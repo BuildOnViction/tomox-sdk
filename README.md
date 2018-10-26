@@ -1,10 +1,7 @@
-# matching-engine
+# DEX backend
 
-Official proof decentralized exchange matching engine
-
-# The Proof Decentralized Exchange
-
-The proof decentralized exchange is a hybrid decentralized exchange that aims at bringing together the ease of use of centralized exchanges along with the security and privacy features of decentralized exchanges. Orders are matched through the an off-chain orderbook. After orders are matched and signed, the decentralized exchange operator has the sole ability to perform a transaction to the smart contract. This provides for the best UX as the exchange operator is the only party having to interact directly with the blockchain. Exchange users simply sign orders which are broadcasted then to the orderbook. This design enables users to queue and cancel their orders seamlessly.
+Official decentralized exchange backend, forked from the Proof project.  
+The matching-engine will be soon moved to blockchain services.
 
 # Getting Started
 
@@ -19,25 +16,24 @@ The proof decentralized exchange is a hybrid decentralized exchange that aims at
 
 **Install the dependencies**
 
-```
-mkdir -p $GOPATH/src/github.com/Proofsuite
-ln -s $PWD $GOPATH/src/github.com/Proofsuite
-cd $GOPATH/src/github.com/tomochain/backend-matching-engine
+```bash
+cd dex-server
+export BACKEND=$GOPATH/src/github.com/tomochain/backend-matching-engine
+mkdir -p $BACKEND
+ln -sF $PWD $BACKEND
+cd $BACKEND
 dep ensure
-```
-
-**Start the Server**
-
-```
-go run server.go
 ```
 
 **Start the development**
 
-```
-docker-compose up -d rabbitmq redis mongodb mongodb-seed
-# start the server in hot-reload mode
-BIN_APP_PORT=8081 GIN_BUILD_ARGS="server.go" gin run serve
+```bash
+# start dockers including mongo, redis, rabbitmq
+yarn start-env
+# seed the sample data
+yarn seeds
+# this will start the server in hot-reload mode
+yarn hot
 ```
 
 # API Endpoints
@@ -180,7 +176,7 @@ The (Order, Trade) tuple can then be used to perform an on-chain transaction for
 ## Quote Tokens and Token Pairs
 
 In the same way as traditional exchanges function with the idea of base
-currencies and quote currencies, the Proof decentralized exchange works with
+currencies and quote currencies, the decentralized exchange works with
 base tokens and quote tokens under the following principles:
 
 - Only the exchange operator can register a quote token
@@ -191,22 +187,3 @@ Token pairs are identified by an ID (a hash of both token addresses)
 # Websocket API
 
 See [WEBSOCKET_API.md](WEBSOCKET_API.md)
-
-# Contribution
-
-Thank you for considering helping the Proof project !
-
-To make the Proof project truely revolutionary, we need and accept contributions from anyone and are grateful even for the smallest fixes.
-
-If you want to help Proof, please fork and setup the development environment of the appropriate repository. In the case you want to submit substantial changes, please get in touch with our development team on our slack channel (slack.proofsuite.com) to verify those modifications are in line with the general goal of the project and receive early feedback. Otherwise you are welcome to fix, commit and send a pull request for the maintainers to review and merge into the main code base.
-
-Please make sure your contributions adhere to our coding guidelines:
-
-Code must adhere as much as possible to standard conventions (DRY - Separation of concerns - Modular)
-Pull requests need to be based and opened against the master branch
-Commit messages should properly describe the code modified
-Ensure all tests are passing before submitting a pull request
-
-# License
-
-The Proof CryptoFiat smart contract (i.e. all code inside of the contracts and test directories) is licensed under the MIT License, also included in our repository in the LICENSE file.
