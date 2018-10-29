@@ -24,9 +24,9 @@ logs:
 ethereum:
   http_url: http://localhost:8545
   ws_url: ws://localhost:18544
-  exchange_address: '0xfc074fd5702e6becb78d64acd4126a0079f42d85'
-  weth_address: '0x2EB24432177e82907dE24b7c5a6E0a5c03226135'
-  fee_account: '0x66455575708ea7b3b61cb1a749f1a4b6fe4924ca'
+  exchange_address: '0x44e5a8cc74C389e805DAa84993bacC2b833E13f0'
+  weth_address: '0x2eb24432177e82907de24b7c5a6e0a5c03226135'
+  fee_account: '0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c'
   decimal: 8
 
 # These are secret keys used for JWT signing and verification.

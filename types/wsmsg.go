@@ -12,8 +12,8 @@ type SubscriptionEvent string
 
 // Enum members for SubscriptionEvent
 const (
-	SUBSCRIBE   SubscriptionEvent = "subscribe"
-	UNSUBSCRIBE SubscriptionEvent = "unsubscribe"
+	SUBSCRIBE   SubscriptionEvent = "SUBSCRIBE"
+	UNSUBSCRIBE SubscriptionEvent = "UNSUBSCRIBE"
 	Fetch       SubscriptionEvent = "fetch"
 )
 
@@ -23,14 +23,14 @@ const OrderChannel = "orders"
 const OHLCVChannel = "ohlcv"
 
 type WebSocketMessage struct {
-	Channel string           `json:"channel"`
-	Payload WebSocketPayload `json:"payload"`
+	Channel string         `json:"channel"`
+	Event   WebsocketEvent `json:"event"`
 }
 
-type WebSocketPayload struct {
-	Type string      `json:"type"`
-	Hash string      `json:"hash,omitempty"`
-	Data interface{} `json:"data"`
+type WebsocketEvent struct {
+	Type    string      `json:"type"`
+	Hash    string      `json:"hash,omitempty"`
+	Payload interface{} `json:"payload"`
 }
 
 type WebSocketSubscription struct {
@@ -56,10 +56,10 @@ type SignaturePayload struct {
 func NewOrderWebsocketMessage(o *Order) *WebSocketMessage {
 	return &WebSocketMessage{
 		Channel: "orders",
-		Payload: WebSocketPayload{
-			Type: "NEW_ORDER",
-			Hash: o.Hash.Hex(),
-			Data: o,
+		Event: WebsocketEvent{
+			Type:    "NEW_ORDER",
+			Hash:    o.Hash.Hex(),
+			Payload: o,
 		},
 	}
 }
@@ -70,10 +70,10 @@ func NewOrderAddedWebsocketMessage(o *Order, p *Pair, filled int64) *WebSocketMe
 	o.Status = "OPEN"
 	return &WebSocketMessage{
 		Channel: "orders",
-		Payload: WebSocketPayload{
-			Type: "ORDER_ADDED",
-			Hash: o.Hash.Hex(),
-			Data: o,
+		Event: WebsocketEvent{
+			Type:    "ORDER_ADDED",
+			Hash:    o.Hash.Hex(),
+			Payload: o,
 		},
 	}
 }
@@ -81,10 +81,10 @@ func NewOrderAddedWebsocketMessage(o *Order, p *Pair, filled int64) *WebSocketMe
 func NewOrderCancelWebsocketMessage(oc *OrderCancel) *WebSocketMessage {
 	return &WebSocketMessage{
 		Channel: "orders",
-		Payload: WebSocketPayload{
-			Type: "CANCEL_ORDER",
-			Hash: oc.Hash.Hex(),
-			Data: oc,
+		Event: WebsocketEvent{
+			Type:    "CANCEL_ORDER",
+			Hash:    oc.Hash.Hex(),
+			Payload: oc,
 		},
 	}
 }
@@ -92,10 +92,10 @@ func NewOrderCancelWebsocketMessage(oc *OrderCancel) *WebSocketMessage {
 func NewRequestSignaturesWebsocketMessage(hash common.Hash, m []*OrderTradePair, o *Order) *WebSocketMessage {
 	return &WebSocketMessage{
 		Channel: "orders",
-		Payload: WebSocketPayload{
-			Type: "REQUEST_SIGNATURE",
-			Hash: hash.Hex(),
-			Data: SignaturePayload{o, m},
+		Event: WebsocketEvent{
+			Type:    "REQUEST_SIGNATURE",
+			Hash:    hash.Hex(),
+			Payload: SignaturePayload{o, m},
 		},
 	}
 }
@@ -103,10 +103,10 @@ func NewRequestSignaturesWebsocketMessage(hash common.Hash, m []*OrderTradePair,
 func NewSubmitSignatureWebsocketMessage(hash string, m []*OrderTradePair, o *Order) *WebSocketMessage {
 	return &WebSocketMessage{
 		Channel: "orders",
-		Payload: WebSocketPayload{
-			Type: "SUBMIT_SIGNATURE",
-			Hash: hash,
-			Data: SignaturePayload{o, m},
+		Event: WebsocketEvent{
+			Type:    "SUBMIT_SIGNATURE",
+			Hash:    hash,
+			Payload: SignaturePayload{o, m},
 		},
 	}
 }
@@ -120,7 +120,7 @@ func (w *WebSocketMessage) Print() {
 	logger.Info(string(b))
 }
 
-func (w *WebSocketPayload) Print() {
+func (w *WebsocketEvent) Print() {
 	b, err := json.MarshalIndent(w, "", "  ")
 	if err != nil {
 		logger.Error(err)

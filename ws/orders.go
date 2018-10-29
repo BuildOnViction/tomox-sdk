@@ -3,15 +3,15 @@ package ws
 import (
 	"sync"
 
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 // OrderConn is websocket order connection struct
 // It holds the reference to connection and the channel of type OrderMessage
 type OrderConnection struct {
 	Conn        *Conn
-	ReadChannel chan *types.WebSocketPayload
+	ReadChannel chan *types.WebsocketEvent
 	Active      bool
 	Once        sync.Once
 }
@@ -30,7 +30,7 @@ func GetOrderConnection(hash common.Hash) (conn *Conn) {
 }
 
 // GetOrderChannel returns the channel associated with an order ID
-func GetOrderChannel(h common.Hash) chan *types.WebSocketPayload {
+func GetOrderChannel(h common.Hash) chan *types.WebsocketEvent {
 	hash := h.Hex()
 
 	if orderConnections[hash] == nil {

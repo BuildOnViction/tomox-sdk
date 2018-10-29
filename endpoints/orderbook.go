@@ -5,10 +5,9 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
 	"github.com/tomochain/backend-matching-engine/ws"
 )
 
@@ -18,28 +17,29 @@ type OrderBookEndpoint struct {
 
 // ServePairResource sets up the routing of pair endpoints and the corresponding handlers.
 func ServeOrderBookResource(
-	r *mux.Router,
+	r *gin.Engine,
 	orderBookService interfaces.OrderBookService,
 ) {
 	e := &OrderBookEndpoint{orderBookService}
-	r.HandleFunc("/orderbook/{baseToken}/{quoteToken}/raw", e.handleGetRawOrderBook)
-	r.HandleFunc("/orderbook/{baseToken}/{quoteToken}/", e.handleGetOrderBook)
-	ws.RegisterChannel(ws.LiteOrderBookChannel, e.orderBookWebSocket)
+
+	// orderbook return information about order
+	r.GET("/orderbook/:baseToken/:quoteToken/raw", e.handleGetRawOrderBook)
+	r.GET("/orderbook/:baseToken/:quoteToken", e.handleGetOrderBook)
+	ws.RegisterChannel(ws.OrderBookChannel, e.orderBookWebSocket)
 	ws.RegisterChannel(ws.RawOrderBookChannel, e.rawOrderBookWebSocket)
 }
 
 // orderBookEndpoint
-func (e *OrderBookEndpoint) handleGetOrderBook(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	bt := vars["baseToken"]
-	qt := vars["quoteToken"]
+func (e *OrderBookEndpoint) handleGetOrderBook(c *gin.Context) {
+	bt := c.Param("baseToken")
+	qt := c.Param("quoteToken")
 
 	if !common.IsHexAddress(bt) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		c.JSON(http.StatusBadRequest, GinError("Invalid Address"))
 	}
 
 	if !common.IsHexAddress(qt) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		c.JSON(http.StatusBadRequest, GinError("Invalid Address"))
 	}
 
 	baseTokenAddress := common.HexToAddress(bt)
@@ -47,42 +47,41 @@ func (e *OrderBookEndpoint) handleGetOrderBook(w http.ResponseWriter, r *http.Re
 	ob, err := e.orderBookService.GetOrderBook(baseTokenAddress, quoteTokenAddress)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		c.JSON(http.StatusInternalServerError, GinError(""))
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, ob)
+	c.JSON(http.StatusOK, ob)
 }
 
 // orderBookEndpoint
-func (e *OrderBookEndpoint) handleGetRawOrderBook(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	bt := vars["baseToken"]
-	qt := vars["quoteToken"]
+func (e *OrderBookEndpoint) handleGetRawOrderBook(c *gin.Context) {
+	bt := c.Param("baseToken")
+	qt := c.Param("quoteToken")
 
 	if !common.IsHexAddress(bt) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		c.JSON(http.StatusBadRequest, GinError("Invalid Address"))
 	}
 
 	if !common.IsHexAddress(qt) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		c.JSON(http.StatusBadRequest, GinError("Invalid Address"))
 	}
 
 	baseTokenAddress := common.HexToAddress(bt)
 	quoteTokenAddress := common.HexToAddress(qt)
 	ob, err := e.orderBookService.GetRawOrderBook(baseTokenAddress, quoteTokenAddress)
 	if err != nil {
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		c.JSON(http.StatusInternalServerError, GinError(""))
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, ob)
+	c.JSON(http.StatusOK, ob)
 }
 
 // liteOrderBookWebSocket
 func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, conn *ws.Conn) {
 	mab, _ := json.Marshal(input)
-	var payload *types.WebSocketPayload
+	var event *types.WebsocketEvent
 
-	err := json.Unmarshal(mab, &payload)
+	err := json.Unmarshal(mab, &event)
 	if err != nil {
 		logger.Error(err)
 		return
@@ -90,13 +89,13 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, conn *ws.Co
 
 	socket := ws.GetRawOrderBookSocket()
 
-	if payload.Type != "subscription" {
-		logger.Error("Payload is not of subscription type")
-		socket.SendErrorMessage(conn, "Payload is not of subscription type")
+	if event.Type != "subscription" {
+		logger.Error("Event is not of subscription type")
+		socket.SendErrorMessage(conn, "Event is not of subscription type")
 		return
 	}
 
-	dab, _ := json.Marshal(payload.Data)
+	dab, _ := json.Marshal(event.Payload)
 	var msg *types.WebSocketSubscription
 
 	err = json.Unmarshal(dab, &msg)
@@ -128,20 +127,20 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, conn *ws.Co
 // liteOrderBookWebSocket
 func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, conn *ws.Conn) {
 	bytes, _ := json.Marshal(input)
-	var payload *types.WebSocketPayload
-	err := json.Unmarshal(bytes, &payload)
+	var event *types.WebsocketEvent
+	err := json.Unmarshal(bytes, &event)
 	if err != nil {
 		logger.Error(err)
 	}
 
 	socket := ws.GetOrderBookSocket()
-	if payload.Type != "subscription" {
-		message := map[string]string{"Message": "Invalid subscription payload"}
+	if event.Type != "subscription" {
+		message := map[string]string{"Message": "Invalid subscription event"}
 		socket.SendErrorMessage(conn, message)
 		return
 	}
 
-	bytes, _ = json.Marshal(payload.Data)
+	bytes, _ = json.Marshal(event.Payload)
 	var msg *types.WebSocketSubscription
 
 	err = json.Unmarshal(bytes, &msg)

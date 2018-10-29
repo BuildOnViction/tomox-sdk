@@ -8,13 +8,13 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/utils/math"
 	"github.com/tomochain/backend-matching-engine/ws"
-	"github.com/ethereum/go-ethereum/common"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -363,7 +363,7 @@ func (s *OrderService) handleSubmitSignatures(res *types.EngineResponse) {
 	select {
 	case msg := <-ch:
 		if msg != nil && msg.Type == "SUBMIT_SIGNATURE" {
-			bytes, err := json.Marshal(msg.Data)
+			bytes, err := json.Marshal(msg.Payload)
 			if err != nil {
 				logger.Error(err)
 				s.Rollback(res)

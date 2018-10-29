@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/ws"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/websocket"
 	"github.com/posener/wstest"
+	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/backend-matching-engine/ws"
 )
 
 var wg = &sync.WaitGroup{}
@@ -165,7 +165,7 @@ func (c *Client) handleOrderChannelMessagesOut(m types.WebSocketMessage) {
 }
 
 // handleChannelMessagesIn
-func (c *Client) handleOrderChannelMessagesIn(p types.WebSocketPayload) {
+func (c *Client) handleOrderChannelMessagesIn(p types.WebsocketEvent) {
 	logger.Infof("Receiving: %v", p.Type)
 	switch p.Type {
 	case "ERROR":
@@ -185,7 +185,7 @@ func (c *Client) handleOrderChannelMessagesIn(p types.WebSocketPayload) {
 	}
 }
 
-func (c *Client) handleOrderBookChannelMessages(p types.WebSocketPayload) {
+func (c *Client) handleOrderBookChannelMessages(p types.WebsocketEvent) {
 	switch p.Type {
 	case "INIT":
 		c.handleOrderBookInit(p)
@@ -194,7 +194,7 @@ func (c *Client) handleOrderBookChannelMessages(p types.WebSocketPayload) {
 	}
 }
 
-func (c *Client) handleTradeChannelMessages(p types.WebSocketPayload) {
+func (c *Client) handleTradeChannelMessages(p types.WebsocketEvent) {
 	switch p.Type {
 	case "INIT":
 		c.handleTradesInit(p)
@@ -203,7 +203,7 @@ func (c *Client) handleTradeChannelMessages(p types.WebSocketPayload) {
 	}
 }
 
-func (c *Client) handleOHLCVMessages(p types.WebSocketPayload) {
+func (c *Client) handleOHLCVMessages(p types.WebsocketEvent) {
 	switch p.Type {
 	case "INIT":
 		c.handleOHLCVInit(p)
@@ -213,12 +213,12 @@ func (c *Client) handleOHLCVMessages(p types.WebSocketPayload) {
 }
 
 // handleError handles incoming error mesasges (does not include tx errors)
-func (c *Client) handleError(p types.WebSocketPayload) {
+func (c *Client) handleError(p types.WebsocketEvent) {
 	utils.PrintJSON(p)
 }
 
 // handleOrderAdded handles incoming order added messages
-func (c *Client) handleOrderAdded(p types.WebSocketPayload) {
+func (c *Client) handleOrderAdded(p types.WebsocketEvent) {
 	o := &types.Order{}
 
 	bytes, err := json.Marshal(p.Data)
@@ -240,7 +240,7 @@ func (c *Client) handleOrderAdded(p types.WebSocketPayload) {
 }
 
 // handleOrderAdded handles incoming order canceled messages
-func (c *Client) handleOrderCancelled(p types.WebSocketPayload) {
+func (c *Client) handleOrderCancelled(p types.WebsocketEvent) {
 	o := &types.Order{}
 
 	bytes, err := json.Marshal(p.Data)
@@ -263,7 +263,7 @@ func (c *Client) handleOrderCancelled(p types.WebSocketPayload) {
 
 // handleSignatureRequested handles incoming signature requested messages.
 // It follows up by signing given data and sending back a SUBMIT_SIGNATURES messages
-func (c *Client) handleSignatureRequested(p types.WebSocketPayload) {
+func (c *Client) handleSignatureRequested(p types.WebsocketEvent) {
 	data := &types.SignaturePayload{}
 	bytes, err := json.Marshal(p.Data)
 	if err != nil {
@@ -307,7 +307,7 @@ func (c *Client) handleSignatureRequested(p types.WebSocketPayload) {
 
 // handleOrderPending handles incoming pending messages (the order has been matched/partially matched
 // and the execution tx is currently waiting to be mined)
-func (c *Client) handleOrderPending(p types.WebSocketPayload) {
+func (c *Client) handleOrderPending(p types.WebsocketEvent) {
 	o := &types.Order{}
 
 	bytes, err := json.Marshal(p.Data)
@@ -329,7 +329,7 @@ func (c *Client) handleOrderPending(p types.WebSocketPayload) {
 }
 
 // handleOrderSuccess handles incoming tx success messages
-func (c *Client) handleOrderSuccess(p types.WebSocketPayload) {
+func (c *Client) handleOrderSuccess(p types.WebsocketEvent) {
 	o := &types.Order{}
 
 	bytes, err := json.Marshal(p.Data)
@@ -352,7 +352,7 @@ func (c *Client) handleOrderSuccess(p types.WebSocketPayload) {
 
 // handleOrderError handles incoming tx error messages (a tx has been sent but the
 // the transaction was reverted)
-func (c *Client) handleOrderError(p types.WebSocketPayload) {
+func (c *Client) handleOrderError(p types.WebsocketEvent) {
 	o := &types.Order{}
 
 	bytes, err := json.Marshal(p.Data)
@@ -373,27 +373,27 @@ func (c *Client) handleOrderError(p types.WebSocketPayload) {
 	c.Logs <- l
 }
 
-func (c *Client) handleOrderBookInit(p types.WebSocketPayload) {
+func (c *Client) handleOrderBookInit(p types.WebsocketEvent) {
 
 }
 
-func (c *Client) handleOrderBookUpdate(p types.WebSocketPayload) {
+func (c *Client) handleOrderBookUpdate(p types.WebsocketEvent) {
 
 }
 
-func (c *Client) handleTradesInit(p types.WebSocketPayload) {
+func (c *Client) handleTradesInit(p types.WebsocketEvent) {
 
 }
 
-func (c *Client) handleTradesUpdate(p types.WebSocketPayload) {
+func (c *Client) handleTradesUpdate(p types.WebsocketEvent) {
 
 }
 
-func (c *Client) handleOHLCVInit(p types.WebSocketPayload) {
+func (c *Client) handleOHLCVInit(p types.WebsocketEvent) {
 
 }
 
-func (c *Client) handleOHLCVUpdate(p types.WebSocketPayload) {
+func (c *Client) handleOHLCVUpdate(p types.WebsocketEvent) {
 
 }
 

@@ -5,13 +5,13 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/rabbitmq"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 type TxQueue struct {
@@ -20,8 +20,8 @@ type TxQueue struct {
 	TradeService     interfaces.TradeService
 	OrderService     interfaces.OrderService
 	EthereumProvider interfaces.EthereumProvider
-	// Exchange         interfaces.Exchange
-	RabbitMQConn *rabbitmq.Connection
+	Exchange         interfaces.Exchange
+	RabbitMQConn     *rabbitmq.Connection
 }
 
 // NewTxQueue
@@ -31,7 +31,7 @@ func NewTxQueue(
 	p interfaces.EthereumProvider,
 	o interfaces.OrderService,
 	w *types.Wallet,
-	// ex interfaces.Exchange,
+	ex interfaces.Exchange,
 	rabbitConn *rabbitmq.Connection,
 ) (*TxQueue, error) {
 
@@ -41,8 +41,8 @@ func NewTxQueue(
 		OrderService:     o,
 		EthereumProvider: p,
 		Wallet:           w,
-		// Exchange:         ex,
-		RabbitMQConn: rabbitConn,
+		Exchange:         ex,
+		RabbitMQConn:     rabbitConn,
 	}
 
 	err := txq.PurgePendingTrades()

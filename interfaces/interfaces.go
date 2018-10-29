@@ -4,14 +4,14 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/ws"
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
+	"github.com/tomochain/backend-matching-engine/rabbitmq"
+	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/ws"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -75,6 +75,8 @@ type TradeDao interface {
 	Aggregate(q []bson.M) ([]*types.Tick, error)
 	GetByPairName(name string) ([]*types.Trade, error)
 	GetByHash(hash common.Hash) (*types.Trade, error)
+	GetSortedTradesByDate(bt, qt common.Address, n int) ([]*types.Trade, error)
+	GetNTradesByPairAddress(bt, qt common.Address, n int) ([]*types.Trade, error)
 	GetByOrderHash(hash common.Hash) ([]*types.Trade, error)
 	GetByPairAddress(baseToken, quoteToken common.Address) ([]*types.Trade, error)
 	GetByUserAddress(addr common.Address) ([]*types.Trade, error)
@@ -182,6 +184,7 @@ type TokenService interface {
 type TradeService interface {
 	GetByPairName(p string) ([]*types.Trade, error)
 	GetTrades(bt, qt common.Address) ([]types.Trade, error)
+	GetSortedTradesByDate(bt, qt common.Address, n int) ([]*types.Trade, error)
 	GetByPairAddress(bt, qt common.Address) ([]*types.Trade, error)
 	GetByUserAddress(addr common.Address) ([]*types.Trade, error)
 	GetByHash(hash common.Hash) (*types.Trade, error)

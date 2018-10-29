@@ -27,7 +27,7 @@ func ServeTokenResource(
 	r.GET("/tokens", e.handleGetTokens)
 	r.POST("/tokens", e.handleCreateTokens)
 
-	ws.RegisterChannel(ws.TokenChannel, e.ws)
+	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
 
 func (e *tokenEndpoint) handleCreateTokens(c *gin.Context) {
@@ -117,8 +117,8 @@ func (e *tokenEndpoint) handleGetToken(c *gin.Context) {
 
 // ws function handles incoming websocket messages on the order channel
 func (e *tokenEndpoint) ws(input interface{}, conn *ws.Conn) {
-	// it means that we can handle not only WebSocketPayload but other Payloads as well
-	msg, ok := input.(*types.WebSocketPayload)
+	// it means that we can handle not only WebsocketEvent but other Payloads as well
+	msg, ok := input.(*types.WebsocketEvent)
 	if ok {
 		switch msg.Type {
 		case "GET_TOKENS":
@@ -132,13 +132,13 @@ func (e *tokenEndpoint) ws(input interface{}, conn *ws.Conn) {
 
 // handleSubmitSignatures handles NewTrade messages. New trade messages are transmitted to the corresponding order channel
 // and received in the handleClientResponse.
-func (e *tokenEndpoint) handleGetTokensWS(p *types.WebSocketPayload, conn *ws.Conn) {
+func (e *tokenEndpoint) handleGetTokensWS(p *types.WebsocketEvent, conn *ws.Conn) {
 	res, err := e.tokenService.GetAll()
 	if err != nil {
 		logger.Error(err)
-		ws.SendMessage(conn, ws.TokenChannel, ws.ERROR, GinError(""))
+		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, GinError(""))
 		return
 	}
 
-	ws.SendMessage(conn, ws.TokenChannel, ws.UPDATE, res)
+	ws.SendMessage(conn, ws.OrderChannel, ws.UPDATE, res)
 }

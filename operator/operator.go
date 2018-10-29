@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	eth "github.com/ethereum/go-ethereum/core/types"
 )
 
 var logger = utils.OperatorLogger
@@ -23,11 +23,11 @@ var logger = utils.OperatorLogger
 // on the contract
 type Operator struct {
 	// AccountService     interfaces.AccountService
-	WalletService    interfaces.WalletService
-	TradeService     interfaces.TradeService
-	OrderService     interfaces.OrderService
-	EthereumProvider interfaces.EthereumProvider
-	// Exchange           interfaces.Exchange
+	WalletService      interfaces.WalletService
+	TradeService       interfaces.TradeService
+	OrderService       interfaces.OrderService
+	EthereumProvider   interfaces.EthereumProvider
+	Exchange           interfaces.Exchange
 	TxQueues           []*TxQueue
 	QueueAddressIndex  map[common.Address]*TxQueue
 	RabbitMQConnection *rabbitmq.Connection
@@ -54,7 +54,7 @@ func NewOperator(
 	tradeService interfaces.TradeService,
 	orderService interfaces.OrderService,
 	provider interfaces.EthereumProvider,
-	// exchange interfaces.Exchange,
+	exchange interfaces.Exchange,
 	conn *rabbitmq.Connection,
 ) (*Operator, error) {
 	txqueues := []*TxQueue{}
@@ -79,7 +79,7 @@ func NewOperator(
 			provider,
 			orderService,
 			w,
-			// exchange,
+			exchange,
 			conn,
 		)
 
@@ -91,11 +91,11 @@ func NewOperator(
 	}
 
 	op := &Operator{
-		WalletService:    walletService,
-		TradeService:     tradeService,
-		OrderService:     orderService,
-		EthereumProvider: provider,
-		// Exchange:          exchange,
+		WalletService:     walletService,
+		TradeService:      tradeService,
+		OrderService:      orderService,
+		EthereumProvider:  provider,
+		Exchange:          exchange,
 		TxQueues:          txqueues,
 		QueueAddressIndex: addressIndex,
 		mutex:             &sync.Mutex{},

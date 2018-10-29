@@ -15,12 +15,11 @@ import (
 )
 
 const (
-	TradeChannel         = "trades"
-	RawOrderBookChannel  = "order_book_full"
-	LiteOrderBookChannel = "order_book_lite"
-	OrderChannel         = "orders"
+	TradeChannel        = "trades"
+	RawOrderBookChannel = "raw_orderbook"
+	OrderBookChannel    = "orderbook"
+	OrderChannel        = "orders"
 	// this allows us to update all the tokens from web socket in realtime manner
-	TokenChannel = "tokens"
 	OHLCVChannel = "ohlcv"
 )
 
@@ -96,7 +95,7 @@ func ConnectionEndpoint(ginCtx *gin.Context) {
 				SendMessage(conn, msg.Channel, "ERROR", "INVALID_CHANNEL")
 			}
 
-			go socketChannels[msg.Channel](&msg.Payload, conn)
+			go socketChannels[msg.Channel](&msg.Event, conn)
 		}
 	}()
 }
@@ -170,18 +169,18 @@ func wsCloseHandler(conn *Conn) func(code int, text string) error {
 
 // SendMessage constructs the message with proper structure to be sent over websocket
 func SendMessage(conn *Conn, channel string, msgType string, data interface{}, hash ...common.Hash) {
-	payload := types.WebSocketPayload{
-		Type: msgType,
-		Data: data,
+	event := types.WebsocketEvent{
+		Type:    msgType,
+		Payload: data,
 	}
 
 	if len(hash) > 0 {
-		payload.Hash = hash[0].Hex()
+		event.Hash = hash[0].Hex()
 	}
 
 	message := types.WebSocketMessage{
 		Channel: channel,
-		Payload: payload,
+		Event:   event,
 	}
 
 	conn.mu.Lock()

@@ -69,6 +69,10 @@ func (s *TradeService) GetByPairAddress(bt, qt common.Address) ([]*types.Trade, 
 	return s.tradeDao.GetByPairAddress(bt, qt)
 }
 
+func (s *TradeService) GetSortedTradesByDate(bt, qt common.Address, n int) ([]*types.Trade, error) {
+	return s.tradeDao.GetSortedTradesByDate(bt, qt, n)
+}
+
 // GetByUserAddress fetches all the trades corresponding to a user address
 func (s *TradeService) GetByUserAddress(addr common.Address) ([]*types.Trade, error) {
 	return s.tradeDao.GetByUserAddress(addr)

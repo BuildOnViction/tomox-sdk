@@ -3,9 +3,9 @@ package daos
 import (
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/ethereum/go-ethereum/common"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -163,18 +163,53 @@ func (dao *TradeDao) GetByOrderHash(hash common.Hash) ([]*types.Trade, error) {
 	return response, nil
 }
 
-// GetByPairAddress fetches all the trades corresponding to a particular pair token address.
-func (dao *TradeDao) GetByPairAddress(baseToken, quoteToken common.Address) ([]*types.Trade, error) {
-	var response []*types.Trade
+func (dao *TradeDao) GetSortedTradesByDate(bt, qt common.Address, n int) ([]*types.Trade, error) {
+	res := []*types.Trade{}
 
-	q := bson.M{"baseToken": baseToken.Hex(), "quoteToken": quoteToken.Hex()}
-	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &response)
+	q := bson.M{"baseToken": bt.Hex(), "quoteToken": qt.Hex()}
+	sort := []string{"-createdAt"}
+	err := db.GetAndSort(dao.dbName, dao.collectionName, q, sort, 0, n, &res)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
 
-	return response, nil
+	return res, nil
+}
+
+func (dao *TradeDao) GetNTradesByPairAddress(bt, qt common.Address, n int) ([]*types.Trade, error) {
+	res, err := dao.GetTradesByPairAddress(bt, qt, n)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// GetByPairAddress fetches all the trades corresponding to a particular pair token address.
+func (dao *TradeDao) GetTradesByPairAddress(bt, qt common.Address, n int) ([]*types.Trade, error) {
+	var res []*types.Trade
+
+	q := bson.M{"baseToken": bt.Hex(), "quoteToken": qt.Hex()}
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, n, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// GetByPairAddress fetches all the trades corresponding to a particular pair token address.
+func (dao *TradeDao) GetByPairAddress(bt, qt common.Address) ([]*types.Trade, error) {
+	res, err := dao.GetTradesByPairAddress(bt, qt, 0)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // GetByUserAddress fetches all the trades corresponding to a particular user address.

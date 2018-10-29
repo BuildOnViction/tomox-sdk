@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/ws"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils/testutils"
+	"github.com/tomochain/backend-matching-engine/ws"
 )
 
 func testWS(t *testing.T, pairs []types.Pair, accounts map[*ecdsa.PrivateKey]types.Account) {
@@ -74,7 +74,7 @@ func testInitSubscription(t *testing.T, client1 *testutils.Client, factory1 *tes
 	}
 	client1.Requests <- buyOrderMsg
 	time.Sleep(time.Second)
-	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client1.ResponseLogs).Payload.Type)
+	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client1.ResponseLogs).Event.Type)
 
 	// send sell order
 	sellOrderMsg, _, err := factory2.NewSellOrderMessage(1e5+10, 1e6)
@@ -83,17 +83,17 @@ func testInitSubscription(t *testing.T, client1 *testutils.Client, factory1 *tes
 	}
 	client2.Requests <- sellOrderMsg
 	time.Sleep(time.Second)
-	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client2.ResponseLogs).Payload.Type)
+	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client2.ResponseLogs).Event.Type)
 
-	newTradeClient(t, baseToken, quoteToken, getLatestRLog(tradeClient.ResponseLogs).Payload.Data)
+	newTradeClient(t, baseToken, quoteToken, getLatestRLog(tradeClient.ResponseLogs).Event.Payload)
 }
 
 func getOrderbookSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSocketMessage {
 	return &types.WebSocketMessage{
-		Channel: ws.LiteOrderBookChannel,
-		Payload: types.WebSocketPayload{
+		Channel: ws.OrderBookChannel,
+		Event: types.WebsocketEvent{
 			Type: "subscription",
-			Data: types.WebSocketSubscription{
+			Payload: types.WebSocketSubscription{
 				Event: types.SUBSCRIBE,
 				Pair: types.PairSubDoc{
 					BaseToken:  baseToken,
@@ -107,9 +107,9 @@ func getOrderbookSubscribeRequest(baseToken, quoteToken common.Address) *types.W
 func getTradeSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSocketMessage {
 	return &types.WebSocketMessage{
 		Channel: ws.TradeChannel,
-		Payload: types.WebSocketPayload{
+		Event: types.WebsocketEvent{
 			Type: "subscription",
-			Data: types.WebSocketSubscription{
+			Payload: types.WebSocketSubscription{
 				Event: types.SUBSCRIBE,
 				Pair: types.PairSubDoc{
 					BaseToken:  baseToken,
@@ -122,9 +122,9 @@ func getTradeSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSo
 func getOHLCVSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSocketMessage {
 	return &types.WebSocketMessage{
 		Channel: ws.OHLCVChannel,
-		Payload: types.WebSocketPayload{
+		Event: types.WebsocketEvent{
 			Type: "subscription",
-			Data: types.WebSocketSubscription{
+			Payload: types.WebSocketSubscription{
 				Event: types.SUBSCRIBE,
 				Pair: types.PairSubDoc{
 					BaseToken:  baseToken,
@@ -141,10 +141,10 @@ func getOHLCVSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSo
 func getWebsocketMessage(channel, t, hash string, data interface{}) types.WebSocketMessage {
 	return types.WebSocketMessage{
 		Channel: channel,
-		Payload: types.WebSocketPayload{
-			Type: t,
-			Hash: "",
-			Data: data,
+		Event: types.WebsocketEvent{
+			Type:    t,
+			Hash:    "",
+			Payload: data,
 		},
 	}
 }

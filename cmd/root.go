@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/spf13/cobra"
 )
 
 var cfgDir string
@@ -29,7 +29,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgDir, "configDir", "./config", "config directory (default is $PROJECT_PATH/config)")
-	rootCmd.PersistentFlags().StringVar(&env, "env", "", "Environment to use for deployment(default is '')")
+	rootCmd.PersistentFlags().StringVar(&env, "env", os.Getenv("GO_ENV"), "Environment to use for deployment(default is '')")
 
 	cobra.OnInitialize(initConfig)
 

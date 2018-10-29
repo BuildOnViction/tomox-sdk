@@ -3,12 +3,16 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/contracts"
+	"github.com/tomochain/backend-matching-engine/crons"
 	"github.com/tomochain/backend-matching-engine/daos"
 	"github.com/tomochain/backend-matching-engine/endpoints"
 	"github.com/tomochain/backend-matching-engine/engine"
 	"github.com/tomochain/backend-matching-engine/ethereum"
+	"github.com/tomochain/backend-matching-engine/operator"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/services"
@@ -71,69 +75,69 @@ func RegisterRouter(
 	pairDao := daos.NewPairDao()
 	tradeDao := daos.NewTradeDao()
 	accountDao := daos.NewAccountDao()
-	// walletDao := daos.NewWalletDao()
+	walletDao := daos.NewWalletDao()
 
 	// instantiate engine
 	eng := engine.NewEngine(redisConn, rabbitConn, pairDao)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao)
-	// ohlcvService := services.NewOHLCVService(tradeDao)
+	ohlcvService := services.NewOHLCVService(tradeDao)
 	tokenService := services.NewTokenService(tokenDao)
 	tradeService := services.NewTradeService(tradeDao)
 	pairService := services.NewPairService(pairDao, tokenDao, eng, tradeService)
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, provider, rabbitConn)
-	// orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
-	// walletService := services.NewWalletService(walletDao)
-	// cronService := crons.NewCronService(ohlcvService)
+	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
+	walletService := services.NewWalletService(walletDao)
+	cronService := crons.NewCronService(ohlcvService)
 
 	var err error
 	// fmt.Printf("config %v", app.Config)
 	// get exchange contract instance
-	// exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
-	// exchange, err := contracts.NewExchange(
-	// 	walletService,
-	// 	exchangeAddress,
-	// 	provider.Client,
-	// )
+	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
+	exchange, err := contracts.NewExchange(
+		walletService,
+		exchangeAddress,
+		provider.Client,
+	)
 
-	// if err != nil {
-	// 	panic(err)
-	// }
+	if err != nil {
+		panic(err)
+	}
 
 	// deploy http and ws endpoints
 	endpoints.ServeAccountResource(r, accountService)
 	endpoints.ServeTokenResource(r, tokenService)
 	endpoints.ServePairResource(r, pairService)
-	// endpoints.ServeOrderBookResource(r, orderBookService)
-	// endpoints.ServeOHLCVResource(r, ohlcvService)
-	// endpoints.ServeTradeResource(r, tradeService)
+	endpoints.ServeOrderBookResource(r, orderBookService)
+	endpoints.ServeOHLCVResource(r, ohlcvService)
+	endpoints.ServeTradeResource(r, tradeService)
 	endpoints.ServeOrderResource(r, orderService, eng)
 
 	// deploy operator
-	// op, err := operator.NewOperator(
-	// 	walletService,
-	// 	tradeService,
-	// 	orderService,
-	// 	provider,
-	// 	// exchange,
-	// 	rabbitConn,
-	// )
+	op, err := operator.NewOperator(
+		walletService,
+		tradeService,
+		orderService,
+		provider,
+		exchange,
+		rabbitConn,
+	)
 
-	// if err == nil {
+	if err == nil {
 
-	// 	// instead of using rabbit mq for working with channel from smart contract event logs
-	// 	// we use pss to subscribe directly to decentralized message queue
+		// instead of using rabbit mq for working with channel from smart contract event logs
+		// we use pss to subscribe directly to decentralized message queue
 
-	// 	//initialize rabbitmq subscriptions
-	// 	// rabbitConn.SubscribeOrders(eng.HandleOrders)
-	// 	rabbitConn.SubscribeTrades(op.HandleTrades)
-	// 	// rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
-	// 	// rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
+		//initialize rabbitmq subscriptions
+		rabbitConn.SubscribeOrders(eng.HandleOrders)
+		rabbitConn.SubscribeTrades(op.HandleTrades)
+		rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
+		rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 
-	// 	// this service is for crawling data if the backend is offline for a while and need a catch-up
-	// 	cronService.InitCrons()
-	// }
+		// this service is for crawling data if the backend is offline for a while and need a catch-up
+		cronService.InitCrons()
+	}
 
 	return err
 }

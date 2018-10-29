@@ -68,7 +68,7 @@ func (s *OrderBookSocket) BroadcastMessage(channelID string, p interface{}) erro
 
 // SendMessage sends a message on the orderbook channel
 func (s *OrderBookSocket) SendMessage(conn *Conn, msgType string, data interface{}) {
-	SendMessage(conn, LiteOrderBookChannel, msgType, data)
+	SendMessage(conn, OrderBookChannel, msgType, data)
 }
 
 // SendErrorMessage sends error message on orderbookchannel
