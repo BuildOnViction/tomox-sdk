@@ -111,13 +111,13 @@ to: unix timestamp of to time. (default: current timestamp)
 Orders contain the information that is required to register an order in the orderbook as a "Maker".
 
 - **id** is the primary ID of the order (possibly deprecated)
-- **orderType** is either BUY or SELL. It is currently not parsed by the server and compute directly from tokenBuy, tokenSell, amountBuy, amountSell
+- **orderType** is either BUY or SELL. It is currently not parsed by the server and compute directly from buyToken, sellToken, buyAmount, sellAmount
 - **exchangeAddress** is the exchange smart contract address
 - **maker** is the maker (usually sender) ethereum account address
-- **tokenBuy** is the BUY token ethereum address
-- **tokenSell** is the SELL token ethereum address
-- **amountBuy** is the BUY amount (in BUY_TOKEN units)
-- **amountSell** is the SELL amount (in SELL_TOKEN units)
+- **buyToken** is the BUY token ethereum address
+- **sellToken** is the SELL token ethereum address
+- **buyAmount** is the BUY amount (in BUY_TOKEN units)
+- **sellAmount** is the SELL amount (in SELL_TOKEN units)
 - **expires** is the order expiration timestamp
 - **nonce** is the nonce that corresponds to
 - **feeMake** is the maker fee (not implemented yet)
@@ -130,7 +130,7 @@ Orders contain the information that is required to register an order in the orde
 
 **Order Price and Amount**
 
-There are two ways to describe the amount of tokens being bought/sold. The smart-contract requires (tokenBuy, tokenSell, amountBuy, amountSell) while the
+There are two ways to describe the amount of tokens being bought/sold. The smart-contract requires (buyToken, sellToken, buyAmount, sellAmount) while the
 orderbook requires (pairID, amount, price).
 
 The conversion between both systems can be found in the engine.ComputeOrderPrice

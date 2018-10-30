@@ -189,7 +189,7 @@ func TestTrade(t *testing.T) {
 
 	simulator.Commit()
 
-	// TokenSell: InitialSellTokenAmount + amount * (amountSell/amountBuy)
+	// TokenSell: InitialSellTokenAmount + amount * (sellAmount/buyAmount)
 	sellTokenTakerBalance, _ := sellToken.BalanceOf(taker.Address)
 	sellTokenMakerBalance, _ := sellToken.BalanceOf(maker.Address)
 	buyTokenTakerBalance, _ := buyToken.BalanceOf(taker.Address)
