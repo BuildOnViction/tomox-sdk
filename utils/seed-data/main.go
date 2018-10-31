@@ -33,6 +33,15 @@ func init() {
 				cli.StringFlag{Name: "output-folder, out", Value: "../../../protocol/OrderBook"},
 			},
 		},
+		cli.Command{
+			Name: "tokens",
+			Action: func(c *cli.Context) error {
+				return generateToken(c.String("cr"))
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "contract-result, cr", Value: "/contract-results.txt"},
+			},
+		},
 	}
 }
 
@@ -79,6 +88,11 @@ func getAbsolutePath(basePath, folder string) string {
 
 	return path.Join(basePath, folder)
 
+}
+
+func generateToken(contractResultFile string) error {
+
+	return nil
 }
 
 func generateGenesis(folder, outFolder string) error {
