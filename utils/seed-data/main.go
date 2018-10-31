@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,12 +24,13 @@ func init() {
 	// Initialize the CLI app and start tomo
 	app.Commands = []cli.Command{
 		cli.Command{
-			Name: "genesis-token",
+			Name: "genesis",
 			Action: func(c *cli.Context) error {
-				return genesisToken(c.String("cbf"))
+				return generateGenesis(c.String("cbf"), c.String("out"))
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "contract-build-folder, cbf", Value: "../../../contracts/build/contracts"},
+				cli.StringFlag{Name: "output-folder, out", Value: "../../../protocol/OrderBook"},
 			},
 		},
 	}
@@ -70,11 +72,29 @@ func getTokenCode(buildFolder, symbol string) TokenCode {
 	return tokenCode
 }
 
-func genesisToken(folder string) error {
+func getAbsolutePath(basePath, folder string) string {
+	if folder[0] == '/' {
+		return folder
+	}
+
+	return path.Join(basePath, folder)
+
+}
+
+func generateGenesis(folder, outFolder string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
-	buildFolder := path.Join(basePath, folder)
+	buildFolder := getAbsolutePath(basePath, folder)
+	outputFolder := getAbsolutePath(basePath, outFolder)
+
 	fmt.Printf("Contract folder :%s\n", buildFolder)
+
+	templatePath := path.Join(basePath, "genesis.gohtml")
+	tpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
 
 	// first step: read all tokens and deployedBytecode (bytecode of smartcontract without deploying by wallet but creation block)
 	tokenPath := path.Join(basePath, "tokens.json")
@@ -103,9 +123,14 @@ func genesisToken(folder string) error {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	genesisBytes, _ := json.MarshalIndent(genesis, "", " ")
-	genesisPath := path.Join(basePath, "genesis.json")
-	ioutil.WriteFile(genesisPath, genesisBytes, os.ModePerm)
+
+	genesisPath := path.Join(outputFolder, "genesis.json")
+	f, err := os.Create(genesisPath)
+	tpl.Execute(f, genesis)
+	if err != nil {
+		log.Print("execute: ", err)
+		return err
+	}
 	return nil
 
 }

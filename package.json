@@ -1,9 +1,9 @@
 {
-  "name": "backend",
+  "name": "dex-backend",
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/agiletechvn/tendermint-starterkit.git"
+    "url": "https://github.com/tomochain/dex-server.git"
   },
   "scripts": {
     "start-env": "docker-compose up -d rabbitmq redis mongodb",
