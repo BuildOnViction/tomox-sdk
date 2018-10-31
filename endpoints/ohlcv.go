@@ -115,17 +115,18 @@ func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, conn *ws.Conn) {
 
 	socket := ws.GetOHLCVSocket()
 
-	if event.Type != "subscription" {
-		socket.SendErrorMessage(conn, "Invalid payload")
-		return
-	}
-
 	dab, _ := json.Marshal(event.Payload)
 	var msg *types.WebSocketSubscription
 
 	err = json.Unmarshal(dab, &msg)
 	if err != nil {
 		logger.Error(err)
+	}
+
+	// raw websocket only have 2 types: UNSUBSCRIBE and SUBSCRIBE
+	if msg.Event != types.UNSUBSCRIBE && msg.Event != types.SUBSCRIBE {
+		socket.SendErrorMessage(conn, "Invalid payload")
+		return
 	}
 
 	if (msg.Pair.BaseToken == common.Address{}) {

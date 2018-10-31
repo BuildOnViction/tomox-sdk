@@ -89,18 +89,18 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, conn *ws.Co
 
 	socket := ws.GetRawOrderBookSocket()
 
-	if event.Type != "subscription" {
-		logger.Error("Event is not of subscription type")
-		socket.SendErrorMessage(conn, "Event is not of subscription type")
-		return
-	}
-
 	dab, _ := json.Marshal(event.Payload)
 	var msg *types.WebSocketSubscription
 
 	err = json.Unmarshal(dab, &msg)
 	if err != nil {
 		logger.Error(err)
+	}
+
+	// raw websocket only have 2 types: UNSUBSCRIBE and SUBSCRIBE
+	if msg.Event != types.UNSUBSCRIBE && msg.Event != types.SUBSCRIBE {
+		socket.SendErrorMessage(conn, "Invalid payload")
+		return
 	}
 
 	if (msg.Pair.BaseToken == common.Address{}) {
@@ -134,11 +134,6 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, conn *ws.Conn)
 	}
 
 	socket := ws.GetOrderBookSocket()
-	if event.Type != "subscription" {
-		message := map[string]string{"Message": "Invalid subscription event"}
-		socket.SendErrorMessage(conn, message)
-		return
-	}
 
 	bytes, _ = json.Marshal(event.Payload)
 	var msg *types.WebSocketSubscription
@@ -148,6 +143,11 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, conn *ws.Conn)
 		logger.Error(err)
 		message := map[string]string{"Message": "Internal server error"}
 		socket.SendErrorMessage(conn, message)
+	}
+
+	if msg.Event != types.UNSUBSCRIBE && msg.Event != types.SUBSCRIBE {
+		socket.SendErrorMessage(conn, "Invalid payload")
+		return
 	}
 
 	if (msg.Pair.BaseToken == common.Address{}) {

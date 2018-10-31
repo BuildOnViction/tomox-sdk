@@ -105,17 +105,18 @@ func (e *tradeEndpoint) tradeWebSocket(input interface{}, conn *ws.Conn) {
 	}
 
 	socket := ws.GetTradeSocket()
-	if event.Type != "subscription" {
-		err := map[string]string{"Message": "Invalid payload"}
-		socket.SendErrorMessage(conn, err)
-		return
-	}
 
 	bytes, _ = json.Marshal(event.Payload)
 	var msg *types.WebSocketSubscription
 	err := json.Unmarshal(bytes, &msg)
 	if err != nil {
 		logger.Error(err)
+	}
+
+	// raw websocket only have 2 types: UNSUBSCRIBE and SUBSCRIBE
+	if msg.Event != types.UNSUBSCRIBE && msg.Event != types.SUBSCRIBE {
+		socket.SendErrorMessage(conn, "Invalid payload")
+		return
 	}
 
 	if (msg.Pair.BaseToken == common.Address{}) {
