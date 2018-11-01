@@ -2,11 +2,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"os"
 	"path"
 	"regexp"
@@ -39,7 +41,7 @@ func init() {
 				return generateToken(c.String("cr"))
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-result, cr", Value: "/contract-results.txt"},
+				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
 			},
 		},
 	}
@@ -57,6 +59,11 @@ func main() {
 type Token struct {
 	Symbol          string `json:"symbol"`
 	ContractAddress string `json:"contractAddress"`
+}
+
+type TokenInsert struct {
+	*Token
+	ID string
 }
 
 type TokenCode struct {
@@ -90,8 +97,37 @@ func getAbsolutePath(basePath, folder string) string {
 
 }
 
-func generateToken(contractResultFile string) error {
+func generateToken(filePath string) error {
+	_, fileName, _, _ := runtime.Caller(1)
+	basePath := path.Dir(fileName)
+	contractResultFile := getAbsolutePath(basePath, filePath)
+	tplStr := `{"_id":{"$oid":"{{.ID}}"},"symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","decimals":18,"quote":false,"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
+	tpl, _ := template.New("token").Parse(tplStr)
+	startIndex, _ := new(big.Int).SetString("5b8ba09da75a9b1320ca4974", 16)
+	oneBig := big.NewInt(1)
+	// now matching data from contract-resultFile
+	resultData, _ := ioutil.ReadFile(contractResultFile)
+	// ?m: is notation tell this will match multiline
+	tokenAndAddress := regexp.MustCompile(`(?m:^\s*([\w]+)\s*:\s*(.*?)\s*$)`)
+	// TOMO: 0x4f696e8a1a3fb3aea9f72eb100ea8d97c5130b32
+	matches := tokenAndAddress.FindAllStringSubmatch(string(resultData), -1)
+	buffer := &bytes.Buffer{}
+	for _, match := range matches {
+		startIndex = startIndex.Add(startIndex, oneBig)
+		tokenInsert := &TokenInsert{
+			Token: &Token{
+				Symbol:          match[1],
+				ContractAddress: match[2],
+			},
+			ID: startIndex.Text(16),
+		}
 
+		tpl.Execute(buffer, tokenInsert)
+		buffer.WriteString("\n")
+	}
+	tokenFile := path.Join(basePath, "tokens.json")
+	ioutil.WriteFile(tokenFile, buffer.Bytes(), os.ModePerm)
+	fmt.Printf("Token json data: %s\n", buffer.String())
 	return nil
 }
 
