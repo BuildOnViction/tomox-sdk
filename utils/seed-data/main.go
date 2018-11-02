@@ -38,28 +38,28 @@ func init() {
 		cli.Command{
 			Name: "tokens",
 			Action: func(c *cli.Context) error {
-				return generateTokens(c.String("cr"))
+				return generateTokens(c.String("ccf"))
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
+				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
 			},
 		},
 		cli.Command{
 			Name: "pairs",
 			Action: func(c *cli.Context) error {
-				return generatePairs(c.String("cr"))
+				return generatePairs(c.String("ccf"))
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
+				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
 			},
 		},
 		cli.Command{
 			Name: "accounts",
 			Action: func(c *cli.Context) error {
-				return generateAccounts(c.String("cr"))
+				return generateAccounts(c.String("ccf"))
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
+				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
 			},
 		},
 	}
@@ -115,19 +115,23 @@ func getAbsolutePath(basePath, folder string) string {
 
 }
 
-func getGroupsFromContractResultFile(contractResultFile string) (groups map[string]string) {
-	// now matching data from contract-resultFile
-	resultData, _ := ioutil.ReadFile(contractResultFile)
-	// ?m: is notation tell this will match multiline
-	tokenAndAddress := regexp.MustCompile(`(?m:^\s*([\w]+)\s*:\s*(.*?)\s*$)`)
-	// TOMO: 0x4f696e8a1a3fb3aea9f72eb100ea8d97c5130b32
-	groups = make(map[string]string)
-	matches := tokenAndAddress.FindAllStringSubmatch(string(resultData), -1)
-	for _, match := range matches {
-		groups[match[1]] = match[2]
-	}
+func getGroupsFromContractResultFile(contractResultFile string) map[string]interface{} {
+	// // now matching data from contract-resultFile
+	// resultData, _ := ioutil.ReadFile(contractResultFile)
+	// // ?m: is notation tell this will match multiline
+	// tokenAndAddress := regexp.MustCompile(`(?m:^\s*([\w]+)\s*:\s*(.*?)\s*$)`)
+	// // TOMO: 0x4f696e8a1a3fb3aea9f72eb100ea8d97c5130b32
+	// groups = make(map[string]string)
+	// matches := tokenAndAddress.FindAllStringSubmatch(string(resultData), -1)
+	// for _, match := range matches {
+	// 	groups[match[1]] = match[2]
+	// }
 
-	return groups
+	// return groups
+	var ret map[string]interface{}
+	bytes, _ := ioutil.ReadFile(contractResultFile)
+	json.Unmarshal(bytes, &ret)
+	return ret["8888"].(map[string]interface{})
 }
 
 func generatePairs(filePath string) error {
@@ -135,7 +139,7 @@ func generatePairs(filePath string) error {
 	basePath := path.Dir(fileName)
 	// first create a list from pairs.json, then update it using matches
 	pairsFile := path.Join(basePath, "pairs.json")
-	contractResultFile := getAbsolutePath(basePath, filePath)
+	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
 	groups := getGroupsFromContractResultFile(contractResultFile)
 	buffer := &bytes.Buffer{}
 	file, err := os.Open(pairsFile)
@@ -174,7 +178,7 @@ func generateAccounts(filePath string) error {
 	basePath := path.Dir(fileName)
 	// first create a list from pairs.json, then update it using matches
 	accountFile := path.Join(basePath, "accounts.json")
-	contractResultFile := getAbsolutePath(basePath, filePath)
+	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
 	groups := getGroupsFromContractResultFile(contractResultFile)
 
 	bytes, _ := ioutil.ReadFile(accountFile)
@@ -189,7 +193,7 @@ func generateAccounts(filePath string) error {
 		tokenBalanceMap := tokenBalance.(map[string]interface{})
 		if address, ok := groups[tokenBalanceMap["symbol"].(string)]; ok {
 			tokenBalanceMap["address"] = address
-			updateTokenBalances[address] = tokenBalance
+			updateTokenBalances[address.(string)] = tokenBalance
 		} else {
 			updateTokenBalances[oldAddress] = tokenBalance
 		}
@@ -205,7 +209,7 @@ func generateAccounts(filePath string) error {
 func generateTokens(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
-	contractResultFile := getAbsolutePath(basePath, filePath)
+	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
 	tplStr := `{"_id":{"$oid":"{{.ID}}"},"symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","decimals":18,"quote":false,"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
 	tpl, _ := template.New("token").Parse(tplStr)
 	startIndex, _ := new(big.Int).SetString("5b8ba09da75a9b1320ca4974", 16)
@@ -217,7 +221,7 @@ func generateTokens(filePath string) error {
 		tokenInsert := &TokenInsert{
 			Token: &Token{
 				Symbol:          symbol,
-				ContractAddress: address,
+				ContractAddress: address.(string),
 			},
 			ID: startIndex.Text(16),
 		}
