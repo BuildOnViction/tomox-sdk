@@ -1,7 +1,7 @@
 # The Data Source Name for the database
 # Make sure you override this in production with the environment variable: RESTFUL_DSN
 dsn: 'mongodb://mongodb:27017/'
-db_name: proofdex
+db_name: tomodex
 
 rabbitmq: amqp://guest:guest@rabbitmq:5672/
 redis: redis://redis:6379

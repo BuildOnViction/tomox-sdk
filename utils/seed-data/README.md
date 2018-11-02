@@ -2,9 +2,14 @@
 
 `go run main.go genesis -cbf dex-contracts/build/contracts -out dex-protocol/OrderBook`
 
-## Generate tokens seed data
+## Generate tokens, accounts, pairs seed data
 
-`go run main.go tokens -cr contract-results.txt`  
+```go
+go run main.go tokens -cr contract-results.txt
+go run main.go accounts -cr contract-results.txt
+go run main.go pairs -cr contract-results.txt
+```
+
 To use image instead of icon, append this
 
 ```json

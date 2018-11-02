@@ -643,8 +643,8 @@ func ExampleGetOrderBook() {
 	}
 
 	db = &Database{session}
-	pairDao := NewPairDao(PairDaoDBOption("proofdex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("proofdex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
 	pair, err := pairDao.GetByTokenSymbols("BAT", "WETH")
 	if err != nil {
 		panic(err)
@@ -667,8 +667,8 @@ func ExampleGetOrderBookPricePoint() {
 
 	db = &Database{session}
 
-	pairDao := NewPairDao(PairDaoDBOption("proofdex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("proofdex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
 	pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
 	if err != nil {
 		panic(err)
@@ -690,8 +690,8 @@ func ExampleGetRawOrderBook() {
 
 	db = &Database{session}
 
-	pairDao := NewPairDao(PairDaoDBOption("proofdex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("proofdex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
 	pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
 	if err != nil {
 		panic(err)

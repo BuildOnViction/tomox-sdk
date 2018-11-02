@@ -38,7 +38,25 @@ func init() {
 		cli.Command{
 			Name: "tokens",
 			Action: func(c *cli.Context) error {
-				return generateToken(c.String("cr"))
+				return generateTokens(c.String("cr"))
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
+			},
+		},
+		cli.Command{
+			Name: "pairs",
+			Action: func(c *cli.Context) error {
+				return generatePairs(c.String("cr"))
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
+			},
+		},
+		cli.Command{
+			Name: "accounts",
+			Action: func(c *cli.Context) error {
+				return generateAccounts(c.String("cr"))
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "contract-result, cr", Value: "./contract-results.txt"},
@@ -97,7 +115,94 @@ func getAbsolutePath(basePath, folder string) string {
 
 }
 
-func generateToken(filePath string) error {
+func getGroupsFromContractResultFile(contractResultFile string) (groups map[string]string) {
+	// now matching data from contract-resultFile
+	resultData, _ := ioutil.ReadFile(contractResultFile)
+	// ?m: is notation tell this will match multiline
+	tokenAndAddress := regexp.MustCompile(`(?m:^\s*([\w]+)\s*:\s*(.*?)\s*$)`)
+	// TOMO: 0x4f696e8a1a3fb3aea9f72eb100ea8d97c5130b32
+	groups = make(map[string]string)
+	matches := tokenAndAddress.FindAllStringSubmatch(string(resultData), -1)
+	for _, match := range matches {
+		groups[match[1]] = match[2]
+	}
+
+	return groups
+}
+
+func generatePairs(filePath string) error {
+	_, fileName, _, _ := runtime.Caller(1)
+	basePath := path.Dir(fileName)
+	// first create a list from pairs.json, then update it using matches
+	pairsFile := path.Join(basePath, "pairs.json")
+	contractResultFile := getAbsolutePath(basePath, filePath)
+	groups := getGroupsFromContractResultFile(contractResultFile)
+	buffer := &bytes.Buffer{}
+	file, err := os.Open(pairsFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	var objList []map[string]interface{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var obj map[string]interface{}
+		json.Unmarshal(scanner.Bytes(), &obj)
+		objList = append(objList, obj)
+	}
+
+	for _, obj := range objList {
+		if baseTokenAddress, ok := groups[obj["baseTokenSymbol"].(string)]; ok {
+			obj["baseTokenAddress"] = baseTokenAddress
+		}
+		if quoteTokenAddress, ok := groups[obj["quoteTokenAddress"].(string)]; ok {
+			obj["quoteTokenAddress"] = quoteTokenAddress
+		}
+		bytes, _ := json.Marshal(obj)
+		buffer.Write(bytes)
+		buffer.WriteString("\n")
+	}
+
+	fmt.Println(buffer.String())
+	ioutil.WriteFile(pairsFile, buffer.Bytes(), os.ModePerm)
+
+	return nil
+}
+
+func generateAccounts(filePath string) error {
+	_, fileName, _, _ := runtime.Caller(1)
+	basePath := path.Dir(fileName)
+	// first create a list from pairs.json, then update it using matches
+	accountFile := path.Join(basePath, "accounts.json")
+	contractResultFile := getAbsolutePath(basePath, filePath)
+	groups := getGroupsFromContractResultFile(contractResultFile)
+
+	bytes, _ := ioutil.ReadFile(accountFile)
+
+	var obj map[string]interface{}
+	json.Unmarshal(bytes, &obj)
+
+	tokenBalances := obj["tokenBalances"].(map[string]interface{})
+	updateTokenBalances := make(map[string]interface{})
+
+	for oldAddress, tokenBalance := range tokenBalances {
+		tokenBalanceMap := tokenBalance.(map[string]interface{})
+		if address, ok := groups[tokenBalanceMap["symbol"].(string)]; ok {
+			tokenBalanceMap["address"] = address
+			updateTokenBalances[address] = tokenBalance
+		} else {
+			updateTokenBalances[oldAddress] = tokenBalance
+		}
+	}
+	obj["tokenBalances"] = updateTokenBalances
+	bytes, _ = json.MarshalIndent(obj, "", "  ")
+	fmt.Println(string(bytes))
+	ioutil.WriteFile(accountFile, bytes, os.ModePerm)
+
+	return nil
+}
+
+func generateTokens(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
 	contractResultFile := getAbsolutePath(basePath, filePath)
@@ -105,19 +210,14 @@ func generateToken(filePath string) error {
 	tpl, _ := template.New("token").Parse(tplStr)
 	startIndex, _ := new(big.Int).SetString("5b8ba09da75a9b1320ca4974", 16)
 	oneBig := big.NewInt(1)
-	// now matching data from contract-resultFile
-	resultData, _ := ioutil.ReadFile(contractResultFile)
-	// ?m: is notation tell this will match multiline
-	tokenAndAddress := regexp.MustCompile(`(?m:^\s*([\w]+)\s*:\s*(.*?)\s*$)`)
-	// TOMO: 0x4f696e8a1a3fb3aea9f72eb100ea8d97c5130b32
-	matches := tokenAndAddress.FindAllStringSubmatch(string(resultData), -1)
+	groups := getGroupsFromContractResultFile(contractResultFile)
 	buffer := &bytes.Buffer{}
-	for _, match := range matches {
+	for symbol, address := range groups {
 		startIndex = startIndex.Add(startIndex, oneBig)
 		tokenInsert := &TokenInsert{
 			Token: &Token{
-				Symbol:          match[1],
-				ContractAddress: match[2],
+				Symbol:          symbol,
+				ContractAddress: address,
 			},
 			ID: startIndex.Text(16),
 		}

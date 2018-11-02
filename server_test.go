@@ -16,7 +16,7 @@ func TestApp(t *testing.T) {
 		panic(fmt.Errorf("Invalid application configuration: %s", err))
 	}
 
-	app.Config.DBName = "proofdextest"
+	app.Config.DBName = "tomodextest"
 	// load error messages
 	if err := errors.LoadMessages(app.Config.ErrorFile); err != nil {
 		panic(fmt.Errorf("Failed to read the error message file: %s", err))

@@ -51,10 +51,10 @@ services:
       - /bin/sh
       - -c
       - |
-        mongo proofdex --eval "db.dropDatabase()"
-        mongoimport --host mongodb --db proofdex --type json --file utils/seed-data/tokens.json
-        mongoimport --host mongodb --db proofdex --type json --file utils/seed-data/pairs.json
-        mongoimport --host mongodb --db proofdex --type json --file utils/seed-data/accounts.json
+        mongo tomodex --eval "db.dropDatabase()"
+        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/tokens.json
+        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/pairs.json
+        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/accounts.json
 
 # USEFUL COMMANDS TO BE REINCLUDED LATER
 
