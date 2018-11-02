@@ -118,6 +118,7 @@ type Engine interface {
 	CancelTrades(orders []*types.Order, amount []*big.Int) error
 	DeleteOrder(o *types.Order) error
 	DeleteOrders(orders ...types.Order) error
+	Provider() EthereumProvider
 }
 
 type WalletService interface {

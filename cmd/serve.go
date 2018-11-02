@@ -91,7 +91,7 @@ func RegisterRouter(
 	walletDao := daos.NewWalletDao()
 
 	// instantiate engine
-	eng := engine.NewEngine(redisConn, rabbitConn, pairDao)
+	eng := engine.NewEngine(redisConn, rabbitConn, pairDao, provider)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao)
@@ -99,7 +99,7 @@ func RegisterRouter(
 	tokenService := services.NewTokenService(tokenDao)
 	tradeService := services.NewTradeService(tradeDao)
 	pairService := services.NewPairService(pairDao, tokenDao, eng, tradeService)
-	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, provider, rabbitConn)
+	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	walletService := services.NewWalletService(walletDao)
 	cronService := crons.NewCronService(ohlcvService)

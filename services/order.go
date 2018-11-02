@@ -10,7 +10,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/utils/math"
@@ -25,13 +24,12 @@ import (
 // OrderService struct with daos required, responsible for communicating with daos.
 // OrderService functions are responsible for interacting with daos and implements business logics.
 type OrderService struct {
-	orderDao         interfaces.OrderDao
-	pairDao          interfaces.PairDao
-	accountDao       interfaces.AccountDao
-	tradeDao         interfaces.TradeDao
-	engine           interfaces.Engine
-	ethereumProvider interfaces.EthereumProvider
-	broker           *rabbitmq.Connection
+	orderDao   interfaces.OrderDao
+	pairDao    interfaces.PairDao
+	accountDao interfaces.AccountDao
+	tradeDao   interfaces.TradeDao
+	engine     interfaces.Engine
+	broker     *rabbitmq.Connection
 }
 
 // NewOrderService returns a new instance of orderservice
@@ -41,7 +39,6 @@ func NewOrderService(
 	accountDao interfaces.AccountDao,
 	tradeDao interfaces.TradeDao,
 	engine interfaces.Engine,
-	ethereumProvider interfaces.EthereumProvider,
 	broker *rabbitmq.Connection,
 ) *OrderService {
 	return &OrderService{
@@ -50,13 +47,8 @@ func NewOrderService(
 		accountDao,
 		tradeDao,
 		engine,
-		ethereumProvider,
 		broker,
 	}
-}
-
-func (s *OrderService) Provider() *ethereum.EthereumProvider {
-	return s.ethereumProvider.(*ethereum.EthereumProvider)
 }
 
 // GetByID fetches the details of an order using order's mongo ID
@@ -144,13 +136,15 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
-	wethBalance, err := s.ethereumProvider.BalanceOf(o.UserAddress, wethAddress)
+	ethereumProvider := s.engine.Provider()
+
+	wethBalance, err := ethereumProvider.BalanceOf(o.UserAddress, wethAddress)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	wethAllowance, err := s.ethereumProvider.Allowance(o.UserAddress, exchangeAddress, wethAddress)
+	wethAllowance, err := ethereumProvider.Allowance(o.UserAddress, exchangeAddress, wethAddress)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -162,13 +156,13 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
-	sellTokenBalance, err := s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken)
+	sellTokenBalance, err := ethereumProvider.BalanceOf(o.UserAddress, o.SellToken)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	sellTokenAllowance, err := s.ethereumProvider.Allowance(o.UserAddress, exchangeAddress, o.SellToken)
+	sellTokenAllowance, err := ethereumProvider.Allowance(o.UserAddress, exchangeAddress, o.SellToken)
 	if err != nil {
 		logger.Error(err)
 		return err

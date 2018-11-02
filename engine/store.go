@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/ethereum/go-ethereum/common"
 )
+
+// this store will not update orderbook but subscribe and download from swarm feed
+// it only acts as a relayer, to process order and show information
+// todo: implement orderbook as a protocol in blockchain ?
 
 // GetPricePoints returns the pricepoints matching a certain (pair, pricepoint)
 func (ob *OrderBook) GetMatchingBuyPricePoints(obKey string, pricePoint int64) ([]int64, error) {

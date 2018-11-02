@@ -7,8 +7,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
+	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/services"
 
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
@@ -50,8 +50,7 @@ func (e *orderEndpoint) handleGetOrdersAction(c *gin.Context) {
 func (e *orderEndpoint) handleGetOrdersFromPss(c *gin.Context) {
 	coin := c.Param("action")
 	addr := c.Param("address")
-	orderService := e.orderService.(*services.OrderService)
-	rpcClient := orderService.Provider().RPCClient
+	rpcClient := e.engine.Provider().(*ethereum.EthereumProvider).RPCClient
 	var orderResult interface{}
 	rpcClient.Call(&orderResult, "orderbook_getOrders", coin, addr)
 

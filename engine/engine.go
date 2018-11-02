@@ -6,12 +6,13 @@ import (
 	"math/big"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // Engine contains daos and redis connection required for engine to work
@@ -19,6 +20,7 @@ type Engine struct {
 	orderbooks   map[string]*OrderBook
 	redisConn    *redis.RedisConnection
 	rabbitMQConn *rabbitmq.Connection
+	provider     *ethereum.EthereumProvider
 }
 
 var logger = utils.EngineLogger
@@ -28,6 +30,7 @@ func NewEngine(
 	redisConn *redis.RedisConnection,
 	rabbitMQConn *rabbitmq.Connection,
 	pairDao interfaces.PairDao,
+	provider *ethereum.EthereumProvider,
 ) *Engine {
 
 	pairs, err := pairDao.GetAll()
@@ -47,8 +50,13 @@ func NewEngine(
 		obs[p.Code()] = ob
 	}
 
-	engine := &Engine{obs, redisConn, rabbitMQConn}
+	engine := &Engine{obs, redisConn, rabbitMQConn, provider}
 	return engine
+}
+
+// Provider : implement engine interface
+func (e *Engine) Provider() interfaces.EthereumProvider {
+	return e.provider
 }
 
 // HandleOrders parses incoming rabbitmq order messages and redirects them to the appropriate
@@ -116,6 +124,11 @@ func (e *Engine) newOrder(o *types.Order, hashID common.Hash) error {
 		logger.Error(err)
 		return err
 	}
+
+	// e.provider.RPCClient.Call()
+
+	// also publish this order to PSS :D
+	// TODO: call websocket to push the order to swarm feed with signature as well
 
 	return nil
 }

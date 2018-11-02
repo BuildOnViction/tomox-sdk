@@ -23,16 +23,17 @@ package engine
 // Keys: hash
 // Values: serialized order
 
+// this engine could be replaced by Orderbook engine in protocol
 import (
 	"encoding/json"
 	"math/big"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/math"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type OrderBook struct {
