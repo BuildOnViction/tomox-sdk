@@ -79,8 +79,15 @@ type Token struct {
 	ContractAddress string `json:"contractAddress"`
 }
 
+type ImageInsert struct {
+	ImageURL string `json:"url"`
+	// meta can be null
+	ImageMeta string `json:"meta"`
+}
+
 type TokenInsert struct {
 	*Token
+	ImageInsert
 	ID string
 }
 
@@ -210,13 +217,25 @@ func generateTokens(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
 	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
-	tplStr := `{"_id":{"$oid":"{{.ID}}"},"symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","decimals":18,"quote":false,"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
+	imagesConfigFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "images.json"))
+	imagesConfigBytes, _ := ioutil.ReadFile(imagesConfigFile)
+	// with RawMessage we can deserialize whatever type
+	var imagesConfigMap map[string]map[string]*ImageInsert
+	json.Unmarshal(imagesConfigBytes, &imagesConfigMap)
+	imagesConfig := imagesConfigMap["8888"]
+	// fmt.Println(imagesConfig)
+
+	tplStr := `{"_id":{"$oid":"{{.ID}}"},"symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","image":{"url":"{{.ImageURL}}","meta":"{{.ImageMeta}}"},"decimals":18,"quote":false,"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
 	tpl, _ := template.New("token").Parse(tplStr)
 	startIndex, _ := new(big.Int).SetString("5b8ba09da75a9b1320ca4974", 16)
 	oneBig := big.NewInt(1)
 	groups := getGroupsFromContractResultFile(contractResultFile)
 	buffer := &bytes.Buffer{}
 	for symbol, address := range groups {
+		if symbol == "Exchange" {
+			continue
+		}
+
 		startIndex = startIndex.Add(startIndex, oneBig)
 		tokenInsert := &TokenInsert{
 			Token: &Token{
@@ -224,6 +243,12 @@ func generateTokens(filePath string) error {
 				ContractAddress: address.(string),
 			},
 			ID: startIndex.Text(16),
+		}
+
+		imageData, ok := imagesConfig[symbol]
+		if ok {
+			tokenInsert.ImageURL = imageData.ImageURL
+			tokenInsert.ImageMeta = imageData.ImageMeta
 		}
 
 		tpl.Execute(buffer, tokenInsert)

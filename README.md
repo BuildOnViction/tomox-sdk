@@ -34,6 +34,8 @@ _If you need to generate genesis block, take a look at [seed-data](./utils/seed-
 ```bash
 # start dockers including mongo, redis, rabbitmq
 yarn start-env
+# generate seeds data
+yarn generate-seeds
 # seed the sample data
 yarn seeds
 # this will start the server in hot-reload mode
