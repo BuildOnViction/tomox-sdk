@@ -32,7 +32,6 @@ func ServePairResource(
 
 func (e *pairEndpoint) handleCreatePair(c *gin.Context) {
 	p := &types.Pair{}
-	c.BindJSON(p)
 	err := c.BindJSON(p)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, GinError("Invalid payload"))

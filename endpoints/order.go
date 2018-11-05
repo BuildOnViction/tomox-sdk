@@ -5,7 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/rpc"
+
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/gin-gonic/gin"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
@@ -30,32 +33,111 @@ func ServeOrderResource(
 	r.GET("/orders/:address", e.handleGetOrders)
 	r.GET("/orders/:address/:action", e.handleGetOrdersAction)
 
+	r.POST("/orders/:address/:action/encode", e.handleEncode)
+
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
+}
+
+func (e *orderEndpoint) getRPCClient() *rpc.Client {
+	return e.engine.Provider().(*ethereum.EthereumProvider).RPCClient
 }
 
 func (e *orderEndpoint) handleGetOrdersAction(c *gin.Context) {
 	// vars := mux.Vars(r)
 	action := c.Param("action")
 
-	if action == "history" {
+	switch action {
+	case "history":
 		e.handleGetOrderHistory(c)
-	} else if action == "current" {
+	case "current":
 		e.handleGetPositions(c)
-	} else {
+	default:
 		e.handleGetOrdersFromPss(c)
 	}
 
 }
 
+type OrderbookMsg struct {
+	Timestamp uint64
+	Type      string
+	Side      string
+	Quantity  string
+	Price     string
+	Coin      string
+	ID        string
+	TradeID   string
+}
+
 func (e *orderEndpoint) handleGetOrdersFromPss(c *gin.Context) {
 	coin := c.Param("action")
 	addr := c.Param("address")
-	rpcClient := e.engine.Provider().(*ethereum.EthereumProvider).RPCClient
-	var orderResult interface{}
+	rpcClient := e.getRPCClient()
+	var orderResult []OrderbookMsg
 	rpcClient.Call(&orderResult, "orderbook_getOrders", coin, addr)
 
 	c.JSON(http.StatusOK, orderResult)
 
+}
+
+func (e *orderEndpoint) handleEncode(c *gin.Context) {
+
+	// deserialize order, in the future can use cargo to batch
+	// return byte update to client to update, even it can not extend chunk size, the actual storage size is not chunk size
+	// Topic "Tomo" will give us information like user type, how many slots corresponding to IDs
+	var msg = &OrderbookMsg{}
+
+	c.BindJSON(msg)
+
+	// coin := c.Param("action")
+	// addr := c.Param("address")
+	// rpcClient := e.getRPCClient()
+	var messages []OrderbookMsg
+	// rpcClient.Call(&messages, "orderbook_getOrders", coin, addr)
+
+	// log.Printf("order results: %s", messages)
+	// // on server, try update if fail then create
+	// if messages == nil {
+	// 	messages = []OrderbookMsg{*msg}
+	// } else {
+	// 	// find item if found then append, else update
+	// 	var found = false
+	// 	for i, message := range messages {
+	// 		if message.ID == msg.ID {
+	// 			found = true
+	// 			messages[i] = *msg
+	// 			break
+	// 		}
+	// 	}
+	// 	if !found {
+	// 		messages = append(messages, *msg)
+	// 	}
+	// }
+
+	messages = []OrderbookMsg{*msg}
+
+	data, _ := rlp.EncodeToBytes(messages)
+	c.Data(http.StatusOK, "application/octet-stream", data)
+
+	// topic, _ := feed.NewTopic("Token", []byte("Tomo"))
+	// request := new(feed.Request)
+
+	// // get the current time
+
+	// request.Epoch = lookup.Epoch{
+	// 	Time:  1538650124,
+	// 	Level: 25,
+	// }
+	// request.Feed.Topic = topic
+	// request.Header.Version = 0
+
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"topic": topic.Hex(),
+	// 	"epoch": gin.H{
+	// 		"time":  request.Time,
+	// 		"level": request.Level,
+	// 	},
+	// 	"data": data,
+	// })
 }
 
 func (e *orderEndpoint) handleGetOrders(c *gin.Context) {
