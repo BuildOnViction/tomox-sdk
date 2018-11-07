@@ -91,6 +91,10 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
+	if acc == nil {
+		return fmt.Errorf("Address: %s is not existed", o.UserAddress.Hex())
+	}
+
 	if acc.IsBlocked {
 		return fmt.Errorf("Address: %+v isBlocked", acc)
 	}
@@ -119,6 +123,11 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 	if p == nil {
 		return errors.New("Pair not found")
 	}
+
+	if p.PriceMultiplier == nil {
+		p.PriceMultiplier = big.NewInt(1e6)
+	}
+	// logger.Infof("pair :%+v", p)
 
 	// Fill token and pair data
 	err = o.Process(p)

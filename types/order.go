@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/utils/math"
@@ -47,23 +46,6 @@ type Order struct {
 
 // Validate : validate a valid order
 func (o *Order) Validate() error {
-	err := validation.ValidateStruct(o,
-		validation.Field(o.ExchangeAddress, validation.Required),
-		validation.Field(o.UserAddress, validation.Required),
-		validation.Field(o.SellToken, validation.Required),
-		validation.Field(o.BuyToken, validation.Required),
-		validation.Field(o.MakeFee, validation.Required),
-		validation.Field(o.TakeFee, validation.Required),
-		validation.Field(o.Nonce, validation.Required),
-		validation.Field(o.Expires, validation.Required),
-		validation.Field(o.SellAmount, validation.Required),
-		validation.Field(o.UserAddress, validation.Required),
-		validation.Field(o.Signature, validation.Required),
-	)
-
-	if err != nil {
-		return err
-	}
 
 	if o.ExchangeAddress != common.HexToAddress(app.Config.Ethereum["exchange_address"]) {
 		return errors.New("Incorrect exchange address")

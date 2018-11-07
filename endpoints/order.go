@@ -45,7 +45,6 @@ func (e *orderEndpoint) getRPCClient() *rpc.Client {
 }
 
 func (e *orderEndpoint) handleGetOrdersAction(c *gin.Context) {
-	// vars := mux.Vars(r)
 	action := c.Param("action")
 
 	switch action {
@@ -170,7 +169,7 @@ func (e *orderEndpoint) ws(input interface{}, conn *ws.Conn) {
 		case "SUBMIT_SIGNATURE":
 			e.handleSubmitSignatures(msg, conn)
 		default:
-			log.Print("Response with error")
+			log.Printf("Unknown event type: %s", msg.Type)
 		}
 	}
 }
@@ -179,6 +178,7 @@ func (e *orderEndpoint) ws(input interface{}, conn *ws.Conn) {
 // and received in the handleClientResponse.
 func (e *orderEndpoint) handleSubmitSignatures(p *types.WebsocketEvent, conn *ws.Conn) {
 	hash := common.HexToHash(p.Hash)
+	// get order channel return the channel of the order by its hash, waiting for data to be updated
 	ch := ws.GetOrderChannel(hash)
 
 	if ch != nil {
@@ -189,36 +189,34 @@ func (e *orderEndpoint) handleSubmitSignatures(p *types.WebsocketEvent, conn *ws
 // handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
 func (e *orderEndpoint) handleNewOrder(msg *types.WebsocketEvent, conn *ws.Conn) {
 
-	// o := &types.Order{}
+	o := &types.Order{}
 
-	// bytes, err := json.Marshal(msg.Payload)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
-	// 	return
-	// }
+	bytes, err := json.Marshal(msg.Payload)
+	if err != nil {
+		logger.Error(err)
+		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
+		return
+	}
 
-	// err = json.Unmarshal(bytes, &o)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
-	// 	return
-	// }
+	err = json.Unmarshal(bytes, &o)
+	if err != nil {
+		logger.Error(err)
+		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
+		return
+	}
 
-	// o.Hash = o.ComputeHash()
+	o.Hash = o.ComputeHash()
 
-	ws.SendMessage(conn, ws.OrderChannel, ws.UPDATE, msg.Payload)
+	ch := make(chan *types.WebsocketEvent)
+	ws.RegisterOrderConnection(o.Hash, &ws.OrderConnection{Conn: conn, ReadChannel: ch})
+	ws.RegisterConnectionUnsubscribeHandler(conn, ws.OrderSocketUnsubscribeHandler(o.Hash))
 
-	// ch := make(chan *types.WebsocketEvent)
-	// ws.RegisterOrderConnection(o.Hash, &ws.OrderConnection{Conn: conn, ReadChannel: ch})
-	// ws.RegisterConnectionUnsubscribeHandler(conn, ws.OrderSocketUnsubscribeHandler(o.Hash))
-
-	// err = e.orderService.NewOrder(o)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
-	// 	return
-	// }
+	err = e.orderService.NewOrder(o)
+	if err != nil {
+		logger.Error(err)
+		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
+		return
+	}
 }
 
 // handleCancelOrder handles CancelOrder message.

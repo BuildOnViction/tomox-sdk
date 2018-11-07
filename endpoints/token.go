@@ -27,7 +27,7 @@ func ServeTokenResource(
 	r.GET("/tokens", e.handleGetTokens)
 	r.POST("/tokens", e.handleCreateTokens)
 
-	ws.RegisterChannel(ws.OrderChannel, e.ws)
+	ws.RegisterChannel(ws.TokenChannel, e.ws)
 }
 
 func (e *tokenEndpoint) handleCreateTokens(c *gin.Context) {
@@ -125,7 +125,7 @@ func (e *tokenEndpoint) ws(input interface{}, conn *ws.Conn) {
 			e.handleGetTokensWS(msg, conn)
 			log.Printf("Data: %+v", msg)
 		default:
-			log.Print("Response with error")
+			log.Printf("Unknown event type: %s", msg.Type)
 		}
 	}
 }
@@ -136,9 +136,9 @@ func (e *tokenEndpoint) handleGetTokensWS(p *types.WebsocketEvent, conn *ws.Conn
 	res, err := e.tokenService.GetAll()
 	if err != nil {
 		logger.Error(err)
-		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, GinError(""))
+		ws.SendMessage(conn, ws.TokenChannel, ws.ERROR, GinError(""))
 		return
 	}
 
-	ws.SendMessage(conn, ws.OrderChannel, ws.UPDATE, res)
+	ws.SendMessage(conn, ws.TokenChannel, ws.UPDATE, res)
 }

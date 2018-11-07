@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/spf13/viper"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -22,9 +23,21 @@ var (
 	app = cli.NewApp()
 )
 
+func batch(filePath string, funcs ...func(string) error) error {
+	var err error
+	for _, funcObj := range funcs {
+		err = funcObj(filePath)
+		if err != nil {
+			break
+		}
+	}
+	return err
+}
+
 func init() {
 	// Initialize the CLI app and start tomo
 	app.Commands = []cli.Command{
+
 		cli.Command{
 			Name: "genesis",
 			Action: func(c *cli.Context) error {
@@ -36,27 +49,16 @@ func init() {
 			},
 		},
 		cli.Command{
-			Name: "tokens",
+			Name: "seeds",
 			Action: func(c *cli.Context) error {
-				return generateTokens(c.String("ccf"))
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
-			},
-		},
-		cli.Command{
-			Name: "pairs",
-			Action: func(c *cli.Context) error {
-				return generatePairs(c.String("ccf"))
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
-			},
-		},
-		cli.Command{
-			Name: "accounts",
-			Action: func(c *cli.Context) error {
-				return generateAccounts(c.String("ccf"))
+				filePath := c.String("ccf")
+				return batch(
+					filePath,
+					generateConfig,
+					generateTokens,
+					generatePairs,
+					generateAccounts,
+				)
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
@@ -141,6 +143,35 @@ func getGroupsFromContractResultFile(contractResultFile string) map[string]inter
 	return ret["8888"].(map[string]interface{})
 }
 
+func generateConfig(filePath string) error {
+	_, fileName, _, _ := runtime.Caller(1)
+	basePath := path.Dir(fileName)
+	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
+
+	groups := getGroupsFromContractResultFile(contractResultFile)
+
+	configPath := path.Join(basePath, "../../config")
+	v := viper.New()
+	v.SetConfigName("config.sample")
+	v.SetConfigType("yaml")
+	v.AddConfigPath(configPath)
+
+	if err := v.ReadInConfig(); err != nil {
+		return fmt.Errorf("Failed to read the configuration file: %s", err)
+	}
+
+	ethereumConfig := v.GetStringMap("ethereum")
+
+	ethereumConfig["exchange_address"] = groups["Exchange"]
+	ethereumConfig["weth_address"] = groups["WETH"]
+
+	v.SetDefault("ethereum", ethereumConfig)
+
+	err := v.WriteConfigAs(path.Join(configPath, "config.yaml"))
+
+	return err
+}
+
 func generatePairs(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
@@ -166,7 +197,7 @@ func generatePairs(filePath string) error {
 		if baseTokenAddress, ok := groups[obj["baseTokenSymbol"].(string)]; ok {
 			obj["baseTokenAddress"] = baseTokenAddress
 		}
-		if quoteTokenAddress, ok := groups[obj["quoteTokenAddress"].(string)]; ok {
+		if quoteTokenAddress, ok := groups[obj["quoteTokenSymbol"].(string)]; ok {
 			obj["quoteTokenAddress"] = quoteTokenAddress
 		}
 		bytes, _ := json.Marshal(obj)

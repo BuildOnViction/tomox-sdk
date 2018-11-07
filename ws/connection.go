@@ -19,6 +19,7 @@ const (
 	RawOrderBookChannel = "raw_orderbook"
 	OrderBookChannel    = "orderbook"
 	OrderChannel        = "orders"
+	TokenChannel        = "tokens"
 	// this allows us to update all the tokens from web socket in realtime manner
 	OHLCVChannel = "ohlcv"
 )
