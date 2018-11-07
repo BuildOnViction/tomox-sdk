@@ -7,12 +7,13 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/utils/math"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/backend-matching-engine/utils/math"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -44,24 +45,25 @@ type Order struct {
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
+// Validate : validate a valid order
 func (o *Order) Validate() error {
-	// err := validation.ValidateStruct(o,
-	// 	validation.Field(o.ExchangeAddress, validation.Required),
-	// 	validation.Field(o.UserAddress, validation.Required),
-	// 	validation.Field(o.SellToken, validation.Required),
-	// 	validation.Field(o.BuyToken, validation.Required),
-	// 	validation.Field(o.MakeFee, validation.Required),
-	// 	validation.Field(o.TakeFee, validation.Required),
-	// 	validation.Field(o.Nonce, validation.Required),
-	// 	validation.Field(o.Expires, validation.Required),
-	// 	validation.Field(o.SellAmount, validation.Required),
-	// 	validation.Field(o.UserAddress, validation.Required),
-	// 	validation.Field(o.Signature, validation.Required),
-	// )
+	err := validation.ValidateStruct(o,
+		validation.Field(o.ExchangeAddress, validation.Required),
+		validation.Field(o.UserAddress, validation.Required),
+		validation.Field(o.SellToken, validation.Required),
+		validation.Field(o.BuyToken, validation.Required),
+		validation.Field(o.MakeFee, validation.Required),
+		validation.Field(o.TakeFee, validation.Required),
+		validation.Field(o.Nonce, validation.Required),
+		validation.Field(o.Expires, validation.Required),
+		validation.Field(o.SellAmount, validation.Required),
+		validation.Field(o.UserAddress, validation.Required),
+		validation.Field(o.Signature, validation.Required),
+	)
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
 	if o.ExchangeAddress != common.HexToAddress(app.Config.Ethereum["exchange_address"]) {
 		return errors.New("Incorrect exchange address")
@@ -82,7 +84,7 @@ func (o *Order) Validate() error {
 	return nil
 }
 
-// ComputeHash calculates the orderRequest hash
+// ComputeHash: calculates the orderRequest hash, should calculate at server and need client to sign
 func (o *Order) ComputeHash() common.Hash {
 	sha := sha3.NewKeccak256()
 	sha.Write(o.ExchangeAddress.Bytes())
@@ -98,7 +100,8 @@ func (o *Order) ComputeHash() common.Hash {
 	return common.BytesToHash(sha.Sum(nil))
 }
 
-// VerifySignature checks that the orderRequest signature corresponds to the address in the userAddress field
+// VerifySignature: checks that the orderRequest signature corresponds to the address in the userAddress field
+// If client send the correct signature then update to swarm, need to have a FeedID in order at mongo
 func (o *Order) VerifySignature() (bool, error) {
 	o.Hash = o.ComputeHash()
 	message := crypto.Keccak256(

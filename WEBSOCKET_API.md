@@ -347,18 +347,19 @@ where
 
 The general format of the GET_TOKENS message is the following:
 
-````json
+```json
 {
   "channel": "orders",
   "event": {
-    "type": "GET_TOKENS",
+    "type": "GET_TOKENS"
   }
 }
-
+```
 
 ## NEW_ORDER (client --> server)
 
 The general format of the NEW_ORDER message is the following:
+
 ```json
 {
   "channel": "orders",
@@ -368,7 +369,7 @@ The general format of the NEW_ORDER message is the following:
     "payload": <order>,
   }
 }
-````
+```
 
 where:
 

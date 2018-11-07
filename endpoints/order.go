@@ -15,6 +15,8 @@ import (
 
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
+
+	"github.com/tomochain/orderbook/protocol"
 )
 
 type orderEndpoint struct {
@@ -57,22 +59,11 @@ func (e *orderEndpoint) handleGetOrdersAction(c *gin.Context) {
 
 }
 
-type OrderbookMsg struct {
-	Timestamp uint64
-	Type      string
-	Side      string
-	Quantity  string
-	Price     string
-	Coin      string
-	ID        string
-	TradeID   string
-}
-
 func (e *orderEndpoint) handleGetOrdersFromPss(c *gin.Context) {
 	coin := c.Param("action")
 	addr := c.Param("address")
 	rpcClient := e.getRPCClient()
-	var orderResult []OrderbookMsg
+	var orderResult []protocol.OrderbookMsg
 	rpcClient.Call(&orderResult, "orderbook_getOrders", coin, addr)
 
 	c.JSON(http.StatusOK, orderResult)
@@ -84,60 +75,37 @@ func (e *orderEndpoint) handleEncode(c *gin.Context) {
 	// deserialize order, in the future can use cargo to batch
 	// return byte update to client to update, even it can not extend chunk size, the actual storage size is not chunk size
 	// Topic "Tomo" will give us information like user type, how many slots corresponding to IDs
-	var msg = &OrderbookMsg{}
+	var msg = &protocol.OrderbookMsg{}
 
 	c.BindJSON(msg)
 
-	// coin := c.Param("action")
-	// addr := c.Param("address")
-	// rpcClient := e.getRPCClient()
-	var messages []OrderbookMsg
-	// rpcClient.Call(&messages, "orderbook_getOrders", coin, addr)
+	coin := c.Param("action")
+	addr := c.Param("address")
+	rpcClient := e.getRPCClient()
+	var messages []*protocol.OrderbookMsg
+	rpcClient.Call(&messages, "orderbook_getOrders", coin, addr)
 
-	// log.Printf("order results: %s", messages)
-	// // on server, try update if fail then create
-	// if messages == nil {
-	// 	messages = []OrderbookMsg{*msg}
-	// } else {
-	// 	// find item if found then append, else update
-	// 	var found = false
-	// 	for i, message := range messages {
-	// 		if message.ID == msg.ID {
-	// 			found = true
-	// 			messages[i] = *msg
-	// 			break
-	// 		}
-	// 	}
-	// 	if !found {
-	// 		messages = append(messages, *msg)
-	// 	}
-	// }
-
-	messages = []OrderbookMsg{*msg}
+	log.Printf("order results: %s", messages)
+	// on server, try update if fail then create
+	if messages == nil {
+		messages = []*protocol.OrderbookMsg{msg}
+	} else {
+		// find item if found then append, else update
+		var found = false
+		for i, message := range messages {
+			if message.ID == msg.ID {
+				found = true
+				messages[i] = msg
+				break
+			}
+		}
+		if !found {
+			messages = append(messages, msg)
+		}
+	}
 
 	data, _ := rlp.EncodeToBytes(messages)
 	c.Data(http.StatusOK, "application/octet-stream", data)
-
-	// topic, _ := feed.NewTopic("Token", []byte("Tomo"))
-	// request := new(feed.Request)
-
-	// // get the current time
-
-	// request.Epoch = lookup.Epoch{
-	// 	Time:  1538650124,
-	// 	Level: 25,
-	// }
-	// request.Feed.Topic = topic
-	// request.Header.Version = 0
-
-	// c.JSON(http.StatusOK, gin.H{
-	// 	"topic": topic.Hex(),
-	// 	"epoch": gin.H{
-	// 		"time":  request.Time,
-	// 		"level": request.Level,
-	// 	},
-	// 	"data": data,
-	// })
 }
 
 func (e *orderEndpoint) handleGetOrders(c *gin.Context) {
@@ -220,33 +188,37 @@ func (e *orderEndpoint) handleSubmitSignatures(p *types.WebsocketEvent, conn *ws
 
 // handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
 func (e *orderEndpoint) handleNewOrder(msg *types.WebsocketEvent, conn *ws.Conn) {
-	ch := make(chan *types.WebsocketEvent)
-	o := &types.Order{}
 
-	bytes, err := json.Marshal(msg.Payload)
-	if err != nil {
-		logger.Error(err)
-		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
-		return
-	}
+	// o := &types.Order{}
 
-	err = json.Unmarshal(bytes, &o)
-	if err != nil {
-		logger.Error(err)
-		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
-		return
-	}
+	// bytes, err := json.Marshal(msg.Payload)
+	// if err != nil {
+	// 	logger.Error(err)
+	// 	ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
+	// 	return
+	// }
 
-	o.Hash = o.ComputeHash()
-	ws.RegisterOrderConnection(o.Hash, &ws.OrderConnection{Conn: conn, ReadChannel: ch})
-	ws.RegisterConnectionUnsubscribeHandler(conn, ws.OrderSocketUnsubscribeHandler(o.Hash))
+	// err = json.Unmarshal(bytes, &o)
+	// if err != nil {
+	// 	logger.Error(err)
+	// 	ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
+	// 	return
+	// }
 
-	err = e.orderService.NewOrder(o)
-	if err != nil {
-		logger.Error(err)
-		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
-		return
-	}
+	// o.Hash = o.ComputeHash()
+
+	ws.SendMessage(conn, ws.OrderChannel, ws.UPDATE, msg.Payload)
+
+	// ch := make(chan *types.WebsocketEvent)
+	// ws.RegisterOrderConnection(o.Hash, &ws.OrderConnection{Conn: conn, ReadChannel: ch})
+	// ws.RegisterConnectionUnsubscribeHandler(conn, ws.OrderSocketUnsubscribeHandler(o.Hash))
+
+	// err = e.orderService.NewOrder(o)
+	// if err != nil {
+	// 	logger.Error(err)
+	// 	ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
+	// 	return
+	// }
 }
 
 // handleCancelOrder handles CancelOrder message.
