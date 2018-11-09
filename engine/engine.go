@@ -127,7 +127,7 @@ func (e *Engine) newOrder(o *types.Order, hashID common.Hash) error {
 
 	// e.provider.RPCClient.Call()
 
-	// also publish this order to PSS :D
+	// also update this order to PSS :D
 	// TODO: call websocket to push the order to swarm feed with signature as well
 
 	return nil

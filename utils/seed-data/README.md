@@ -5,9 +5,7 @@
 ## Generate tokens, accounts, pairs seed data
 
 ```go
-go run main.go tokens -cr contract-results.txt
-go run main.go accounts -cr contract-results.txt
-go run main.go pairs -cr contract-results.txt
+go run main.go seeds -ccf ../../../client/src/config
 ```
 
 To use image instead of icon, append this

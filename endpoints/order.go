@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/gin-gonic/gin"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
@@ -35,7 +34,7 @@ func ServeOrderResource(
 	r.GET("/orders/:address", e.handleGetOrders)
 	r.GET("/orders/:address/:action", e.handleGetOrdersAction)
 
-	r.POST("/orders/:address/:action/encode", e.handleEncode)
+	// r.POST("/orders/:address/:action/encode", e.handleEncode)
 
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
@@ -69,43 +68,43 @@ func (e *orderEndpoint) handleGetOrdersFromPss(c *gin.Context) {
 
 }
 
-func (e *orderEndpoint) handleEncode(c *gin.Context) {
+// func (e *orderEndpoint) handleEncode(c *gin.Context) {
 
-	// deserialize order, in the future can use cargo to batch
-	// return byte update to client to update, even it can not extend chunk size, the actual storage size is not chunk size
-	// Topic "Tomo" will give us information like user type, how many slots corresponding to IDs
-	var msg = &protocol.OrderbookMsg{}
+// 	// deserialize order, in the future can use cargo to batch
+// 	// return byte update to client to update, even it can not extend chunk size, the actual storage size is not chunk size
+// 	// Topic "Tomo" will give us information like user type, how many slots corresponding to IDs
+// 	var msg = &protocol.OrderbookMsg{}
 
-	c.BindJSON(msg)
+// 	c.BindJSON(msg)
 
-	coin := c.Param("action")
-	addr := c.Param("address")
-	rpcClient := e.getRPCClient()
-	var messages []*protocol.OrderbookMsg
-	rpcClient.Call(&messages, "orderbook_getOrders", coin, addr)
+// 	coin := c.Param("action")
+// 	addr := c.Param("address")
+// 	rpcClient := e.getRPCClient()
+// 	var messages []*protocol.OrderbookMsg
+// 	rpcClient.Call(&messages, "orderbook_getOrders", coin, addr)
 
-	log.Printf("order results: %s", messages)
-	// on server, try update if fail then create
-	if messages == nil {
-		messages = []*protocol.OrderbookMsg{msg}
-	} else {
-		// find item if found then append, else update
-		var found = false
-		for i, message := range messages {
-			if message.ID == msg.ID {
-				found = true
-				messages[i] = msg
-				break
-			}
-		}
-		if !found {
-			messages = append(messages, msg)
-		}
-	}
+// 	log.Printf("order results: %s", messages)
+// 	// on server, try update if fail then create
+// 	if messages == nil {
+// 		messages = []*protocol.OrderbookMsg{msg}
+// 	} else {
+// 		// find item if found then append, else update
+// 		var found = false
+// 		for i, message := range messages {
+// 			if message.ID == msg.ID {
+// 				found = true
+// 				messages[i] = msg
+// 				break
+// 			}
+// 		}
+// 		if !found {
+// 			messages = append(messages, msg)
+// 		}
+// 	}
 
-	data, _ := rlp.EncodeToBytes(messages)
-	c.Data(http.StatusOK, "application/octet-stream", data)
-}
+// 	data, _ := rlp.EncodeToBytes(messages)
+// 	c.Data(http.StatusOK, "application/octet-stream", data)
+// }
 
 func (e *orderEndpoint) handleGetOrders(c *gin.Context) {
 
@@ -209,7 +208,7 @@ func (e *orderEndpoint) handleNewOrder(msg *types.WebsocketEvent, conn *ws.Conn)
 
 	ch := make(chan *types.WebsocketEvent)
 	ws.RegisterOrderConnection(o.Hash, &ws.OrderConnection{Conn: conn, ReadChannel: ch})
-	ws.RegisterConnectionUnsubscribeHandler(conn, ws.OrderSocketUnsubscribeHandler(o.Hash))
+	// ws.RegisterConnectionUnsubscribeHandler(conn, ws.OrderSocketUnsubscribeHandler(o.Hash))
 
 	err = e.orderService.NewOrder(o)
 	if err != nil {
@@ -217,6 +216,8 @@ func (e *orderEndpoint) handleNewOrder(msg *types.WebsocketEvent, conn *ws.Conn)
 		ws.SendMessage(conn, ws.OrderChannel, ws.ERROR, err.Error())
 		return
 	}
+
+	// send hash to client, then client will submit signature
 }
 
 // handleCancelOrder handles CancelOrder message.
@@ -231,10 +232,10 @@ func (e *orderEndpoint) handleCancelOrder(event *types.WebsocketEvent, conn *ws.
 	}
 
 	ws.RegisterOrderConnection(oc.Hash, &ws.OrderConnection{Conn: conn, Active: true})
-	ws.RegisterConnectionUnsubscribeHandler(
-		conn,
-		ws.OrderSocketUnsubscribeHandler(oc.Hash),
-	)
+	// ws.RegisterConnectionUnsubscribeHandler(
+	// 	conn,
+	// 	ws.OrderSocketUnsubscribeHandler(oc.Hash),
+	// )
 
 	err = e.orderService.CancelOrder(oc)
 	if err != nil {
