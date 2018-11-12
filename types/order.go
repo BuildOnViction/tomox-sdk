@@ -356,6 +356,81 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// OrderFeed is the object that will be retrieved from swarm feed
+type OrderFeed struct {
+	Amount          *big.Int `json:"amount"`
+	BaseToken       []byte   `json:"baseToken"`
+	BuyAmount       *big.Int `json:"buyAmount"`
+	BuyToken        []byte   `json:"buyToken"`
+	ExchangeAddress []byte   `json:"exchangeAddress"`
+	Expires         *big.Int `json:"expires"`
+	FilledAmount    *big.Int `json:"filledAmount"`
+	Hash            []byte   `json:"hash"`
+	ID              []byte   `json:"id"`
+	MakeFee         *big.Int `json:"makeFee"`
+	Nonce           *big.Int `json:"nonce"`
+	PairName        string   `json:"pairName"`
+	PricePoint      *big.Int `json:"pricepoint"`
+	QuoteToken      []byte   `json:"quoteToken"`
+	SellAmount      *big.Int `json:"sellAmount"`
+	SellToken       []byte   `json:"sellToken"`
+	Side            string   `json:"side"`
+	Signature       []byte   `json:"signature"`
+	Status          string   `json:"status"`
+	TakeFee         *big.Int `json:"takeFee"`
+	Timestamp       uint     `json:"timestamp"`
+	UserAddress     []byte   `json:"userAddress"`
+}
+
+func (o *OrderFeed) GetBSON() (*OrderRecord, error) {
+
+	timestamp := time.Unix(int64(o.Timestamp), 0)
+
+	or := &OrderRecord{
+		ID:              bson.ObjectId(o.ID),
+		PairName:        o.PairName,
+		ExchangeAddress: common.BytesToAddress(o.ExchangeAddress).Hex(),
+		UserAddress:     common.BytesToAddress(o.UserAddress).Hex(),
+		BuyToken:        common.BytesToAddress(o.BuyToken).Hex(),
+		SellToken:       common.BytesToAddress(o.SellToken).Hex(),
+		BaseToken:       common.BytesToAddress(o.BaseToken).Hex(),
+		QuoteToken:      common.BytesToAddress(o.QuoteToken).Hex(),
+		BuyAmount:       o.BuyAmount.String(),
+		SellAmount:      o.SellAmount.String(),
+		Status:          o.Status,
+		Side:            o.Side,
+		Hash:            common.BytesToHash(o.Hash).Hex(),
+		Nonce:           o.Nonce.String(),
+		Expires:         o.Expires.String(),
+		MakeFee:         o.MakeFee.String(),
+		TakeFee:         o.TakeFee.String(),
+		CreatedAt:       timestamp,
+		UpdatedAt:       timestamp,
+	}
+
+	if o.PricePoint != nil {
+		or.PricePoint = o.PricePoint.String()
+	}
+
+	if o.Amount != nil {
+		or.Amount = o.Amount.String()
+	}
+
+	if o.FilledAmount != nil {
+		or.FilledAmount = o.FilledAmount.String()
+	}
+
+	if o.Signature != nil {
+		signature, err := NewSignature(o.Signature)
+		if err != nil {
+			return or, err
+		}
+		or.Signature = signature.GetRecord()
+	}
+
+	return or, nil
+}
+
 // OrderRecord is the object that will be saved in the database
 type OrderRecord struct {
 	ID              bson.ObjectId    `json:"id" bson:"_id"`
@@ -384,8 +459,8 @@ type OrderRecord struct {
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
-func (o *Order) GetBSON() (interface{}, error) {
-	or := OrderRecord{
+func (o *Order) GetBSON() (*OrderRecord, error) {
+	or := &OrderRecord{
 		ID:              o.ID,
 		PairName:        o.PairName,
 		ExchangeAddress: o.ExchangeAddress.Hex(),

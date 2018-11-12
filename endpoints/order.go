@@ -2,21 +2,24 @@ package endpoints
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/rpc"
-
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/swarm/storage/feed"
+	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
 	"github.com/gin-gonic/gin"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
-
-	"github.com/tomochain/orderbook/protocol"
 )
+
+const TopicName = "Token"
 
 type orderEndpoint struct {
 	orderService interfaces.OrderService
@@ -39,8 +42,8 @@ func ServeOrderResource(
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
 
-func (e *orderEndpoint) getRPCClient() *rpc.Client {
-	return e.engine.Provider().(*ethereum.EthereumProvider).RPCClient
+func (e *orderEndpoint) getEngineProvider() *ethereum.EthereumProvider {
+	return e.engine.Provider().(*ethereum.EthereumProvider)
 }
 
 func (e *orderEndpoint) handleGetOrdersAction(c *gin.Context) {
@@ -59,12 +62,44 @@ func (e *orderEndpoint) handleGetOrdersAction(c *gin.Context) {
 
 func (e *orderEndpoint) handleGetOrdersFromPss(c *gin.Context) {
 	coin := c.Param("action")
-	addr := c.Param("address")
-	rpcClient := e.getRPCClient()
-	var orderResult []protocol.OrderbookMsg
-	rpcClient.Call(&orderResult, "orderbook_getOrders", coin, addr)
+	address := c.Param("address")
+	topic, _ := feed.NewTopic(TopicName, []byte(coin))
+	fd := &feed.Feed{
+		Topic: topic,
+		User:  common.HexToAddress(address),
+	}
 
-	c.JSON(http.StatusOK, orderResult)
+	lookupParams := feed.NewQueryLatest(fd, lookup.NoClue)
+
+	bzzClient := e.getEngineProvider().BzzClient
+	reader, err := bzzClient.QueryFeed(lookupParams, "")
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, GinError(fmt.Sprintf("Error retrieving feed updates: %s", err)))
+		return
+	}
+	defer reader.Close()
+	databytes, err := ioutil.ReadAll(reader)
+
+	if databytes == nil || err != nil {
+		c.JSON(http.StatusBadRequest, GinError(fmt.Sprintf("Error retrieving feed updates: %s", err)))
+		return
+	}
+
+	// // try to decode
+	var feeds []types.OrderFeed
+	err = rlp.DecodeBytes(databytes, &feeds)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, GinError(fmt.Sprintf("Error retrieving feed updates: %s", err)))
+		return
+	}
+
+	var messages []*types.OrderRecord
+	for _, feed := range feeds {
+		message, _ := feed.GetBSON()
+		messages = append(messages, message)
+	}
+	c.JSON(http.StatusOK, messages)
 
 }
 

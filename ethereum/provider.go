@@ -5,19 +5,21 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/swarm/api/client"
+	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
+	"github.com/tomochain/backend-matching-engine/interfaces"
 )
 
 type EthereumProvider struct {
 	Client    interfaces.EthereumClient
 	RPCClient *rpc.Client
+	BzzClient *client.Client
 	Config    interfaces.EthereumConfig
 }
 
@@ -54,6 +56,7 @@ func NewDefaultEthereumProvider() *EthereumProvider {
 
 func NewWebsocketProvider() *EthereumProvider {
 	url := app.Config.Ethereum["ws_url"]
+	bzzURL := app.Config.Ethereum["bzz_url"]
 	exchange := common.HexToAddress(app.Config.Ethereum["exchange_address"])
 	weth := common.HexToAddress(app.Config.Ethereum["weth_address"])
 
@@ -62,14 +65,17 @@ func NewWebsocketProvider() *EthereumProvider {
 		panic(err)
 	}
 
-	client := ethclient.NewClient(conn)
+	ethClient := ethclient.NewClient(conn)
 
 	config := NewEthereumConfig(url, exchange, weth)
 
+	bzzClient := client.NewClient(bzzURL)
+
 	return &EthereumProvider{
-		Client:    client,
+		Client:    ethClient,
 		Config:    config,
 		RPCClient: conn,
+		BzzClient: bzzClient,
 	}
 }
 

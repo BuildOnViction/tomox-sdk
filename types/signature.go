@@ -34,6 +34,14 @@ func NewSignature(b []byte) (*Signature, error) {
 	}, nil
 }
 
+func (s *Signature) GetRecord() *SignatureRecord {
+	return &SignatureRecord{
+		V: s.V,
+		R: s.R.Hex(),
+		S: s.S.Hex(),
+	}
+}
+
 // MarshalSignature marshals the signature struct to []byte
 func (s *Signature) MarshalSignature() ([]byte, error) {
 	sigBytes1 := s.R.Bytes()
