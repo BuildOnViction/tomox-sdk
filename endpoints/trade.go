@@ -22,8 +22,7 @@ func ServeTradeResource(
 	tradeService interfaces.TradeService,
 ) {
 	e := &tradeEndpoint{tradeService}
-	r.GET("/trades/pair", e.HandleGetTradeHistory)
-	r.GET("/trades", e.HandleGetTrades)
+	r.GET("/trades/:address", e.HandleGetTrades)
 	ws.RegisterChannel(ws.TradeChannel, e.tradeWebSocket)
 }
 
@@ -74,7 +73,13 @@ func (e *tradeEndpoint) HandleGetTradeHistory(c *gin.Context) {
 
 // get is reponsible for handling user's trade history requests
 func (e *tradeEndpoint) HandleGetTrades(c *gin.Context) {
-	addr := c.Query("address")
+	addr := c.Param("address")
+
+	// short cut to trade history
+	if addr == "pair" {
+		e.HandleGetTradeHistory(c)
+		return
+	}
 
 	if addr == "" {
 		c.JSON(http.StatusBadRequest, GinError("address Parameter missing"))
