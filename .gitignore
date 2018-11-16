@@ -23,7 +23,7 @@ _cgo_*
 _obj
 _test
 _testmain.go
-
+gin-bin
 /VERSION.cache
 /bin/
 .vscode/
@@ -51,7 +51,6 @@ vendor/
 /test/pass.out
 /test/run.out
 /test/times.out
-
 /utils/datadir/*
 
 # This file includes artifacts of Go build that should not be checked in.
