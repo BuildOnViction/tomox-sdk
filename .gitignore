@@ -17,6 +17,7 @@
 /last-change
 /gin-bin
 /pkg/
+/node_modules
 /utils/datadir
 
 # This file includes artifacts of Go build that should not be checked in.
