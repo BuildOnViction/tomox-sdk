@@ -69,6 +69,21 @@ Retrieve token information for a token at a certain address
 
 * {address} is an Ethereum address
 
+### POST /tokens
+
+Create/Insert token in DB.
+
+* Sample request parameters:
+```json
+{
+	"name":"HotPotCoin",
+	"symbol":"HPC",
+	"decimal":18,
+	"contractAddress":"0x1888a8db0b7db59413ce07150b3373972bf818d3",
+	"active":true,
+	"quote":true // This is required when creating pair
+}
+```
 
 # Orderbook resource
 
