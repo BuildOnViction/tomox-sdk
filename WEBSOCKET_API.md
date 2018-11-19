@@ -199,7 +199,7 @@ The general format of the INIT message is the following:
 {
   "channel": "orderbook",
   "event": {
-    "type": "UDPATE",
+    "type": "INIT",
     "payload": {
       "asks": [
         { "amount": "10000", "pricepoint": "1000000" },
@@ -508,7 +508,7 @@ Example:
 }
 ```
 
-## ORDER_CANCELLED_MESSAGE (client --> server)
+## ORDER_CANCELLED_MESSAGE (server --> client)
 
 The general format of the order cancelled message is the following:
 
@@ -776,7 +776,7 @@ The general format of the order success message is the following:
 {
   "channel": "orders",
   "event": {
-    "type": "ORDER_PENDING",
+    "type": "ORDER_SUCCESS",
     "hash": <order hash>
     "payload": {
       "order": <order>,
@@ -827,7 +827,7 @@ The ORDER_ERROR message indicates that a trade transaction was sent to the block
 }
 ```
 
-It is identical to the order successs message exect that order statuses are different.
+It is identical to the order successs message except that order statuses are different.
 The client should usually not receive this message and it can be interpreted as an 'internal server error' (bug in the system rather than a malformed payload or client error)
 
 # Raw Orderbook Channel
