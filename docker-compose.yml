@@ -44,6 +44,7 @@ services:
         mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/tokens.json
         mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/pairs.json
         mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/accounts.json
+        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/wallets.json
 
   rabbitmq:
     image: rabbitmq

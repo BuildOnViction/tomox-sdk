@@ -38,6 +38,10 @@ yarn start-env
 yarn generate-seeds
 # seed the sample data
 yarn seeds
+# If you need to reset
+yarn restart-env
+# If you need to run mongod outside docker-compose
+mongod --dbpath utils/datadir
 # this will start the server in hot-reload mode
 yarn hot
 ```
@@ -191,6 +195,8 @@ base tokens and quote tokens under the following principles:
 Token pairs are identified by an ID (a hash of both token addresses)
 
 # REST API
+
+Download [tomo-dex.postman_collection.json](tomo-dex.postman_collection.json)
 
 See [REST_API.md](REST_API.md)
 

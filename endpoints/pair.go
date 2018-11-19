@@ -6,11 +6,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
-	"github.com/gorilla/mux"
 )
 
 type pairEndpoint struct {
@@ -23,9 +23,9 @@ func ServePairResource(
 	p interfaces.PairService,
 ) {
 	e := &pairEndpoint{p}
-	r.HandleFunc("/pairs", e.HandleCreatePair).Methods("POST")
 	r.HandleFunc("/pairs", e.HandleGetPairs).Methods("GET")
 	r.HandleFunc("/pair", e.HandleGetPair).Methods("GET")
+	r.HandleFunc("/pair", e.HandleCreatePair).Methods("POST")
 	r.HandleFunc("/pairs/data", e.HandleGetPairData).Methods("GET")
 }
 
