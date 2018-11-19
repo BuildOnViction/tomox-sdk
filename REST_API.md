@@ -10,6 +10,10 @@ There are 7 different resources on the matching engine REST API:
 * orders
 * ohlcv
 
+Moreover, there is one resource for getting general information:
+
+* info
+
 
 # Account resource
 
@@ -179,3 +183,22 @@ Retrieve OHLCV data corresponding to a baseToken and a quoteToken.
 * {units} is the unit used to represent the above duration: "minute", "hour", "day", "week", "month"
 * {from} is the beginning timestamp from which ohlcv data has to be queried
 * {to} is the ending timestamp until which ohlcv data has to be queried
+
+
+# Info resource
+
+### GET /info
+
+Get general information (exchange address, fees and operators)
+
+### GET /info/exchange
+
+Get exchange address
+
+### GET /info/operators
+
+Get operators information
+
+### GET /info/fees
+
+Get fees information
