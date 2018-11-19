@@ -123,19 +123,20 @@ corresponding to a baseToken and a quoteToken.
 
 # Trade resource
 
-### GET /trades?address={address}
+### GET /trades?address={address}&limit={limit}
 
-Retrieve the sorted list of trades for an Ethereum address
+Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker
 
 * {address} is an Ethereum address
+* {limit} is the number of records returned
 
-### GET /trades/pair?baseToken={baseToken}&quoteToken={quoteToken}
+### GET /trades/pair?baseToken={baseToken}&quoteToken={quoteToken}&limit={limit}
 
 Retrieve all trades corresponding to a baseToken and a quoteToken
 
 * {baseToken} is the Ethereum address of a base token
 * {quoteToken} is the Ethereum address of a quote token
-
+* {limit} is the number of records returned
 
 
 # Order resource
