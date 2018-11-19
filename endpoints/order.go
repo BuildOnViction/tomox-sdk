@@ -101,7 +101,9 @@ func (e *orderEndpoint) handleGetOrderFeeds(w http.ResponseWriter, r *http.Reque
 
 	if address == "" || !common.IsHexAddress(address) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
+		return
 	}
+	
 	tokenAddress := common.HexToAddress(address)
 	// token, err := e.orderService.GetTokenByAddress(tokenAddress)
 	// if err != nil {
