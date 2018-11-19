@@ -41,10 +41,10 @@ services:
       - -c
       - |
         # mongo tomodex --eval "db.dropDatabase()"
-        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/tokens.json
-        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/pairs.json
-        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/accounts.json
-        mongoimport --host mongodb --db tomodex --type json --file utils/seed-data/wallets.json
+        mongoimport --host mongodb --db tomodex --type json --collection tokens --file utils/seed-data/tokens.json
+        mongoimport --host mongodb --db tomodex --type json --collection pairs --file utils/seed-data/pairs.json
+        mongoimport --host mongodb --db tomodex --type json --collection accounts --file utils/seed-data/accounts.json
+        mongoimport --host mongodb --db tomodex --type json --collection wallets --file utils/seed-data/wallets.json
 
   rabbitmq:
     image: rabbitmq

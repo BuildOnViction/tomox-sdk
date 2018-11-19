@@ -269,7 +269,7 @@ func generateTokens(filePath string) error {
 	imagesConfig := imagesConfigMap["8888"]
 	// fmt.Println(imagesConfig)
 
-	tplStr := `{"_id":{"$oid":"{{.ID}}"},"name":"{{.Name}}","symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","image":{"url":"{{.ImageURL}}","meta":"{{.ImageMeta}}"},"decimal":18,"quote":{{.IsQuote}},"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
+	tplStr := `{"_id":{"$oid":"{{.ID}}"},"name":"{{.Name}}","symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","image":{"url":"{{.ImageURL}}","meta":"{{.ImageMeta}}"},"decimals":18,"quote":{{.IsQuote}},"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
 	tpl, _ := template.New("token").Parse(tplStr)
 	startIndex, _ := new(big.Int).SetString("5b8ba09da75a9b1320ca4974", 16)
 	oneBig := big.NewInt(1)

@@ -58,7 +58,7 @@ yarn hot
 {
 	"name":"HotPotCoin",
 	"symbol":"HPC",
-	"decimal":18,
+	"decimals":18,
 	"contractAddress":"0x1888a8db0b7db59413ce07150b3373972bf818d3",
 	"active":true,
 	"quote":true

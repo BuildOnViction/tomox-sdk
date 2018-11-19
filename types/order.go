@@ -224,9 +224,9 @@ func (o *Order) BuyToken() common.Address {
 
 // SellAmount
 // If order is a "BUY", then sellToken = quoteToken
-func (o *Order) SellAmount() *big.Int {
+func (o *Order) SellAmount(pricepointMultiplier *big.Int) *big.Int {
 	if o.Side == "BUY" {
-		return math.Div(math.Mul(o.Amount, o.PricePoint), big.NewInt(1e9))
+		return math.Div(math.Mul(o.Amount, o.PricePoint), pricepointMultiplier)
 	} else {
 		return o.Amount
 	}
@@ -321,15 +321,16 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 
 	if o.Signature != nil {
 		order["signature"] = map[string]interface{}{
-			"V": o.Signature.V,
-			"R": o.Signature.R,
-			"S": o.Signature.S,
+			"v": o.Signature.V,
+			"r": o.Signature.R,
+			"s": o.Signature.S,
 		}
 	}
 
 	return json.Marshal(order)
 }
 
+// UnmarshalJSON : write custom logic to unmarshal bytes to Order
 func (o *Order) UnmarshalJSON(b []byte) error {
 	order := map[string]interface{}{}
 
@@ -400,10 +401,11 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 
 	if order["signature"] != nil {
 		signature := order["signature"].(map[string]interface{})
+		logger.Debugf("Signature: %v#", signature)
 		o.Signature = &Signature{
-			V: byte(signature["V"].(float64)),
-			R: common.HexToHash(signature["R"].(string)),
-			S: common.HexToHash(signature["S"].(string)),
+			V: byte(signature["v"].(float64)),
+			R: common.HexToHash(signature["r"].(string)),
+			S: common.HexToHash(signature["s"].(string)),
 		}
 	}
 
@@ -642,9 +644,9 @@ func (o OrderBSONUpdate) GetBSON() (interface{}, error) {
 
 	if o.Signature != nil {
 		set["signature"] = bson.M{
-			"V": o.Signature.V,
-			"R": o.Signature.R.Hex(),
-			"S": o.Signature.S.Hex(),
+			"v": o.Signature.V,
+			"r": o.Signature.R.Hex(),
+			"s": o.Signature.S.Hex(),
 		}
 	}
 
