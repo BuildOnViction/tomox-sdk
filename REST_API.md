@@ -48,6 +48,20 @@ Retrieve pair data corresponding to a baseToken and quoteToken where
 This endpoints returns the Open, High, Low, Close, Volume and Change for the last 24 hours
 as well as the last price.
 
+### POST /pairs
+
+Create/Insert pair in DB.
+
+* Sample request parameters:
+```json
+{
+    "BaseTokenAddress":"0x4f696e8A1A3fB3AEA9f72EB100eA8d97c5130B32",
+    "BaseTokenSymbol": "KCS",
+    "QuoteTokenAddress":"0x1888a8db0b7db59413ce07150b3373972bf818d4", // Must be registered as quote when creating new token
+    "QuoteTokenSymbol":"HTC",
+    "active":true
+}
+```
 
 # Tokens resource
 
