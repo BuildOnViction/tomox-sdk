@@ -24,6 +24,10 @@ Retrieve the token balance of a certain Ethereum address
 * {userAddress} is the Ethereum address of a user/client wallet
 * {tokenAddress} is the Ethereum address of a token (base or quote)
 
+### POST /account/create?address={newAddress}
+
+* {newAddress} is the Ethereum address of a user/client wallet
+
 
 # Pairs resource
 
