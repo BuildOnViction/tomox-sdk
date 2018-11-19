@@ -81,7 +81,7 @@ func (o *Order) Validate() error {
 	}
 
 	if o.Side != "BUY" && o.Side != "SELL" {
-		return errors.New("Order 'side' should be 'SELL' or 'BUY'")
+		return errors.New("Order 'side' should be 'SELL' or 'BUY', but got: '" + o.Side + "'")
 	}
 
 	if o.Signature == nil {

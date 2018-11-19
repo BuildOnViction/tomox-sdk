@@ -13,3 +13,9 @@ go get github.com/go-ozzo/ozzo-validation
 go get github.com/gorilla/websocket
 go get github.com/spf13/cobra
 go get github.com/gorilla/handlers
+
+
+# testing
+go get github.com/go-test/deep
+go get github.com/stretchr/testify
+go get gopkg.in/tomb.v2

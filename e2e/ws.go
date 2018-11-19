@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/ws"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils/testutils"
+	"github.com/tomochain/backend-matching-engine/ws"
 )
 
 func testWS(t *testing.T, pairs []types.Pair, accounts map[*ecdsa.PrivateKey]types.Account) {
@@ -52,7 +52,7 @@ func testWS(t *testing.T, pairs []types.Pair, accounts map[*ecdsa.PrivateKey]typ
 		ohlcvClient := newOHLCVClient(t, baseToken, quoteToken, nil)
 		time.Sleep(6 * time.Second)
 		log := getLatestRLog(ohlcvClient.ResponseLogs)
-		assert.Equal(test, "UPDATE", log.Payload.Type)
+		assert.Equal(test, "UPDATE", log.Event.Type)
 		wg.Done()
 	}(t)
 
@@ -74,7 +74,7 @@ func testInitSubscription(t *testing.T, client1 *testutils.Client, factory1 *tes
 	}
 	client1.Requests <- buyOrderMsg
 	time.Sleep(time.Second)
-	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client1.ResponseLogs).Payload.Type)
+	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client1.ResponseLogs).Event.Type)
 
 	// send sell order
 	sellOrderMsg, _, err := factory2.NewSellOrderMessage(1e5+10, 1e6)
@@ -83,80 +83,69 @@ func testInitSubscription(t *testing.T, client1 *testutils.Client, factory1 *tes
 	}
 	client2.Requests <- sellOrderMsg
 	time.Sleep(time.Second)
-	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client2.ResponseLogs).Payload.Type)
+	assert.Equal(t, "ORDER_ADDED", getLatestRLog(client2.ResponseLogs).Event.Type)
 
-	newTradeClient(t, baseToken, quoteToken, getLatestRLog(tradeClient.ResponseLogs).Payload.Data)
+	newTradeClient(t, baseToken, quoteToken, getLatestRLog(tradeClient.ResponseLogs).Event.Payload)
 }
 
-func getOrderbookSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSocketMessage {
-	return &types.WebSocketMessage{
+func getOrderbookSubscribeRequest(baseToken, quoteToken common.Address) *types.WebsocketMessage {
+	return &types.WebsocketMessage{
 		Channel: ws.OrderBookChannel,
-		Payload: types.WebSocketPayload{
+		Event: types.WebsocketEvent{
 			Type: "subscription",
-			Data: types.WebSocketSubscription{
-				Event: types.SUBSCRIBE,
-				Pair: types.PairAddresses{
-					BaseToken:  baseToken,
-					QuoteToken: quoteToken,
-				},
+			Payload: types.SubscriptionPayload{
+				BaseToken:  baseToken,
+				QuoteToken: quoteToken,
 			},
 		},
 	}
 }
 
-func getTradeSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSocketMessage {
-	return &types.WebSocketMessage{
+func getTradeSubscribeRequest(baseToken, quoteToken common.Address) *types.WebsocketMessage {
+	return &types.WebsocketMessage{
 		Channel: ws.TradeChannel,
-		Payload: types.WebSocketPayload{
+		Event: types.WebsocketEvent{
 			Type: "subscription",
-			Data: types.WebSocketSubscription{
-				Event: types.SUBSCRIBE,
-				Pair: types.PairAddresses{
-					BaseToken:  baseToken,
-					QuoteToken: quoteToken,
-				},
+			Payload: types.SubscriptionPayload{
+				BaseToken:  baseToken,
+				QuoteToken: quoteToken,
 			},
 		},
 	}
 }
-func getOHLCVSubscribeRequest(baseToken, quoteToken common.Address) *types.WebSocketMessage {
-	return &types.WebSocketMessage{
+func getOHLCVSubscribeRequest(baseToken, quoteToken common.Address) *types.WebsocketMessage {
+	return &types.WebsocketMessage{
 		Channel: ws.OHLCVChannel,
-		Payload: types.WebSocketPayload{
+		Event: types.WebsocketEvent{
 			Type: "subscription",
-			Data: types.WebSocketSubscription{
-				Event: types.SUBSCRIBE,
-				Pair: types.PairAddresses{
-					BaseToken:  baseToken,
-					QuoteToken: quoteToken,
-				},
-				Params: types.Params{
-					Duration: 5,
-					Units:    "sec",
-				},
+			Payload: types.SubscriptionPayload{
+				BaseToken:  baseToken,
+				QuoteToken: quoteToken,
+				Duration:   5,
+				Units:      "sec",
 			},
 		},
 	}
 }
-func getWebsocketMessage(channel, t, hash string, data interface{}) types.WebSocketMessage {
-	return types.WebSocketMessage{
+func getWebsocketMessage(channel, t, hash string, data interface{}) types.WebsocketMessage {
+	return types.WebsocketMessage{
 		Channel: channel,
-		Payload: types.WebSocketPayload{
-			Type: t,
-			Hash: "",
-			Data: data,
+		Event: types.WebsocketEvent{
+			Type:    t,
+			Hash:    "",
+			Payload: data,
 		},
 	}
 }
 
-func getLatestRLog(logs []types.WebSocketMessage) types.WebSocketMessage {
+func getLatestRLog(logs []types.WebsocketMessage) types.WebsocketMessage {
 	return logs[len(logs)-1]
 }
 
 func resetLogs(clients ...*testutils.Client) {
 	for _, client := range clients {
-		client.ResponseLogs = make([]types.WebSocketMessage, 0)
-		client.RequestLogs = make([]types.WebSocketMessage, 0)
+		client.ResponseLogs = make([]types.WebsocketMessage, 0)
+		client.RequestLogs = make([]types.WebsocketMessage, 0)
 	}
 }
 

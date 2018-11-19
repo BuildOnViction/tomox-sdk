@@ -26,13 +26,16 @@ type Trade struct {
 	MakerOrderHash common.Hash    `json:"makerOrderHash" bson:"makerOrderHash"`
 	TakerOrderHash common.Hash    `json:"takerOrderHash" bson:"takerOrderHash"`
 	Hash           common.Hash    `json:"hash" bson:"hash"`
-	TxHash         common.Hash    `json:"txHash" bson:"txHash"`
-	PairName       string         `json:"pairName" bson:"pairName"`
-	CreatedAt      time.Time      `json:"createdAt" bson:"createdAt" redis:"createdAt"`
-	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt" redis:"updatedAt"`
-	PricePoint     *big.Int       `json:"pricepoint" bson:"pricepoint"`
-	Status         string         `json:"status" bson:"status"`
-	Amount         *big.Int       `json:"amount" bson:"amount"`
+	// side and signature will be omit
+	Side       string      `json:"side" bson:"side"`
+	Signature  *Signature  `json:"signature" bson:"signature"`
+	TxHash     common.Hash `json:"txHash" bson:"txHash"`
+	PairName   string      `json:"pairName" bson:"pairName"`
+	CreatedAt  time.Time   `json:"createdAt" bson:"createdAt" redis:"createdAt"`
+	UpdatedAt  time.Time   `json:"updatedAt" bson:"updatedAt" redis:"updatedAt"`
+	PricePoint *big.Int    `json:"pricepoint" bson:"pricepoint"`
+	Status     string      `json:"status" bson:"status"`
+	Amount     *big.Int    `json:"amount" bson:"amount"`
 }
 
 type TradeRecord struct {

@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/contracts"
 	"github.com/tomochain/backend-matching-engine/daos"
@@ -17,9 +20,6 @@ import (
 	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/ws"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 
 	"github.com/tomochain/backend-matching-engine/engine"
 )

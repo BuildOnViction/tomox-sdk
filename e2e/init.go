@@ -9,6 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+	routing "github.com/go-ozzo/ozzo-routing"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/contracts"
 	"github.com/tomochain/backend-matching-engine/crons"
@@ -20,10 +24,6 @@ import (
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/services"
-	"github.com/ethereum/go-ethereum/common"
-	routing "github.com/go-ozzo/ozzo-routing"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/dbtest"
 )
 
@@ -79,15 +79,16 @@ func NewRouter() *mux.Router {
 	walletDao := daos.NewWalletDao()
 
 	// instantiate engine
-	eng := engine.NewEngine(redisConn, rabbitConn, pairDao)
+	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao)
 	ohlcvService := services.NewOHLCVService(tradeDao)
 	tokenService := services.NewTokenService(tokenDao)
 	tradeService := services.NewTradeService(tradeDao)
-	pairService := services.NewPairService(pairDao, tokenDao, eng, tradeService)
-	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, provider, rabbitConn)
+	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, eng)
+	validatorService := services.NewValidatorService(provider, accountDao, orderDao)
+	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	walletService := services.NewWalletService(walletDao)
 	cronService := crons.NewCronService(ohlcvService)
@@ -125,7 +126,7 @@ func NewRouter() *mux.Router {
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 	endpoints.ServeTradeResource(r, tradeService)
-	endpoints.ServeOrderResource(r, orderService, eng)
+	endpoints.ServeOrderResource(r, orderService, accountService, eng)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

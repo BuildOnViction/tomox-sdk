@@ -8,8 +8,8 @@ import (
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/ws"
 
-	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/robfig/cron"
+	"github.com/tomochain/backend-matching-engine/app"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming
@@ -35,8 +35,8 @@ func (s *CronService) tickStream(unit string, duration int64) func() {
 		}
 
 		for _, tick := range ticks {
-			baseTokenAddress := tick.ID.BaseToken
-			quoteTokenAddress := tick.ID.QuoteToken
+			baseTokenAddress := tick.Pair.BaseToken
+			quoteTokenAddress := tick.Pair.QuoteToken
 			id := utils.GetTickChannelID(baseTokenAddress, quoteTokenAddress, unit, duration)
 			ws.GetOHLCVSocket().BroadcastOHLCV(id, tick)
 		}
