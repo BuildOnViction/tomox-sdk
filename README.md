@@ -46,75 +46,17 @@ mongod --dbpath utils/datadir
 yarn hot
 ```
 
-
 =======
-# API Endpoints
 
-## Tokens
+# REST API
 
-- `GET /tokens` : returns list of all the tokens from the database
-- `GET /tokens/<addr>`: returns details of a token from db using token's contract address
-- `POST /tokens`: Create/Insert token in DB. Sample input:
+Download [tomo-dex.postman_collection.json](tomo-dex.postman_collection.json)
 
-```
-{
-	"name":"HotPotCoin",
-	"symbol":"HPC",
-	"decimals":18,
-	"contractAddress":"0x1888a8db0b7db59413ce07150b3373972bf818d3",
-	"active":true,
-	"quote":true
-}
-```
+See [REST_API.md](REST_API.md)
 
-## Pairs
+# Websocket API
 
-- `GET /pairs` : returns list of all the pairs from the database
-- `GET /pairs/<baseToken>/<quoteToken>`: returns details of a pair from db using using contract address of its constituting tokens
-- `GET /pairs/book/<pairName>`: Returns orderbook for the pair using pair name
-- `POST /pairs`: Create/Insert pair in DB. Sample input:
-
-```
-{
-    "baseToken":"5b3e82587b44576ba8000001",
-    "quoteToken":"5b3e82607b44576ba8000002",
-    "active":true,
-    "quoteTokenSymbol":"hpc"
-}
-```
-
-## Address
-
-- `POST /address`: Create/Insert address and corresponding balance entry in DB. Sample input:
-
-```
-{
-	"address":"0xefD7eB287CeeFCE8256Dd46e25F398acEA7C4b63"
-}
-```
-
-## Balance
-
-- `GET /account/<addr>`: Fetch the balance details from db of the given address.
-
-## Order
-
-- `GET /orders/<addr>`: Fetch all the orders placed by the given address
-
-## Trade
-
-- `GET /trades/history/<pair>`: Fetch complete trade history of given pair using pair name
-- `GET /trades/<addr>`: Fetch all the trades in which the given address is either maker or taker
-- `GET /trades/ticks`: Fetch ohlcv data. Query Params:
-
-```
-// Query Params for /trades/ticks
-pairName: names of pair separated by comma(,) ex: "hpc/aut,abc/xyz". (Atleast 1 Required)
-unit: sec,min,hour,day,week,month,yr. (default:hour)
-duration: in int. (default: 24)
-from: unix timestamp of from time.(default: start of timestamp)
-to: unix timestamp of to time. (default: current timestamp)
-```
+See [WEBSOCKET_API.md](WEBSOCKET_API.md)
 
 # Types
 
@@ -195,13 +137,3 @@ base tokens and quote tokens under the following principles:
 - Anybody can register a token pair (but the quote token needs to be registered)
 
 Token pairs are identified by an ID (a hash of both token addresses)
-
-# REST API
-
-Download [tomo-dex.postman_collection.json](tomo-dex.postman_collection.json)
-
-See [REST_API.md](REST_API.md)
-
-# Websocket API
-
-See [WEBSOCKET_API.md](WEBSOCKET_API.md)
