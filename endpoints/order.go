@@ -9,14 +9,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/tomochain/backend-matching-engine/ethereum"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/swarm/storage/feed"
 	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/backend-matching-engine/ethereum"
+	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/utils/httputils"
 
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
@@ -268,6 +268,8 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 		c.SendMessage(ws.OrderChannel, "ERROR", err.Error())
 		return
 	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
 
 	err = json.Unmarshal(bytes, &o)
 	if err != nil {

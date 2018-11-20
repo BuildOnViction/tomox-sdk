@@ -397,9 +397,9 @@ where:
       "expires": "10000000000000",
       "nonce": "3426223084368067",
       "signature": {
-        "R": "0x14f9f97a43df77b79e79fa0af2ccfc8798be6ab2fa1f4468f92f99ed3542c1b9",
-        "S": "0x78b035c950f5cb54a58ca54961f82a8c301027693f50272ea0f178b55891f8fc",
-        "V": 28
+        "r": "0x14f9f97a43df77b79e79fa0af2ccfc8798be6ab2fa1f4468f92f99ed3542c1b9",
+        "s": "0x78b035c950f5cb54a58ca54961f82a8c301027693f50272ea0f178b55891f8fc",
+        "v": 28
       }
     }
   }
@@ -451,9 +451,9 @@ where:
     "status": "OPEN",
     "pairName": "FUN/WETH",
     "signature": {
-      "R": "0x1106adc21f1d85e37d245df4808c683b2dad7970f6e831c96d2c91c886281a9d",
-      "S": "0x43dbfbb4c2c7cfcb2afadc3abd63854449eaad9e9d306981fad9bcd46dce0d0b",
-      "V": 27},
+      "r": "0x1106adc21f1d85e37d245df4808c683b2dad7970f6e831c96d2c91c886281a9d",
+      "s": "0x43dbfbb4c2c7cfcb2afadc3abd63854449eaad9e9d306981fad9bcd46dce0d0b",
+      "v": 27},
     "quoteToken": "0x17b4e8b709ca82abf89e172366b151c72df9c62e",
     "baseToken": "0x546d3b3d69e30859f4f3ba15f81809a2efce6e67",
     "createdAt": "2018-10-20T15:21:55.119253+09:00"
@@ -499,9 +499,9 @@ Example:
       "hash": "0xd3cad812e8a15d0efedb11187d14e82f4ec190df455844583b8844dbc2e068b2",
       "orderHash": "0xb958a32836f4ca15c93c0e54a22e83b384dc7ec899c6b66952195f12b0ed5708",
       "signature": {
-        "R": "0x584391c40d49fedd7760ba2d1becc960ceb8a220f1c93156198fe6d18d31db02",
-        "S": "0x34a5775f8a0ef32ea0fea8158975203c74b0646e1f37b27fc640ec902290ceca",
-        "V": 27
+        "r": "0x584391c40d49fedd7760ba2d1becc960ceb8a220f1c93156198fe6d18d31db02",
+        "s": "0x34a5775f8a0ef32ea0fea8158975203c74b0646e1f37b27fc640ec902290ceca",
+        "v": 27
       }
     }
   }
@@ -552,9 +552,9 @@ The general format of the order cancelled message is the following:
       "quoteToken": "0x17b4e8b709ca82abf89e172366b151c72df9c62e",
       "baseToken": "0x546d3b3d69e30859f4f3ba15f81809a2efce6e67",
       "signature": {,
-        "R": "0x1106adc21f1d85e37d245df4808c683b2dad7970f6e831c96d2c91c886281a9d",
-        "S": "0x43dbfbb4c2c7cfcb2afadc3abd63854449eaad9e9d306981fad9bcd46dce0d0b",
-        "V": 27,
+        "r": "0x1106adc21f1d85e37d245df4808c683b2dad7970f6e831c96d2c91c886281a9d",
+        "s": "0x43dbfbb4c2c7cfcb2afadc3abd63854449eaad9e9d306981fad9bcd46dce0d0b",
+        "v": 27,
       },
     }
 }
@@ -667,9 +667,9 @@ where:
         "pairName": "FUN/WETH",
         "pricepoint": "1000000",
         "signature": {
-          "R": "0x14f9f97a43df77b79e79fa0af2ccfc8798be6ab2fa1f4468f92f99ed3542c1b9",
-          "S": "0x78b035c950f5cb54a58ca54961f82a8c301027693f50272ea0f178b55891f8fc",
-          "V": 28
+          "r": "0x14f9f97a43df77b79e79fa0af2ccfc8798be6ab2fa1f4468f92f99ed3542c1b9",
+          "s": "0x78b035c950f5cb54a58ca54961f82a8c301027693f50272ea0f178b55891f8fc",
+          "v": 28
         },
         "baseToken": "0x546d3b3d69e30859f4f3ba15f81809a2efce6e67",
         "quoteToken": "0x17b4e8b709ca82abf89e172366b151c72df9c62e"
@@ -696,9 +696,9 @@ where:
             "pairName": "FUN/WETH",
             "pricepoint": "900000",
             "signature": {
-              "R": "0x0796313b59449ca056244d63089a6c7043bfe7c1eebd69f9a6374ae9975b206e",
-              "S": "0x587b5f42ec0007ae07851c24d489cb9d5024a02d0c91a6066d135f451fa074da",
-              "V": 28
+              "r": "0x0796313b59449ca056244d63089a6c7043bfe7c1eebd69f9a6374ae9975b206e",
+              "s": "0x587b5f42ec0007ae07851c24d489cb9d5024a02d0c91a6066d135f451fa074da",
+              "v": 28
             },
             "baseToken": "0x546d3b3d69e30859f4f3ba15f81809a2efce6e67",
             "quoteToken": "0x17b4e8b709ca82abf89e172366b151c72df9c62e"
@@ -718,9 +718,9 @@ where:
             "side": "BUY",
             "tradeNonce": "5596387790547337",
             "signature": {
-              "R": "0xcc881329d253de13a9a7b9c7c48d381954038e9899099d4453a858d7799db7e1",
-              "S": "0x55a78923f7d6d7cf4d0e06e2bfbc511d87dbfdfa58cad51de8882b99e5da0976",
-              "V": 27
+              "r": "0xcc881329d253de13a9a7b9c7c48d381954038e9899099d4453a858d7799db7e1",
+              "s": "0x55a78923f7d6d7cf4d0e06e2bfbc511d87dbfdfa58cad51de8882b99e5da0976",
+              "v": 27
             }
           }
         }

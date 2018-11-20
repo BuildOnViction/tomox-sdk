@@ -54,10 +54,10 @@ func init() {
 				filePath := c.String("ccf")
 				return batch(
 					filePath,
-					generateConfig,
-					generateTokens,
+					// generateConfig,
+					// generateTokens,
 					generatePairs,
-					generateAccounts,
+					// generateAccounts,
 				)
 			},
 			Flags: []cli.Flag{
@@ -91,7 +91,8 @@ type TokenInsert struct {
 	*Token
 	Name string
 	ImageInsert
-	ID string
+	ID      string
+	IsQuote bool
 }
 
 type TokenCode struct {
@@ -104,7 +105,7 @@ type Genesis struct {
 }
 
 func getTokenCode(buildFolder, symbol string) TokenCode {
-	contractPath := path.Join(buildFolder, fmt.Sprintf("%s.json", symbol))
+	contractPath := path.Join(buildFolder, fmt.Sprintf("%s.bson", symbol))
 	byteValue, _ := ioutil.ReadFile(contractPath)
 	var contract map[string]string
 	json.Unmarshal(byteValue, &contract)
@@ -176,8 +177,8 @@ func generateConfig(filePath string) error {
 func generatePairs(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
-	// first create a list from pairs.json, then update it using matches
-	pairsFile := path.Join(basePath, "pairs.json")
+	// first create a list from pairs.bson, then update it using matches
+	pairsFile := path.Join(basePath, "pairs.bson")
 	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
 	groups := getGroupsFromContractResultFile(contractResultFile)
 	buffer := &bytes.Buffer{}
@@ -195,6 +196,7 @@ func generatePairs(filePath string) error {
 	}
 
 	for _, obj := range objList {
+
 		if baseTokenAddress, ok := groups[obj["baseTokenSymbol"].(string)]; ok {
 			obj["baseTokenAddress"] = baseTokenAddress
 		}
@@ -215,8 +217,8 @@ func generatePairs(filePath string) error {
 func generateAccounts(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
-	// first create a list from pairs.json, then update it using matches
-	accountFile := path.Join(basePath, "accounts.json")
+	// first create a list from pairs.bson, then update it using matches
+	accountFile := path.Join(basePath, "accounts.bson")
 	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
 	groups := getGroupsFromContractResultFile(contractResultFile)
 
@@ -245,6 +247,17 @@ func generateAccounts(filePath string) error {
 	return nil
 }
 
+var quoteTokens = []string{"WETH", "DAI"}
+
+func isQuote(tokenSymbol string) bool {
+	for _, val := range quoteTokens {
+		if val == tokenSymbol {
+			return true
+		}
+	}
+	return false
+}
+
 func generateTokens(filePath string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
@@ -257,7 +270,7 @@ func generateTokens(filePath string) error {
 	imagesConfig := imagesConfigMap["8888"]
 	// fmt.Println(imagesConfig)
 
-	tplStr := `{"_id":{"$oid":"{{.ID}}"},"name":"{{.Name}}","symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","image":{"url":"{{.ImageURL}}","meta":"{{.ImageMeta}}"},"decimals":18,"quote":false,"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
+	tplStr := `{"_id":{"$oid":"{{.ID}}"},"name":"{{.Name}}","symbol":"{{.Symbol}}","contractAddress":"{{.ContractAddress}}","image":{"url":"{{.ImageURL}}","meta":"{{.ImageMeta}}"},"decimals":18,"quote":{{.IsQuote}},"createdAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)","updatedAt":"Sun Sep 02 2018 17:34:37 GMT+0900 (Korean Standard Time)"}`
 	tpl, _ := template.New("token").Parse(tplStr)
 	startIndex, _ := new(big.Int).SetString("5b8ba09da75a9b1320ca4974", 16)
 	oneBig := big.NewInt(1)
@@ -274,8 +287,9 @@ func generateTokens(filePath string) error {
 				Symbol:          symbol,
 				ContractAddress: address.(string),
 			},
-			Name: symbol,
-			ID:   startIndex.Text(16),
+			Name:    symbol,
+			ID:      startIndex.Text(16),
+			IsQuote: isQuote(symbol),
 		}
 
 		imageData, ok := imagesConfig[symbol]
@@ -287,7 +301,7 @@ func generateTokens(filePath string) error {
 		tpl.Execute(buffer, tokenInsert)
 		buffer.WriteString("\n")
 	}
-	tokenFile := path.Join(basePath, "tokens.json")
+	tokenFile := path.Join(basePath, "tokens.bson")
 	ioutil.WriteFile(tokenFile, buffer.Bytes(), os.ModePerm)
 	fmt.Printf("Token json data: %s\n", buffer.String())
 	return nil
@@ -309,7 +323,7 @@ func generateGenesis(folder, outFolder string) error {
 	}
 
 	// first step: read all tokens and deployedBytecode (bytecode of smartcontract without deploying by wallet but creation block)
-	tokenPath := path.Join(basePath, "tokens.json")
+	tokenPath := path.Join(basePath, "tokens.bson")
 	tokenFile, err := os.Open(tokenPath)
 	// if we os.Open returns an error then handle it
 	if err != nil {
@@ -336,7 +350,7 @@ func generateGenesis(folder, outFolder string) error {
 		log.Fatal(err)
 	}
 
-	genesisPath := path.Join(outputFolder, "genesis.json")
+	genesisPath := path.Join(outputFolder, "genesis.bson")
 	f, err := os.Create(genesisPath)
 	tpl.Execute(f, genesis)
 	if err != nil {

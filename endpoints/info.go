@@ -3,11 +3,11 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/gorilla/mux"
 )
 
 type infoEndpoint struct {
@@ -47,8 +47,8 @@ func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	for _, q := range quotes {
 		fees = append(fees, map[string]string{
 			"quote":   q.Symbol,
-			"makeFee": q.MakeFee,
-			"takeFee": q.TakeFee,
+			"makeFee": q.MakeFee.String(),
+			"takeFee": q.TakeFee.String(),
 		})
 	}
 
@@ -91,8 +91,8 @@ func (e *infoEndpoint) handleGetFeeInfo(w http.ResponseWriter, r *http.Request) 
 	for _, q := range quotes {
 		fees = append(fees, map[string]string{
 			"quote":   q.Symbol,
-			"makeFee": q.MakeFee,
-			"takeFee": q.TakeFee,
+			"makeFee": q.MakeFee.String(),
+			"takeFee": q.TakeFee.String(),
 		})
 	}
 

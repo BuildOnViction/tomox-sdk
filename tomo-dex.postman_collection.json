@@ -1,0 +1,49 @@
+{
+	"info": {
+		"_postman_id": "4346f574-dd5c-48ae-b807-249c8fa6aba8",
+		"name": "tomo-dex",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Pairs",
+			"item": [
+				{
+					"name": "Add Pair",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Coin\": \"Tomo\",\n  \"ID\": \"2\",\n  \"Price\": \"100\",\n  \"Quantity\": \"10\",\n  \"Side\": \"ask\",\n  \"Timestamp\": 1541152000736,\n  \"TradeID\": \"1\",\n  \"Type\": \"limit\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/pair",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"pair"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
