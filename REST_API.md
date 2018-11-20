@@ -10,6 +10,10 @@ There are 7 different resources on the matching engine REST API:
 * orders
 * ohlcv
 
+Moreover, there is one resource for getting general information:
+
+* info
+
 
 # Account resource
 
@@ -23,6 +27,10 @@ Retrieve the token balance of a certain Ethereum address
 
 * {userAddress} is the Ethereum address of a user/client wallet
 * {tokenAddress} is the Ethereum address of a token (base or quote)
+
+### POST /account/create?address={newAddress}
+
+* {newAddress} is the Ethereum address of a user/client wallet
 
 
 # Pairs resource
@@ -48,6 +56,20 @@ Retrieve pair data corresponding to a baseToken and quoteToken where
 This endpoints returns the Open, High, Low, Close, Volume and Change for the last 24 hours
 as well as the last price.
 
+### POST /pairs
+
+Create/Insert pair in DB.
+
+* Sample request parameters:
+```json
+{
+    "BaseTokenAddress":"0x4f696e8A1A3fB3AEA9f72EB100eA8d97c5130B32",
+    "BaseTokenSymbol": "KCS",
+    "QuoteTokenAddress":"0x1888a8db0b7db59413ce07150b3373972bf818d4", // Must be registered as quote when creating new token
+    "QuoteTokenSymbol":"HTC",
+    "active":true
+}
+```
 
 # Tokens resource
 
@@ -69,6 +91,21 @@ Retrieve token information for a token at a certain address
 
 * {address} is an Ethereum address
 
+### POST /tokens
+
+Create/Insert token in DB.
+
+* Sample request parameters:
+```json
+{
+	"name":"HotPotCoin",
+	"symbol":"HPC",
+	"decimal":18,
+	"contractAddress":"0x1888a8db0b7db59413ce07150b3373972bf818d3",
+	"active":true,
+	"quote":true // This is required when creating pair
+}
+```
 
 # Orderbook resource
 
@@ -90,19 +127,20 @@ corresponding to a baseToken and a quoteToken.
 
 # Trade resource
 
-### GET /trades?address={address}
+### GET /trades?address={address}&limit={limit}
 
-Retrieve the sorted list of trades for an Ethereum address
+Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker
 
 * {address} is an Ethereum address
+* {limit} is the number of records returned
 
-### GET /trades/pair?baseToken={baseToken}&quoteToken={quoteToken}
+### GET /trades/pair?baseToken={baseToken}&quoteToken={quoteToken}&limit={limit}
 
 Retrieve all trades corresponding to a baseToken and a quoteToken
 
 * {baseToken} is the Ethereum address of a base token
 * {quoteToken} is the Ethereum address of a quote token
-
+* {limit} is the number of records returned
 
 
 # Order resource
@@ -124,6 +162,13 @@ Retrieve the list of filled order for an Ethereum address.
 
 * {address} is an Ethereum address
 
+### GET /orders/feeds/{address}?tokenAddress={tokenAddress}
+
+Retrieve the list of filled order for an Ethereum address from Swarm Feed.
+
+* {address} is an Ethereum address
+* {tokenAddress} is the token address
+
 
 # OHLCV resource
 
@@ -138,3 +183,22 @@ Retrieve OHLCV data corresponding to a baseToken and a quoteToken.
 * {units} is the unit used to represent the above duration: "minute", "hour", "day", "week", "month"
 * {from} is the beginning timestamp from which ohlcv data has to be queried
 * {to} is the ending timestamp until which ohlcv data has to be queried
+
+
+# Info resource
+
+### GET /info
+
+Get general information (exchange address, fees and operators)
+
+### GET /info/exchange
+
+Get exchange address
+
+### GET /info/operators
+
+Get operators information
+
+### GET /info/fees
+
+Get fees information
