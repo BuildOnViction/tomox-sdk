@@ -175,7 +175,7 @@ type OrderService interface {
 }
 
 type OrderBookService interface {
-	GetOrderBook(bt, qt common.Address) (map[string]interface{}, error)
+	GetOrderBook(bt, qt common.Address) (*types.OrderBook, error)
 	GetRawOrderBook(bt, qt common.Address) (*types.RawOrderBook, error)
 	SubscribeOrderBook(c *ws.Client, bt, qt common.Address)
 	UnsubscribeOrderBook(c *ws.Client)

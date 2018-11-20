@@ -3,10 +3,10 @@ package services
 import (
 	"errors"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/tomochain/backend-matching-engine/ws"
 )
@@ -31,7 +31,7 @@ func NewOrderBookService(
 }
 
 // GetOrderBook fetches orderbook from engine/redis and returns it as an map[string]interface
-func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (map[string]interface{}, error) {
+func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (*types.OrderBook, error) {
 	pair, err := s.pairDao.GetByTokenAddress(bt, qt)
 	if err != nil {
 		logger.Error(err)
@@ -48,10 +48,10 @@ func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (map[string]inter
 		return nil, err
 	}
 
-	ob := map[string]interface{}{
-		"pair": pair.Name(),
-		"asks": asks,
-		"bids": bids,
+	ob := &types.OrderBook{
+		PairName: pair.Name(),
+		Asks:     asks,
+		Bids:     bids,
 	}
 
 	return ob, nil
