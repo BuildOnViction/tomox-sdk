@@ -8,14 +8,14 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
+	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 type ethereumClientInterface interface {
@@ -114,7 +114,7 @@ func (e *Exchange) SetOperator(a common.Address, isOperator bool, txOpts *bind.T
 func (e *Exchange) FeeAccount() (common.Address, error) {
 	callOptions := e.GetTxCallOptions()
 
-	account, err := e.Interface.FeeAccount(callOptions)
+	account, err := e.Interface.RewardAccount(callOptions)
 	if err != nil {
 		logger.Error(err)
 		return common.Address{}, err

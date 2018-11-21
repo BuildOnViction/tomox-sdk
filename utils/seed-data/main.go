@@ -44,8 +44,8 @@ func init() {
 				return generateGenesis(c.String("cbf"), c.String("out"))
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-build-folder, cbf", Value: "../../../contracts/build/contracts"},
-				cli.StringFlag{Name: "output-folder, out", Value: "../../../protocol/OrderBook"},
+				cli.StringFlag{Name: "contract-build-folder, cbf", Value: "../../../dex-smart-contracts/build/contracts"},
+				cli.StringFlag{Name: "output-folder, out", Value: "../../../dex-protocol/OrderBook"},
 			},
 		},
 		cli.Command{
@@ -54,14 +54,14 @@ func init() {
 				filePath := c.String("ccf")
 				return batch(
 					filePath,
-					// generateConfig,
-					// generateTokens,
+					generateConfig,
+					generateTokens,
 					generatePairs,
-					// generateAccounts,
+					generateAccounts,
 				)
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../client/src/config"},
+				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../dex-client/src/config"},
 			},
 		},
 	}
