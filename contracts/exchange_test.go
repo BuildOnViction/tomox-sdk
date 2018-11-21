@@ -5,13 +5,13 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/testutils"
 	"github.com/tomochain/backend-matching-engine/utils/testutils/mocks"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 func SetupTest() (*testutils.Deployer, *types.Wallet, common.Address, common.Address, *types.Wallet, *types.Wallet) {
@@ -114,7 +114,9 @@ func TestTrade(t *testing.T) {
 
 	pricepoint := big.NewInt(1e8)
 	amount := big.NewInt(5e17)
-	expires := big.NewInt(1e7)
+	buyAmount := big.NewInt(1000)
+	sellAmount := big.NewInt(100)
+	// expires := big.NewInt(1e7)
 
 	exchange, exchangeAddr, _, err := deployer.DeployExchange(feeAccount, wethToken)
 	if err != nil {
@@ -165,22 +167,26 @@ func TestTrade(t *testing.T) {
 		Nonce:           big.NewInt(0),
 		MakeFee:         big.NewInt(0),
 		TakeFee:         big.NewInt(0),
-		BuyToken:        buyTokenAddr,
-		SellToken:       sellTokenAddr,
+		BaseToken:       buyTokenAddr,
+		QuoteToken:      sellTokenAddr,
 		UserAddress:     maker.Address,
 	}
 
 	order.Sign(maker)
 
 	trade := &types.Trade{
-		OrderHash: order.Hash,
-		Amount:    amount,
-		Taker:     taker.Address,
+		Hash:   order.Hash,
+		Amount: amount,
+		Taker:  taker.Address,
 	}
 
-	trade.Sign(taker)
-
-	_, err = exchange.Trade(order, trade, txOpts)
+	// trade.Sign(taker)
+	matches := types.NewMatches(
+		[]*types.Order{order},
+		order,
+		[]*types.Trade{trade},
+	)
+	_, err = exchange.Trade(matches, txOpts)
 	if err != nil {
 		t.Errorf("Could not execute trade: %v", err)
 	}
