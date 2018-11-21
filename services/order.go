@@ -6,10 +6,10 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/ws"
-	"github.com/ethereum/go-ethereum/common"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -448,10 +448,10 @@ func (s *OrderService) broadcastOrderBookUpdate(orders []*types.Order) {
 	}
 
 	id := utils.GetOrderBookChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
-	ws.GetOrderBookSocket().BroadcastMessage(id, map[string]interface{}{
-		"pair": orders[0].PairName,
-		"bids": bids,
-		"asks": asks,
+	ws.GetOrderBookSocket().BroadcastMessage(id, &types.OrderBook{
+		PairName: orders[0].PairName,
+		Bids:     bids,
+		Asks:     asks,
 	})
 }
 
