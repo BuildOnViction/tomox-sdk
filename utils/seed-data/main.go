@@ -44,7 +44,7 @@ func init() {
 				return generateGenesis(c.String("cbf"), c.String("out"))
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-build-folder, cbf", Value: "../../../dex-smart-contracts/build/contracts"},
+				cli.StringFlag{Name: "contract-build-folder, cbf", Value: "../../../dex-smart-contract/build/contracts"},
 				cli.StringFlag{Name: "output-folder, out", Value: "../../../dex-protocol/OrderBook"},
 			},
 		},
