@@ -3,8 +3,8 @@ package rabbitmq
 import (
 	"log"
 
-	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/streadway/amqp"
+	"github.com/tomochain/backend-matching-engine/utils"
 )
 
 // Conn is singleton rabbitmq connection
@@ -31,6 +31,7 @@ func InitConnection(address string) *Connection {
 		}
 		conn = &Connection{newConn}
 	}
+
 	return conn
 }
 

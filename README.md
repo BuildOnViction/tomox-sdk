@@ -43,7 +43,9 @@ yarn restart-env
 # If you need to run mongod outside docker-compose
 mongod --dbpath utils/datadir
 # this will start the server in hot-reload mode
-yarn hot
+yarn start
+# check rabbitmq
+docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
 ```
 
 =======

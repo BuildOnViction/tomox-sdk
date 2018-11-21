@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
 	"github.com/tomochain/backend-matching-engine/ws"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/gorilla/mux"
 )
 
 type OHLCVEndpoint struct {
