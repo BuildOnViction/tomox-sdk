@@ -1,6 +1,4 @@
 db_name: tomodex
-make_fee: 10000
-take_fee: 10000
 dsn: 127.0.0.1
 error_file: config/errors.yaml
 ethereum:
@@ -17,9 +15,11 @@ logs:
   engine: ./engine.log
   main: ./main.log
   operator: ./operator.log
+make_fee: 10000
 rabbitmq: amqp://guest:guest@localhost:5672/
 redis: redis://localhost:6379
 server_port: 8082
+take_fee: 10000
 tick_duration:
   day:
   - 1
