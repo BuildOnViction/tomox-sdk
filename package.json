@@ -7,7 +7,7 @@
   },
   "scripts": {
     "install": "./install-requirements.sh",
-    "start-env": "docker-compose up -d rabbitmq redis mongodb",
+    "start-env": "docker-compose up -d rabbitmq redis mongodb; sleep 10",
     "reset-env": "yarn stop-env && rm -rf ./utils/datadir && yarn start-env",
     "start": "TOMO_SERVER_PORT=8082 gin -a 8082 -p 8080 run main.go",
     "generate-seeds": "go run utils/seed-data/main.go seeds",

@@ -4,7 +4,7 @@ error_file: config/errors.yaml
 ethereum:
   bzz_url: http://localhost:8542
   decimal: 8
-  exchange_address: 0xc1F424996039cc5B037dfB073bcd6e6915F0dfab
+  exchange_address: 0x0368aa810555F532398598f9C75707e7b31c6838
   fee_account: 0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c
   http_url: http://localhost:8545
   weth_address: 0x53DDd545882dec853226dC8255268C7760276695
