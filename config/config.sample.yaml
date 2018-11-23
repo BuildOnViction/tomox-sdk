@@ -3,6 +3,8 @@
 dsn: '127.0.0.1'
 server_port: 8082
 db_name: tomodex
+make_fee: 10000
+take_fee: 10000
 error_file: config/errors.yaml
 rabbitmq: amqp://guest:guest@localhost:5672/
 redis: redis://localhost:6379

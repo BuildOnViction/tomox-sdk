@@ -5,13 +5,13 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/streadway/amqp"
+	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/rabbitmq"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 type TxQueue struct {
@@ -97,7 +97,7 @@ func (txq *TxQueue) Length() int {
 // trade message, the trade is updated on the database and is published to the operator subscribers
 // (order service)
 func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
-	logger.Infof("Executing trades")
+	logger.Infof("Executing trades: %+v", m)
 
 	callOpts := txq.GetTxCallOptions()
 	gasLimit, err := txq.Exchange.CallBatchTrades(m, callOpts)
