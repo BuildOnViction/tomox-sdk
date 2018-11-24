@@ -4,6 +4,8 @@ const MongoClient = require('mongodb').MongoClient
 const faker = require('faker')
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017'
 // default quote
+// each pair has 1000 orders
+const numberOfOrders = argv.number || 1000;
 const quoteTokenSymbol = argv.quote || 'WETH';
 const { generatePricingData, interpolatePrice } = require('./utils/prices')
 const { DB_NAME, addresses } = require('./utils/config')
@@ -55,7 +57,7 @@ const seed = async () => {
     let start = new Date(2017, 6, 1)
     let end = new Date(Date.now())
     let pricingData = generatePricingData(start, end)
-    let numberOfOrders = 100000
+    
 
     for (let i = 0; i < numberOfOrders; i++) {
       let taker = randomElement(addresses)
