@@ -3,7 +3,7 @@ const MongoClient = require('mongodb').MongoClient
 const { keys } = require('../../config')
 const { utils, Wallet } = require('ethers')
 const { getNetworkID } = require('../../utils/helpers')
-
+const { DB_NAME } = require('./utils/config')
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017'
 const network = argv.network
 const networkID = getNetworkID(network)
@@ -14,7 +14,7 @@ let client, db, documents, response
 const seed = async () => {
   try {
     client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true })
-    db = client.db('proofdex')
+    db = client.db(DB_NAME)
     documents = []
 
     walletKeys.forEach(key => {

@@ -2,11 +2,10 @@ const utils = require('ethers').utils
 const MongoClient = require('mongodb').MongoClient
 const faker = require('faker')
 const argv = require('yargs').argv
-const { generatePricingData , interpolatePrice } = require('../../utils/prices')
-
+const { generatePricingData , interpolatePrice } = require('./utils/prices')
+const { DB_NAME, addresses } = require('./utils/config')
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017'
 
-let { addresses } = require('./addresses.json')
 let exchangeAddress = "0x7400d4d4263a3330beeb2a0d2674f0456054f217"
 let minTimeStamp = 1500000000000
 let maxTimeStamp = 1520000000000
@@ -164,8 +163,8 @@ const randomTradeStatus = () => {
 
 const seed = async () => {
     let orders = []
-    const client = await MongoClient.connect(url, { useNewUrlParser: true })
-    const db = client.db('proofdex')
+    const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true })
+    const db = client.db(DB_NAME)
 
     const docs = await db.collection('pairs')
       .find(
@@ -196,7 +195,7 @@ const seed = async () => {
 
 
     //we choose a limited number of user accounts
-    addresses = addresses.slice(0,4)
+    // addresses = addresses.slice(0,4)
 
       for (let i = 0; i < 20000; i++) {
         let pair = randomElement(pairs)

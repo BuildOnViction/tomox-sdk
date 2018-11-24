@@ -5,7 +5,7 @@ const argv = require('yargs').argv
 const utils = require('ethers').utils
 const MongoClient = require('mongodb').MongoClient
 const { getNetworkID } = require('../../utils/helpers')
-
+const { DB_NAME } = require('./utils/config')
 const network = argv.network
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017'
 const networkID = getNetworkID(network)
@@ -22,7 +22,7 @@ let client, db, response
 const seed = async () => {
   try {
     client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true })
-    db = client.db('proofdex')
+    db = client.db(DB_NAME)
 
     documents = baseTokens.map((symbol) => ({
       symbol: symbol,

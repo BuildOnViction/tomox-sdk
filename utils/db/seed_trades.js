@@ -3,9 +3,10 @@ const utils = require('ethers').utils
 const MongoClient = require('mongodb').MongoClient
 const faker = require('faker')
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017'
+// default quote
+const quoteTokenSymbol = argv.quote || 'WETH';
 const { generatePricingData, interpolatePrice } = require('./utils/prices')
-
-const address = ['0x28074f8D0fD78629CD59290Cac185611a8d60109','0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c'];
+const { DB_NAME, addresses } = require('./utils/config')
 let exchangeAddress = '0xc1F424996039cc5B037dfB073bcd6e6915F0dfab'
 let minAmount = 0.1
 let maxAmount = 10000
@@ -26,10 +27,10 @@ let randomBigAmount = () => {
 
 const seed = async () => {
   const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true })
-  const db = client.db('proofdex')
+  const db = client.db(DB_NAME)
 
   const pairDocuments = await db.collection('pairs').find({
-    quoteTokenSymbol: 'USDC'
+    quoteTokenSymbol,
   }, {
     baseTokenSymbol: 1,
     baseTokenAddress: 1,

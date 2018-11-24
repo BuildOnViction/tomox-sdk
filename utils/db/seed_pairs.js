@@ -2,7 +2,7 @@ const utils = require('ethers').utils
 const argv = require('yargs').argv
 const MongoClient = require('mongodb').MongoClient
 const { getNetworkID, getPriceMultiplier } = require('../../utils/helpers')
-
+const { DB_NAME } = require('./utils/config')
 const network = argv.network
 const mongoUrl = argv.mongo_url
 const networkID = getNetworkID(network)
@@ -12,7 +12,7 @@ let client, db
 const seed = async () => {
   try {
     client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true })
-    db = client.db('proofdex')
+    db = client.db(DB_NAME)
 
     let pairs = []
 
