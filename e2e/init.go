@@ -22,7 +22,6 @@ import (
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/operator"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/services"
 	"gopkg.in/mgo.v2/dbtest"
 )
@@ -65,8 +64,6 @@ func Init(t *testing.T) {
 func NewRouter() *mux.Router {
 	provider := ethereum.NewWebsocketProvider()
 	rabbitConn := rabbitmq.InitConnection(app.Config.Rabbitmq)
-	redisConn := redis.NewRedisConnection(app.Config.Redis)
-	redisConn.FlushAll()
 
 	r := mux.NewRouter()
 

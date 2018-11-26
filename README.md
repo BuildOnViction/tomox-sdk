@@ -9,7 +9,6 @@ The matching-engine will be soon moved to blockchain services.
 
 - **mongoDB** version 3.6 or newer
 - **rabbitmq** version 3.7.7 or newer
-- **redis** version 4.0 or newer
 - **dep** latest
 
 ## Booting up the server
@@ -32,7 +31,7 @@ dep ensure
 _If you need to generate genesis block, take a look at [seed-data](./utils/seed-data/README.md)_
 
 ```bash
-# start dockers including mongo, redis, rabbitmq
+# start dockers including mongo, rabbitmq
 yarn start-env
 # generate seeds data
 yarn generate-seeds

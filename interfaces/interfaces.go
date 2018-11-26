@@ -58,6 +58,15 @@ type AccountDao interface {
 	Drop()
 }
 
+type DepositDao interface {
+	GetSchemaVersion() uint64
+	GetAssociationByChainAddress(chain types.Chain, address *common.Address) (*types.AddressAssociation, error)
+	GetAddressIndex(chain types.Chain) (uint64, error)
+	IncrementAddressIndex(chain types.Chain) error
+	ResetBlockCounters() error
+	Drop()
+}
+
 type WalletDao interface {
 	Create(wallet *types.Wallet) error
 	GetAll() ([]types.Wallet, error)
@@ -163,6 +172,7 @@ type EthereumService interface {
 
 type OrderService interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
+	GetFeedByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
@@ -237,6 +247,12 @@ type AccountService interface {
 	FindOrCreate(a common.Address) (*types.Account, error)
 	GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error)
 	GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error)
+}
+
+type DepositService interface {
+	GenerateAddress(chain string) (*common.Address, error)
+	GetSchemaVersion() uint64
+	// RecoveryTransaction(chain string, address *common.Address) error
 }
 
 type ValidatorService interface {

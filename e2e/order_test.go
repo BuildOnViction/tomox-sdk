@@ -15,7 +15,6 @@ import (
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/utils/testutils"
@@ -50,9 +49,6 @@ func SetupTest() (
 
 	rabbitmq.InitConnection(app.Config.Rabbitmq)
 	ethereum.NewWebsocketProvider()
-	redisConn := redis.NewRedisConnection(app.Config.Redis)
-
-	defer redisConn.FlushAll()
 
 	_, err = daos.InitSession(nil)
 	if err != nil {

@@ -5,7 +5,7 @@ const create = async () => {
   const client = await MongoClient.connect(url, { useNewUrlParser: true })
 
   const db = client.db(DB_NAME)
-  const response = await db.createCollection('balances', {
+  const response = await db.createCollection('accounts', {
     validator:  {
       $jsonSchema: 'object',
       required: ['address'],
@@ -13,18 +13,15 @@ const create = async () => {
         address: {
           bsonType: "string",
         },
-        tokens: {
+        tokenBalances: {
           bsonType: "object",
         },
-        createdAt: {
-          bsonType: "long"
+        isBlocked: {
+          bsonType: "bool",
         },
-        updatedAt: {
-          bsonType: "string"
-        }
       }
-      }
-    })
+    }
+  })
 
   console.log(response)
 }

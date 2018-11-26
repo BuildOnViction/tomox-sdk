@@ -3,10 +3,15 @@ package services
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/swarm/storage/feed"
+	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
+	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/ws"
@@ -74,6 +79,49 @@ func (s *OrderService) GetByHash(hash common.Hash) (*types.Order, error) {
 
 func (s *OrderService) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 	return s.orderDao.GetByHashes(hashes)
+}
+
+func (s *OrderService) GetFeedByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error) {
+	// topic, _ := feed.NewTopic("Token", []byte("TOMO"))
+	topic := feed.Topic{}
+
+	copy(topic[:], tokenAddress.Bytes())
+	// topic, _ := feed.NewTopic(token.Symbol, tokenAddress.Bytes())
+	fd := &feed.Feed{
+		Topic: topic,
+		User:  userAddress,
+	}
+
+	// httputils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s,%s", tokenAddress.Hex(), topic.Hex()))
+
+	lookupParams := feed.NewQueryLatest(fd, lookup.NoClue)
+	bzzClient := s.engine.Provider().(*ethereum.EthereumProvider).BzzClient
+	reader, err := bzzClient.QueryFeed(lookupParams, "")
+
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving feed updates: %s", err)
+	}
+	defer reader.Close()
+	databytes, err := ioutil.ReadAll(reader)
+
+	if databytes == nil || err != nil {
+		return nil, fmt.Errorf("Error retrieving feed updates: %s", err)
+	}
+
+	// // try to decode
+	var feeds []types.OrderFeed
+	err = rlp.DecodeBytes(databytes, &feeds)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding feed updates: %s", err)
+	}
+
+	var messages []*types.OrderRecord
+	for _, feed := range feeds {
+		message, _ := feed.GetBSON()
+		messages = append(messages, message)
+	}
+
+	return messages, nil
 }
 
 // // GetByAddress fetches the detailed document of a token using its contract address
@@ -245,7 +293,6 @@ func (s *OrderService) handleOrdersInvalidated(res *types.EngineResponse) error 
 }
 
 // handleEngineError returns an websocket error message to the client and recovers orders on the
-// redis key/value store
 func (s *OrderService) handleEngineError(res *types.EngineResponse) {
 	o := res.Order
 	ws.SendOrderMessage("ERROR", o.UserAddress, nil)
@@ -379,7 +426,7 @@ func (s *OrderService) handleOperatorTradeSuccess(msg *types.OperatorMessage) {
 }
 
 // handleOperatorTradeError handles error messages from the operator (case where the blockchain tx was made
-// but ended up failing. It updates the trade status in the db. None of the orders are reincluded in the redis
+// but ended up failing. It updates the trade status in the db.
 // orderbook.
 func (s *OrderService) handleOperatorTradeError(msg *types.OperatorMessage) {
 	matches := msg.Matches

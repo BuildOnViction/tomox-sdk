@@ -12,7 +12,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/utils"
 )
 
-// Engine contains daos and redis connection required for engine to work
+// Engine contains daos required for engine to work
 type Engine struct {
 	orderbooks   map[string]*OrderBook
 	rabbitMQConn *rabbitmq.Connection

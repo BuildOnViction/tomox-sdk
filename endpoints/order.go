@@ -3,18 +3,12 @@ package endpoints
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/swarm/storage/feed"
-	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
 
@@ -103,8 +97,9 @@ func (e *orderEndpoint) handleGetOrderFeeds(w http.ResponseWriter, r *http.Reque
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
 		return
 	}
-	
+
 	tokenAddress := common.HexToAddress(address)
+	userAddress := common.HexToAddress(addr)
 	// token, err := e.orderService.GetTokenByAddress(tokenAddress)
 	// if err != nil {
 	// 	logger.Error(err)
@@ -112,50 +107,13 @@ func (e *orderEndpoint) handleGetOrderFeeds(w http.ResponseWriter, r *http.Reque
 	// 	return
 	// }
 
-	// topic, _ := feed.NewTopic("Token", []byte("TOMO"))
-	topic := feed.Topic{}
-
-	copy(topic[:], tokenAddress.Bytes())
-	// topic, _ := feed.NewTopic(token.Symbol, tokenAddress.Bytes())
-	fd := &feed.Feed{
-		Topic: topic,
-		User:  common.HexToAddress(addr),
-	}
-
-	// httputils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s,%s", tokenAddress.Hex(), topic.Hex()))
-
-	lookupParams := feed.NewQueryLatest(fd, lookup.NoClue)
-	bzzClient := e.engine.Provider().(*ethereum.EthereumProvider).BzzClient
-	reader, err := bzzClient.QueryFeed(lookupParams, "")
-
+	messages, err := e.orderService.GetFeedByTopic(userAddress, tokenAddress)
 	if err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Error retrieving feed updates: %s", err))
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
-	}
-	defer reader.Close()
-	databytes, err := ioutil.ReadAll(reader)
-
-	if databytes == nil || err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Error retrieving feed updates: %s", err))
-		return
-	}
-
-	// // try to decode
-	var feeds []types.OrderFeed
-	err = rlp.DecodeBytes(databytes, &feeds)
-	if err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Error retrieving feed updates: %s", err))
-		return
-	}
-
-	var messages []*types.OrderRecord
-	for _, feed := range feeds {
-		message, _ := feed.GetBSON()
-		messages = append(messages, message)
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, messages)
-
 }
 
 func (e *orderEndpoint) handleGetPositions(w http.ResponseWriter, r *http.Request) {

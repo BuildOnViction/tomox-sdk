@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/ethereum/go-ethereum/common"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-// BalanceDao contains:
+// AccountDao contains:
 // collectionName: MongoDB collection name
 // dbName: name of mongodb to interact with
 type AccountDao struct {
@@ -19,7 +19,7 @@ type AccountDao struct {
 	dbName         string
 }
 
-// NewBalanceDao returns a new instance of AddressDao
+// NewAccountDao returns a new instance of AddressDao
 func NewAccountDao() *AccountDao {
 	dbName := app.Config.DBName
 	collection := "accounts"

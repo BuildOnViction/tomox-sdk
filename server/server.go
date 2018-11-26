@@ -11,13 +11,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/contracts"
+	"github.com/tomochain/backend-matching-engine/crons"
 	"github.com/tomochain/backend-matching-engine/daos"
 	"github.com/tomochain/backend-matching-engine/endpoints"
 	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/operator"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/redis"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/ws"
 
@@ -41,11 +41,16 @@ func Start() {
 		panic(err)
 	}
 
-	rabbitConn := rabbitmq.InitConnection(app.Config.Rabbitmq)
-	redisConn := redis.NewRedisConnection(app.Config.Redis)
-	provider := ethereum.NewWebsocketProvider()
+	rabbitConn := rabbitmq.InitConnection(app.Config.RabbitMQURL)
 
-	router := NewRouter(provider, redisConn, rabbitConn)
+	// provider := ethereum.NewWebsocketProvider()
+
+	provider := ethereum.NewSimulatedEthereumProvider([]common.Address{
+		common.HexToAddress("0x28074f8D0fD78629CD59290Cac185611a8d60109"),
+		common.HexToAddress("0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c"),
+	})
+
+	router := NewRouter(provider, rabbitConn)
 	// http.Handle("/", router)
 	router.HandleFunc("/socket", ws.ConnectionEndpoint)
 
@@ -62,7 +67,6 @@ func Start() {
 
 func NewRouter(
 	provider *ethereum.EthereumProvider,
-	redisConn *redis.RedisConnection,
 	rabbitConn *rabbitmq.Connection,
 ) *mux.Router {
 
@@ -75,6 +79,7 @@ func NewRouter(
 	tradeDao := daos.NewTradeDao()
 	accountDao := daos.NewAccountDao()
 	walletDao := daos.NewWalletDao()
+	depositDao := daos.NewDepositDao()
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
@@ -89,7 +94,9 @@ func NewRouter(
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	walletService := services.NewWalletService(walletDao)
-	// cronService := crons.NewCronService(ohlcvService)
+	depositService := services.NewDepositService(depositDao)
+
+	cronService := crons.NewCronService(ohlcvService)
 
 	// get exchange contract instance
 	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
@@ -126,6 +133,7 @@ func NewRouter(
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 	endpoints.ServeTradeResource(r, tradeService)
 	endpoints.ServeOrderResource(r, orderService, accountService, eng)
+	endpoints.ServeDepositResource(r, depositService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)
@@ -133,6 +141,6 @@ func NewRouter(
 	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
 	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 
-	// cronService.InitCrons()
+	cronService.InitCrons()
 	return r
 }

@@ -16,7 +16,6 @@ logs:
   main: ./main.log
   operator: ./operator.log
 rabbitmq: amqp://guest:guest@localhost:5672/
-redis: redis://localhost:6379
 server_port: 8082
 tick_duration:
   day:

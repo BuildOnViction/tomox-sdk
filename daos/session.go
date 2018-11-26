@@ -23,7 +23,7 @@ var logger = utils.Logger
 func InitSession(session *mgo.Session) (*mgo.Session, error) {
 	if db == nil {
 		if session == nil {
-			db1, err := mgo.Dial(app.Config.DSN)
+			db1, err := mgo.Dial(app.Config.MongoURL)
 			if err != nil {
 				logger.Error(err)
 				return nil, err
