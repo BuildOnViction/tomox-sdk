@@ -1,58 +1,35 @@
 package tomochain
 
 import (
-	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/stellar/go/clients/horizon"
-	"github.com/stellar/go/keypair"
-	"github.com/stellar/go/services/bifrost/common"
-	"github.com/stellar/go/support/log"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tomochain/backend-matching-engine/swap/errors"
 )
 
 func (ac *AccountConfigurator) Start() error {
-	ac.log = common.CreateLogger("StellarAccountConfigurator")
-	ac.log.Info("StellarAccountConfigurator starting")
 
-	_, err := keypair.Parse(ac.IssuerPublicKey)
-	if err != nil || (err == nil && ac.IssuerPublicKey[0] != 'G') {
-		err = errors.Wrap(err, "Invalid IssuerPublicKey")
-		ac.log.Error(err)
-		return err
+	logger.Info("TomochainAccountConfigurator starting")
+
+	if !common.IsHexAddress(ac.IssuerPublicKey) {
+		return errors.New("Invalid IssuerPublicKey")
 	}
 
-	_, err = keypair.Parse(ac.DistributionPublicKey)
-	if err != nil || (err == nil && ac.DistributionPublicKey[0] != 'G') {
-		err = errors.Wrap(err, "Invalid DistributionPublicKey")
-		ac.log.Error(err)
-		return err
+	if !common.IsHexAddress(ac.DistributionPublicKey) {
+		return errors.New("Invalid DistributionPublicKey")
 	}
 
-	kp, err := keypair.Parse(ac.SignerSecretKey)
-	if err != nil || (err == nil && ac.SignerSecretKey[0] != 'S') {
-		err = errors.Wrap(err, "Invalid SignerSecretKey")
-		ac.log.Error(err)
-		return err
+	if !common.IsHexAddress(ac.SignerPrivateKey) {
+		return errors.New("Invalid SignerPrivateKey")
 	}
 
-	ac.signerPublicKey = kp.Address()
+	privkey, _ := crypto.LoadECDSA(ac.SignerPrivateKey)
+	ac.signerPublicKey = crypto.PubkeyToAddress(privkey.PublicKey)
 
-	root, err := ac.Horizon.Root()
-	if err != nil {
-		err = errors.Wrap(err, "Error loading Horizon root")
-		ac.log.Error(err)
-		return err
-	}
-
-	if root.NetworkPassphrase != ac.NetworkPassphrase {
-		return errors.Errorf("Invalid network passphrase (have=%s, want=%s)", root.NetworkPassphrase, ac.NetworkPassphrase)
-	}
-
-	err = ac.updateSignerSequence()
+	err := ac.updateSignerSequence()
 	if err != nil {
 		err = errors.Wrap(err, "Error loading issuer sequence number")
-		ac.log.Error(err)
 		return err
 	}
 
@@ -64,7 +41,7 @@ func (ac *AccountConfigurator) Start() error {
 
 func (ac *AccountConfigurator) logStats() {
 	for {
-		ac.log.WithField("statuses", ac.accountStatus).Info("Stats")
+		logger.Infof("statuses: %v", ac.accountStatus)
 		time.Sleep(15 * time.Second)
 	}
 }
@@ -73,12 +50,8 @@ func (ac *AccountConfigurator) logStats() {
 // * First it creates a new account.
 // * Once a signer is replaced on the account, it creates trust lines and exchanges assets.
 func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount string) {
-	localLog := ac.log.WithFields(log.F{
-		"destination": destination,
-		"assetCode":   assetCode,
-		"amount":      amount,
-	})
-	localLog.Info("Configuring Stellar account")
+
+	logger.Info("Configuring Tomochain account")
 
 	ac.setAccountStatus(destination, StatusCreatingAccount)
 	defer func() {
@@ -87,9 +60,10 @@ func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount s
 
 	// Check if account exists. If it is, skip creating it.
 	for {
+		// get from feed
 		_, exists, err := ac.getAccount(destination)
 		if err != nil {
-			localLog.WithField("err", err).Error("Error loading account from Horizon")
+			logger.Error("Error loading account from Tomochain")
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -98,10 +72,10 @@ func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount s
 			break
 		}
 
-		localLog.WithField("destination", destination).Info("Creating Stellar account")
+		logger.Info("Creating Tomochain account")
 		err = ac.createAccountTransaction(destination)
 		if err != nil {
-			localLog.WithField("err", err).Error("Error creating Stellar account")
+			logger.Error("Error creating Tomochain account")
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -117,9 +91,9 @@ func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount s
 
 	// Wait for signer changes...
 	for {
-		account, err := ac.Horizon.LoadAccount(destination)
+		account, err := ac.LoadAccount(destination)
 		if err != nil {
-			localLog.WithField("err", err).Error("Error loading account to check trustline")
+			logger.Error("Error loading account to check trustline")
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -131,26 +105,26 @@ func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount s
 		time.Sleep(2 * time.Second)
 	}
 
-	localLog.Info("Signer found")
+	logger.Info("Signer found")
 
 	ac.setAccountStatus(destination, StatusConfiguringAccount)
 
 	// When signer was created we can configure account in Bifrost without requiring
 	// the user to share the account's secret key.
-	localLog.Info("Sending token")
-	err := ac.configureAccountTransaction(destination, assetCode, amount, ac.NeedsAuthorize)
+	logger.Info("Sending token")
+	err := ac.configureAccountTransaction(destination, assetCode, amount)
 	if err != nil {
-		localLog.WithField("err", err).Error("Error configuring an account")
+		logger.Error("Error configuring an account")
 		return
 	}
 
 	ac.setAccountStatus(destination, StatusRemovingSigner)
 
 	if ac.LockUnixTimestamp == 0 {
-		localLog.Info("Removing temporary signer")
+		logger.Info("Removing temporary signer")
 		err = ac.removeTemporarySigner(destination)
 		if err != nil {
-			localLog.WithField("err", err).Error("Error removing temporary signer")
+			logger.Error("Error removing temporary signer")
 			return
 		}
 
@@ -158,10 +132,10 @@ func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount s
 			ac.OnExchanged(destination)
 		}
 	} else {
-		localLog.Info("Creating unlock transaction to remove temporary signer")
+		logger.Info("Creating unlock transaction to remove temporary signer")
 		transaction, err := ac.buildUnlockAccountTransaction(destination)
 		if err != nil {
-			localLog.WithField("err", err).Error("Error creating unlock transaction")
+			logger.Error("Error creating unlock transaction")
 			return
 		}
 
@@ -170,7 +144,7 @@ func (ac *AccountConfigurator) ConfigureAccount(destination, assetCode, amount s
 		}
 	}
 
-	localLog.Info("Account successully configured")
+	logger.Info("Account successully configured")
 }
 
 func (ac *AccountConfigurator) setAccountStatus(account string, status Status) {
@@ -185,36 +159,28 @@ func (ac *AccountConfigurator) removeAccountStatus(account string) {
 	delete(ac.accountStatus, account)
 }
 
-func (ac *AccountConfigurator) getAccount(account string) (horizon.Account, bool, error) {
-	var hAccount horizon.Account
-	hAccount, err := ac.Horizon.LoadAccount(account)
-	if err != nil {
-		if err, ok := err.(*horizon.Error); ok && err.Response.StatusCode == http.StatusNotFound {
-			return hAccount, false, nil
-		}
-		return hAccount, false, err
-	}
-
-	return hAccount, true, nil
+func (ac *AccountConfigurator) getAccount(account string) (Account, bool, error) {
+	hAccount, err := ac.LoadAccount(account)
+	return hAccount, true, err
 }
 
 // signerExistsOnly returns true if account has exactly one signer and it's
 // equal to `signerPublicKey`.
-func (ac *AccountConfigurator) signerExistsOnly(account horizon.Account) bool {
+func (ac *AccountConfigurator) signerExistsOnly(account Account) bool {
 	tempSignerFound := false
 
-	for _, signer := range account.Signers {
-		if signer.PublicKey == ac.signerPublicKey {
-			if signer.Weight == 1 {
-				tempSignerFound = true
-			}
-		} else {
-			// For each other signer, weight should be equal 0
-			if signer.Weight != 0 {
-				return false
-			}
-		}
-	}
+	// for _, signer := range account.Signers {
+	// 	if signer.PublicKey == ac.signerPublicKey {
+	// 		if signer.Weight == 1 {
+	// 			tempSignerFound = true
+	// 		}
+	// 	} else {
+	// 		// For each other signer, weight should be equal 0
+	// 		if signer.Weight != 0 {
+	// 			return false
+	// 		}
+	// 	}
+	// }
 
 	return tempSignerFound
 }

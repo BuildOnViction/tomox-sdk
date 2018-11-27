@@ -14,14 +14,15 @@ import (
 	"github.com/tomochain/backend-matching-engine/crons"
 	"github.com/tomochain/backend-matching-engine/daos"
 	"github.com/tomochain/backend-matching-engine/endpoints"
+	"github.com/tomochain/backend-matching-engine/engine"
 	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/operator"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/services"
+	"github.com/tomochain/backend-matching-engine/swap"
+	swapConfig "github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/ws"
-
-	"github.com/tomochain/backend-matching-engine/engine"
 )
 
 func Start() {
@@ -65,6 +66,19 @@ func Start() {
 	panic(http.ListenAndServe(address, handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
 }
 
+func NewSwapEngine() *swap.Engine {
+	swapConfig := &swapConfig.Config{
+		// Ethereum: &swapConfig.EthereumConfig{
+		// 	RpcServer: "localhost:8545",
+		// },
+		// Tomochain: &swapConfig.TomochainConfig {
+		// 	TokenAssetCode: "WETH",
+		// },
+	}
+	swapEngine := swap.NewEngine(swapConfig)
+	return swapEngine
+}
+
 func NewRouter(
 	provider *ethereum.EthereumProvider,
 	rabbitConn *rabbitmq.Connection,
@@ -83,6 +97,7 @@ func NewRouter(
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
+	swapEngine := NewSwapEngine()
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao)
@@ -94,7 +109,9 @@ func NewRouter(
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	walletService := services.NewWalletService(walletDao)
-	depositService := services.NewDepositService(depositDao)
+	depositService := services.NewDepositService(depositDao, swapEngine)
+	// set delegate to service
+	// swapEngine.SetDelegate(depositService)
 
 	cronService := crons.NewCronService(ohlcvService)
 
@@ -132,7 +149,7 @@ func NewRouter(
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 	endpoints.ServeTradeResource(r, tradeService)
-	endpoints.ServeOrderResource(r, orderService, accountService, eng)
+	endpoints.ServeOrderResource(r, orderService, accountService)
 	endpoints.ServeDepositResource(r, depositService)
 
 	//initialize rabbitmq subscriptions

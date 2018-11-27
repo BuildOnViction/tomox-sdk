@@ -10,6 +10,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
+	swapEthereum "github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
 	"gopkg.in/mgo.v2/bson"
@@ -61,6 +62,9 @@ type AccountDao interface {
 type DepositDao interface {
 	GetSchemaVersion() uint64
 	GetAssociationByChainAddress(chain types.Chain, address *common.Address) (*types.AddressAssociation, error)
+	AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress *common.Address) (bool, error)
+	AddRecoveryTransaction(sourceAccount *common.Address, txEnvelope string) error
+	GetAssociationByTomochainPublicKey(tomochainPublicKey *common.Address) (*types.AddressAssociation, error)
 	GetAddressIndex(chain types.Chain) (uint64, error)
 	IncrementAddressIndex(chain types.Chain) error
 	ResetBlockCounters() error
@@ -250,9 +254,16 @@ type AccountService interface {
 }
 
 type DepositService interface {
-	GenerateAddress(chain string) (*common.Address, error)
+	GenerateAddress(chain types.Chain) (*common.Address, error)
 	GetSchemaVersion() uint64
-	// RecoveryTransaction(chain string, address *common.Address) error
+	RecoveryTransaction(chain types.Chain, address *common.Address) error
+}
+
+type SwapEngineHandler interface {
+	OnNewEthereumTransaction(transaction swapEthereum.Transaction) error
+	OnTomochainAccountCreated(destination string)
+	OnExchanged(destination string)
+	OnExchangedTimelocked(destination, transaction string)
 }
 
 type ValidatorService interface {

@@ -22,14 +22,14 @@ func NewAddressGenerator(masterPublicKeyString string) (*AddressGenerator, error
 	return &AddressGenerator{deserializedMasterPublicKey}, nil
 }
 
-func (g *AddressGenerator) Generate(index uint32) (string, error) {
+func (g *AddressGenerator) Generate(index uint64) (*common.Address, error) {
 	if g.masterPublicKey == nil {
-		return "", errors.New("No master public key set")
+		return nil, errors.New("No master public key set")
 	}
 
-	accountKey, err := g.masterPublicKey.NewChildKey(index)
+	accountKey, err := g.masterPublicKey.NewChildKey(uint32(index))
 	if err != nil {
-		return "", errors.Wrap(err, "Error creating new child key")
+		return nil, errors.Wrap(err, "Error creating new child key")
 	}
 
 	x, y := secp256k1.DecompressPubkey(accountKey.Key)
@@ -39,6 +39,6 @@ func (g *AddressGenerator) Generate(index uint32) (string, error) {
 	copy(uncompressed[32:], y.Bytes())
 
 	keccak := crypto.Keccak256(uncompressed)
-	address := common.BytesToAddress(keccak[12:]).Hex() // Encode lower 160 bits/20 bytes
-	return address, nil
+	address := common.BytesToAddress(keccak[12:]) // Encode lower 160 bits/20 bytes
+	return &address, nil
 }

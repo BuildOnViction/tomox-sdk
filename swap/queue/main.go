@@ -15,15 +15,15 @@ type Transaction struct {
 	// For 1 Finney   this should be equal 0.0010000
 	// For 1 ETH      this should be equal 1.0000000
 	// Currently, the length of Amount string shouldn't be longer than 17 characters.
-	Amount           string
-	StellarPublicKey string
+	Amount             string
+	TomochainPublicKey string
 }
 
 // Queue implements transactions queue.
 // The queue must not allow duplicates (including history) or must implement deduplication
 // interval so it should not allow duplicate entries for 5 minutes since the first
 // entry with the same ID was added.
-// This is a critical requirement! Otherwise ETH/BTC may be sent twice to Stellar account.
+// This is a critical requirement! Otherwise ETH/BTC may be sent twice to Tomochain account.
 // If you don't know what to do, use default AWS SQS FIFO queue or DB queue.
 type Queue interface {
 	// QueueAdd inserts the element to this queue. If element already exists in a queue, it should

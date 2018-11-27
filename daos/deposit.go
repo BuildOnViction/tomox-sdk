@@ -49,6 +49,18 @@ func (dao *DepositDao) GetAssociationByChainAddress(chain types.Chain, address *
 	return nil, nil
 }
 
+func (dao *DepositDao) AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress *common.Address) (bool, error) {
+	return false, nil
+}
+
+func (dao *DepositDao) GetAssociationByTomochainPublicKey(tomochainPublicKey *common.Address) (*types.AddressAssociation, error) {
+	return nil, nil
+}
+
+func (dao *DepositDao) AddRecoveryTransaction(sourceAccount *common.Address, txEnvelope string) error {
+	return nil
+}
+
 func (dao *DepositDao) GetSchemaVersion() uint64 {
 	// get version
 	var response []types.KeyValue
