@@ -2,9 +2,15 @@ package engine
 
 import (
 	"encoding/json"
-	"errors"
+	"io/ioutil"
 	"sync"
 
+	"github.com/tomochain/backend-matching-engine/errors"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/swarm/storage/feed"
+	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
@@ -55,6 +61,48 @@ func NewEngine(
 // Provider : implement engine interface
 func (e *Engine) Provider() interfaces.EthereumProvider {
 	return e.provider
+}
+
+// Feed method
+func (e *Engine) GetFeed(userAddress common.Address, bytesTopic []byte, result interface{}) error {
+	// get from feed
+	topic := feed.Topic{}
+	topicLength := len(bytesTopic)
+	if topicLength > feed.TopicLength {
+		topicLength = feed.TopicLength
+	}
+	startIndex := feed.TopicLength - topicLength
+	if startIndex < 0 {
+		startIndex = 0
+	}
+	copy(topic[startIndex:], bytesTopic[0:topicLength])
+	fd := &feed.Feed{
+		Topic: topic,
+		User:  userAddress,
+	}
+
+	logger.Infof("Topic: %s", topic.Hex())
+
+	lookupParams := feed.NewQueryLatest(fd, lookup.NoClue)
+	reader, err := e.provider.BzzClient.QueryFeed(lookupParams, "")
+
+	if err != nil {
+		return errors.Errorf("Error retrieving feed updates: %s", err)
+	}
+	defer reader.Close()
+	databytes, err := ioutil.ReadAll(reader)
+
+	if databytes == nil || err != nil {
+		return errors.Errorf("Error retrieving feed updates: %s", err)
+	}
+
+	// try to decode, with interface do not use pointer
+	err = rlp.DecodeBytes(databytes, result)
+	if err != nil {
+		return errors.Errorf("Error decoding feed updates: %s", err)
+	}
+
+	return nil
 }
 
 // HandleOrders parses incoming rabbitmq order messages and redirects them to the appropriate

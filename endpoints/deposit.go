@@ -3,6 +3,7 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/swap"
@@ -61,27 +62,38 @@ func (e *depositEndpoint) handleGenerateAddress(w http.ResponseWriter, r *http.R
 	httputils.WriteJSON(w, http.StatusOK, response)
 }
 
+// return Address association for testing first
 func (e *depositEndpoint) handleRecoveryTransaction(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
+	v := r.URL.Query()
+	addr := v.Get("userAddress")
+	chainStr := v.Get("chain")
+	var chain types.Chain
+	err := chain.Scan([]byte(chainStr))
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "Chain is not correct")
+		return
+	}
 
-	// a := vars["address"]
-	// if !common.IsHexAddress(a) {
-	// 	httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
-	// }
+	if addr == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
+		return
+	}
 
-	// t := vars["token"]
-	// if !common.IsHexAddress(a) {
-	// 	httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
-	// }
+	if !common.IsHexAddress(addr) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid User Address")
+		return
+	}
 
-	// addr := common.HexToAddress(a)
-	// tokenAddr := common.HexToAddress(t)
+	address := common.HexToAddress(addr)
 
-	// b, err := e.depositService.GetTokenBalance(addr, tokenAddr)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	httputils.WriteError(w, http.StatusInternalServerError, "")
-	// }
+	association, err := e.depositService.GetAssociationByChainAddress(chain, address)
 
-	// httputils.WriteJSON(w, http.StatusOK, b)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "Can not get address association")
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, association)
 }

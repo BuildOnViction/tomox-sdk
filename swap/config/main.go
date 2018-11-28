@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -54,7 +52,7 @@ func (c *Config) SignerPublicKey() string {
 	keyBytes := common.FromHex(c.Tomochain.SignerPrivateKey)
 	privkey, err := crypto.ToECDSA(keyBytes)
 
-	fmt.Printf("address key:%s, err: %v", privkey, err)
+	// fmt.Printf("address key:%s, err: %v", privkey, err)
 	if err != nil {
 		return ""
 	}

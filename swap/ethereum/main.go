@@ -5,7 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/swap/errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/utils"
 	bip32 "github.com/tyler-smith/go-bip32"
 )

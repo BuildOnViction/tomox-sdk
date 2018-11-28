@@ -61,13 +61,15 @@ type AccountDao interface {
 
 type DepositDao interface {
 	GetSchemaVersion() uint64
-	GetAssociationByChainAddress(chain types.Chain, address *common.Address) (*types.AddressAssociation, error)
-	AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress *common.Address) (bool, error)
-	AddRecoveryTransaction(sourceAccount *common.Address, txEnvelope string) error
-	GetAssociationByTomochainPublicKey(tomochainPublicKey *common.Address) (*types.AddressAssociation, error)
+	// GetAssociationByChainAddress(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
+	AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress common.Address) (bool, error)
+	AddRecoveryTransaction(sourceAccount common.Address, txEnvelope string) error
+	GetAssociationByTomochainPublicKey(tomochainPublicKey common.Address) (*types.AddressAssociation, error)
 	GetAddressIndex(chain types.Chain) (uint64, error)
 	IncrementAddressIndex(chain types.Chain) error
 	ResetBlockCounters() error
+	GetEthereumBlockToProcess() (uint64, error)
+	SaveLastProcessedEthereumBlock(block uint64) error
 	Drop()
 }
 
@@ -150,6 +152,9 @@ type Engine interface {
 	// CancelOrder(order *types.Order) (*types.EngineResponse, error)
 	// DeleteOrder(o *types.Order) error
 	Provider() EthereumProvider
+
+	// Feed method
+	GetFeed(a common.Address, topic []byte, result interface{}) error
 }
 
 type WalletService interface {
@@ -176,7 +181,7 @@ type EthereumService interface {
 
 type OrderService interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
-	GetFeedByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error)
+	GetByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
@@ -255,9 +260,10 @@ type AccountService interface {
 
 type DepositService interface {
 	SignerPublicKey() string
-	GenerateAddress(chain types.Chain) (*common.Address, error)
+	GenerateAddress(chain types.Chain) (common.Address, error)
 	GetSchemaVersion() uint64
-	RecoveryTransaction(chain types.Chain, address *common.Address) error
+	RecoveryTransaction(chain types.Chain, address common.Address) error
+	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error)
 }
 
 type SwapEngineHandler interface {

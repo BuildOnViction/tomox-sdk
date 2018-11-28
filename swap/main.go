@@ -8,9 +8,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/labstack/gommon/log"
+	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/swap/config"
-	"github.com/tomochain/backend-matching-engine/swap/errors"
 	"github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/swap/queue"
 	"github.com/tomochain/backend-matching-engine/swap/tomochain"
@@ -78,7 +78,7 @@ func NewEngine(cfg *config.Config) *Engine {
 		}
 
 		if cfg.Tomochain.StartingBalance == "" {
-			tomochainAccountConfigurator.StartingBalance = "2.1"
+			tomochainAccountConfigurator.StartingBalance = "100.00"
 		}
 
 		if cfg.Ethereum != nil {
@@ -90,6 +90,11 @@ func NewEngine(cfg *config.Config) *Engine {
 
 	engine.Config = cfg
 	return engine
+}
+
+// SetStorage : update storage mechanism
+func (engine *Engine) SetStorage(storage ethereum.Storage) {
+	engine.ethereumListener.Storage = storage
 }
 
 func (engine *Engine) SetDelegate(handler interfaces.SwapEngineHandler) {

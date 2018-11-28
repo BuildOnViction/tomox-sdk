@@ -3,29 +3,29 @@ package services
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/ethereum/go-ethereum/common"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type AccountService struct {
-	AccountDao interfaces.AccountDao
-	TokenDao   interfaces.TokenDao
+	accountDao interfaces.AccountDao
+	tokenDao   interfaces.TokenDao
 }
 
 // NewAddressService returns a new instance of accountService
 func NewAccountService(
-	AccountDao interfaces.AccountDao,
-	TokenDao interfaces.TokenDao,
+	accountDao interfaces.AccountDao,
+	tokenDao interfaces.TokenDao,
 ) *AccountService {
-	return &AccountService{AccountDao, TokenDao}
+	return &AccountService{accountDao, tokenDao}
 }
 
 func (s *AccountService) Create(a *types.Account) error {
 	addr := a.Address
 
-	acc, err := s.AccountDao.GetByAddress(addr)
+	acc, err := s.accountDao.GetByAddress(addr)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -35,7 +35,7 @@ func (s *AccountService) Create(a *types.Account) error {
 		return ErrAccountExists
 	}
 
-	tokens, err := s.TokenDao.GetAll()
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -57,7 +57,7 @@ func (s *AccountService) Create(a *types.Account) error {
 	}
 
 	if a != nil {
-		err = s.AccountDao.Create(a)
+		err = s.accountDao.Create(a)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -68,7 +68,7 @@ func (s *AccountService) Create(a *types.Account) error {
 }
 
 func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, error) {
-	a, err := s.AccountDao.GetByAddress(addr)
+	a, err := s.accountDao.GetByAddress(addr)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -78,7 +78,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		return a, nil
 	}
 
-	tokens, err := s.TokenDao.GetAll()
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -102,7 +102,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		}
 	}
 
-	err = s.AccountDao.Create(a)
+	err = s.accountDao.Create(a)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -112,21 +112,21 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 }
 
 func (s *AccountService) GetByID(id bson.ObjectId) (*types.Account, error) {
-	return s.AccountDao.GetByID(id)
+	return s.accountDao.GetByID(id)
 }
 
 func (s *AccountService) GetAll() ([]types.Account, error) {
-	return s.AccountDao.GetAll()
+	return s.accountDao.GetAll()
 }
 
 func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) {
-	return s.AccountDao.GetByAddress(a)
+	return s.accountDao.GetByAddress(a)
 }
 
 func (s *AccountService) GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error) {
-	return s.AccountDao.GetTokenBalance(owner, token)
+	return s.accountDao.GetTokenBalance(owner, token)
 }
 
 func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
-	return s.AccountDao.GetTokenBalances(owner)
+	return s.accountDao.GetTokenBalances(owner)
 }

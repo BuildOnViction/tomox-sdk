@@ -8,43 +8,67 @@ import (
 	"github.com/tomochain/backend-matching-engine/swap/queue"
 	"github.com/tomochain/backend-matching-engine/types"
 
-	"github.com/tomochain/backend-matching-engine/swap/errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 )
 
 // need to refractor using interface.SwappEngine and only expose neccessary methods
 type DepositService struct {
-	DepositDao interfaces.DepositDao
-	SwapEngine *swap.Engine
+	depositDao interfaces.DepositDao
+	swapEngine *swap.Engine
+	engine     interfaces.Engine
 }
 
 // NewAddressService returns a new instance of accountService
-func NewDepositService(DepositDAO interfaces.DepositDao, SwapEngine *swap.Engine) *DepositService {
-	return &DepositService{DepositDAO, SwapEngine}
+func NewDepositService(
+	depositDao interfaces.DepositDao,
+	swapEngine *swap.Engine,
+	engine interfaces.Engine,
+) *DepositService {
+
+	depositService := &DepositService{depositDao, swapEngine, engine}
+
+	// set event handler delegate to this service
+	swapEngine.SetDelegate(depositService)
+	// set storage engine to this service
+	swapEngine.SetStorage(depositService)
+	// run watching
+	swapEngine.Start()
+
+	return depositService
 }
 
-func (s *DepositService) GenerateAddress(chain types.Chain) (*common.Address, error) {
-	err := s.DepositDao.IncrementAddressIndex(chain)
+func (s *DepositService) GenerateAddress(chain types.Chain) (common.Address, error) {
+	err := s.depositDao.IncrementAddressIndex(chain)
 	if err != nil {
-		return nil, err
+		return ethereum.EmptyAddress, err
 	}
-	index, err := s.DepositDao.GetAddressIndex(chain)
+	index, err := s.depositDao.GetAddressIndex(chain)
 	if err != nil {
-		return nil, err
+		return ethereum.EmptyAddress, err
 	}
 	logger.Infof("Current index: %d", index)
-	return s.SwapEngine.EthereumAddressGenerator().Generate(index)
+	return s.swapEngine.EthereumAddressGenerator().Generate(index)
 }
 
 func (s *DepositService) SignerPublicKey() string {
-	return s.SwapEngine.SignerPublicKey()
+	return s.swapEngine.SignerPublicKey()
 }
 
 func (s *DepositService) GetSchemaVersion() uint64 {
-	return s.DepositDao.GetSchemaVersion()
+	return s.depositDao.GetSchemaVersion()
 }
 
-func (s *DepositService) RecoveryTransaction(chain types.Chain, address *common.Address) error {
+func (s *DepositService) RecoveryTransaction(chain types.Chain, address common.Address) error {
 	return nil
+}
+
+/***** implement Storage interface ***/
+func (s *DepositService) GetEthereumBlockToProcess() (uint64, error) {
+	return s.depositDao.GetEthereumBlockToProcess()
+}
+
+func (s *DepositService) SaveLastProcessedEthereumBlock(block uint64) error {
+	return s.depositDao.SaveLastProcessedEthereumBlock(block)
 }
 
 /***** events from engine ****/
@@ -60,14 +84,14 @@ func (s *DepositService) OnNewEthereumTransaction(transaction ethereum.Transacti
 	// Let's check if tx is valid first.
 
 	// Check if value is above minimum required
-	if transaction.ValueWei.Cmp(s.SwapEngine.MinimumValueWei()) < 0 {
+	if transaction.ValueWei.Cmp(s.swapEngine.MinimumValueWei()) < 0 {
 		logger.Debug("Value is below minimum required amount, skipping")
 		return nil
 	}
 
 	addressTo := common.HexToAddress(transaction.To)
 
-	addressAssociation, err := s.DepositDao.GetAssociationByChainAddress(types.ChainEthereum, &addressTo)
+	addressAssociation, err := s.GetAssociationByChainAddress(types.ChainEthereum, addressTo)
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -78,7 +102,7 @@ func (s *DepositService) OnNewEthereumTransaction(transaction ethereum.Transacti
 	}
 
 	// Add transaction as processing.
-	processed, err := s.DepositDao.AddProcessedTransaction(types.ChainEthereum, transaction.Hash, &addressTo)
+	processed, err := s.depositDao.AddProcessedTransaction(types.ChainEthereum, transaction.Hash, addressTo)
 	if err != nil {
 		return err
 	}
@@ -94,10 +118,10 @@ func (s *DepositService) OnNewEthereumTransaction(transaction ethereum.Transacti
 		AssetCode:     queue.AssetCodeETH,
 		// Amount in the base unit of currency.
 		Amount:             transaction.ValueWei.String(),
-		TomochainPublicKey: addressAssociation.TomochainPublicKey,
+		TomochainPublicKey: addressAssociation.TomochainPublicKey.String(),
 	}
 
-	err = s.SwapEngine.TransactionsQueue().QueueAdd(queueTx)
+	err = s.swapEngine.TransactionsQueue().QueueAdd(queueTx)
 	if err != nil {
 		return errors.Wrap(err, "Error adding transaction to the processing queue")
 	}
@@ -111,7 +135,7 @@ func (s *DepositService) OnNewEthereumTransaction(transaction ethereum.Transacti
 
 func (s *DepositService) OnTomochainAccountCreated(destination string) {
 	publicKey := common.HexToAddress(destination)
-	association, err := s.DepositDao.GetAssociationByTomochainPublicKey(&publicKey)
+	association, err := s.depositDao.GetAssociationByTomochainPublicKey(publicKey)
 	if err != nil {
 		logger.Error("Error getting association")
 		return
@@ -127,7 +151,7 @@ func (s *DepositService) OnTomochainAccountCreated(destination string) {
 
 func (s *DepositService) OnExchanged(destination string) {
 	publicKey := common.HexToAddress(destination)
-	association, err := s.DepositDao.GetAssociationByTomochainPublicKey(&publicKey)
+	association, err := s.depositDao.GetAssociationByTomochainPublicKey(publicKey)
 	if err != nil {
 		logger.Error("Error getting association")
 		return
@@ -143,7 +167,7 @@ func (s *DepositService) OnExchanged(destination string) {
 
 func (s *DepositService) OnExchangedTimelocked(destination, transaction string) {
 	publicKey := common.HexToAddress(destination)
-	association, err := s.DepositDao.GetAssociationByTomochainPublicKey(&publicKey)
+	association, err := s.depositDao.GetAssociationByTomochainPublicKey(publicKey)
 	if err != nil {
 		logger.Error("Error getting association")
 		return
@@ -155,11 +179,25 @@ func (s *DepositService) OnExchangedTimelocked(destination, transaction string) 
 	}
 
 	// Save tx to database
-	err = s.DepositDao.AddRecoveryTransaction(&publicKey, transaction)
+	err = s.depositDao.AddRecoveryTransaction(publicKey, transaction)
 	if err != nil {
 		logger.Error("Error saving unlock transaction to DB")
 		return
 	}
 
 	logger.Infof("Broasting event: %v", association)
+}
+
+// Create function performs the DB insertion task for Balance collection
+func (s *DepositService) GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error) {
+	// get from feed
+	var addressAssociationFeed types.AddressAssociationFeed
+	err := s.engine.GetFeed(userAddress, chain.Bytes(), &addressAssociationFeed)
+
+	logger.Infof("feed :%v", addressAssociationFeed)
+
+	if err == nil {
+		return addressAssociationFeed.GetJSON()
+	}
+	return nil, err
 }

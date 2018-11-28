@@ -3,7 +3,7 @@ package tomochain
 import (
 	"strconv"
 
-	"github.com/pkg/errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 )
 
 func (ac *AccountConfigurator) createAccountTransaction(destination string) error {

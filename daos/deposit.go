@@ -1,9 +1,11 @@
 package daos
 
 import (
+	"strconv"
+
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
 	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/types"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -41,21 +43,15 @@ func NewDepositDao() *DepositDao {
 	return &DepositDao{collection, dbName}
 }
 
-// Create function performs the DB insertion task for Balance collection
-func (dao *DepositDao) GetAssociationByChainAddress(chain types.Chain, address *common.Address) (*types.AddressAssociation, error) {
-	// get from feed
-	return nil, nil
-}
-
-func (dao *DepositDao) AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress *common.Address) (bool, error) {
+func (dao *DepositDao) AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress common.Address) (bool, error) {
 	return false, nil
 }
 
-func (dao *DepositDao) GetAssociationByTomochainPublicKey(tomochainPublicKey *common.Address) (*types.AddressAssociation, error) {
+func (dao *DepositDao) GetAssociationByTomochainPublicKey(tomochainPublicKey common.Address) (*types.AddressAssociation, error) {
 	return nil, nil
 }
 
-func (dao *DepositDao) AddRecoveryTransaction(sourceAccount *common.Address, txEnvelope string) error {
+func (dao *DepositDao) AddRecoveryTransaction(sourceAccount common.Address, txEnvelope string) error {
 	return nil
 }
 
@@ -81,20 +77,42 @@ func (dao *DepositDao) getAddressIndexKey(chain types.Chain) (string, error) {
 	}
 }
 
+func (dao *DepositDao) getValueFromKey(key string) (interface{}, error) {
+	var response []types.KeyValue
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{"key": key}, 0, 1, &response)
+	if err != nil {
+		return nil, err
+	}
+	if len(response) == 0 {
+		return nil, errors.Errorf("Value not found for key: %s", key)
+	}
+	return response[0].Value, nil
+}
+
+func (dao *DepositDao) getUint64ValueFromKey(key string) (uint64, error) {
+	value, err := dao.getValueFromKey(key)
+	if err != nil {
+		return 0, err
+	}
+	switch v := value.(type) {
+	case int:
+		return uint64(value.(int)), nil
+	case int64:
+		return uint64(value.(int64)), nil
+	case string:
+		return strconv.ParseUint(value.(string), 10, 64)
+	default:
+		return 0, errors.Errorf("Can not process type %T!\n", v)
+	}
+}
+
 func (dao *DepositDao) GetAddressIndex(chain types.Chain) (uint64, error) {
 	key, err := dao.getAddressIndexKey(chain)
 	if err != nil {
 		return 0, err
 	}
 
-	var response []types.KeyValue
-	err = db.Get(dao.dbName, dao.collectionName, bson.M{"key": key}, 0, 1, &response)
-	if err != nil {
-		return 0, err
-	}
-
-	index := response[0].Value.(int)
-	return uint64(index), nil
+	return dao.getUint64ValueFromKey(key)
 }
 
 func (dao *DepositDao) IncrementAddressIndex(chain types.Chain) error {
@@ -107,6 +125,22 @@ func (dao *DepositDao) IncrementAddressIndex(chain types.Chain) error {
 	err = db.Update(dao.dbName, dao.collectionName, bson.M{"key": key}, bson.M{
 		"$inc": bson.M{
 			"value": 1,
+		},
+	})
+
+	return err
+}
+
+func (dao *DepositDao) GetEthereumBlockToProcess() (uint64, error) {
+	return dao.getUint64ValueFromKey(ethereumLastBlockKey)
+}
+
+func (dao *DepositDao) SaveLastProcessedEthereumBlock(block uint64) error {
+	// update database
+
+	err := db.Update(dao.dbName, dao.collectionName, bson.M{"key": ethereumLastBlockKey}, bson.M{
+		"$set": bson.M{
+			"value": block,
 		},
 	})
 

@@ -105,7 +105,7 @@ func (e *orderEndpoint) handleGetOrderFeeds(w http.ResponseWriter, r *http.Reque
 	// 	return
 	// }
 
-	messages, err := e.orderService.GetFeedByTopic(userAddress, tokenAddress)
+	messages, err := e.orderService.GetByTopic(userAddress, tokenAddress)
 	if err != nil {
 		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return

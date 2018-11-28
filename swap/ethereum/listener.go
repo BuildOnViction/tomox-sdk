@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/swap/errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 	demo "github.com/tomochain/orderbook/common"
 )
 
@@ -124,13 +124,13 @@ func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
 
 func (l *Listener) processBlock(block *types.Block) error {
 	transactions := block.Transactions()
-	blockTime := time.Unix(block.Time().Int64(), 0)
+	// blockTime := time.Unix(block.Time().Int64(), 0)
 
-	logger.Infof("Processing block: ",
-		"blockNumber", block.NumberU64(),
-		"blockTime", blockTime,
-		"transactions", len(transactions),
-	)
+	// logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
+	// 	block.NumberU64(),
+	// 	blockTime,
+	// 	len(transactions),
+	// )
 
 	for _, transaction := range transactions {
 		to := transaction.To()
@@ -150,7 +150,7 @@ func (l *Listener) processBlock(block *types.Block) error {
 		}
 	}
 
-	logger.Infof("Processed block")
+	// logger.Infof("Processed block")
 
 	return nil
 }

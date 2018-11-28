@@ -41,6 +41,7 @@ deposit:
     minimum_value_eth: '0.00001'	
     token_price: '1'
     rpc_server: 'localhost:8545'
+    # rpc_server: 'https://rinkeby.infura.io/4ad8ebab557048469e407244a41b5f5c'
   tomochain:
     token_asset_code: 'WETH'
     # using this private key, or secret from ENV to run smart contract

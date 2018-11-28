@@ -4,9 +4,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/tomochain/backend-matching-engine/swap/errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tyler-smith/go-bip32"
 )
+
+var EmptyAddress = common.HexToAddress("0x0")
 
 // NewAddressGenerator : generate new address from master key : cfg.Ethereum.MasterPublicKey
 func NewAddressGenerator(masterPublicKeyString string) (*AddressGenerator, error) {
@@ -22,14 +24,15 @@ func NewAddressGenerator(masterPublicKeyString string) (*AddressGenerator, error
 	return &AddressGenerator{deserializedMasterPublicKey}, nil
 }
 
-func (g *AddressGenerator) Generate(index uint64) (*common.Address, error) {
+// common.Address is pointer already, it is slice
+func (g *AddressGenerator) Generate(index uint64) (common.Address, error) {
 	if g.masterPublicKey == nil {
-		return nil, errors.New("No master public key set")
+		return EmptyAddress, errors.New("No master public key set")
 	}
 
 	accountKey, err := g.masterPublicKey.NewChildKey(uint32(index))
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating new child key")
+		return EmptyAddress, errors.Wrap(err, "Error creating new child key")
 	}
 
 	x, y := secp256k1.DecompressPubkey(accountKey.Key)
@@ -40,5 +43,5 @@ func (g *AddressGenerator) Generate(index uint64) (*common.Address, error) {
 
 	keccak := crypto.Keccak256(uncompressed)
 	address := common.BytesToAddress(keccak[12:]) // Encode lower 160 bits/20 bytes
-	return &address, nil
+	return address, nil
 }

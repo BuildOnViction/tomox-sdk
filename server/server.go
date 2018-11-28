@@ -104,10 +104,9 @@ func NewRouter(
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	walletService := services.NewWalletService(walletDao)
-	depositService := services.NewDepositService(depositDao, swapEngine)
-	// set delegate to service
-	// swapEngine.SetDelegate(depositService)
+	depositService := services.NewDepositService(depositDao, swapEngine, eng)
 
+	// start cron service
 	cronService := crons.NewCronService(ohlcvService)
 
 	// get exchange contract instance

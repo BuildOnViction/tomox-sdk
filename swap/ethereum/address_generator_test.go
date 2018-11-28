@@ -17,7 +17,7 @@ func TestAddressGenerator(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedChildren := []struct {
-		index   uint32
+		index   uint64
 		address string
 	}{
 		{0, "0x044d22459b0Ce2eBa60B47ee411F8B6a8f91dF52"},
