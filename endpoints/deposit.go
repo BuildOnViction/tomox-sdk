@@ -5,6 +5,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/swap"
+	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
 )
 
@@ -32,23 +34,31 @@ func (e *depositEndpoint) handleGetSchema(w http.ResponseWriter, r *http.Request
 }
 
 func (e *depositEndpoint) handleGenerateAddress(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
+	v := r.URL.Query()
+	chainStr := v.Get("chain")
+	var chain types.Chain
+	err := chain.Scan([]byte(chainStr))
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "Chain is not correct")
+		return
+	}
+	address, err := e.depositService.GenerateAddress(chain)
 
-	// addr := vars["address"]
-	// if !common.IsHexAddress(addr) {
-	// 	httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
-	// 	return
-	// }
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "Can not generate Address")
+		return
+	}
 
-	// address := common.HexToAddress(addr)
-	// a, err := e.depositService.GetByAddress(address)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	httputils.WriteError(w, http.StatusInternalServerError, "")
-	// 	return
-	// }
+	response := types.GenerateAddressResponse{
+		ProtocolVersion: swap.ProtocolVersion,
+		Chain:           chain.String(),
+		Address:         address.String(),
+		Signer:          e.depositService.SignerPublicKey(),
+	}
 
-	// httputils.WriteJSON(w, http.StatusOK, a)
+	httputils.WriteJSON(w, http.StatusOK, response)
 }
 
 func (e *depositEndpoint) handleRecoveryTransaction(w http.ResponseWriter, r *http.Request) {

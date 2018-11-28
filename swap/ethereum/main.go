@@ -10,7 +10,7 @@ import (
 	bip32 "github.com/tyler-smith/go-bip32"
 )
 
-var logger = utils.Logger
+var logger = utils.EngineLogger
 
 var (
 	ten      = big.NewInt(10)

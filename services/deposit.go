@@ -31,8 +31,12 @@ func (s *DepositService) GenerateAddress(chain types.Chain) (*common.Address, er
 	if err != nil {
 		return nil, err
 	}
+	logger.Infof("Current index: %d", index)
+	return s.SwapEngine.EthereumAddressGenerator().Generate(index)
+}
 
-	return s.SwapEngine.EthereumAddressGenerator.Generate(index)
+func (s *DepositService) SignerPublicKey() string {
+	return s.SwapEngine.SignerPublicKey()
 }
 
 func (s *DepositService) GetSchemaVersion() uint64 {
@@ -56,7 +60,7 @@ func (s *DepositService) OnNewEthereumTransaction(transaction ethereum.Transacti
 	// Let's check if tx is valid first.
 
 	// Check if value is above minimum required
-	if transaction.ValueWei.Cmp(s.SwapEngine.MinimumValueWei) < 0 {
+	if transaction.ValueWei.Cmp(s.SwapEngine.MinimumValueWei()) < 0 {
 		logger.Debug("Value is below minimum required amount, skipping")
 		return nil
 	}
@@ -93,7 +97,7 @@ func (s *DepositService) OnNewEthereumTransaction(transaction ethereum.Transacti
 		TomochainPublicKey: addressAssociation.TomochainPublicKey,
 	}
 
-	err = s.SwapEngine.TransactionsQueue.QueueAdd(queueTx)
+	err = s.SwapEngine.TransactionsQueue().QueueAdd(queueTx)
 	if err != nil {
 		return errors.Wrap(err, "Error adding transaction to the processing queue")
 	}

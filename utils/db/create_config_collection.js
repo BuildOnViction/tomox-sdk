@@ -11,9 +11,9 @@ const create = async () => {
   const index = await db.collection('config').createIndex( { "key": 1 }, { unique: true } )
 
   const documents = [
-    {key:'schema_version', value: '2'},
-    {key:'ethereum_last_block', value: '0'},
-    {key:'ethereum_address_index', value: '0'},
+    {key:'schema_version', value: 2},
+    {key:'ethereum_last_block', value: 0},
+    {key:'ethereum_address_index', value: 0},
   ]
 
   response = await db.collection('config').insertMany(documents)

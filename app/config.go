@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
+	"github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/utils"
 )
 
@@ -47,6 +48,8 @@ type appConfig struct {
 	Logs map[string]string `mapstructure:"logs"`
 
 	Ethereum map[string]string `mapstructure:"ethereum"`
+
+	Deposit *config.Config `mapstructure:"deposit"`
 }
 
 func (config appConfig) Validate() error {
@@ -80,8 +83,8 @@ func LoadConfig(configPath string, env string) error {
 	if err != nil {
 		return err
 	}
-	// update config
-	Config.Simulated = v.GetBool("simulated")
+	// // update config, if yaml does not presented this config, we can still apply from env
+	// Config.Simulated = v.GetBool("simulated")
 
 	// log information
 	logger.Infof("Server port: %v", Config.ServerPort)
@@ -91,6 +94,5 @@ func LoadConfig(configPath string, env string) error {
 	logger.Infof("RabbitMQ url: %v", Config.RabbitMQURL)
 	logger.Infof("Exchange contract address: %v", Config.Ethereum["exchange_address"])
 	logger.Infof("Fee Account: %v", Config.Ethereum["fee_account"])
-
 	return Config.Validate()
 }

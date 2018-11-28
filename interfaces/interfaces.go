@@ -254,6 +254,7 @@ type AccountService interface {
 }
 
 type DepositService interface {
+	SignerPublicKey() string
 	GenerateAddress(chain types.Chain) (*common.Address, error)
 	GetSchemaVersion() uint64
 	RecoveryTransaction(chain types.Chain, address *common.Address) error

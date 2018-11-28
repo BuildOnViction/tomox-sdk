@@ -17,6 +17,10 @@ func (s *Chain) Scan(src interface{}) error {
 	return nil
 }
 
+func (s *Chain) String() string {
+	return string(*s)
+}
+
 const (
 	SwapSchemaVersion uint64 = 2
 	ChainEthereum     Chain  = "ethereum"
@@ -30,4 +34,11 @@ type AddressAssociation struct {
 	Address            string    `json:"address"`
 	TomochainPublicKey string    `json:"tomochain_public_key"`
 	CreatedAt          time.Time `json:"created_at"`
+}
+
+type GenerateAddressResponse struct {
+	ProtocolVersion int    `json:"protocol_version"`
+	Chain           string `json:"chain"`
+	Address         string `json:"address"`
+	Signer          string `json:"signer"`
 }

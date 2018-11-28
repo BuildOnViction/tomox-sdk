@@ -1,8 +1,6 @@
 package daos
 
 import (
-	"strconv"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/tomochain/backend-matching-engine/app"
@@ -70,8 +68,8 @@ func (dao *DepositDao) GetSchemaVersion() uint64 {
 		return types.SwapSchemaVersion
 	}
 
-	version, _ := strconv.ParseUint(response[0].Value, 10, 32)
-	return version
+	version := response[0].Value.(int)
+	return uint64(version)
 }
 
 func (dao *DepositDao) getAddressIndexKey(chain types.Chain) (string, error) {
@@ -95,8 +93,8 @@ func (dao *DepositDao) GetAddressIndex(chain types.Chain) (uint64, error) {
 		return 0, err
 	}
 
-	index, _ := strconv.ParseUint(response[0].Value, 10, 32)
-	return index, nil
+	index := response[0].Value.(int)
+	return uint64(index), nil
 }
 
 func (dao *DepositDao) IncrementAddressIndex(chain types.Chain) error {
@@ -108,7 +106,7 @@ func (dao *DepositDao) IncrementAddressIndex(chain types.Chain) error {
 
 	err = db.Update(dao.dbName, dao.collectionName, bson.M{"key": key}, bson.M{
 		"$inc": bson.M{
-			key: 1,
+			"value": 1,
 		},
 	})
 

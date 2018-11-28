@@ -20,23 +20,26 @@ import (
 // swap is engine
 var logger = utils.EngineLogger
 
+// JS SDK use to communicate.
+const ProtocolVersion int = 2
+
 type Engine struct {
 	Config                       *config.Config                 `inject:""`
-	EthereumListener             *ethereum.Listener             `inject:""`
-	EthereumAddressGenerator     *ethereum.AddressGenerator     `inject:""`
-	TomochainAccountConfigurator *tomochain.AccountConfigurator `inject:""`
-	TransactionsQueue            queue.Queue                    `inject:""`
+	ethereumListener             *ethereum.Listener             `inject:""`
+	ethereumAddressGenerator     *ethereum.AddressGenerator     `inject:""`
+	tomochainAccountConfigurator *tomochain.AccountConfigurator `inject:""`
+	transactionsQueue            queue.Queue                    `inject:""`
 
-	MinimumValueEth string
-	SignerPublicKey string
+	minimumValueEth string
+	signerPublicKey string
 
-	MinimumValueSat int64
-	MinimumValueWei *big.Int
+	minimumValueSat int64
+	minimumValueWei *big.Int
 }
 
 func NewEngine(cfg *config.Config) *Engine {
 	engine := &Engine{
-		SignerPublicKey: cfg.SignerPublicKey(),
+		signerPublicKey: cfg.SignerPublicKey(),
 	}
 	if cfg.Ethereum != nil {
 		ethereumListener := &ethereum.Listener{}
@@ -51,7 +54,7 @@ func NewEngine(cfg *config.Config) *Engine {
 		ethereumListener.NetworkID = cfg.Ethereum.NetworkID
 		ethereumListener.Client = ethereumClient
 
-		engine.MinimumValueEth = cfg.Ethereum.MinimumValueEth
+		engine.minimumValueEth = cfg.Ethereum.MinimumValueEth
 
 		ethereumAddressGenerator, err := ethereum.NewAddressGenerator(cfg.Ethereum.MasterPublicKey)
 		if err != nil {
@@ -59,8 +62,8 @@ func NewEngine(cfg *config.Config) *Engine {
 			os.Exit(-1)
 		}
 
-		engine.EthereumAddressGenerator = ethereumAddressGenerator
-		engine.EthereumListener = ethereumListener
+		engine.ethereumAddressGenerator = ethereumAddressGenerator
+		engine.ethereumListener = ethereumListener
 	}
 
 	if cfg.Tomochain != nil {
@@ -82,7 +85,7 @@ func NewEngine(cfg *config.Config) *Engine {
 			tomochainAccountConfigurator.TokenPriceETH = cfg.Ethereum.TokenPrice
 		}
 
-		engine.TomochainAccountConfigurator = tomochainAccountConfigurator
+		engine.tomochainAccountConfigurator = tomochainAccountConfigurator
 	}
 
 	engine.Config = cfg
@@ -91,30 +94,30 @@ func NewEngine(cfg *config.Config) *Engine {
 
 func (engine *Engine) SetDelegate(handler interfaces.SwapEngineHandler) {
 	// delegate some handlers
-	engine.EthereumListener.TransactionHandler = handler.OnNewEthereumTransaction
-	engine.TomochainAccountConfigurator.OnAccountCreated = handler.OnTomochainAccountCreated
-	engine.TomochainAccountConfigurator.OnExchanged = handler.OnExchanged
-	engine.TomochainAccountConfigurator.OnExchangedTimelocked = handler.OnExchangedTimelocked
+	engine.ethereumListener.TransactionHandler = handler.OnNewEthereumTransaction
+	engine.tomochainAccountConfigurator.OnAccountCreated = handler.OnTomochainAccountCreated
+	engine.tomochainAccountConfigurator.OnExchanged = handler.OnExchanged
+	engine.tomochainAccountConfigurator.OnExchangedTimelocked = handler.OnExchangedTimelocked
 }
 
 func (engine *Engine) Start() error {
 
 	var err error
-	engine.MinimumValueWei, err = ethereum.EthToWei(engine.MinimumValueEth)
+	engine.minimumValueWei, err = ethereum.EthToWei(engine.minimumValueEth)
 	if err != nil {
 		return errors.Wrap(err, "Invalid minimum accepted Ethereum transaction value")
 	}
 
-	if engine.MinimumValueWei.Cmp(new(big.Int)) == 0 {
+	if engine.minimumValueWei.Cmp(new(big.Int)) == 0 {
 		return errors.New("Minimum accepted Ethereum transaction value must be larger than 0")
 	}
 
-	err = engine.EthereumListener.Start(engine.Config.Ethereum.RpcServer)
+	err = engine.ethereumListener.Start(engine.Config.Ethereum.RpcServer)
 	if err != nil {
 		return errors.Wrap(err, "Error starting EthereumListener")
 	}
 
-	err = engine.TomochainAccountConfigurator.Start()
+	err = engine.tomochainAccountConfigurator.Start()
 	if err != nil {
 		return errors.Wrap(err, "Error starting TomochainAccountConfigurator")
 	}
@@ -132,13 +135,42 @@ func (engine *Engine) Start() error {
 	return nil
 }
 
+func (engine *Engine) TransactionsQueue() queue.Queue {
+	return engine.transactionsQueue
+}
+
+// public method to access private properties, this avoids setting props directly cause mistmatch from config
+func (engine *Engine) EthereumAddressGenerator() *ethereum.AddressGenerator {
+	return engine.ethereumAddressGenerator
+}
+
+func (engine *Engine) TomochainAccountConfigurator() *tomochain.AccountConfigurator {
+	return engine.tomochainAccountConfigurator
+}
+
+func (engine *Engine) MinimumValueEth() string {
+	return engine.minimumValueEth
+}
+
+func (engine *Engine) SignerPublicKey() string {
+	return engine.signerPublicKey
+}
+
+func (engine *Engine) MinimumValueSat() int64 {
+	return engine.minimumValueSat
+}
+
+func (engine *Engine) MinimumValueWei() *big.Int {
+	return engine.minimumValueWei
+}
+
 // poolTransactionsQueue pools transactions queue which contains only processed and
 // validated transactions and sends it to TomochainAccountConfigurator for account configuration.
-func (s *Engine) poolTransactionsQueue() {
+func (engine *Engine) poolTransactionsQueue() {
 	logger.Infof("Started pooling transactions queue")
 
 	for {
-		transaction, err := s.TransactionsQueue.QueuePool()
+		transaction, err := engine.transactionsQueue.QueuePool()
 		if err != nil {
 			logger.Infof("Error pooling transactions queue")
 			time.Sleep(time.Second)
@@ -151,7 +183,7 @@ func (s *Engine) poolTransactionsQueue() {
 		}
 
 		logger.Infof("Received transaction from transactions queue: %v", transaction)
-		go s.TomochainAccountConfigurator.ConfigureAccount(
+		go engine.tomochainAccountConfigurator.ConfigureAccount(
 			transaction.TomochainPublicKey,
 			string(transaction.AssetCode),
 			transaction.Amount,
@@ -161,11 +193,4 @@ func (s *Engine) poolTransactionsQueue() {
 
 func (e *Engine) shutdown() {
 	// do something
-}
-
-type GenerateAddressResponse struct {
-	ProtocolVersion int    `json:"protocol_version"`
-	Chain           string `json:"chain"`
-	Address         string `json:"address"`
-	Signer          string `json:"signer"`
 }

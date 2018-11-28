@@ -21,7 +21,6 @@ import (
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/swap"
-	swapConfig "github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/ws"
 )
 
@@ -71,15 +70,7 @@ func Start() {
 }
 
 func NewSwapEngine() *swap.Engine {
-	swapConfig := &swapConfig.Config{
-		// Ethereum: &swapConfig.EthereumConfig{
-		// 	RpcServer: "localhost:8545",
-		// },
-		// Tomochain: &swapConfig.TomochainConfig {
-		// 	TokenAssetCode: "WETH",
-		// },
-	}
-	swapEngine := swap.NewEngine(swapConfig)
+	swapEngine := swap.NewEngine(app.Config.Deposit)
 	return swapEngine
 }
 
