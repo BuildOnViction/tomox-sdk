@@ -22,6 +22,9 @@ type appConfig struct {
 	MongoDBPassword string `mapstructure:"mongo_password"`
 	MongoDBUsername string `mapstructure:"mongo_username"`
 
+	// simulate the environment
+	Simulated bool `mapstructure:"simulated"`
+
 	// the data source name (DSN) for connecting to the database. required.
 	DBName string `mapstructure:"db_name"`
 	// the make fee is the percentage to charged from maker
@@ -77,9 +80,10 @@ func LoadConfig(configPath string, env string) error {
 	if err != nil {
 		return err
 	}
+	// update config
+	Config.Simulated = v.GetBool("simulated")
 
 	// log information
-
 	logger.Infof("Server port: %v", Config.ServerPort)
 	logger.Infof("Ethereum node HTTP url: %v", Config.Ethereum["http_url"])
 	logger.Infof("Ethereum node WS url: %v", Config.Ethereum["ws_url"])

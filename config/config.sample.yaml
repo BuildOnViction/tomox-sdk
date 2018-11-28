@@ -1,6 +1,7 @@
 # The Data Source Name for the database
 # Make sure you override this in production with the environment variable: RESTFUL_DSN
 mongo_url: '127.0.0.1'
+simulated: false
 server_port: 8082
 db_name: tomodex
 make_fee: 10000
