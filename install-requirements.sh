@@ -5,7 +5,6 @@ go get github.com/op/go-logging
 go get github.com/streadway/amqp
 go get gopkg.in/mgo.v2
 go get github.com/spf13/viper
-go get github.com/ethereum/go-ethereum
 go get github.com/robfig/cron
 go get github.com/go-ozzo/ozzo-validation
 go get github.com/gorilla/websocket
