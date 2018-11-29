@@ -11,6 +11,11 @@ The matching-engine will be soon moved to blockchain services.
 - **rabbitmq** version 3.7.7 or newer
 - **dep** latest
 
+## Deployment guide step by step
+
+https://github.com/tomochain/dex-client/blob/master/Deployment_step_by_step.md
+
+
 ## Booting up the server
 
 **Install the dependencies**
