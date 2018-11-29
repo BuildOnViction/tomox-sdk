@@ -5,12 +5,15 @@ go get github.com/op/go-logging
 go get github.com/streadway/amqp
 go get gopkg.in/mgo.v2
 go get github.com/spf13/viper
-go get github.com/ethereum/go-ethereum
 go get github.com/robfig/cron
 go get github.com/go-ozzo/ozzo-validation
 go get github.com/gorilla/websocket
 go get github.com/spf13/cobra
 go get github.com/gorilla/handlers
+go get github.com/codegangsta/gin
+go get github.com/gorilla/mux
+go get github.com/labstack/gommon/log
+go get github.com/pkg/errors
 
 
 # testing
