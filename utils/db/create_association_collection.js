@@ -9,19 +9,21 @@ const create = async () => {
   );
 
   const db = client.db(DB_NAME);
-  let response = await db.createCollection('config');
+  let response = await db.createCollection('associations');
 
   const index = await db
-    .collection('config')
-    .createIndex({ key: 1 }, { unique: true });
+    .collection('associations')
+    .createIndex({ chain: 1, address: 1 }, { unique: true });
 
   const documents = [
-    { key: 'schema_version', value: 2 },
-    { key: 'ethereum_last_block', value: 0 },
-    { key: 'ethereum_address_index', value: 0 }
+    {
+      chain: 'ethereum',
+      address: '787dff5a56cf30d676e45d8de4518c03c335386e'.toUpperCase(),
+      associatedAddress: '0x59B8515E7fF389df6926Cd52a086B0f1f46C630A'
+    }
   ];
 
-  response = await db.collection('config').insertMany(documents);
+  response = await db.collection('associations').insertMany(documents);
   console.log(response);
 
   client.close();

@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/labstack/gommon/log"
 	"github.com/tomochain/backend-matching-engine/errors"
@@ -31,7 +32,7 @@ type Engine struct {
 	transactionsQueue            queue.Queue                    `inject:""`
 
 	minimumValueEth string
-	signerPublicKey string
+	signerPublicKey common.Address
 
 	minimumValueSat int64
 	minimumValueWei *big.Int
@@ -157,7 +158,7 @@ func (engine *Engine) MinimumValueEth() string {
 	return engine.minimumValueEth
 }
 
-func (engine *Engine) SignerPublicKey() string {
+func (engine *Engine) SignerPublicKey() common.Address {
 	return engine.signerPublicKey
 }
 

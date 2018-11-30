@@ -10,6 +10,11 @@ import (
 	demo "github.com/tomochain/orderbook/common"
 )
 
+const (
+	// time out 15 seconds
+	timeout = 15
+)
+
 func (l *Listener) Start(rpcServer string) error {
 
 	demo.LogInfo("EthereumListener starting")
@@ -22,7 +27,7 @@ func (l *Listener) Start(rpcServer string) error {
 	}
 
 	// Check if connected to correct network
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeout*time.Second))
 	defer cancel()
 	id, err := l.Client.NetworkID(ctx)
 	if err != nil {
@@ -74,14 +79,20 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 		noBlockWarningLogged = false
 
 		if block.NumberU64() == 0 {
-			logger.Error("Etheruem node is not synced yet. Unable to process blocks")
+			logger.Error("Ethereum node is not synced yet. Unable to process blocks")
 			time.Sleep(30 * time.Second)
+			continue
+		}
+
+		if l.TransactionHandler == nil {
+			// waiting for handler
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
 		err = l.processBlock(block)
 		if err != nil {
-			logger.Errorf("Error processing block, blockNumber: %d", block.NumberU64())
+			logger.Errorf("Error processing block, blockNumber: %d, err: %v", block.NumberU64(), err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -124,13 +135,13 @@ func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
 
 func (l *Listener) processBlock(block *types.Block) error {
 	transactions := block.Transactions()
-	// blockTime := time.Unix(block.Time().Int64(), 0)
 
-	// logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
-	// 	block.NumberU64(),
-	// 	blockTime,
-	// 	len(transactions),
-	// )
+	blockTime := time.Unix(block.Time().Int64(), 0)
+	logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
+		block.NumberU64(),
+		blockTime,
+		len(transactions),
+	)
 
 	for _, transaction := range transactions {
 		to := transaction.To()
@@ -139,6 +150,12 @@ func (l *Listener) processBlock(block *types.Block) error {
 			continue
 		}
 
+		// this is the address that we need to check in address association
+		// server will store associate like ethereumAddress => userAddress
+		// user will store in feed with topic ethereum like {ethereumAddress}
+		// if server has problem, client can use this feed to refer to ethereumAddress
+		// and check for transaction, then check against current blockchain
+		// for server, it is just an indexer to help process faster
 		tx := Transaction{
 			Hash:     transaction.Hash().Hex(),
 			ValueWei: transaction.Value(),

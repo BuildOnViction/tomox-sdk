@@ -58,6 +58,8 @@ const create = async () => {
     })
 
   console.log(response)
+
+  client.close()
 }
 
 create()

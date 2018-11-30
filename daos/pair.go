@@ -3,9 +3,9 @@ package daos
 import (
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/ethereum/go-ethereum/common"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -64,6 +64,7 @@ func (dao *PairDao) Create(pair *types.Pair) error {
 }
 
 // GetAll function fetches all the pairs in the pair collection of mongodb.
+// for GetAll return continous memory
 func (dao *PairDao) GetAll() ([]types.Pair, error) {
 	var res []types.Pair
 	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &res)

@@ -15,7 +15,12 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
+	dexApp "github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
+	"github.com/tomochain/backend-matching-engine/ethereum"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -64,6 +69,18 @@ func init() {
 				cli.StringFlag{Name: "client-config-folder, ccf", Value: "../../../dex-client/src/config"},
 			},
 		},
+
+		cli.Command{
+			Name: "transfer",
+			Action: func(c *cli.Context) error {
+				return transfer(c.String("taddr"), c.String("addr"), c.Int64("am"))
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "address, addr", Value: "0xbB96A2aca0Af527fAa267Db3365c5259a9ca3943"},
+				cli.StringFlag{Name: "tokenAddress, taddr", Value: "0x53DDd545882dec853226dC8255268C7760276695"},
+				cli.Int64Flag{Name: "amount, am", Value: 10},
+			},
+		},
 	}
 }
 
@@ -102,6 +119,38 @@ type TokenCode struct {
 
 type Genesis struct {
 	Alloc map[string]TokenCode `json:"alloc"`
+}
+
+func transfer(tokenAddressStr, receiver string, amount int64) error {
+	_, fileName, _, _ := runtime.Caller(1)
+	basePath := path.Dir(fileName)
+	configFile := path.Join(basePath, "../../config")
+	err := dexApp.LoadConfig(configFile, "")
+
+	fmt.Printf("Private key: %s", dexApp.Config.Deposit.Tomochain.SignerPrivateKey)
+	dexApp.Config.Deposit.SignerPublicKey()
+	privateKey := dexApp.Config.Deposit.SignerPrivateKey()
+	if privateKey == nil {
+		return nil
+	}
+
+	provider := ethereum.NewWebsocketProvider()
+
+	unitAmount := big.NewInt(1e18)
+	transferAmount := big.NewInt(amount)
+	transferAmount = transferAmount.Mul(transferAmount, unitAmount)
+
+	contractAddress := common.HexToAddress(tokenAddressStr)
+	receiverAddress := common.HexToAddress(receiver)
+
+	token, err := contractsinterfaces.NewToken(contractAddress, provider.Client)
+	txOpts := bind.NewKeyedTransactor(privateKey)
+	_, err = token.Transfer(txOpts, receiverAddress, transferAmount)
+	if err != nil {
+		fmt.Printf("Could not transfer tokens: %v", err)
+	}
+
+	return err
 }
 
 func getTokenCode(buildFolder, symbol string) TokenCode {

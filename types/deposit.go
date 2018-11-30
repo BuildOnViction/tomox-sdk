@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Chain string
@@ -40,6 +41,16 @@ type AddressAssociation struct {
 	Address            common.Address `json:"address"`
 	TomochainPublicKey common.Address `json:"tomochainPublicKey"`
 	CreatedAt          time.Time      `json:"createdAt"`
+}
+
+// AddressAssociationRecord is the object that will be saved in the database
+type AddressAssociationRecord struct {
+	ID                bson.ObjectId `json:"id" bson:"_id"`
+	Chain             string        `json:"chain" bson:"chain"`
+	Address           string        `json:"address" bson:"address"`
+	AssociatedAddress string        `json:"associatedAddress" bson:"associatedAddress"`
+	CreatedAt         time.Time     `json:"createdAt" bson:"createdAt"`
+	UpdatedAt         time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
 
 type AddressAssociationFeed struct {

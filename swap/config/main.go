@@ -1,8 +1,11 @@
 package config
 
 import (
+	"crypto/ecdsa"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tomochain/backend-matching-engine/swap/ethereum"
 )
 
 type EthereumConfig struct {
@@ -36,6 +39,8 @@ type TomochainConfig struct {
 	StartingBalance string `mapstructure:"starting_balance"`
 	// LockUnixTimestamp defines unix timestamp when user account will be unlocked.
 	LockUnixTimestamp uint64 `mapstructure:"lock_unix_timestamp"`
+
+	signerPrivateKey *ecdsa.PrivateKey
 }
 
 type Config struct {
@@ -43,20 +48,29 @@ type Config struct {
 	Tomochain *TomochainConfig `mapstructure:"tomochain"`
 }
 
-func (c *Config) SignerPublicKey() string {
+func (c *Config) SignerPrivateKey() *ecdsa.PrivateKey {
+	if c.Tomochain.signerPrivateKey == nil {
+		// from private key to sign smart contract
+		// may contain 0x must use FromHex instead of HexString to bytes directly
+		keyBytes := common.FromHex(c.Tomochain.SignerPrivateKey)
+		c.Tomochain.signerPrivateKey, _ = crypto.ToECDSA(keyBytes)
+
+		// fmt.Printf("address key:%s, err: %v", privkey, err)
+
+	}
+
+	return c.Tomochain.signerPrivateKey
+}
+
+func (c *Config) SignerPublicKey() common.Address {
 	if c.Tomochain == nil {
-		return ""
+		return ethereum.EmptyAddress
 	}
-	// from private key to sign smart contract
-	// may contain 0x must use FromHex instead of HexString to bytes directly
-	keyBytes := common.FromHex(c.Tomochain.SignerPrivateKey)
-	privkey, err := crypto.ToECDSA(keyBytes)
+	privkey := c.SignerPrivateKey()
+	if privkey == nil {
+		return ethereum.EmptyAddress
+	}
 
-	// fmt.Printf("address key:%s, err: %v", privkey, err)
-	if err != nil {
-		return ""
-	}
 	address := crypto.PubkeyToAddress(privkey.PublicKey)
-
-	return address.String()
+	return address
 }

@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 func init() {
@@ -26,7 +26,7 @@ func TestTokenDao(t *testing.T) {
 		Name:            "PRFT",
 		Symbol:          "PRFT",
 		ContractAddress: common.HexToAddress("0x6e9a406696617ec5105f9382d33ba3360fcfabcc"),
-		Decimal:         18,
+		Decimals:        18,
 		Active:          true,
 		Quote:           true,
 	}

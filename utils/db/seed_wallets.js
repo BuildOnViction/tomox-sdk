@@ -1,39 +1,41 @@
-const argv = require('yargs').argv
-const MongoClient = require('mongodb').MongoClient
-const { keys } = require('../../config')
-const { utils, Wallet } = require('ethers')
-const { getNetworkID } = require('../../utils/helpers')
-const { DB_NAME } = require('./utils/config')
-const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017'
-const network = argv.network
-const networkID = getNetworkID(network)
-const walletKeys = keys[networkID]
+const argv = require('yargs').argv;
+const MongoClient = require('mongodb').MongoClient;
+const { utils, Wallet } = require('ethers');
+const { getNetworkID } = require('./utils/helpers');
+const { DB_NAME, keys } = require('./utils/config');
+const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
+const network = argv.network;
+const networkID = getNetworkID(network);
+const walletKeys = keys[networkID];
 
-let client, db, documents, response
+let client, db, documents, response;
 
 const seed = async () => {
   try {
-    client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true })
-    db = client.db(DB_NAME)
-    documents = []
+    client = await MongoClient.connect(
+      mongoUrl,
+      { useNewUrlParser: true }
+    );
+    db = client.db(DB_NAME);
+    documents = [];
 
     walletKeys.forEach(key => {
-      let walletRecord = {}
-      wallet = new Wallet(key)
+      let walletRecord = {};
+      wallet = new Wallet(key);
 
-      walletRecord.privateKey = wallet.privateKey.slice(2)
-      walletRecord.address = utils.getAddress(wallet.address)
-      walletRecord.admin = true
-      walletRecord.operator = true
-      documents.push(walletRecord)
-    })
+      walletRecord.privateKey = wallet.privateKey.slice(2);
+      walletRecord.address = utils.getAddress(wallet.address);
+      walletRecord.admin = true;
+      walletRecord.operator = true;
+      documents.push(walletRecord);
+    });
 
-    response = await db.collection('wallets').insertMany(documents)
+    response = await db.collection('wallets').insertMany(documents);
   } catch (e) {
-    console.log(e.message)
+    console.log(e.message);
   } finally {
-    client.close()
+    client.close();
   }
-}
+};
 
-seed()
+seed();

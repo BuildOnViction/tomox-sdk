@@ -21,6 +21,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/swap"
+	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
 )
 
@@ -88,7 +89,8 @@ func NewRouter(
 	tradeDao := daos.NewTradeDao()
 	accountDao := daos.NewAccountDao()
 	walletDao := daos.NewWalletDao()
-	depositDao := daos.NewDepositDao()
+	configDao := daos.NewConfigDao()
+	associationDao := daos.NewAssociationDao()
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
@@ -103,8 +105,16 @@ func NewRouter(
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, eng)
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
+
 	walletService := services.NewWalletService(walletDao)
-	depositService := services.NewDepositService(depositDao, swapEngine, eng)
+
+	// txservice for deposit
+	wallet := &types.Wallet{
+		Address:    app.Config.Deposit.SignerPublicKey(),
+		PrivateKey: app.Config.Deposit.SignerPrivateKey(),
+	}
+	txService := services.NewTxService(walletDao, wallet)
+	depositService := services.NewDepositService(configDao, associationDao, swapEngine, eng)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService)
@@ -144,7 +154,8 @@ func NewRouter(
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 	endpoints.ServeTradeResource(r, tradeService)
 	endpoints.ServeOrderResource(r, orderService, accountService)
-	endpoints.ServeDepositResource(r, depositService)
+
+	endpoints.ServeDepositResource(r, depositService, walletService, txService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

@@ -62,5 +62,7 @@ const { DB_NAME } = require('./utils/config')
     })
 
   console.log(response)
+
+  client.close()
 })()
 

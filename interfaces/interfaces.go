@@ -59,18 +59,22 @@ type AccountDao interface {
 	Drop()
 }
 
-type DepositDao interface {
+type ConfigDao interface {
 	GetSchemaVersion() uint64
-	// GetAssociationByChainAddress(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
-	AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress common.Address) (bool, error)
-	AddRecoveryTransaction(sourceAccount common.Address, txEnvelope string) error
-	GetAssociationByTomochainPublicKey(tomochainPublicKey common.Address) (*types.AddressAssociation, error)
 	GetAddressIndex(chain types.Chain) (uint64, error)
 	IncrementAddressIndex(chain types.Chain) error
 	ResetBlockCounters() error
 	GetEthereumBlockToProcess() (uint64, error)
 	SaveLastProcessedEthereumBlock(block uint64) error
 	Drop()
+}
+
+type AssociationDao interface {
+	GetAssociationByChainAddress(chain types.Chain, address common.Address) (*types.AddressAssociationRecord, error)
+	// save mean if there is no item then insert, otherwise update
+	SaveAssociation(record *types.AddressAssociationRecord) error
+	// AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress common.Address) (bool, error)
+	// AddRecoveryTransaction(sourceAccount common.Address, txEnvelope string) error
 }
 
 type WalletDao interface {
@@ -259,11 +263,22 @@ type AccountService interface {
 }
 
 type DepositService interface {
-	SignerPublicKey() string
+	SignerPublicKey() common.Address
 	GenerateAddress(chain types.Chain) (common.Address, error)
 	GetSchemaVersion() uint64
 	RecoveryTransaction(chain types.Chain, address common.Address) error
-	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error)
+	// one for wallet, one for relayer
+	GetAssociationByTomochainPublicKey(chain types.Chain, tomochainPublicKey common.Address) (*types.AddressAssociation, error)
+	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
+	SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address) error
+	// SetDelegate to endpoint
+	MinimumValueWei() *big.Int
+
+	SetDelegate(handler SwapEngineHandler)
+
+	// help creating token
+	EthereumClient() EthereumClient
+	WethAddress() common.Address
 }
 
 type SwapEngineHandler interface {

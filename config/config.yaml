@@ -2,16 +2,16 @@ db_name: tomodex
 deposit:
   ethereum:
     master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
-    minimum_value_eth: "0.00001"
-    network_id: "8888"
+    minimum_value_eth: 1e-05
+    network_id: 8888
     rpc_server: localhost:8545
-    token_price: "1"
+    token_price: 1
   tomochain:
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     lock_unix_timestamp: 0
-    signer_private_key: 0x17C6C258E1590E9CCD06FEDDFD3855D19490CEC93BE96AD6D52D16BDF9CC22C9
-    starting_balance: "100.00"
+    signer_private_key: 0x3411b45169aa5a8312e51357db68621031020dcf46011d7431db1bbb6d3922ce
+    starting_balance: 100
     token_asset_code: WETH
 error_file: config/errors.yaml
 ethereum:

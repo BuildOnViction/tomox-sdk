@@ -1,30 +1,34 @@
-const MongoClient = require('mongodb').MongoClient
-const url = process.env.MONGODB_URL || 'mongodb://localhost:27017'
-const { DB_NAME } = require('./utils/config')
+const MongoClient = require('mongodb').MongoClient;
+const url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
+const { DB_NAME } = require('./utils/config');
 const create = async () => {
-  const client = await MongoClient.connect(url, { useNewUrlParser: true })
+  const client = await MongoClient.connect(
+    url,
+    { useNewUrlParser: true }
+  );
 
-  const db = client.db(DB_NAME)
+  const db = client.db(DB_NAME);
   const response = await db.createCollection('accounts', {
-    validator:  {
+    validator: {
       $jsonSchema: 'object',
       required: ['address'],
-      properties:  {
+      properties: {
         address: {
-          bsonType: "string",
+          bsonType: 'string'
         },
         tokenBalances: {
-          bsonType: "object",
+          bsonType: 'object'
         },
         isBlocked: {
-          bsonType: "bool",
-        },
+          bsonType: 'bool'
+        }
       }
     }
-  })
+  });
 
-  console.log(response)
-}
+  console.log(response);
 
-create()
+  client.close();
+};
 
+create();

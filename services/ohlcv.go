@@ -36,7 +36,7 @@ func (s *OHLCVService) Subscribe(conn *ws.Client, p *types.SubscriptionPayload) 
 	socket := ws.GetOHLCVSocket()
 
 	ohlcv, err := s.GetOHLCV(
-		[]types.PairAddresses{types.PairAddresses{BaseToken: p.BaseToken, QuoteToken: p.QuoteToken}},
+		[]types.PairAddresses{{BaseToken: p.BaseToken, QuoteToken: p.QuoteToken}},
 		p.Duration,
 		p.Units,
 		p.From,

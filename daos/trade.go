@@ -3,9 +3,9 @@ package daos
 import (
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/ethereum/go-ethereum/common"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -153,7 +153,7 @@ func (dao *TradeDao) Update(trade *types.Trade) error {
 func (dao *TradeDao) Upsert(id bson.ObjectId, t *types.Trade) error {
 	t.UpdatedAt = time.Now()
 
-	err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"_id": id}, t)
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"_id": id}, t)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -165,7 +165,7 @@ func (dao *TradeDao) Upsert(id bson.ObjectId, t *types.Trade) error {
 func (dao *TradeDao) UpsertByHash(h common.Hash, t *types.Trade) error {
 	t.UpdatedAt = time.Now()
 
-	err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"hash": h}, t)
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"hash": h}, t)
 	if err != nil {
 		logger.Error(err)
 		return err

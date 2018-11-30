@@ -143,7 +143,7 @@ func (dao *OrderDao) Update(id bson.ObjectId, o *types.Order) error {
 func (dao *OrderDao) Upsert(id bson.ObjectId, o *types.Order) error {
 	o.UpdatedAt = time.Now()
 
-	err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"_id": id}, o)
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"_id": id}, o)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -153,7 +153,7 @@ func (dao *OrderDao) Upsert(id bson.ObjectId, o *types.Order) error {
 }
 
 func (dao *OrderDao) UpsertByHash(h common.Hash, o *types.Order) error {
-	err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"hash": h.Hex()}, types.OrderBSONUpdate{o})
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"hash": h.Hex()}, types.OrderBSONUpdate{o})
 	if err != nil {
 		logger.Error(err)
 		return err

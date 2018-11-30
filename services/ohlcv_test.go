@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/assert"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/daos"
 	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -79,7 +79,7 @@ var testTimes = []string{
 var durationMap = make(map[string]map[int64]*types.Tick)
 
 func TestOHLCV(t *testing.T) {
-	pair := types.PairAddresses{
+	pair := &types.PairAddresses{
 		Name:       "HPC/AUT",
 		BaseToken:  common.HexToAddress("0x2034842261b82651885751fc293bba7ba5398156"),
 		QuoteToken: common.HexToAddress("0x1888a8db0b7db59413ce07150b3373972bf818d3"),

@@ -2,4 +2,4 @@ package endpoints
 
 import "github.com/tomochain/backend-matching-engine/utils"
 
-var logger = utils.Logger
+var logger = utils.APILogger
