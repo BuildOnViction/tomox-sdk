@@ -1,6 +1,7 @@
 # DEX backend
 
 Official decentralized exchange backend, forked from the Proof project.  
+Support deposit scenarios: coin-coin, token-coin, token-token.  
 The matching-engine will be soon moved to blockchain services.
 
 # Getting Started
@@ -14,7 +15,6 @@ The matching-engine will be soon moved to blockchain services.
 ## Deployment guide step by step
 
 https://github.com/tomochain/dex-client/blob/master/Deployment_step_by_step.md
-
 
 ## Booting up the server
 
