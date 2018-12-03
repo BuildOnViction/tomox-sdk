@@ -1,15 +1,20 @@
 package tomochain
 
 import (
-	"strconv"
+	"crypto/ecdsa"
+	"crypto/rand"
+	"encoding/hex"
 
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
-func (ac *AccountConfigurator) createAccountTransaction(destination string) error {
+func (ac *AccountConfigurator) createAccountTransaction(chain types.Chain, destination string) error {
 	transaction, err := ac.buildTransaction(
 		ac.signerPublicKey.String(),
-		ac.SignerPrivateKey,
+		ac.signerPrivateKey,
+		"CreateAccount",
 		destination,
 		ac.StartingBalance,
 	)
@@ -17,7 +22,7 @@ func (ac *AccountConfigurator) createAccountTransaction(destination string) erro
 		return errors.Wrap(err, "Error building transaction")
 	}
 
-	err = ac.submitTransaction(transaction)
+	err = ac.submitTransaction(chain, destination, transaction)
 	if err != nil {
 		return errors.Wrap(err, "Error submitting a transaction")
 	}
@@ -26,7 +31,7 @@ func (ac *AccountConfigurator) createAccountTransaction(destination string) erro
 }
 
 // configureAccountTransaction is using a signer on an user accounts to configure the account.
-func (ac *AccountConfigurator) configureAccountTransaction(destination, intermediateAssetCode, amount string) error {
+func (ac *AccountConfigurator) configureAccountTransaction(chain types.Chain, destination, intermediateAssetCode, amount string) error {
 
 	var tokenPrice string
 	switch intermediateAssetCode {
@@ -37,22 +42,13 @@ func (ac *AccountConfigurator) configureAccountTransaction(destination, intermed
 	}
 
 	// // Send WETH token using smart contract
-	// build.Payment(
-	// 	build.SourceAccount{ac.DistributionPublicKey},
-	// 	build.Destination{destination},
-	// 	build.CreditAmount{
-	// 		Code:   intermediateAssetCode,
-	// 		Issuer: ac.IssuerPublicKey,
-	// 		Amount: amount,
-	// 	},
-	// )
-
-	transaction, err := ac.buildTransaction(destination, ac.SignerPrivateKey, tokenPrice)
+	// exchange by rate from regulator service
+	transaction, err := ac.buildTransaction(destination, ac.signerPrivateKey, "CreateOffer", tokenPrice)
 	if err != nil {
 		return errors.Wrap(err, "Error building a transaction")
 	}
 
-	err = ac.submitTransaction(transaction)
+	err = ac.submitTransaction(chain, destination, transaction)
 	if err != nil {
 		return errors.Wrap(err, "Error submitting a transaction")
 	}
@@ -61,15 +57,15 @@ func (ac *AccountConfigurator) configureAccountTransaction(destination, intermed
 }
 
 // removeTemporarySigner is removing temporary signer from an account.
-func (ac *AccountConfigurator) removeTemporarySigner(destination string) error {
+func (ac *AccountConfigurator) removeTemporarySigner(chain types.Chain, destination string) error {
 	// Remove signer ? need to remove this account wallet? ac.signerPublicKey
 
-	transaction, err := ac.buildTransaction(destination, ac.SignerPrivateKey)
+	transaction, err := ac.buildTransaction(destination, ac.signerPrivateKey, "RemoveSigner")
 	if err != nil {
 		return errors.Wrap(err, "Error building a transaction")
 	}
 
-	err = ac.submitTransaction(transaction)
+	err = ac.submitTransaction(chain, destination, transaction)
 	if err != nil {
 		return errors.Wrap(err, "Error submitting a transaction")
 	}
@@ -81,77 +77,49 @@ func (ac *AccountConfigurator) removeTemporarySigner(destination string) error {
 func (ac *AccountConfigurator) buildUnlockAccountTransaction(source string) (string, error) {
 	// Remove signer, ac.LockUnixTimestamp
 
-	return ac.buildTransaction(source, ac.SignerPrivateKey)
+	return ac.buildTransaction(source, ac.signerPrivateKey, "RemoveSigner")
 }
 
-func (ac *AccountConfigurator) buildTransaction(source string, signer string, params ...string) (string, error) {
-	// muts := []build.TransactionMutator{
-	// 	build.SourceAccount{source},
-	// 	build.Network{ac.NetworkPassphrase},
-	// }
+// this will create hex data of rlp encode data
+func (ac *AccountConfigurator) buildTransaction(source string, signer *ecdsa.PrivateKey, transactionType string, params ...string) (string, error) {
 
-	// if source == ac.signerPublicKey {
-	// 	muts = append(muts, build.Sequence{ac.getSignerSequence()})
-	// } else {
-	// 	muts = append(muts, build.AutoSequence{ac.Horizon})
-	// }
+	associationTransaction := &types.AssociationTransaction{
+		Source:          source,
+		TransactionType: transactionType,
+		Params:          params,
+	}
 
-	// muts = append(muts, mutators...)
-	// tx, err := build.Transaction(muts...)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// txe, err := tx.Sign(signer)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// return txe.Base64()
-	return "hash", nil
+	associationTransaction.Hash = associationTransaction.ComputeHash()
+
+	signature, err := signer.Sign(rand.Reader, associationTransaction.Hash, nil)
+	if err == nil {
+		return "", err
+	}
+
+	associationTransaction.Signature = signature
+
+	bytes, err := rlp.EncodeToBytes(associationTransaction)
+	return hex.EncodeToString(bytes), err
 }
 
-func (ac *AccountConfigurator) submitTransaction(transaction string) error {
+func (ac *AccountConfigurator) submitTransaction(chain types.Chain, destination, transaction string) error {
 	logger.Info("Submitting transaction")
 
-	err := ac.submitTransaction(transaction)
+	// no implementation, just return
+	if ac.OnSubmitTransaction == nil {
+		return nil
+	}
+
+	// call storage update transaction for association
+
+	err := ac.OnSubmitTransaction(chain, destination, transaction)
+
 	if err != nil {
-		ac.updateSignerSequence()
+
 		logger.Error("Error submitting transaction")
 		return errors.Wrap(err, "Error submitting transaction")
 	}
 
 	logger.Info("Transaction successfully submitted")
 	return nil
-}
-
-func (ac *AccountConfigurator) updateSignerSequence() error {
-	ac.signerSequenceMutex.Lock()
-	defer ac.signerSequenceMutex.Unlock()
-
-	account, err := ac.LoadAccount(ac.signerPublicKey.String())
-	if err != nil {
-		err = errors.Wrap(err, "Error loading issuing account")
-		logger.Error(err)
-		return err
-	}
-
-	ac.signerSequence, err = strconv.ParseUint(account.Sequence, 10, 64)
-	if err != nil {
-		err = errors.Wrap(err, "Invalid DistributionPublicKey sequence")
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (ac *AccountConfigurator) LoadAccount(publicKey string) (Account, error) {
-	return Account{}, nil
-}
-
-func (ac *AccountConfigurator) getSignerSequence() uint64 {
-	ac.signerSequenceMutex.Lock()
-	defer ac.signerSequenceMutex.Unlock()
-	ac.signerSequence++
-	sequence := ac.signerSequence
-	return sequence
 }

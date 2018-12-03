@@ -114,7 +114,7 @@ func NewRouter(
 		PrivateKey: app.Config.Deposit.SignerPrivateKey(),
 	}
 	txService := services.NewTxService(walletDao, wallet)
-	depositService := services.NewDepositService(configDao, associationDao, swapEngine, eng)
+	depositService := services.NewDepositService(configDao, associationDao, swapEngine, eng, rabbitConn)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService)

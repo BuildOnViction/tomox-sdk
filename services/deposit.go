@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/swap"
 	swapEthereum "github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/types"
@@ -18,6 +19,7 @@ type DepositService struct {
 	associationDao interfaces.AssociationDao
 	swapEngine     *swap.Engine
 	engine         interfaces.Engine
+	broker         *rabbitmq.Connection
 }
 
 // NewAddressService returns a new instance of accountService
@@ -26,12 +28,15 @@ func NewDepositService(
 	associationDao interfaces.AssociationDao,
 	swapEngine *swap.Engine,
 	engine interfaces.Engine,
+	broker *rabbitmq.Connection,
 ) *DepositService {
 
-	depositService := &DepositService{configDao, associationDao, swapEngine, engine}
+	depositService := &DepositService{configDao, associationDao, swapEngine, engine, broker}
 
 	// set storage engine to this service
 	swapEngine.SetStorage(depositService)
+
+	swapEngine.SetQueue(depositService)
 
 	// run watching
 	swapEngine.Start()
@@ -86,6 +91,25 @@ func (s *DepositService) GetEthereumBlockToProcess() (uint64, error) {
 
 func (s *DepositService) SaveLastProcessedEthereumBlock(block uint64) error {
 	return s.configDao.SaveLastProcessedEthereumBlock(block)
+}
+
+func (s *DepositService) SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error {
+	return s.associationDao.SaveDepositTransaction(chain, sourceAccount, txEnvelope)
+}
+
+func (s *DepositService) QueueAdd(transaction *types.DepositTransaction) error {
+	err := s.broker.PublishDepositTransaction(transaction)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// QueuePool receives and removes the head of this queue. Returns nil if no elements found.
+func (s *DepositService) QueuePool() (<-chan *types.DepositTransaction, error) {
+	return s.broker.QueuePoolDepositTransactions()
 }
 
 func (s *DepositService) MinimumValueWei() *big.Int {

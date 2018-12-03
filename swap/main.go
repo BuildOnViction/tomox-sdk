@@ -1,6 +1,7 @@
 package swap
 
 import (
+	"fmt"
 	"math/big"
 	"os"
 	"os/signal"
@@ -44,7 +45,7 @@ func NewEngine(cfg *config.Config) *Engine {
 	}
 	if cfg.Ethereum != nil {
 		ethereumListener := &ethereum.Listener{}
-		ethereumClient, err := ethclient.Dial("http://" + cfg.Ethereum.RpcServer)
+		ethereumClient, err := ethclient.Dial(fmt.Sprintf("http://%s", cfg.Ethereum.RpcServer))
 		if err != nil {
 			logger.Error("Error connecting to geth")
 			os.Exit(-1)
@@ -69,14 +70,7 @@ func NewEngine(cfg *config.Config) *Engine {
 
 	if cfg.Tomochain != nil {
 
-		tomochainAccountConfigurator := &tomochain.AccountConfigurator{
-			IssuerPublicKey:       cfg.Tomochain.IssuerPublicKey,
-			DistributionPublicKey: cfg.Tomochain.DistributionPublicKey,
-			SignerPrivateKey:      cfg.Tomochain.SignerPrivateKey,
-			TokenAssetCode:        cfg.Tomochain.TokenAssetCode,
-			StartingBalance:       cfg.Tomochain.StartingBalance,
-			LockUnixTimestamp:     cfg.Tomochain.LockUnixTimestamp,
-		}
+		tomochainAccountConfigurator := tomochain.NewAccountConfigurator(cfg)
 
 		if cfg.Tomochain.StartingBalance == "" {
 			tomochainAccountConfigurator.StartingBalance = "100.00"
@@ -98,12 +92,19 @@ func (engine *Engine) SetStorage(storage ethereum.Storage) {
 	engine.ethereumListener.Storage = storage
 }
 
+// SetQueue : update queue mechanism, may be rabbitmq implementation
+func (engine *Engine) SetQueue(queue queue.Queue) {
+	engine.transactionsQueue = queue
+}
+
 func (engine *Engine) SetDelegate(handler interfaces.SwapEngineHandler) {
 	// delegate some handlers
 	engine.ethereumListener.TransactionHandler = handler.OnNewEthereumTransaction
+	engine.tomochainAccountConfigurator.OnSubmitTransaction = handler.OnSubmitTransaction
 	engine.tomochainAccountConfigurator.OnAccountCreated = handler.OnTomochainAccountCreated
 	engine.tomochainAccountConfigurator.OnExchanged = handler.OnExchanged
 	engine.tomochainAccountConfigurator.OnExchangedTimelocked = handler.OnExchangedTimelocked
+	engine.tomochainAccountConfigurator.LoadAccountHandler = handler.LoadAccountHandler
 }
 
 func (engine *Engine) Start() error {
@@ -176,27 +177,41 @@ func (engine *Engine) poolTransactionsQueue() {
 	logger.Infof("Started pooling transactions queue")
 
 	for {
-		transaction, err := engine.transactionsQueue.QueuePool()
+		msgs, err := engine.transactionsQueue.QueuePool()
+
 		if err != nil {
 			logger.Infof("Error pooling transactions queue")
-			time.Sleep(time.Second)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 
-		if transaction == nil {
-			time.Sleep(time.Second)
-			continue
-		}
+		// eating messages from the read-only channel
+		for transaction := range msgs {
 
-		logger.Infof("Received transaction from transactions queue: %v", transaction)
-		go engine.tomochainAccountConfigurator.ConfigureAccount(
-			transaction.TomochainPublicKey,
-			string(transaction.AssetCode),
-			transaction.Amount,
-		)
+			if err != nil {
+				logger.Infof("Error pooling transactions queue")
+				time.Sleep(time.Second)
+				continue
+			}
+
+			if transaction == nil {
+				time.Sleep(time.Second)
+				continue
+			}
+
+			logger.Infof("Received transaction from transactions queue: %v", transaction)
+			go engine.tomochainAccountConfigurator.ConfigureAccount(
+				transaction.Chain,
+				transaction.TomochainPublicKey,
+				string(transaction.AssetCode),
+				transaction.Amount,
+			)
+		}
 	}
 }
 
 func (e *Engine) shutdown() {
 	// do something
+	ethClient := e.ethereumListener.Client.(*ethclient.Client)
+	ethClient.Close()
 }

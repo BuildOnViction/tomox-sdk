@@ -5,7 +5,14 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"gopkg.in/mgo.v2/bson"
+)
+
+type AssetCode string
+
+const (
+	AssetCodeETH AssetCode = "ETH"
 )
 
 type Chain string
@@ -48,6 +55,7 @@ type AddressAssociationRecord struct {
 	ID                bson.ObjectId `json:"id" bson:"_id"`
 	Chain             string        `json:"chain" bson:"chain"`
 	Address           string        `json:"address" bson:"address"`
+	TxEnvelope        string        `json:"txEnvelope" bson: "txEnvelope"`
 	AssociatedAddress string        `json:"associatedAddress" bson:"associatedAddress"`
 	CreatedAt         time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt         time.Time     `json:"updatedAt" bson:"updatedAt"`
@@ -80,4 +88,38 @@ type GenerateAddressResponse struct {
 	Chain           string `json:"chain"`
 	Address         string `json:"address"`
 	Signer          string `json:"signer"`
+}
+
+type DepositTransaction struct {
+	Chain         Chain
+	TransactionID string
+	AssetCode     AssetCode
+	// CRITICAL REQUIREMENT: Amount in the base unit of currency.
+	// For 10 satoshi this should be equal 0.0000001
+	// For 1 BTC      this should be equal 1.0000000
+	// For 1 Finney   this should be equal 0.0010000
+	// For 1 ETH      this should be equal 1.0000000
+	// Currently, the length of Amount string shouldn't be longer than 17 characters.
+	Amount             string
+	TomochainPublicKey string
+}
+
+type AssociationTransaction struct {
+	Source          string   `json:"source"`
+	Signature       []byte   `json:"signature"`
+	Hash            []byte   `json:"hash"`
+	TransactionType string   `json:"transactionType"`
+	Params          []string `json:"params"`
+}
+
+// ComputeHash calculates the orderRequest hash
+func (o *AssociationTransaction) ComputeHash() []byte {
+	sha := sha3.NewKeccak256()
+
+	sha.Write([]byte(o.Source))
+	sha.Write([]byte(o.TransactionType))
+	for _, param := range o.Params {
+		sha.Write([]byte(param))
+	}
+	return sha.Sum(nil)
 }

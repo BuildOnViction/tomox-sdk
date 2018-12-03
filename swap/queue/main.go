@@ -1,23 +1,6 @@
 package queue
 
-type AssetCode string
-
-const (
-	AssetCodeETH AssetCode = "ETH"
-)
-
-type Transaction struct {
-	TransactionID string
-	AssetCode     AssetCode
-	// CRITICAL REQUIREMENT: Amount in the base unit of currency.
-	// For 10 satoshi this should be equal 0.0000001
-	// For 1 BTC      this should be equal 1.0000000
-	// For 1 Finney   this should be equal 0.0010000
-	// For 1 ETH      this should be equal 1.0000000
-	// Currently, the length of Amount string shouldn't be longer than 17 characters.
-	Amount             string
-	TomochainPublicKey string
-}
+import "github.com/tomochain/backend-matching-engine/types"
 
 // Queue implements transactions queue.
 // The queue must not allow duplicates (including history) or must implement deduplication
@@ -28,9 +11,7 @@ type Transaction struct {
 type Queue interface {
 	// QueueAdd inserts the element to this queue. If element already exists in a queue, it should
 	// return nil.
-	QueueAdd(tx Transaction) error
-	// QueuePool receives and removes the head of this queue. Returns nil if no elements found.
-	QueuePool() (*Transaction, error)
+	QueueAdd(tx *types.DepositTransaction) error
+	// QueuePool return the queue as a read-only channel.
+	QueuePool() (<-chan *types.DepositTransaction, error)
 }
-
-type SQSFiFo struct{}

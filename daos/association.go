@@ -46,8 +46,19 @@ func (dao *AssociationDao) Drop() {
 	db.DropCollection(dao.dbName, dao.collectionName)
 }
 
-// AddRecoveryTransaction inserts recovery account ID and transaction envelope
-// func (dao *AssociationDao) AddRecoveryTransaction(sourceAccount string, txEnvelope string) error
+// SaveDepositTransaction update the transaction envelope for association item
+func (dao *AssociationDao) SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error {
+	// txEnvolope is rlp of result
+	err := db.Update(dao.dbName, dao.collectionName, bson.M{
+		"chain":   chain.String(),
+		"address": sourceAccount,
+	}, bson.M{
+		"$set": bson.M{
+			"txEnvelope": txEnvelope,
+		},
+	})
+	return err
+}
 
 func (dao *AssociationDao) GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error) {
 	var response types.AddressAssociationRecord

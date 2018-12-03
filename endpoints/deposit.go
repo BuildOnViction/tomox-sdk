@@ -14,7 +14,6 @@ import (
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/swap"
 	"github.com/tomochain/backend-matching-engine/swap/ethereum"
-	"github.com/tomochain/backend-matching-engine/swap/queue"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
 )
@@ -142,7 +141,7 @@ func (e *depositEndpoint) handleRecoveryTransaction(w http.ResponseWriter, r *ht
 // the transactions queue for TomochainAccountConfigurator to consume.
 //
 // Transaction added to transactions queue should be in a format described in
-// queue.Transaction (especialy amounts). Pooling service should not have to deal with any
+// types.DepositTransaction (especialy amounts). Pooling service should not have to deal with any
 // conversions.
 func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transaction) error {
 	logger.Info("Processing transaction: %v", transaction)
@@ -172,9 +171,10 @@ func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transact
 	}
 
 	// Add tx to the processing queue
-	queueTx := &queue.Transaction{
+	queueTx := &types.DepositTransaction{
+		Chain:         types.ChainEthereum,
 		TransactionID: transaction.Hash,
-		AssetCode:     queue.AssetCodeETH,
+		AssetCode:     types.AssetCodeETH,
 		// Amount in the base unit of currency.
 		Amount:             transaction.ValueWei.String(),
 		TomochainPublicKey: addressAssociation.AssociatedAddress,
@@ -187,15 +187,17 @@ func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transact
 		return err
 	}
 
-	if processed {
-		logger.Debug("Transaction already processed, skipping")
+	if !processed {
+		logger.Debug("Transaction can not be processed, skipping")
 		return nil
 	}
 
-	// err = s.swapEngine.TransactionsQueue().QueueAdd(queueTx)
-	// if err != nil {
-	// 	return errors.Wrap(err, "Error adding transaction to the processing queue")
-	// }
+	// add queue transaction
+	err = e.depositService.QueueAdd(queueTx)
+	if err != nil {
+		return errors.Wrap(err, "Error adding transaction to the processing queue")
+	}
+
 	logger.Info("Transaction added to transaction queue: %v", queueTx)
 
 	// Broadcast event to address stream using websocket
@@ -204,9 +206,20 @@ func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transact
 	return nil
 }
 
-func (e *depositEndpoint) OnTomochainAccountCreated(destination string) {
+func (e *depositEndpoint) OnSubmitTransaction(chain types.Chain, destination, transaction string) error {
+	// Save tx to database
 	publicKey := common.HexToAddress(destination)
-	association, err := e.getAssociationByTomochainPublicKey(publicKey)
+	err := e.depositService.SaveDepositTransaction(chain, publicKey, transaction)
+	if err != nil {
+		logger.Error("Error saving transaction to DB")
+		return err
+	}
+	return nil
+}
+
+func (e *depositEndpoint) OnTomochainAccountCreated(chain types.Chain, destination string) {
+	publicKey := common.HexToAddress(destination)
+	association, err := e.depositService.GetAssociationByTomochainPublicKey(chain, publicKey)
 	if err != nil {
 		logger.Error("Error getting association")
 		return
@@ -220,9 +233,9 @@ func (e *depositEndpoint) OnTomochainAccountCreated(destination string) {
 	logger.Infof("Broasting event: %v", association)
 }
 
-func (e *depositEndpoint) OnExchanged(destination string) {
+func (e *depositEndpoint) OnExchanged(chain types.Chain, destination string) {
 	publicKey := common.HexToAddress(destination)
-	association, err := e.getAssociationByTomochainPublicKey(publicKey)
+	association, err := e.depositService.GetAssociationByTomochainPublicKey(chain, publicKey)
 	if err != nil {
 		logger.Error("Error getting association")
 		return
@@ -236,9 +249,9 @@ func (e *depositEndpoint) OnExchanged(destination string) {
 	logger.Infof("Broasting event: %v", association)
 }
 
-func (e *depositEndpoint) OnExchangedTimelocked(destination, transaction string) {
+func (e *depositEndpoint) OnExchangedTimelocked(chain types.Chain, destination, transaction string) {
 	publicKey := common.HexToAddress(destination)
-	association, err := e.getAssociationByTomochainPublicKey(publicKey)
+	association, err := e.depositService.GetAssociationByTomochainPublicKey(chain, publicKey)
 	if err != nil {
 		logger.Error("Error getting association")
 		return
@@ -250,7 +263,7 @@ func (e *depositEndpoint) OnExchangedTimelocked(destination, transaction string)
 	}
 
 	// Save tx to database
-	err = e.addRecoveryTransaction(publicKey, transaction)
+	err = e.depositService.SaveDepositTransaction(chain, publicKey, transaction)
 	if err != nil {
 		logger.Error("Error saving unlock transaction to DB")
 		return
@@ -259,7 +272,12 @@ func (e *depositEndpoint) OnExchangedTimelocked(destination, transaction string)
 	logger.Infof("Broasting event: %v", association)
 }
 
-func (e *depositEndpoint) processedTransaction(transaction *queue.Transaction) (bool, error) {
+func (e *depositEndpoint) LoadAccountHandler(chain types.Chain, destination string) (*types.AddressAssociation, error) {
+	publicKey := common.HexToAddress(destination)
+	return e.depositService.GetAssociationByTomochainPublicKey(chain, publicKey)
+}
+
+func (e *depositEndpoint) processedTransaction(transaction *types.DepositTransaction) (bool, error) {
 	// call smart contract and listen to event, then update to mongodb via DAO
 	token, err := contracts.NewToken(
 		e.walletService, e.txService,
@@ -317,12 +335,4 @@ func (e *depositEndpoint) processedTransaction(transaction *queue.Transaction) (
 	}
 
 	return true, nil
-}
-
-func (e *depositEndpoint) getAssociationByTomochainPublicKey(tomochainPublicKey common.Address) (*types.AddressAssociation, error) {
-	return nil, nil
-}
-
-func (e *depositEndpoint) addRecoveryTransaction(sourceAccount common.Address, txEnvelope string) error {
-	return nil
 }

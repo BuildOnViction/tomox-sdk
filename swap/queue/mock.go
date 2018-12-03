@@ -2,6 +2,7 @@ package queue
 
 import (
 	"github.com/stretchr/testify/mock"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 // MockQueue is a mockable queue.
@@ -9,12 +10,12 @@ type MockQueue struct {
 	mock.Mock
 }
 
-func (m *MockQueue) QueueAdd(tx Transaction) error {
+func (m *MockQueue) QueueAdd(tx *types.DepositTransaction) error {
 	a := m.Called(tx)
 	return a.Error(0)
 }
 
-func (m *MockQueue) QueuePool() (*Transaction, error) {
+func (m *MockQueue) QueuePool() (<-chan *types.DepositTransaction, error) {
 	a := m.Called()
-	return a.Get(0).(*Transaction), a.Error(1)
+	return a.Get(0).(<-chan *types.DepositTransaction), a.Error(1)
 }

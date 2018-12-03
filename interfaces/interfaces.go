@@ -73,8 +73,7 @@ type AssociationDao interface {
 	GetAssociationByChainAddress(chain types.Chain, address common.Address) (*types.AddressAssociationRecord, error)
 	// save mean if there is no item then insert, otherwise update
 	SaveAssociation(record *types.AddressAssociationRecord) error
-	// AddProcessedTransaction(chain types.Chain, transactionID string, receivingAddress common.Address) (bool, error)
-	// AddRecoveryTransaction(sourceAccount common.Address, txEnvelope string) error
+	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
 }
 
 type WalletDao interface {
@@ -271,10 +270,16 @@ type DepositService interface {
 	GetAssociationByTomochainPublicKey(chain types.Chain, tomochainPublicKey common.Address) (*types.AddressAssociation, error)
 	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
 	SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address) error
+
+	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
 	// SetDelegate to endpoint
 	MinimumValueWei() *big.Int
 
 	SetDelegate(handler SwapEngineHandler)
+
+	// Queue implementation
+	QueueAdd(queueTx *types.DepositTransaction) error
+	QueuePool() (<-chan *types.DepositTransaction, error)
 
 	// help creating token
 	EthereumClient() EthereumClient
@@ -283,9 +288,12 @@ type DepositService interface {
 
 type SwapEngineHandler interface {
 	OnNewEthereumTransaction(transaction swapEthereum.Transaction) error
-	OnTomochainAccountCreated(destination string)
-	OnExchanged(destination string)
-	OnExchangedTimelocked(destination, transaction string)
+	OnSubmitTransaction(chain types.Chain, destination, transaction string) error
+	OnTomochainAccountCreated(chain types.Chain, destination string)
+	OnExchanged(chain types.Chain, destination string)
+	OnExchangedTimelocked(chain types.Chain, destination, transaction string)
+
+	LoadAccountHandler(chain types.Chain, publicKey string) (*types.AddressAssociation, error)
 }
 
 type ValidatorService interface {
