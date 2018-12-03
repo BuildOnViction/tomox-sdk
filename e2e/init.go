@@ -63,7 +63,7 @@ func Init(t *testing.T) {
 
 func NewRouter() *mux.Router {
 	provider := ethereum.NewWebsocketProvider()
-	rabbitConn := rabbitmq.InitConnection(app.Config.Rabbitmq)
+	rabbitConn := rabbitmq.InitConnection(app.Config.RabbitMQURL)
 
 	r := mux.NewRouter()
 
@@ -84,7 +84,7 @@ func NewRouter() *mux.Router {
 	tokenService := services.NewTokenService(tokenDao)
 	tradeService := services.NewTradeService(tradeDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, eng)
-	validatorService := services.NewValidatorService(provider, accountDao, orderDao)
+	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	walletService := services.NewWalletService(walletDao)
@@ -123,7 +123,7 @@ func NewRouter() *mux.Router {
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 	endpoints.ServeTradeResource(r, tradeService)
-	endpoints.ServeOrderResource(r, orderService, accountService, eng)
+	endpoints.ServeOrderResource(r, orderService, accountService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

@@ -133,7 +133,7 @@ func (engine *Engine) Start() error {
 
 	signalInterrupt := make(chan os.Signal, 1)
 	signal.Notify(signalInterrupt, os.Interrupt)
-
+	// only stop if ctrl+c or got interrupt signal
 	go engine.poolTransactionsQueue()
 
 	<-signalInterrupt
@@ -176,38 +176,31 @@ func (engine *Engine) MinimumValueWei() *big.Int {
 func (engine *Engine) poolTransactionsQueue() {
 	logger.Infof("Started pooling transactions queue")
 
-	for {
-		msgs, err := engine.transactionsQueue.QueuePool()
+	msgs, err := engine.transactionsQueue.QueuePool()
 
-		if err != nil {
-			logger.Infof("Error pooling transactions queue")
-			time.Sleep(5 * time.Second)
+	if err != nil {
+		logger.Infof("Error pooling transactions queue")
+		time.Sleep(5 * time.Second)
+		return
+	}
+
+	// eating messages from the read-only channel
+	for transaction := range msgs {
+
+		if transaction == nil {
+			time.Sleep(time.Second)
 			continue
 		}
 
-		// eating messages from the read-only channel
-		for transaction := range msgs {
-
-			if err != nil {
-				logger.Infof("Error pooling transactions queue")
-				time.Sleep(time.Second)
-				continue
-			}
-
-			if transaction == nil {
-				time.Sleep(time.Second)
-				continue
-			}
-
-			logger.Infof("Received transaction from transactions queue: %v", transaction)
-			go engine.tomochainAccountConfigurator.ConfigureAccount(
-				transaction.Chain,
-				transaction.TomochainPublicKey,
-				string(transaction.AssetCode),
-				transaction.Amount,
-			)
-		}
+		logger.Infof("Received transaction from transactions queue: %v", transaction)
+		go engine.tomochainAccountConfigurator.ConfigureAccount(
+			transaction.Chain,
+			transaction.TomochainPublicKey,
+			string(transaction.AssetCode),
+			transaction.Amount,
+		)
 	}
+
 }
 
 func (e *Engine) shutdown() {
