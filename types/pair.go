@@ -57,6 +57,21 @@ type PairRecord struct {
 	UpdatedAt          time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
+func (p *Pair) BaseTokenMultiplier() *big.Int {
+	return math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
+}
+
+func (p *Pair) QuoteTokenMultiplier() *big.Int {
+	return math.Exp(big.NewInt(10), big.NewInt(int64(p.QuoteTokenDecimals)))
+}
+
+func (p *Pair) PairMultiplier() *big.Int {
+	defaultMultiplier := math.Exp(big.NewInt(10), big.NewInt(18))
+	baseTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
+
+	return math.Mul(defaultMultiplier, baseTokenMultiplier)
+}
+
 func (p *Pair) PricepointMultiplier() *big.Int {
 	baseTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
 	quoteTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.QuoteTokenDecimals)))
@@ -83,6 +98,10 @@ func (p *Pair) AddressCode() string {
 func (p *Pair) Name() string {
 	name := p.BaseTokenSymbol + "/" + p.QuoteTokenSymbol
 	return name
+}
+
+func (p *Pair) MinQuoteAmount() *big.Int {
+	return math.Add(math.Mul(big.NewInt(2), p.MakeFee), math.Mul(big.NewInt(2), p.TakeFee))
 }
 
 func (p *Pair) SetBSON(raw bson.Raw) error {

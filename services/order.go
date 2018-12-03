@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/backend-matching-engine/utils/math"
 	"github.com/tomochain/backend-matching-engine/ws"
 
 	"gopkg.in/mgo.v2/bson"
@@ -141,6 +142,13 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 
 	if p == nil {
 		return errors.New("Pair not found")
+	}
+
+	utils.PrintJSON(o.QuoteAmount(p).String())
+	utils.PrintJSON(p.MinQuoteAmount().String())
+
+	if math.IsStrictlySmallerThan(o.QuoteAmount(p), p.MinQuoteAmount()) {
+		return errors.New("Order amount too low")
 	}
 
 	// Fill token and pair data

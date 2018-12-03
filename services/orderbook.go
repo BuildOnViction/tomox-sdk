@@ -100,6 +100,10 @@ func (s *OrderBookService) GetRawOrderBook(bt, qt common.Address) (*types.RawOrd
 		return nil, err
 	}
 
+	if pair == nil {
+		return nil, errors.New("Pair does not exist")
+	}
+
 	orders, err := s.orderDao.GetRawOrderBook(pair)
 	if err != nil {
 		logger.Error(err)

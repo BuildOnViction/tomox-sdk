@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/streadway/amqp"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 func (c *Connection) SubscribeOperator(fn func(*types.OperatorMessage) error) error {
@@ -239,15 +239,15 @@ func (c *Connection) ConsumeQueuedTrades(ch *amqp.Channel, q *amqp.Queue, fn fun
 				if err != nil {
 					logger.Error(err)
 					d.Nack(false, false)
+				} else {
+					err = fn(m, d.DeliveryTag)
+					if err != nil {
+						logger.Error(err)
+						d.Nack(false, false)
+					} else {
+						d.Ack(false)
+					}
 				}
-
-				err = fn(m, d.DeliveryTag)
-				if err != nil {
-					logger.Error(err)
-					d.Nack(false, false)
-				}
-
-				d.Ack(false)
 			}
 		}()
 

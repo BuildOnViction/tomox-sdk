@@ -40,6 +40,7 @@ type OrderDao interface {
 	UpdateOrderStatus(h common.Hash, status string) error
 	GetRawOrderBook(*types.Pair) ([]*types.Order, error)
 	GetOrderBook(*types.Pair) ([]map[string]string, []map[string]string, error)
+	GetSideOrderBook(p *types.Pair, side string, sort int, limit ...int) ([]map[string]string, error)
 	GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side string) (*big.Int, error)
 	FindAndModify(h common.Hash, o *types.Order) (*types.Order, error)
 	Drop() error

@@ -99,7 +99,7 @@ func TestOHLCV(t *testing.T) {
 		PricePoint:     big.NewInt(9987),
 		Amount:         big.NewInt(125772),
 	}
-	app.Config.DBName = "proofdex"
+	app.Config.DBName = "tomodex"
 	tradeDao := daos.NewTradeDao()
 	ohlcvService := NewOHLCVService(tradeDao)
 

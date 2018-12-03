@@ -16,6 +16,11 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const (
+	BUY  = "BUY"
+	SELL = "SELL"
+)
+
 // Order contains the data related to an order sent by the user
 type Order struct {
 	ID              bson.ObjectId  `json:"id" bson:"_id"`
@@ -80,7 +85,7 @@ func (o *Order) Validate() error {
 		return errors.New("Order 'pricepoint' parameter is required")
 	}
 
-	if o.Side != "BUY" && o.Side != "SELL" {
+	if o.Side != BUY && o.Side != SELL {
 		return errors.New("Order 'side' should be 'SELL' or 'BUY', but got: '" + o.Side + "'")
 	}
 
@@ -194,11 +199,11 @@ func (o *Order) RemainingAmount() *big.Int {
 }
 
 func (o *Order) SellTokenSymbol() string {
-	if o.Side == "BUY" {
+	if o.Side == BUY {
 		return o.QuoteTokenSymbol()
 	}
 
-	if o.Side == "SELL" {
+	if o.Side == SELL {
 		return o.BaseTokenSymbol()
 	}
 
@@ -207,7 +212,7 @@ func (o *Order) SellTokenSymbol() string {
 
 //TODO handle error case
 func (o *Order) SellToken() common.Address {
-	if o.Side == "BUY" {
+	if o.Side == BUY {
 		return o.QuoteToken
 	} else {
 		return o.BaseToken
@@ -215,17 +220,22 @@ func (o *Order) SellToken() common.Address {
 }
 
 func (o *Order) BuyToken() common.Address {
-	if o.Side == "BUY" {
+	if o.Side == BUY {
 		return o.BaseToken
 	} else {
 		return o.QuoteToken
 	}
 }
 
+func (o *Order) QuoteAmount(p *Pair) *big.Int {
+	pairMultiplier := p.PairMultiplier()
+	return math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
+}
+
 // SellAmount
-// If order is a "BUY", then sellToken = quoteToken
+// If order is a BUY, then sellToken = quoteToken
 func (o *Order) SellAmount(pricepointMultiplier *big.Int) *big.Int {
-	if o.Side == "BUY" {
+	if o.Side == BUY {
 		return math.Div(math.Mul(o.Amount, o.PricePoint), pricepointMultiplier)
 	} else {
 		return o.Amount
@@ -233,16 +243,46 @@ func (o *Order) SellAmount(pricepointMultiplier *big.Int) *big.Int {
 }
 
 func (o *Order) BuyAmount() *big.Int {
-	if o.Side == "SELL" {
+	if o.Side == SELL {
 		return o.Amount
 	} else {
 		return math.Div(math.Mul(o.Amount, o.PricePoint), big.NewInt(1e9))
 	}
 }
 
+func (o *Order) RequiredSellAmount(p *Pair) *big.Int {
+	var requiredSellTokenAmount *big.Int
+
+	pairMultiplier := p.PairMultiplier()
+
+	if o.Side == BUY {
+		requiredSellTokenAmount = math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
+	} else {
+		requiredSellTokenAmount = o.Amount
+	}
+
+	return requiredSellTokenAmount
+}
+
+func (o *Order) TotalRequiredSellAmount(p *Pair) *big.Int {
+	var requiredSellTokenAmount *big.Int
+
+	pairMultiplier := p.PairMultiplier()
+
+	if o.Side == BUY {
+		sellAmount := math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
+		fee := math.Max(p.MakeFee, p.TakeFee)
+		requiredSellTokenAmount = math.Add(sellAmount, fee)
+	} else {
+		requiredSellTokenAmount = o.Amount
+	}
+
+	return requiredSellTokenAmount
+}
+
 //TODO handle error case ?
 func (o *Order) EncodedSide() *big.Int {
-	if o.Side == "BUY" {
+	if o.Side == BUY {
 		return big.NewInt(0)
 	} else {
 		return big.NewInt(1)
@@ -250,11 +290,11 @@ func (o *Order) EncodedSide() *big.Int {
 }
 
 func (o *Order) BuyTokenSymbol() string {
-	if o.Side == "BUY" {
+	if o.Side == BUY {
 		return o.BaseTokenSymbol()
 	}
 
-	if o.Side == "SELL" {
+	if o.Side == SELL {
 		return o.QuoteTokenSymbol()
 	}
 

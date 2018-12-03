@@ -82,6 +82,11 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 // VerifySignature returns a true value if the OrderCancel object signature
 // corresponds to the Maker of the given order
 func (oc *OrderCancel) VerifySignature(o *Order) (bool, error) {
+
+	if o == nil {
+		return false, errors.New("Recovered address is incorrect")
+	}
+
 	message := crypto.Keccak256(
 		[]byte("\x19Ethereum Signed Message:\n32"),
 		oc.Hash.Bytes(),

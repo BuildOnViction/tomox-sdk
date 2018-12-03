@@ -497,9 +497,9 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 	totalLockedBalance := big.NewInt(0)
 	for _, o := range orders {
 		lockedBalance := big.NewInt(0)
-		if o.Side == "BUY" {
+		if o.Side == types.BUY {
 			lockedBalance = math.Sub(o.Amount, o.FilledAmount)
-		} else if o.Side == "SELL" {
+		} else if o.Side == types.SELL {
 			lockedBalance = math.Mul(math.Sub(o.Amount, o.FilledAmount), o.PricePoint)
 		}
 
@@ -511,14 +511,27 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 
 func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	var orders []*types.Order
-	q := bson.M{
-		"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
-		"baseToken":  p.BaseTokenAddress.Hex(),
-		"quoteToken": p.QuoteTokenAddress.Hex(),
+	q := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"baseToken":  p.BaseTokenAddress.Hex(),
+				"quoteToken": p.QuoteTokenAddress.Hex(),
+			},
+		},
+		bson.M{
+			"$addFields": bson.M{
+				"priceDecimal": bson.M{"$toDecimal": "$pricepoint"},
+			},
+		},
+		bson.M{
+			"$sort": bson.M{
+				"priceDecimal": 1,
+			},
+		},
 	}
 
-	sort := []string{"pricepoint"}
-	err := db.GetAndSort(dao.dbName, dao.collectionName, q, sort, 0, 0, &orders)
+	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -527,83 +540,66 @@ func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	return orders, nil
 }
 
+func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limit ...int) ([]map[string]string, error) {
+
+	sideQuery := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"baseToken":  p.BaseTokenAddress.Hex(),
+				"quoteToken": p.QuoteTokenAddress.Hex(),
+				"side":       side,
+			},
+		},
+		bson.M{
+			"$group": bson.M{
+				"_id":        bson.M{"$toDecimal": "$pricepoint"},
+				"pricepoint": bson.M{"$first": "$pricepoint"},
+				"amount": bson.M{
+					"$sum": bson.M{
+						"$subtract": []bson.M{bson.M{"$toDecimal": "$amount"}, bson.M{"$toDecimal": "$filledAmount"}},
+					},
+				},
+			},
+		},
+		bson.M{
+			"$sort": bson.M{
+				"_id": sort,
+			},
+		},
+		bson.M{
+			"$project": bson.M{
+				"_id":        0,
+				"pricepoint": 1,
+				// "pricepoint": bson.M{"$toString": "$_id"},
+				"amount": bson.M{"$toString": "$amount"},
+			},
+		},
+	}
+
+	if limit != nil {
+		sideQuery = append(sideQuery, bson.M{
+			"$limit": limit[0],
+		})
+	}
+
+	sides := []map[string]string{}
+
+	err := db.Aggregate(dao.dbName, dao.collectionName, sideQuery, &sides)
+
+	return sides, err
+}
+
+// GetOrderBook get best bids descending and best asks ascending
 func (dao *OrderDao) GetOrderBook(p *types.Pair) ([]map[string]string, []map[string]string, error) {
-	bidsQuery := []bson.M{
-		bson.M{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
-				"baseToken":  p.BaseTokenAddress.Hex(),
-				"quoteToken": p.QuoteTokenAddress.Hex(),
-				"side":       "BUY",
-			},
-		},
-		bson.M{
-			"$group": bson.M{
-				// "_id": "$pricepoint",
-				"_id": bson.M{"$toDecimal": "$pricepoint"},
-				"amount": bson.M{
-					"$sum": bson.M{
-						"$subtract": []bson.M{bson.M{"$toDecimal": "$amount"}, bson.M{"$toDecimal": "$filledAmount"}},
-					},
-				},
-			},
-		},
-		bson.M{
-			"$sort": bson.M{
-				"_id": 1,
-			},
-		},
-		bson.M{
-			"$project": bson.M{
-				"_id":        0,
-				"pricepoint": bson.M{"$toString": "$_id"},
-				"amount":     bson.M{"$toString": "$amount"},
-			},
-		},
-	}
 
-	asksQuery := []bson.M{
-		bson.M{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
-				"baseToken":  p.BaseTokenAddress.Hex(),
-				"quoteToken": p.QuoteTokenAddress.Hex(),
-				"side":       "SELL",
-			},
-		},
-		bson.M{
-			"$group": bson.M{
-				"_id": "$pricepoint",
-				"amount": bson.M{
-					"$sum": bson.M{
-						"$subtract": []bson.M{bson.M{"$toDecimal": "$amount"}, bson.M{"$toDecimal": "$filledAmount"}},
-					},
-				},
-			},
-		},
-		bson.M{
-			"$sort": bson.M{
-				"_id": 1,
-			},
-		},
-		bson.M{
-			"$project": bson.M{
-				"_id":        0,
-				"pricepoint": bson.M{"$toString": "$_id"},
-				"amount":     bson.M{"$toString": "$amount"},
-			},
-		},
-	}
-
-	bids := []map[string]string{}
-	asks := []map[string]string{}
-	err := db.Aggregate(dao.dbName, dao.collectionName, bidsQuery, &bids)
+	bids, err := dao.GetSideOrderBook(p, types.BUY, -1)
 	if err != nil {
 		logger.Error(err)
 		return nil, nil, err
 	}
 
-	err = db.Aggregate(dao.dbName, dao.collectionName, asksQuery, &asks)
+	asks, err := dao.GetSideOrderBook(p, types.SELL, 1)
 	if err != nil {
 		logger.Error(err)
 		return nil, nil, err
@@ -619,15 +615,14 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
 				"baseToken":  p.BaseTokenAddress.Hex(),
 				"quoteToken": p.QuoteTokenAddress.Hex(),
-				// "pricepoint": pp.Int64(),
 				"pricepoint": pp.String(),
 				"side":       side,
 			},
 		},
 		bson.M{
 			"$group": bson.M{
-				// "_id": "$pricepoint",
-				"_id": bson.M{"$toDecimal": "$pricepoint"},
+				"_id":        bson.M{"$toDecimal": "$pricepoint"},
+				"pricepoint": bson.M{"$first": "$pricepoint"},
 				"amount": bson.M{
 					"$sum": bson.M{
 						"$subtract": []bson.M{bson.M{"$toDecimal": "$amount"}, bson.M{"$toDecimal": "$filledAmount"}},
@@ -638,7 +633,7 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 		bson.M{
 			"$project": bson.M{
 				"_id":        0,
-				"pricepoint": "$_id",
+				"pricepoint": 1,
 				"amount":     bson.M{"$toString": "$amount"},
 			},
 		},
@@ -668,7 +663,7 @@ func (dao *OrderDao) GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error
 				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
 				"baseToken":  o.BaseToken.Hex(),
 				"quoteToken": o.QuoteToken.Hex(),
-				"side":       "BUY",
+				"side":       types.BUY,
 			},
 		},
 		bson.M{
@@ -705,7 +700,7 @@ func (dao *OrderDao) GetMatchingSellOrders(o *types.Order) ([]*types.Order, erro
 				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
 				"baseToken":  o.BaseToken.Hex(),
 				"quoteToken": o.QuoteToken.Hex(),
-				"side":       "SELL",
+				"side":       types.SELL,
 			},
 		},
 		bson.M{
