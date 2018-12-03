@@ -8,6 +8,9 @@ import (
 	"github.com/tomochain/backend-matching-engine/types"
 )
 
+// by default the exchange type is fanout, which means it broadcast all the queues
+// topic is just a list of words, direct is not filterable
+
 // QueuePoolDepositTransactions : return a queue as a channel
 func (c *Connection) QueuePoolDepositTransactions() (<-chan *types.DepositTransaction, error) {
 	ch := c.GetChannel("depositSubscribe")
