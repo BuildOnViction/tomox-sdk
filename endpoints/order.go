@@ -2,10 +2,11 @@ package endpoints
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"

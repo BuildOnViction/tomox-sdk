@@ -75,6 +75,7 @@ type AssociationDao interface {
 	// save mean if there is no item then insert, otherwise update
 	SaveAssociation(record *types.AddressAssociationRecord) error
 	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
+	SaveAssociationStatus(chain types.Chain, sourceAccount common.Address, status string) error
 }
 
 type WalletDao interface {
@@ -267,11 +268,15 @@ type DepositService interface {
 	GenerateAddress(chain types.Chain) (common.Address, error)
 	GetSchemaVersion() uint64
 	RecoveryTransaction(chain types.Chain, address common.Address) error
-	// one for wallet, one for relayer
-	GetAssociationByTomochainPublicKey(chain types.Chain, tomochainPublicKey common.Address) (*types.AddressAssociation, error)
-	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
-	SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address) error
 
+	// Get Token Amount base on Exchange rate of the orderbook
+	GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error)
+
+	// one for wallet, one for relayer
+	GetAssociationByTomochainPublicKey(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
+	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
+	SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address, pairAddreses *types.PairAddresses) error
+	SaveAssociationStatusByChainAddress(chain types.Chain, address common.Address, status string) error
 	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
 	// SetDelegate to endpoint
 	MinimumValueWei() *big.Int
@@ -289,10 +294,10 @@ type DepositService interface {
 
 type SwapEngineHandler interface {
 	OnNewEthereumTransaction(transaction swapEthereum.Transaction) error
-	OnSubmitTransaction(chain types.Chain, destination, transaction string) error
+	OnSubmitTransaction(chain types.Chain, destination string, transaction *types.AssociationTransaction) error
 	OnTomochainAccountCreated(chain types.Chain, destination string)
 	OnExchanged(chain types.Chain, destination string)
-	OnExchangedTimelocked(chain types.Chain, destination, transaction string)
+	OnExchangedTimelocked(chain types.Chain, destination string, transaction *types.AssociationTransaction)
 
 	LoadAccountHandler(chain types.Chain, publicKey string) (*types.AddressAssociation, error)
 }

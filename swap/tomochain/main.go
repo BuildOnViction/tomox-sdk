@@ -28,6 +28,7 @@ type LoadAccountHandler func(chain types.Chain, publicKey string) (*types.Addres
 // participate in ICO.
 // Infact, AccountConfigurator will be replaced by smart contract
 type AccountConfigurator struct {
+	Enabled               bool
 	IssuerPublicKey       string
 	DistributionPublicKey string
 
@@ -38,10 +39,10 @@ type AccountConfigurator struct {
 	StartingBalance   string
 
 	LoadAccountHandler    LoadAccountHandler
-	OnSubmitTransaction   func(chain types.Chain, destination string, transaction string) error
+	OnSubmitTransaction   func(chain types.Chain, destination string, transaction *types.AssociationTransaction) error
 	OnAccountCreated      func(chain types.Chain, destination string)
 	OnExchanged           func(chain types.Chain, destination string)
-	OnExchangedTimelocked func(chain types.Chain, destination, transaction string)
+	OnExchangedTimelocked func(chain types.Chain, destination string, transaction *types.AssociationTransaction)
 
 	signerPublicKey  common.Address
 	signerPrivateKey *ecdsa.PrivateKey

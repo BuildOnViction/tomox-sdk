@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tomochain/backend-matching-engine/errors"
 	demo "github.com/tomochain/orderbook/common"
 )
@@ -44,6 +45,13 @@ func (l *Listener) Start(rpcServer string) error {
 	return nil
 }
 
+func (l *Listener) Stop() error {
+	ethClient := l.Client.(*ethclient.Client)
+	ethClient.Close()
+	l.Enabled = false
+	return nil
+}
+
 func (l *Listener) processBlocks(blockNumber uint64) {
 	if blockNumber == 0 {
 		logger.Info("Starting from the latest block")
@@ -56,6 +64,10 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 	noBlockWarningLogged := false
 
 	for {
+		if l.Enabled == false {
+			// stop listener
+			break
+		}
 		block, err := l.getBlock(blockNumber)
 		if err != nil {
 			logger.Errorf("Error getting block, blockNumber: %d", blockNumber)
@@ -163,6 +175,7 @@ func (l *Listener) processBlock(block *types.Block) error {
 		}
 		err := l.TransactionHandler(tx)
 		if err != nil {
+			logger.Errorf("Error processing transaction: %s", err.Error())
 			return errors.Wrap(err, "Error processing transaction")
 		}
 	}

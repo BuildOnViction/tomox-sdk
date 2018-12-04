@@ -3,9 +3,7 @@ package tomochain
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
-	"encoding/hex"
 
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/types"
 )
@@ -74,14 +72,14 @@ func (ac *AccountConfigurator) removeTemporarySigner(chain types.Chain, destinat
 }
 
 // buildUnlockAccountTransaction creates and returns unlock account transaction.
-func (ac *AccountConfigurator) buildUnlockAccountTransaction(source string) (string, error) {
+func (ac *AccountConfigurator) buildUnlockAccountTransaction(source string) (*types.AssociationTransaction, error) {
 	// Remove signer, ac.LockUnixTimestamp
 
 	return ac.buildTransaction(source, ac.signerPrivateKey, "RemoveSigner")
 }
 
 // this will create hex data of rlp encode data
-func (ac *AccountConfigurator) buildTransaction(source string, signer *ecdsa.PrivateKey, transactionType string, params ...string) (string, error) {
+func (ac *AccountConfigurator) buildTransaction(source string, signer *ecdsa.PrivateKey, transactionType string, params ...string) (*types.AssociationTransaction, error) {
 
 	associationTransaction := &types.AssociationTransaction{
 		Source:          source,
@@ -93,16 +91,15 @@ func (ac *AccountConfigurator) buildTransaction(source string, signer *ecdsa.Pri
 
 	signature, err := signer.Sign(rand.Reader, associationTransaction.Hash, nil)
 	if err == nil {
-		return "", err
+		return nil, err
 	}
 
 	associationTransaction.Signature = signature
 
-	bytes, err := rlp.EncodeToBytes(associationTransaction)
-	return hex.EncodeToString(bytes), err
+	return associationTransaction, nil
 }
 
-func (ac *AccountConfigurator) submitTransaction(chain types.Chain, destination, transaction string) error {
+func (ac *AccountConfigurator) submitTransaction(chain types.Chain, destination string, transaction *types.AssociationTransaction) error {
 	logger.Info("Submitting transaction")
 
 	// no implementation, just return

@@ -1,6 +1,8 @@
 package ws
 
-import "errors"
+import (
+	"github.com/tomochain/backend-matching-engine/errors"
+)
 
 var tradeSocket *TradeSocket
 

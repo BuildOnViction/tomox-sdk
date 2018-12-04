@@ -26,8 +26,17 @@ func (ac *AccountConfigurator) Start() error {
 	return nil
 }
 
+func (ac *AccountConfigurator) Stop() error {
+	ac.Enabled = false
+	return nil
+}
+
 func (ac *AccountConfigurator) logStats() {
 	for {
+		if ac.Enabled == false {
+			// stop logging
+			break
+		}
 		logger.Infof("statuses: %v", ac.accountStatus)
 		time.Sleep(15 * time.Second)
 	}
@@ -48,6 +57,9 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 
 	// Check if account exists. If it is, skip creating it.
 	for {
+		if ac.Enabled == false {
+			break
+		}
 		// get from feed
 		_, exists, err := ac.getAccount(chain, destination)
 		if err != nil {
@@ -80,6 +92,9 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 	// Wait for signer changes...
 	// check if association feed is correct
 	for {
+		if ac.Enabled == false {
+			break
+		}
 		account, err := ac.LoadAccount(chain, destination)
 		if err != nil {
 			logger.Error("Error loading account to check trustline")

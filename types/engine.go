@@ -1,9 +1,10 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 )

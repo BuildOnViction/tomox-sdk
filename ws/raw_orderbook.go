@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 )
 
 var rawOrderBookSocket *RawOrderBookSocket

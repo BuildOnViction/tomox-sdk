@@ -740,7 +740,8 @@ func TestGetExchangeRate(t *testing.T) {
 	db = &Database{session}
 	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
 	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
-	pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
+	// pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
+	pair, err := pairDao.GetByName("AE/WETH")
 	if err != nil {
 		panic(err)
 	}

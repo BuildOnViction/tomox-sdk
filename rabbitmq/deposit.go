@@ -2,8 +2,9 @@ package rabbitmq
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/tomochain/backend-matching-engine/types"
 )

@@ -2,10 +2,11 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"

@@ -1,8 +1,9 @@
 package types
 
 import (
-	"errors"
 	"time"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
@@ -16,6 +17,16 @@ const (
 )
 
 type Chain string
+
+func NewChain(str interface{}) Chain {
+	var chain Chain
+	err := chain.Scan(str)
+	if err != nil {
+		// default chain
+		return ChainEthereum
+	}
+	return chain
+}
 
 // Scan implements database/sql.Scanner interface
 func (s *Chain) Scan(src interface{}) error {
@@ -55,8 +66,12 @@ type AddressAssociationRecord struct {
 	ID                bson.ObjectId `json:"id" bson:"_id"`
 	Chain             string        `json:"chain" bson:"chain"`
 	Address           string        `json:"address" bson:"address"`
-	TxEnvelope        string        `json:"txEnvelope" bson: "txEnvelope"`
+	Status            string        `json:"status" bson:"status"`
+	TxEnvelope        string        `json:"txEnvelope" bson:"txEnvelope"`
 	AssociatedAddress string        `json:"associatedAddress" bson:"associatedAddress"`
+	PairName          string        `json:"pairName" bson:"pairName"`
+	BaseTokenAddress  string        `json:"baseTokenAddress" bson:"baseTokenAddress"`
+	QuoteTokenAddress string        `json:"quoteTokenAddress" bson:"quoteTokenAddress"`
 	CreatedAt         time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt         time.Time     `json:"updatedAt" bson:"updatedAt"`
 }

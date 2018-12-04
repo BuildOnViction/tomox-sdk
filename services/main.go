@@ -1,7 +1,7 @@
 package services
 
 import (
-	"errors"
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/tomochain/backend-matching-engine/utils"
 )

@@ -67,10 +67,14 @@ func (dao *AssociationDao) GetAssociationByChainAddress(chain types.Chain, userA
 		"address": dao.getAddressKey(userAddress),
 	}, &response)
 
-	return &response, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
-// SaveAssociation using upsert to update for existing users
+// SaveAssociation using upsert to update for existing users, only update allowed fields
 func (dao *AssociationDao) SaveAssociation(record *types.AddressAssociationRecord) error {
 	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{
 		"associatedAddress": record.AssociatedAddress,
@@ -79,6 +83,21 @@ func (dao *AssociationDao) SaveAssociation(record *types.AddressAssociationRecor
 			"associatedAddress": record.AssociatedAddress,
 			"chain":             record.Chain,
 			"address":           strings.ToLower(record.Address),
+			"pairName":          record.PairName,
+			"quoteTokenAddress": record.QuoteTokenAddress,
+			"baseTokenAddress":  record.BaseTokenAddress,
+		},
+	})
+	return err
+}
+
+func (dao *AssociationDao) SaveAssociationStatus(chain types.Chain, sourceAccount common.Address, status string) error {
+	err := db.Update(dao.dbName, dao.collectionName, bson.M{
+		"chain":   chain.String(),
+		"address": sourceAccount,
+	}, bson.M{
+		"$set": bson.M{
+			"status": status,
 		},
 	})
 	return err

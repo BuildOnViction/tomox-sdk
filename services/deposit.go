@@ -2,6 +2,9 @@ package services
 
 import (
 	"math/big"
+	"strings"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/ethereum"
@@ -10,6 +13,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/swap"
 	swapEthereum "github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils/math"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -17,6 +21,8 @@ import (
 type DepositService struct {
 	configDao      interfaces.ConfigDao
 	associationDao interfaces.AssociationDao
+	pairDao        interfaces.PairDao
+	orderDao       interfaces.OrderDao
 	swapEngine     *swap.Engine
 	engine         interfaces.Engine
 	broker         *rabbitmq.Connection
@@ -26,12 +32,14 @@ type DepositService struct {
 func NewDepositService(
 	configDao interfaces.ConfigDao,
 	associationDao interfaces.AssociationDao,
+	pairDao interfaces.PairDao,
+	orderDao interfaces.OrderDao,
 	swapEngine *swap.Engine,
 	engine interfaces.Engine,
 	broker *rabbitmq.Connection,
 ) *DepositService {
 
-	depositService := &DepositService{configDao, associationDao, swapEngine, engine, broker}
+	depositService := &DepositService{configDao, associationDao, pairDao, orderDao, swapEngine, engine, broker}
 
 	// set storage engine to this service
 	swapEngine.SetStorage(depositService)
@@ -120,15 +128,74 @@ func (s *DepositService) GetAssociationByChainAddress(chain types.Chain, userAdd
 	return s.associationDao.GetAssociationByChainAddress(chain, userAddress)
 }
 
-func (s *DepositService) SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address) error {
+func (s *DepositService) SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address, pairAddresses *types.PairAddresses) error {
+
 	association := &types.AddressAssociationRecord{
 		ID:                bson.NewObjectId(),
 		Chain:             chain.String(),
 		Address:           address.Hex(),
 		AssociatedAddress: associatedAddress.Hex(),
+		PairName:          pairAddresses.Name,
+		BaseTokenAddress:  pairAddresses.BaseToken.Hex(),
+		QuoteTokenAddress: pairAddresses.QuoteToken.Hex(),
 	}
 
 	return s.associationDao.SaveAssociation(association)
+}
+
+func (s *DepositService) SaveAssociationStatusByChainAddress(chain types.Chain, address common.Address, status string) error {
+	return s.associationDao.SaveAssociationStatus(chain, address, status)
+}
+
+func (s *DepositService) getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol string, quoteAmount *big.Int) (*big.Int, error) {
+	return quoteAmount, nil
+}
+
+func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error) {
+
+	tokenSymbols := strings.Split(pairName, "/")
+	if len(tokenSymbols) != 2 {
+		return nil, errors.Errorf("Pair name is wrong format: %s", pairName)
+	}
+	baseTokenSymbol := tokenSymbols[0]
+	quoteTokenSymbol := tokenSymbols[1]
+
+	// this is 1:1 exchange
+	if baseTokenSymbol == quoteTokenSymbol {
+		return quoteAmount, nil
+	}
+
+	pair, err := s.pairDao.GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol)
+	if err != nil {
+		return nil, err
+	}
+
+	if pair == nil {
+		// there is no exchange rate yet
+		return s.getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol, quoteAmount)
+	}
+
+	logger.Debugf("Got pair :%v", pair)
+
+	// get best Bid, the highest bid available
+	bids, err := s.orderDao.GetSideOrderBook(pair, types.BUY, -1, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	// if there is no exchange rate, should return one from oracle service like coin market cap
+	if len(bids) < 1 {
+		return s.getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol, quoteAmount)
+	}
+
+	pricepoint := new(big.Int)
+	pricepoint.SetString(bids[0]["pricepoint"], 10)
+
+	tokenAmount := new(big.Int)
+	tokenAmount = math.Div(quoteAmount, pricepoint)
+	tokenAmount = math.Mul(tokenAmount, pair.PriceMultiplier)
+
+	return tokenAmount, nil
 }
 
 // Create function performs the DB insertion task for Balance collection

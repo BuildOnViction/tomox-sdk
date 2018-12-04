@@ -2,8 +2,9 @@ package operator
 
 import (
 	"encoding/json"
-	"errors"
 	"math/big"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"

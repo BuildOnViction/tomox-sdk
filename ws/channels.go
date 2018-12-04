@@ -1,8 +1,9 @@
 package ws
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 )
 
 const (

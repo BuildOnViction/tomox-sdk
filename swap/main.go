@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -71,6 +72,7 @@ func NewEngine(cfg *config.Config) *Engine {
 	if cfg.Tomochain != nil {
 
 		tomochainAccountConfigurator := tomochain.NewAccountConfigurator(cfg)
+		tomochainAccountConfigurator.Enabled = true
 
 		if cfg.Tomochain.StartingBalance == "" {
 			tomochainAccountConfigurator.StartingBalance = "100.00"
@@ -129,15 +131,7 @@ func (engine *Engine) Start() error {
 		return errors.Wrap(err, "Error starting TomochainAccountConfigurator")
 	}
 
-	// client will update swarm feed association so that we do not have to build broadcast engine
-
-	signalInterrupt := make(chan os.Signal, 1)
-	signal.Notify(signalInterrupt, os.Interrupt)
-	// only stop if ctrl+c or got interrupt signal
 	go engine.poolTransactionsQueue()
-
-	<-signalInterrupt
-	engine.shutdown()
 
 	return nil
 }
@@ -175,36 +169,57 @@ func (engine *Engine) MinimumValueWei() *big.Int {
 // validated transactions and sends it to TomochainAccountConfigurator for account configuration.
 func (engine *Engine) poolTransactionsQueue() {
 	logger.Infof("Started pooling transactions queue")
-
 	msgs, err := engine.transactionsQueue.QueuePool()
 
 	if err != nil {
 		logger.Infof("Error pooling transactions queue")
 		time.Sleep(5 * time.Second)
+		engine.shutdown()
 		return
 	}
 
+	signalInterrupt := make(chan os.Signal, 1)
+	signal.Notify(signalInterrupt, os.Interrupt)
+
+	var endWaiter sync.WaitGroup
+	endWaiter.Add(1)
+
 	// eating messages from the read-only channel
-	for transaction := range msgs {
+	go func() {
+		for {
+			select {
+			case transaction := <-msgs:
+				if transaction == nil {
+					time.Sleep(time.Second)
+					continue
+				}
 
-		if transaction == nil {
-			time.Sleep(time.Second)
-			continue
+				logger.Infof("Received transaction from transactions queue: %v", transaction)
+				go engine.tomochainAccountConfigurator.ConfigureAccount(
+					transaction.Chain,
+					transaction.TomochainPublicKey,
+					string(transaction.AssetCode),
+					transaction.Amount,
+				)
+			case <-signalInterrupt:
+				// wait for interrupt
+				endWaiter.Done()
+			default:
+				time.Sleep(time.Second)
+			}
 		}
+	}()
 
-		logger.Infof("Received transaction from transactions queue: %v", transaction)
-		go engine.tomochainAccountConfigurator.ConfigureAccount(
-			transaction.Chain,
-			transaction.TomochainPublicKey,
-			string(transaction.AssetCode),
-			transaction.Amount,
-		)
-	}
+	endWaiter.Wait()
 
+	logger.Infof("Ending transaction queue")
+	engine.shutdown()
+
+	os.Exit(0)
 }
 
-func (e *Engine) shutdown() {
+func (engine *Engine) shutdown() {
 	// do something
-	ethClient := e.ethereumListener.Client.(*ethclient.Client)
-	ethClient.Close()
+	engine.ethereumListener.Stop()
+	engine.tomochainAccountConfigurator.Stop()
 }

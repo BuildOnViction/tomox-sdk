@@ -542,6 +542,11 @@ func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 
 func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limit ...int) ([]map[string]string, error) {
 
+	sides := []map[string]string{}
+	if p == nil {
+		return sides, nil
+	}
+
 	sideQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
@@ -582,8 +587,6 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limi
 			"$limit": limit[0],
 		})
 	}
-
-	sides := []map[string]string{}
 
 	err := db.Aggregate(dao.dbName, dao.collectionName, sideQuery, &sides)
 

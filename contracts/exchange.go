@@ -3,10 +3,11 @@ package contracts
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/tomochain/backend-matching-engine/errors"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"

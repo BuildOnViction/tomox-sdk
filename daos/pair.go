@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -102,22 +103,26 @@ func (dao *PairDao) GetByID(id bson.ObjectId) (*types.Pair, error) {
 // GetByName function fetches details of a pair using pair's name.
 // It makes CASE INSENSITIVE search query one pair's name
 func (dao *PairDao) GetByName(name string) (*types.Pair, error) {
-	var res []*types.Pair
-	q := bson.M{"name": bson.RegEx{
-		Pattern: name,
-		Options: "i",
-	}}
 
-	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
-	if err != nil {
-		return nil, err
-	}
+	tokenSymbols := strings.Split(name, "/")
+	return dao.GetByTokenSymbols(tokenSymbols[0], tokenSymbols[1])
 
-	if len(res) == 0 {
-		return nil, nil
-	}
+	// var res []*types.Pair
+	// q := bson.M{"name": bson.RegEx{
+	// 	Pattern: name,
+	// 	Options: "i",
+	// }}
 
-	return res[0], nil
+	// err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// if len(res) == 0 {
+	// 	return nil, nil
+	// }
+
+	// return res[0], nil
 }
 
 func (dao *PairDao) GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol string) (*types.Pair, error) {
