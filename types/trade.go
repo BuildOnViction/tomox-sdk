@@ -69,7 +69,7 @@ func NewTrade(mo *Order, to *Order, amount *big.Int, pricepoint *big.Int) *Trade
 		PairName:       mo.PairName,
 		Amount:         amount,
 		PricePoint:     pricepoint,
-		Status:         "PENDING",
+		Status:         PENDING,
 	}
 
 	t.Hash = t.ComputeHash()

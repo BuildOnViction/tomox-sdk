@@ -751,6 +751,11 @@ func TestGetExchangeRate(t *testing.T) {
 		panic(err)
 	}
 
+	if len(bids) == 0 {
+		t.Log("Empty exchange rate for this pair")
+		return
+	}
+
 	transferAmount := new(big.Int)
 	transferAmount.SetString("10000000000000000000", 10)
 

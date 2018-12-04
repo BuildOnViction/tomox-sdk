@@ -67,17 +67,19 @@ func (s *DepositService) SetDelegate(handler interfaces.SwapEngineHandler) {
 	s.swapEngine.SetDelegate(handler)
 }
 
-func (s *DepositService) GenerateAddress(chain types.Chain) (common.Address, error) {
+func (s *DepositService) GenerateAddress(chain types.Chain) (common.Address, uint64, error) {
+
 	err := s.configDao.IncrementAddressIndex(chain)
 	if err != nil {
-		return swapEthereum.EmptyAddress, err
+		return swapEthereum.EmptyAddress, 0, err
 	}
 	index, err := s.configDao.GetAddressIndex(chain)
 	if err != nil {
-		return swapEthereum.EmptyAddress, err
+		return swapEthereum.EmptyAddress, 0, err
 	}
 	logger.Infof("Current index: %d", index)
-	return s.swapEngine.EthereumAddressGenerator().Generate(index)
+	address, err := s.swapEngine.EthereumAddressGenerator().Generate(index)
+	return address, index, err
 }
 
 func (s *DepositService) SignerPublicKey() common.Address {
@@ -128,12 +130,18 @@ func (s *DepositService) GetAssociationByChainAddress(chain types.Chain, userAdd
 	return s.associationDao.GetAssociationByChainAddress(chain, userAddress)
 }
 
-func (s *DepositService) SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address, pairAddresses *types.PairAddresses) error {
+func (s *DepositService) GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error) {
+	return s.associationDao.GetAssociationByChainAssociatedAddress(chain, associatedAddress)
+}
+
+func (s *DepositService) SaveAssociationByChainAddress(chain types.Chain, address common.Address, index uint64, associatedAddress common.Address, pairAddresses *types.PairAddresses) error {
 
 	association := &types.AddressAssociationRecord{
 		ID:                bson.NewObjectId(),
-		Chain:             chain.String(),
+		Chain:             chain,
 		Address:           address.Hex(),
+		AddressIndex:      index,
+		Status:            types.PENDING,
 		AssociatedAddress: associatedAddress.Hex(),
 		PairName:          pairAddresses.Name,
 		BaseTokenAddress:  pairAddresses.BaseToken.Hex(),
@@ -199,7 +207,7 @@ func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.In
 }
 
 // Create function performs the DB insertion task for Balance collection
-func (s *DepositService) GetAssociationByTomochainPublicKey(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error) {
+func (s *DepositService) GetAssociationByUserAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error) {
 	// get from feed
 	var addressAssociationFeed types.AddressAssociationFeed
 	err := s.engine.GetFeed(userAddress, chain.Bytes(), &addressAssociationFeed)

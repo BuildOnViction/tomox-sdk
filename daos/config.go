@@ -14,6 +14,7 @@ const (
 	schemaVersionKey        = "swap_schema_version"
 	ethereumAddressIndexKey = "ethereum_address_index"
 	ethereumLastBlockKey    = "ethereum_last_block"
+	defaultBlockIndex       = 0
 )
 
 // ConfigDao contains:
@@ -137,10 +138,5 @@ func (dao *ConfigDao) Drop() {
 // ResetBlockCounters changes last processed bitcoin and ethereum block to default value.
 // Used in stress tests.
 func (dao *ConfigDao) ResetBlockCounters() error {
-	// _, err = keyValueStore.Update(nil, map[string]interface{}{"key": ethereumLastBlockKey}).Set("value", 0).Exec()
-	// if err != nil {
-	// 	return errors.Wrap(err, "Error reseting `ethereumLastBlockKey`")
-	// }
-
-	return nil
+	return dao.SaveLastProcessedEthereumBlock(defaultBlockIndex)
 }

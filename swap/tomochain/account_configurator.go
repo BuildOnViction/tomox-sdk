@@ -46,13 +46,13 @@ func (ac *AccountConfigurator) logStats() {
 // * First it creates a new account.
 // * Once a signer is replaced on the account, it creates trust lines and exchanges assets.
 // from coinmarket place trust lines we get exchange rate and call OnExchange event to collect the exchange rate
-func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, assetCode, amount string) {
+func (ac *AccountConfigurator) ConfigureAccount(depositTransaction *types.DepositTransaction) {
 
 	logger.Info("Configuring Tomochain account")
 
-	ac.setAccountStatus(destination, StatusCreatingAccount)
+	ac.setAccountStatus(depositTransaction.AssociatedAddress, StatusCreatingAccount)
 	defer func() {
-		ac.removeAccountStatus(destination)
+		ac.removeAccountStatus(depositTransaction.AssociatedAddress)
 	}()
 
 	// Check if account exists. If it is, skip creating it.
@@ -61,9 +61,9 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 			break
 		}
 		// get from feed
-		_, exists, err := ac.getAccount(chain, destination)
+		_, exists, err := ac.getAccount(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 		if err != nil {
-			logger.Error("Error loading account from Tomochain")
+			logger.Errorf("Error loading account from Tomochain: %s", err.Error())
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -73,7 +73,7 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 		}
 
 		logger.Info("Creating Tomochain account")
-		err = ac.createAccountTransaction(chain, destination)
+		err = ac.createAccountTransaction(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 		if err != nil {
 			logger.Error("Error creating Tomochain account")
 			time.Sleep(2 * time.Second)
@@ -84,10 +84,10 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 	}
 
 	if ac.OnAccountCreated != nil {
-		ac.OnAccountCreated(chain, destination)
+		ac.OnAccountCreated(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 	}
 
-	ac.setAccountStatus(destination, StatusWaitingForSigner)
+	ac.setAccountStatus(depositTransaction.AssociatedAddress, StatusWaitingForSigner)
 
 	// Wait for signer changes...
 	// check if association feed is correct
@@ -95,7 +95,7 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 		if ac.Enabled == false {
 			break
 		}
-		account, err := ac.LoadAccount(chain, destination)
+		account, err := ac.LoadAccount(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 		if err != nil {
 			logger.Error("Error loading account to check trustline")
 			time.Sleep(2 * time.Second)
@@ -111,40 +111,40 @@ func (ac *AccountConfigurator) ConfigureAccount(chain types.Chain, destination, 
 
 	logger.Info("Signer found")
 
-	ac.setAccountStatus(destination, StatusConfiguringAccount)
+	ac.setAccountStatus(depositTransaction.AssociatedAddress, StatusConfiguringAccount)
 
 	// When signer was created we can configure account in Bifrost without requiring
 	// the user to share the account's secret key.
 	logger.Info("Sending token")
-	err := ac.configureAccountTransaction(chain, destination, assetCode, amount)
+	err := ac.configureAccountTransaction(depositTransaction)
 	if err != nil {
 		logger.Error("Error configuring an account")
 		return
 	}
 
-	ac.setAccountStatus(destination, StatusRemovingSigner)
+	ac.setAccountStatus(depositTransaction.AssociatedAddress, StatusRemovingSigner)
 
 	if ac.LockUnixTimestamp == 0 {
 		logger.Info("Removing temporary signer")
-		err = ac.removeTemporarySigner(chain, destination)
+		err = ac.removeTemporarySigner(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 		if err != nil {
 			logger.Error("Error removing temporary signer")
 			return
 		}
 
 		if ac.OnExchanged != nil {
-			ac.OnExchanged(chain, destination)
+			ac.OnExchanged(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 		}
 	} else {
 		logger.Info("Creating unlock transaction to remove temporary signer")
-		transaction, err := ac.buildUnlockAccountTransaction(destination)
+		transaction, err := ac.buildUnlockAccountTransaction(depositTransaction.AssociatedAddress)
 		if err != nil {
 			logger.Error("Error creating unlock transaction")
 			return
 		}
 
 		if ac.OnExchangedTimelocked != nil {
-			ac.OnExchangedTimelocked(chain, destination, transaction)
+			ac.OnExchangedTimelocked(depositTransaction.Chain, depositTransaction.AssociatedAddress, transaction)
 		}
 	}
 
@@ -156,7 +156,7 @@ func (ac *AccountConfigurator) LoadAccount(chain types.Chain, publicKey string) 
 		return ac.LoadAccountHandler(chain, publicKey)
 	}
 
-	return &types.AddressAssociation{}, nil
+	return nil, nil
 }
 
 func (ac *AccountConfigurator) setAccountStatus(account string, status Status) {
@@ -181,7 +181,9 @@ func (ac *AccountConfigurator) getAccount(chain types.Chain, account string) (*t
 func (ac *AccountConfigurator) signerExistsOnly(account *types.AddressAssociation) bool {
 	tempSignerFound := false
 
-	if account.TomochainPublicKey == ac.signerPublicKey {
+	logger.Debugf("account :%v, signerPublicKey: %s", account, ac.signerPublicKey.Hex())
+
+	if account != nil && account.TomochainPublicKey == ac.signerPublicKey {
 		tempSignerFound = true
 	}
 

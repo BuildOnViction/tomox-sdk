@@ -12,7 +12,7 @@ func (ac *AccountConfigurator) createAccountTransaction(chain types.Chain, desti
 	transaction, err := ac.buildTransaction(
 		ac.signerPublicKey.String(),
 		ac.signerPrivateKey,
-		"CreateAccount",
+		types.CreateAccount,
 		destination,
 		ac.StartingBalance,
 	)
@@ -29,24 +29,25 @@ func (ac *AccountConfigurator) createAccountTransaction(chain types.Chain, desti
 }
 
 // configureAccountTransaction is using a signer on an user accounts to configure the account.
-func (ac *AccountConfigurator) configureAccountTransaction(chain types.Chain, destination, intermediateAssetCode, amount string) error {
+func (ac *AccountConfigurator) configureAccountTransaction(depositTransaction *types.DepositTransaction) error {
 
 	var tokenPrice string
-	switch intermediateAssetCode {
-	case "ETH":
+	switch depositTransaction.AssetCode {
+	case types.AssetCodeETH:
 		tokenPrice = ac.TokenPriceETH
 	default:
-		return errors.Errorf("Invalid intermediateAssetCode: $%s", intermediateAssetCode)
+		return errors.Errorf("Invalid intermediateAssetCode: $%s", depositTransaction.AssetCode)
 	}
 
 	// // Send WETH token using smart contract
 	// exchange by rate from regulator service
-	transaction, err := ac.buildTransaction(destination, ac.signerPrivateKey, "CreateOffer", tokenPrice)
+	transaction, err := ac.buildTransaction(depositTransaction.AssociatedAddress, ac.signerPrivateKey,
+		types.CreateOffer, depositTransaction.Amount, tokenPrice, depositTransaction.PairName)
 	if err != nil {
 		return errors.Wrap(err, "Error building a transaction")
 	}
 
-	err = ac.submitTransaction(chain, destination, transaction)
+	err = ac.submitTransaction(depositTransaction.Chain, depositTransaction.AssociatedAddress, transaction)
 	if err != nil {
 		return errors.Wrap(err, "Error submitting a transaction")
 	}
@@ -58,7 +59,7 @@ func (ac *AccountConfigurator) configureAccountTransaction(chain types.Chain, de
 func (ac *AccountConfigurator) removeTemporarySigner(chain types.Chain, destination string) error {
 	// Remove signer ? need to remove this account wallet? ac.signerPublicKey
 
-	transaction, err := ac.buildTransaction(destination, ac.signerPrivateKey, "RemoveSigner")
+	transaction, err := ac.buildTransaction(destination, ac.signerPrivateKey, types.RemoveSigner)
 	if err != nil {
 		return errors.Wrap(err, "Error building a transaction")
 	}
@@ -75,7 +76,7 @@ func (ac *AccountConfigurator) removeTemporarySigner(chain types.Chain, destinat
 func (ac *AccountConfigurator) buildUnlockAccountTransaction(source string) (*types.AssociationTransaction, error) {
 	// Remove signer, ac.LockUnixTimestamp
 
-	return ac.buildTransaction(source, ac.signerPrivateKey, "RemoveSigner")
+	return ac.buildTransaction(source, ac.signerPrivateKey, types.RemoveSigner)
 }
 
 // this will create hex data of rlp encode data
@@ -90,7 +91,7 @@ func (ac *AccountConfigurator) buildTransaction(source string, signer *ecdsa.Pri
 	associationTransaction.Hash = associationTransaction.ComputeHash()
 
 	signature, err := signer.Sign(rand.Reader, associationTransaction.Hash, nil)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 

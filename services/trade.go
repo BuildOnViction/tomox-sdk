@@ -99,7 +99,7 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 }
 
 func (s *TradeService) UpdatePendingTrade(t *types.Trade, txh common.Hash) (*types.Trade, error) {
-	t.Status = "PENDING"
+	t.Status = types.PENDING
 	t.TxHash = txh
 
 	updated, err := s.tradeDao.FindAndModify(t.Hash, t)

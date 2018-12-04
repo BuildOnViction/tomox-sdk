@@ -195,12 +195,7 @@ func (engine *Engine) poolTransactionsQueue() {
 				}
 
 				logger.Infof("Received transaction from transactions queue: %v", transaction)
-				go engine.tomochainAccountConfigurator.ConfigureAccount(
-					transaction.Chain,
-					transaction.TomochainPublicKey,
-					string(transaction.AssetCode),
-					transaction.Amount,
-				)
+				go engine.tomochainAccountConfigurator.ConfigureAccount(transaction)
 			case <-signalInterrupt:
 				// wait for interrupt
 				endWaiter.Done()

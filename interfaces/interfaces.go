@@ -72,6 +72,8 @@ type ConfigDao interface {
 
 type AssociationDao interface {
 	GetAssociationByChainAddress(chain types.Chain, address common.Address) (*types.AddressAssociationRecord, error)
+	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
+
 	// save mean if there is no item then insert, otherwise update
 	SaveAssociation(record *types.AddressAssociationRecord) error
 	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
@@ -265,7 +267,7 @@ type AccountService interface {
 
 type DepositService interface {
 	SignerPublicKey() common.Address
-	GenerateAddress(chain types.Chain) (common.Address, error)
+	GenerateAddress(chain types.Chain) (common.Address, uint64, error)
 	GetSchemaVersion() uint64
 	RecoveryTransaction(chain types.Chain, address common.Address) error
 
@@ -273,9 +275,11 @@ type DepositService interface {
 	GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error)
 
 	// one for wallet, one for relayer
-	GetAssociationByTomochainPublicKey(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
+	GetAssociationByUserAddress(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
 	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
-	SaveAssociationByChainAddress(chain types.Chain, address, associatedAddress common.Address, pairAddreses *types.PairAddresses) error
+	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
+
+	SaveAssociationByChainAddress(chain types.Chain, address common.Address, index uint64, associatedAddress common.Address, pairAddreses *types.PairAddresses) error
 	SaveAssociationStatusByChainAddress(chain types.Chain, address common.Address, status string) error
 	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
 	// SetDelegate to endpoint

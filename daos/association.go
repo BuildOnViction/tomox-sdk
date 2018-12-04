@@ -28,7 +28,18 @@ func NewAssociationDao() *AssociationDao {
 		Unique: true,
 	}
 
+	// chain and associatedAddress also is uniqued
+	index1 := mgo.Index{
+		Key:    []string{"chain", "associatedAddress"},
+		Unique: true,
+	}
+
 	err := db.Session.DB(dbName).C(collection).EnsureIndex(index)
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Session.DB(dbName).C(collection).EnsureIndex(index1)
 	if err != nil {
 		panic(err)
 	}
@@ -51,10 +62,10 @@ func (dao *AssociationDao) SaveDepositTransaction(chain types.Chain, sourceAccou
 	// txEnvolope is rlp of result
 	err := db.Update(dao.dbName, dao.collectionName, bson.M{
 		"chain":   chain.String(),
-		"address": sourceAccount,
+		"address": dao.getAddressKey(sourceAccount),
 	}, bson.M{
-		"$set": bson.M{
-			"txEnvelope": txEnvelope,
+		"$addToSet": bson.M{
+			"txEnvelopes": txEnvelope,
 		},
 	})
 	return err
@@ -67,6 +78,30 @@ func (dao *AssociationDao) GetAssociationByChainAddress(chain types.Chain, userA
 		"address": dao.getAddressKey(userAddress),
 	}, &response)
 
+	// if not found, just return nil instead of error
+	if err == mgo.ErrNotFound {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (dao *AssociationDao) GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error) {
+	var response types.AddressAssociationRecord
+	err := db.GetOne(dao.dbName, dao.collectionName, bson.M{
+		"chain":             chain.String(),
+		"associatedAddress": dao.getAddressKey(associatedAddress),
+	}, &response)
+
+	// if not found, just return nil instead of error
+	if err == mgo.ErrNotFound {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +111,18 @@ func (dao *AssociationDao) GetAssociationByChainAddress(chain types.Chain, userA
 
 // SaveAssociation using upsert to update for existing users, only update allowed fields
 func (dao *AssociationDao) SaveAssociation(record *types.AddressAssociationRecord) error {
+	associatedAddress := strings.ToLower(record.AssociatedAddress)
 	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{
-		"associatedAddress": record.AssociatedAddress,
+		"chain":             record.Chain,
+		"associatedAddress": associatedAddress,
 	}, bson.M{
 		"$set": bson.M{
-			"associatedAddress": record.AssociatedAddress,
+			"associatedAddress": associatedAddress,
 			"chain":             record.Chain,
+			"addressIndex":      record.AddressIndex,
 			"address":           strings.ToLower(record.Address),
 			"pairName":          record.PairName,
+			"status":            record.Status,
 			"quoteTokenAddress": record.QuoteTokenAddress,
 			"baseTokenAddress":  record.BaseTokenAddress,
 		},
@@ -94,7 +133,7 @@ func (dao *AssociationDao) SaveAssociation(record *types.AddressAssociationRecor
 func (dao *AssociationDao) SaveAssociationStatus(chain types.Chain, sourceAccount common.Address, status string) error {
 	err := db.Update(dao.dbName, dao.collectionName, bson.M{
 		"chain":   chain.String(),
-		"address": sourceAccount,
+		"address": dao.getAddressKey(sourceAccount),
 	}, bson.M{
 		"$set": bson.M{
 			"status": status,

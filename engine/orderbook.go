@@ -262,7 +262,7 @@ func (ob *OrderBook) execute(takerOrder *types.Order, makerOrder *types.Order) (
 		Taker:          takerOrder.UserAddress,
 		PairName:       takerOrder.PairName,
 		Maker:          makerOrder.UserAddress,
-		Status:         "PENDING",
+		Status:         types.PENDING,
 	}
 
 	trade.Hash = trade.ComputeHash()
