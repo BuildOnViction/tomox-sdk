@@ -11,7 +11,7 @@ const { DB_NAME, addresses } = require('./utils/config');
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
 
 // each pair has 1000 orders
-const numberOfOrders = argv.number || 1000;
+const numberOfOrders = argv.number || 50000;
 
 let exchangeAddress = '0x7400d4d4263a3330beeb2a0d2674f0456054f217';
 let minTimeStamp = 1500000000000;

@@ -1,8 +1,8 @@
 const faker = require('faker');
 const dateFns = require('date-fns');
-const volatility = 0.05;
+const volatility = 0.00001;
 // not much different
-const minPrice = 100000;
+const minPrice = 999000;
 const maxPrice = 1000000;
 
 const rand = () => faker.random.number(100) / 100;
@@ -52,9 +52,8 @@ const generateTimestamps = (start, end, interval) => {
   return timestamps;
 };
 
-const generatePrices = (timestamps, initialPrice, volatility) => {
+const generatePrices = (timestamps, initialPrice) => {
   initialPrice = initialPrice || randInt(minPrice, maxPrice);
-  volatility = volatility || 0.03;
 
   let pricesArray = [{ timestamp: timestamps[0], price: initialPrice }];
 
@@ -75,18 +74,11 @@ const generateRandomPricepointRange = () => {
   return { min, max };
 };
 
-const generatePricingData = ({
-  start,
-  end,
-  interval,
-  initialPrice,
-  volatility
-}) => {
+const generatePricingData = ({ start, end, interval, initialPrice }) => {
   start = start || new Date(2016, 1, 1).getTime();
   end = end || Date.now();
   initialPrice = initialPrice || randInt(minPrice, maxPrice);
   // initialPrice = initialPrice || faker.random.number(maxPrice)
-  volatility = volatility || 0.03;
   interval = interval || 'hour';
 
   let timestamps = generateTimestamps(start, end, interval);
@@ -116,11 +108,15 @@ const interpolatePrice = (pricingData, timestamp) => {
   let nextTimestamp = pricingData[nextTimestampIndex]
     ? pricingData[nextTimestampIndex].timestamp
     : pricingData[pricingData.length - 1].timestamp;
-  let interpolatedPrice =
-    previousPrice +
-    ((nextPrice - previousPrice) * (timestamp - previousTimestamp)) /
-      (nextTimestamp - previousTimestamp);
+  const inflation =
+    ((previousPrice > nextPrice ? -1 : 1) *
+      volatility *
+      (timestamp - previousTimestamp)) /
+    (nextTimestamp - previousTimestamp);
 
+  let interpolatedPrice = previousPrice + inflation;
+
+  // console.log({ previousPrice, inflation });
   return interpolatedPrice;
 };
 
