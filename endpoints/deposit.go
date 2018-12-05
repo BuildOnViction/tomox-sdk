@@ -469,8 +469,6 @@ func (e *depositEndpoint) LoadAccountHandler(chain types.Chain, destination stri
 }
 
 func (e *depositEndpoint) getAssociationByUserAddress(chain types.Chain, publicKey common.Address) (*types.AddressAssociation, error) {
-	// get from feed of user? should use this for recovery phase even when data is empty
-	// return e.depositService.GetAssociationByUserAddress(chain, publicKey)
 
 	// get from associated address
 	logger.Infof("Get association chain :%s, associatedAddress: %s", chain, publicKey.Hex())
@@ -488,6 +486,11 @@ func (e *depositEndpoint) getAssociationByUserAddress(chain types.Chain, publicK
 	if err == nil {
 		// this time just assign from current service, but should be from swarm feed to make it decentralized
 		addressAssociation.TomochainPublicKey = e.depositService.SignerPublicKey()
+	}
+
+	if addressAssociation == nil {
+		// get from feed of user? should use this for recovery phase even when data is empty
+		addressAssociation, err = e.depositService.GetAssociationByUserAddress(chain, publicKey)
 	}
 
 	return addressAssociation, err

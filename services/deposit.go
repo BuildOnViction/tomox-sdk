@@ -165,8 +165,8 @@ func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.In
 	if len(tokenSymbols) != 2 {
 		return nil, errors.Errorf("Pair name is wrong format: %s", pairName)
 	}
-	baseTokenSymbol := tokenSymbols[0]
-	quoteTokenSymbol := tokenSymbols[1]
+	baseTokenSymbol := strings.ToUpper(tokenSymbols[0])
+	quoteTokenSymbol := strings.ToUpper(tokenSymbols[1])
 
 	// this is 1:1 exchange
 	if baseTokenSymbol == quoteTokenSymbol {
@@ -196,12 +196,13 @@ func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.In
 		return s.getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol, quoteAmount)
 	}
 
-	pricepoint := new(big.Int)
-	pricepoint.SetString(bids[0]["pricepoint"], 10)
+	pricepoint := math.ToBigInt(bids[0]["pricepoint"])
+	if math.IsZero(pricepoint) {
+		return nil, errors.New("Pricepoint is zero")
+	}
 
-	tokenAmount := new(big.Int)
-	tokenAmount = math.Div(quoteAmount, pricepoint)
-	tokenAmount = math.Mul(tokenAmount, pair.PriceMultiplier)
+	// calculate the tokenAmount
+	tokenAmount := math.Div(math.Mul(quoteAmount, pair.PricepointMultiplier()), pricepoint)
 
 	return tokenAmount, nil
 }

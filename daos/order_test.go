@@ -759,14 +759,12 @@ func TestGetExchangeRate(t *testing.T) {
 	transferAmount := new(big.Int)
 	transferAmount.SetString("10000000000000000000", 10)
 
-	pricepoint := new(big.Int)
-	pricepoint.SetString(bids[0]["pricepoint"], 10)
+	pricepoint := math.ToBigInt(bids[0]["pricepoint"])
 
-	tokenAmount := new(big.Int)
-	tokenAmount = math.Div(transferAmount, pricepoint)
-	tokenAmount = math.Mul(tokenAmount, pair.PriceMultiplier)
+	tokenAmount := math.Div(math.Mul(transferAmount, pair.PricepointMultiplier()), pricepoint)
 
-	t.Logf("transferAmount: %s, tokenAmount: %s", transferAmount, tokenAmount)
+	t.Logf("transferAmount: %s, tokenAmount: %s",
+		transferAmount, tokenAmount)
 }
 
 func TestGetOrderBookPricePoint(t *testing.T) {

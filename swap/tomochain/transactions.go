@@ -90,6 +90,9 @@ func (ac *AccountConfigurator) buildTransaction(source string, signer *ecdsa.Pri
 
 	associationTransaction.Hash = associationTransaction.ComputeHash()
 
+	// TODO: If relayer retrieves association from feed to restore sending phrase
+	// it has to verify the signature to make sure it is correct
+	// and client must update this signature in case of recovery
 	signature, err := signer.Sign(rand.Reader, associationTransaction.Hash, nil)
 	if err != nil {
 		return nil, err
