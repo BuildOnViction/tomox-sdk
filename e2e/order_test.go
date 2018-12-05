@@ -95,7 +95,7 @@ func SetupTest() (
 
 func TestBuyOrder(t *testing.T) {
 	_, _, client1, _, factory1, _, _, ZRX, WETH, orderDao, _ := SetupTest()
-	m1, o1, err := factory1.NewBuyOrderMessage(1e6, 2)
+	m1, o1, err := factory1.NewBuyOrderMessage(1e9, 2)
 	if err != nil {
 		t.Errorf("Could not create new order message: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestBuyOrder(t *testing.T) {
 
 	dbo1, _ := orderDao.GetByHash(o1.Hash)
 
-	assert.Equal(t, big.NewInt(1e6), dbo1.PricePoint)
+	assert.Equal(t, big.NewInt(1e9), dbo1.PricePoint)
 	assert.Equal(t, "BUY", dbo1.Side)
 	assert.Equal(t, "OPEN", dbo1.Status)
 	assert.Equal(t, "ZRX/WETH", dbo1.PairName)
@@ -142,7 +142,7 @@ func TestBuyOrder(t *testing.T) {
 
 func TestBuyAndCancelOrder(t *testing.T) {
 	_, _, client1, client2, factory1, factory2, _, _, _, orderDao, _ := SetupTest()
-	m1, o1, err := factory1.NewBuyOrderMessage(1e6, 1)
+	m1, o1, err := factory1.NewBuyOrderMessage(1e9, 1)
 	if err != nil {
 		t.Errorf("Error creating order message: %v", err)
 	}
@@ -183,7 +183,7 @@ func TestBuyAndCancelOrder(t *testing.T) {
 	wg.Wait()
 
 	dbo1, _ := orderDao.GetByHash(o1.Hash)
-	assert.Equal(t, big.NewInt(1e6), dbo1.PricePoint)
+	assert.Equal(t, big.NewInt(1e9), dbo1.PricePoint)
 	assert.Equal(t, "BUY", dbo1.Side)
 	assert.Equal(t, "CANCELLED", dbo1.Status)
 	assert.Equal(t, big.NewInt(0), dbo1.FilledAmount)
