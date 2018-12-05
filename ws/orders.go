@@ -63,25 +63,14 @@ func RegisterOrderConnection(a common.Address, c *Client) {
 	}
 
 	if orderConnections[a.Hex()] != nil {
-		if !isClientConnected(a, c) {
+
+		if !isClientConnected(orderConnections[a.Hex()], c) {
 			logger.Info("Registering a new order connection")
 			orderConnections[a.Hex()] = append(orderConnections[a.Hex()], c)
 			RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
 			logger.Info("Number of connections for this address: %v", len(orderConnections))
 		}
 	}
-}
-
-func isClientConnected(a common.Address, client *Client) bool {
-	for _, c := range orderConnections[a.Hex()] {
-		if c == client {
-			logger.Info("Client is connected")
-			return true
-		}
-	}
-
-	logger.Info("Client is not connected")
-	return false
 }
 
 func SendOrderMessage(msgType types.SubscriptionEvent, a common.Address, payload interface{}) {

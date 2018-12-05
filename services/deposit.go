@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/ws"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/ethereum"
@@ -151,8 +152,19 @@ func (s *DepositService) SaveAssociationByChainAddress(chain types.Chain, addres
 	return s.associationDao.SaveAssociation(association)
 }
 
-func (s *DepositService) SaveAssociationStatusByChainAddress(chain types.Chain, address common.Address, status string) error {
-	return s.associationDao.SaveAssociationStatus(chain, address, status)
+func (s *DepositService) SaveAssociationStatusByChainAddress(addressAssociation *types.AddressAssociationRecord, status string) error {
+
+	if addressAssociation == nil {
+		return errors.New("AddressAssociationRecord is nil")
+	}
+
+	userAddress := common.HexToAddress(addressAssociation.AssociatedAddress)
+	address := common.HexToAddress(addressAssociation.Address)
+
+	// send message to channel deposit
+	ws.SendDepositMessage(types.UPDATE_STATUS, userAddress, addressAssociation)
+
+	return s.associationDao.SaveAssociationStatus(addressAssociation.Chain, address, status)
 }
 
 func (s *DepositService) getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol string, quoteAmount *big.Int) (*big.Int, error) {

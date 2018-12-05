@@ -61,9 +61,15 @@ type AddressAssociation struct {
 	// BIP-44
 	AddressIndex       uint64         `json:"addressIndex"`
 	Address            common.Address `json:"address"`
-	AssociatedAddress  common.Address `json:"associatedAddress" bson:"associatedAddress"`
+	AssociatedAddress  common.Address `json:"associatedAddress"`
 	TomochainPublicKey common.Address `json:"tomochainPublicKey"`
 	CreatedAt          time.Time      `json:"createdAt"`
+}
+
+type AddressAssociationWebsocketPayload struct {
+	Chain             Chain          `json:"chain"`
+	AssociatedAddress common.Address `json:"associatedAddress"`
+	PairAddresses     *PairAddresses `json:"pairAddresses"`
 }
 
 // AddressAssociationRecord is the object that will be saved in the database

@@ -11,15 +11,11 @@ import (
 	mgo "gopkg.in/mgo.v2"
 )
 
-func init() {
+func TestDepositHistory(t *testing.T) {
 	err := app.LoadConfig("../config", "test")
 	if err != nil {
 		panic(err)
 	}
-}
-
-func TestDepositHistory(t *testing.T) {
-
 	session, err := mgo.Dial(app.Config.MongoURL)
 	if err != nil {
 		panic(err)

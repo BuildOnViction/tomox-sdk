@@ -8,15 +8,11 @@ import (
 	mgo "gopkg.in/mgo.v2"
 )
 
-func init() {
+func TestConfigIncrementIndex(t *testing.T) {
 	err := app.LoadConfig("../config", "test")
 	if err != nil {
 		panic(err)
 	}
-}
-
-func TestConfigIncrementIndex(t *testing.T) {
-
 	session, err := mgo.Dial(app.Config.MongoURL)
 	if err != nil {
 		panic(err)

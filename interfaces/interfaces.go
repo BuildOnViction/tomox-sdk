@@ -280,7 +280,7 @@ type DepositService interface {
 	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
 
 	SaveAssociationByChainAddress(chain types.Chain, address common.Address, index uint64, associatedAddress common.Address, pairAddreses *types.PairAddresses) error
-	SaveAssociationStatusByChainAddress(chain types.Chain, address common.Address, status string) error
+	SaveAssociationStatusByChainAddress(addressAssociation *types.AddressAssociationRecord, status string) error
 	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
 	// SetDelegate to endpoint
 	MinimumValueWei() *big.Int

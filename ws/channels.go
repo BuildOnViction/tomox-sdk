@@ -12,6 +12,7 @@ const (
 	OrderChannel        = "orders"
 	OrderBookChannel    = "orderbook"
 	OHLCVChannel        = "ohlcv"
+	DepositChannel      = "deposit"
 )
 
 var socketChannels map[string]func(interface{}, *Client)
