@@ -112,7 +112,7 @@ func (s *TradeService) UpdatePendingTrade(t *types.Trade, txh common.Hash) (*typ
 }
 
 func (s *TradeService) UpdateSuccessfulTrade(t *types.Trade) (*types.Trade, error) {
-	t.Status = "SUCCESS"
+	t.Status = types.SUCCESS
 
 	updated, err := s.tradeDao.FindAndModify(t.Hash, t)
 	if err != nil {

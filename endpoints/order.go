@@ -202,7 +202,7 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	bytes, _ := json.Marshal(input)
 	if err := json.Unmarshal(bytes, &msg); err != nil {
 		logger.Error(err)
-		c.SendMessage(ws.OrderChannel, "ERROR", err.Error())
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
 	}
 
 	switch msg.Type {
@@ -222,7 +222,7 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	bytes, err := json.Marshal(ev.Payload)
 	if err != nil {
 		logger.Error(err)
-		c.SendMessage(ws.OrderChannel, "ERROR", err.Error())
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
 		return
 	}
 
@@ -245,7 +245,7 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	}
 
 	if acc.IsBlocked {
-		c.SendMessage(ws.OrderChannel, "ERROR", errors.New("Account is blocked"))
+		c.SendMessage(ws.OrderChannel, types.ERROR, errors.New("Account is blocked"))
 	}
 
 	err = e.orderService.NewOrder(o)

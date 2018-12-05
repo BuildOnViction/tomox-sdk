@@ -361,7 +361,7 @@ func (e *depositEndpoint) OnSubmitTransaction(chain types.Chain, destination str
 	bytes, err := rlp.EncodeToBytes(associationTransaction)
 	if err != nil {
 		logger.Error("Error encode transaction to string")
-		e.depositService.SaveAssociationStatusByChainAddress(chain, address, "FAILED")
+		e.depositService.SaveAssociationStatusByChainAddress(chain, address, types.FAILED)
 		return err
 	}
 
@@ -371,7 +371,7 @@ func (e *depositEndpoint) OnSubmitTransaction(chain types.Chain, destination str
 	err = e.depositService.SaveDepositTransaction(chain, address, transaction)
 	if err != nil {
 		logger.Error("Error saving transaction to DB")
-		e.depositService.SaveAssociationStatusByChainAddress(chain, address, "FAILED")
+		e.depositService.SaveAssociationStatusByChainAddress(chain, address, types.FAILED)
 		return err
 	}
 
@@ -382,7 +382,7 @@ func (e *depositEndpoint) OnSubmitTransaction(chain types.Chain, destination str
 		quoteAmount := new(big.Int)
 		quoteAmount, ok := quoteAmount.SetString(amount, 10)
 		if !ok {
-			e.depositService.SaveAssociationStatusByChainAddress(chain, address, "FAILED")
+			e.depositService.SaveAssociationStatusByChainAddress(chain, address, types.FAILED)
 			return errors.Errorf("Could not convert to token amount: %s", amount)
 		}
 
@@ -390,9 +390,9 @@ func (e *depositEndpoint) OnSubmitTransaction(chain types.Chain, destination str
 		err = e.processTokenTransaction(addressAssociation, quoteAmount)
 		// update success if there is no error
 		if err != nil {
-			e.depositService.SaveAssociationStatusByChainAddress(chain, address, "FAILED")
+			e.depositService.SaveAssociationStatusByChainAddress(chain, address, types.FAILED)
 		} else {
-			e.depositService.SaveAssociationStatusByChainAddress(chain, address, "SUCCESS")
+			e.depositService.SaveAssociationStatusByChainAddress(chain, address, types.SUCCESS)
 		}
 		return err
 	}

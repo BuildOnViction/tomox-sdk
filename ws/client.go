@@ -31,7 +31,7 @@ func NewClient(c *websocket.Conn) *Client {
 }
 
 // SendMessage constructs the message with proper structure to be sent over websocket
-func (c *Client) SendMessage(channel string, msgType string, payload interface{}, h ...common.Hash) {
+func (c *Client) SendMessage(channel string, msgType types.SubscriptionEvent, payload interface{}, h ...common.Hash) {
 	e := types.WebsocketEvent{
 		Type:    msgType,
 		Payload: payload,

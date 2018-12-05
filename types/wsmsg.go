@@ -15,12 +15,34 @@ const (
 	SUBSCRIBE   SubscriptionEvent = "SUBSCRIBE"
 	UNSUBSCRIBE SubscriptionEvent = "UNSUBSCRIBE"
 	Fetch       SubscriptionEvent = "fetch"
-)
 
-const TradeChannel = "trades"
-const OrderbookChannel = "order_book"
-const OrderChannel = "orders"
-const OHLCVChannel = "ohlcv"
+	UPDATE SubscriptionEvent = "UPDATE"
+	ERROR  SubscriptionEvent = "ERROR"
+	INIT   SubscriptionEvent = "INIT"
+	CANCEL SubscriptionEvent = "CANCEL"
+
+	// status
+	ORDER_ADDED            = "ORDER_ADDED"
+	ORDER_FILLED           = "ORDER_FILLED"
+	ORDER_PARTIALLY_FILLED = "ORDER_PARTIALLY_FILLED"
+	ORDER_CANCELLED        = "ORDER_CANCELLED"
+	TRADES_CANCELLED       = "TRADES_CANCELLED"
+	UPDATE_STATUS          = "UPDATE"
+	ERROR_STATUS           = "ERROR"
+	FILLED                 = "FILLED"
+	CANCELLED              = "CANCELLED"
+
+	TRADE_PENDING = "TRADE_PENDING"
+	TRADE_SUCCESS = "TRADE_SUCCESS"
+	TRADE_ERROR   = "TRADE_ERROR"
+	TRADE_INVALID = "TRADE_INVALID"
+
+	// channel
+	TradeChannel     = "trades"
+	OrderbookChannel = "orderbook"
+	OrderChannel     = "orders"
+	OHLCVChannel     = "ohlcv"
+)
 
 type WebsocketMessage struct {
 	Channel string         `json:"channel"`
@@ -32,9 +54,9 @@ func (ev *WebsocketMessage) String() string {
 }
 
 type WebsocketEvent struct {
-	Type    string      `json:"type"`
-	Hash    string      `json:"hash,omitempty"`
-	Payload interface{} `json:"payload"`
+	Type    SubscriptionEvent `json:"type"`
+	Hash    string            `json:"hash,omitempty"`
+	Payload interface{}       `json:"payload"`
 }
 
 func (ev *WebsocketEvent) String() string {

@@ -113,7 +113,7 @@ func getMatchQuery(start, end time.Time, pairs ...types.PairAddresses) bson.M {
 			"$gte": start,
 			"$lt":  end,
 		},
-		"status": bson.M{"$in": []string{"SUCCESS"}},
+		"status": bson.M{"$in": []string{types.SUCCESS}},
 	}
 
 	if len(pairs) >= 1 {

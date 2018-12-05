@@ -2,6 +2,7 @@ package ws
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 // OrderConn is websocket order connection struct
@@ -83,7 +84,7 @@ func isClientConnected(a common.Address, client *Client) bool {
 	return false
 }
 
-func SendOrderMessage(msgType string, a common.Address, payload interface{}) {
+func SendOrderMessage(msgType types.SubscriptionEvent, a common.Address, payload interface{}) {
 	conn := GetOrderConnections(a)
 	if conn == nil {
 		return

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
 	"github.com/tomochain/backend-matching-engine/ws"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/gorilla/mux"
 )
 
 type OrderBookEndpoint struct {
@@ -124,7 +124,7 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, c *ws.Clien
 		logger.Error(err)
 	}
 
-	if ev.Type == "UNSUBSCRIBE" {
+	if ev.Type == types.UNSUBSCRIBE {
 		e.orderBookService.UnsubscribeRawOrderBook(c)
 		return
 	}
@@ -141,7 +141,7 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, c *ws.Clien
 		return
 	}
 
-	if ev.Type == "SUBSCRIBE" {
+	if ev.Type == types.SUBSCRIBE {
 		e.orderBookService.SubscribeRawOrderBook(c, p.BaseToken, p.QuoteToken)
 	}
 }
@@ -165,7 +165,7 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, c *ws.Client) 
 		socket.SendErrorMessage(c, msg)
 	}
 
-	if ev.Type == "UNSUBSCRIBE" {
+	if ev.Type == types.UNSUBSCRIBE {
 		e.orderBookService.UnsubscribeOrderBook(c)
 		return
 	}
@@ -182,7 +182,7 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, c *ws.Client) 
 		return
 	}
 
-	if ev.Type == "SUBSCRIBE" {
+	if ev.Type == types.SUBSCRIBE {
 		e.orderBookService.SubscribeOrderBook(c, p.BaseToken, p.QuoteToken)
 	}
 

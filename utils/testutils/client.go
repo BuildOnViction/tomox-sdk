@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/ws"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/websocket"
 	"github.com/posener/wstest"
+	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/backend-matching-engine/ws"
 )
 
 var wg = &sync.WaitGroup{}
@@ -120,13 +120,13 @@ func (c *Client) handleMessages() {
 				c.ResponseLogs = append(c.ResponseLogs, *msg)
 
 				switch msg.Channel {
-				case "orders":
+				case types.OrderChannel:
 					go c.handleOrderChannelMessagesIn(msg.Event)
-				case "order_book":
+				case types.OrderbookChannel:
 					go c.handleOrderBookChannelMessages(msg.Event)
-				case "trades":
+				case types.TradeChannel:
 					go c.handleTradeChannelMessages(msg.Event)
-				case "ohlcv":
+				case types.OHLCVChannel:
 					go c.handleOHLCVMessages(msg.Event)
 				}
 			}

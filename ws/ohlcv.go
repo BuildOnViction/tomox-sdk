@@ -2,6 +2,7 @@ package ws
 
 import (
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 var ohlcvSocket *OHLCVSocket
@@ -98,21 +99,21 @@ func (s *OHLCVSocket) BroadcastOHLCV(channelID string, p interface{}) error {
 }
 
 // SendMessage sends a websocket message on the trade channel
-func (s *OHLCVSocket) SendMessage(c *Client, msgType string, p interface{}) {
+func (s *OHLCVSocket) SendMessage(c *Client, msgType types.SubscriptionEvent, p interface{}) {
 	c.SendMessage(OHLCVChannel, msgType, p)
 }
 
 // SendErrorMessage sends an error message on the trade channel
 func (s *OHLCVSocket) SendErrorMessage(c *Client, p interface{}) {
-	c.SendMessage(OHLCVChannel, "ERROR", p)
+	c.SendMessage(OHLCVChannel, types.ERROR, p)
 }
 
 // SendInitMessage is responsible for sending message on trade ohlcv channel at subscription
 func (s *OHLCVSocket) SendInitMessage(c *Client, p interface{}) {
-	c.SendMessage(OHLCVChannel, "INIT", p)
+	c.SendMessage(OHLCVChannel, types.INIT, p)
 }
 
 // SendUpdateMessage is responsible for sending message on trade ohlcv channel at subscription
 func (s *OHLCVSocket) SendUpdateMessage(c *Client, p interface{}) {
-	c.SendMessage(OHLCVChannel, "UPDATE", p)
+	c.SendMessage(OHLCVChannel, types.UPDATE, p)
 }

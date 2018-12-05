@@ -2,6 +2,7 @@ package ws
 
 import (
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 var orderbook *OrderBookSocket
@@ -94,15 +95,15 @@ func (s *OrderBookSocket) BroadcastMessage(channelID string, p interface{}) erro
 
 // SendErrorMessage sends error message on orderbookchannel
 func (s *OrderBookSocket) SendErrorMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, "ERROR", data)
+	c.SendMessage(OrderBookChannel, types.ERROR, data)
 }
 
 // SendInitMessage sends INIT message on orderbookchannel on subscription event
 func (s *OrderBookSocket) SendInitMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, "INIT", data)
+	c.SendMessage(OrderBookChannel, types.INIT, data)
 }
 
 // SendUpdateMessage sends UPDATE message on orderbookchannel as new data is created
 func (s *OrderBookSocket) SendUpdateMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, "UPDATE", data)
+	c.SendMessage(OrderBookChannel, types.UPDATE, data)
 }

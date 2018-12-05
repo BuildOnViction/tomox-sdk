@@ -106,7 +106,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) ([]*types.Tick, er
 					"$gte": start,
 					"$lt":  end,
 				},
-				"status":     bson.M{"$in": []string{"SUCCESS"}},
+				"status":     bson.M{"$in": []string{types.SUCCESS}},
 				"baseToken":  bt.Hex(),
 				"quoteToken": qt.Hex(),
 			},
@@ -154,7 +154,7 @@ func (s *PairService) GetAllTokenPairData() ([]*types.Tick, error) {
 					"$gte": start,
 					"$lt":  end,
 				},
-				"status": bson.M{"$in": []string{"SUCCESS"}},
+				"status": bson.M{"$in": []string{types.SUCCESS}},
 			},
 		},
 		bson.M{

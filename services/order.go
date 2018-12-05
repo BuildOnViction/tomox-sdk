@@ -190,7 +190,7 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 		return errors.New("No order with corresponding hash")
 	}
 
-	if o.Status == "FILLED" || o.Status == "ERROR" || o.Status == "CANCEL" {
+	if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
 		return fmt.Errorf("Cannot cancel order. Status is %v", o.Status)
 	}
 
@@ -214,17 +214,17 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 // responses and database updates accordingly
 func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 	switch res.Status {
-	case "ERROR":
+	case types.ERROR_STATUS:
 		s.handleEngineError(res)
-	case "ORDER_ADDED":
+	case types.ORDER_ADDED:
 		s.handleEngineOrderAdded(res)
-	case "ORDER_FILLED":
+	case types.ORDER_FILLED:
 		s.handleEngineOrderMatched(res)
-	case "ORDER_PARTIALLY_FILLED":
+	case types.ORDER_PARTIALLY_FILLED:
 		s.handleEngineOrderMatched(res)
-	case "ORDER_CANCELLED":
+	case types.ORDER_CANCELLED:
 		s.handleOrderCancelled(res)
-	case "TRADES_CANCELLED":
+	case types.TRADES_CANCELLED:
 		s.handleOrdersInvalidated(res)
 	default:
 		s.handleEngineUnknownMessage(res)
@@ -235,13 +235,13 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 
 func (s *OrderService) HandleOperatorMessages(msg *types.OperatorMessage) error {
 	switch msg.MessageType {
-	case "TRADE_PENDING":
+	case types.TRADE_PENDING:
 		s.handleOperatorTradePending(msg)
-	case "TRADE_SUCCESS":
+	case types.TRADE_SUCCESS:
 		s.handleOperatorTradeSuccess(msg)
-	case "TRADE_ERROR":
+	case types.TRADE_ERROR:
 		s.handleOperatorTradeError(msg)
-	case "TRADE_INVALID":
+	case types.TRADE_INVALID:
 		s.handleOperatorTradeError(msg)
 	default:
 		s.handleOperatorUnknownMessage(msg)
@@ -387,7 +387,7 @@ func (s *OrderService) handleOperatorTradeSuccess(msg *types.OperatorMessage) {
 		return
 	}
 
-	trades, err := s.tradeDao.UpdateTradeStatuses("SUCCESS", hashes...)
+	trades, err := s.tradeDao.UpdateTradeStatuses(types.SUCCESS, hashes...)
 	if err != nil {
 		logger.Error(err)
 	}

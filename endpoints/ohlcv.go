@@ -120,12 +120,12 @@ func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 
 	socket := ws.GetOHLCVSocket()
 
-	if ev.Type != "SUBSCRIBE" && ev.Type != "UNSUBSCRIBE" {
+	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		socket.SendErrorMessage(c, "Invalid payload")
 		return
 	}
 
-	if ev.Type == "SUBSCRIBE" {
+	if ev.Type == types.SUBSCRIBE {
 		b, _ = json.Marshal(ev.Payload)
 		var p *types.SubscriptionPayload
 
@@ -165,7 +165,7 @@ func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 		e.ohlcvService.Subscribe(c, p)
 	}
 
-	if ev.Type == "UNSUBSCRIBE" {
+	if ev.Type == types.UNSUBSCRIBE {
 		e.ohlcvService.Unsubscribe(c)
 	}
 }
