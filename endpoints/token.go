@@ -2,14 +2,16 @@ package endpoints
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/mux"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/gorilla/mux"
+	"github.com/tomochain/backend-matching-engine/ws"
 )
 
 type tokenEndpoint struct {
@@ -27,6 +29,8 @@ func ServeTokenResource(
 	r.HandleFunc("/tokens/{address}", e.HandleGetToken).Methods("GET")
 	r.HandleFunc("/tokens", e.HandleGetTokens).Methods("GET")
 	r.HandleFunc("/tokens", e.HandleCreateTokens).Methods("POST")
+
+	ws.RegisterChannel(ws.TokenChannel, e.ws)
 }
 
 func (e *tokenEndpoint) HandleCreateTokens(w http.ResponseWriter, r *http.Request) {
@@ -105,4 +109,37 @@ func (e *tokenEndpoint) HandleGetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
+}
+
+// ws function handles incoming websocket messages on the order channel
+func (e *tokenEndpoint) ws(input interface{}, c *ws.Client) {
+	// it means that we can handle not only WebSocketPayload but other Payloads as well
+	msg := &types.WebsocketEvent{}
+	bytes, _ := json.Marshal(input)
+	if err := json.Unmarshal(bytes, &msg); err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.TokenChannel, types.ERROR, err.Error())
+	}
+
+	switch msg.Type {
+	case "GET_TOKENS":
+		e.handleGetTokensWS(msg, c)
+		log.Printf("Data: %+v", msg)
+	default:
+		log.Print("Response with error")
+	}
+
+}
+
+// handleSubmitSignatures handles NewTrade messages. New trade messages are transmitted to the corresponding order channel
+// and received in the handleClientResponse.
+func (e *tokenEndpoint) handleGetTokensWS(ev *types.WebsocketEvent, c *ws.Client) {
+	res, err := e.tokenService.GetAll()
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.TokenChannel, types.ERROR, err.Error())
+		return
+	}
+
+	c.SendMessage(ws.TokenChannel, types.UPDATE, res)
 }

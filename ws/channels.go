@@ -11,6 +11,7 @@ const (
 	RawOrderBookChannel = "raw_orderbook"
 	OrderChannel        = "orders"
 	OrderBookChannel    = "orderbook"
+	TokenChannel        = "tokens"
 	OHLCVChannel        = "ohlcv"
 	DepositChannel      = "deposit"
 )

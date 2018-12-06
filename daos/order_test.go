@@ -709,6 +709,7 @@ func TestOrderStatusesByHashes(t *testing.T) {
 }
 
 func TestGetOrderBook(t *testing.T) {
+
 	session, err := mgo.Dial(app.Config.MongoURL)
 	if err != nil {
 		panic(err)
@@ -726,7 +727,6 @@ func TestGetOrderBook(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
 	utils.PrintJSON(bids)
 	utils.PrintJSON(asks)
 }

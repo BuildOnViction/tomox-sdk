@@ -16,26 +16,29 @@ const (
 	UNSUBSCRIBE SubscriptionEvent = "UNSUBSCRIBE"
 	Fetch       SubscriptionEvent = "fetch"
 
-	UPDATE SubscriptionEvent = "UPDATE"
-	ERROR  SubscriptionEvent = "ERROR"
-	INIT   SubscriptionEvent = "INIT"
-	CANCEL SubscriptionEvent = "CANCEL"
+	UPDATE        SubscriptionEvent = "UPDATE"
+	ERROR         SubscriptionEvent = "ERROR"
+	SUCCESS_EVENT SubscriptionEvent = "SUCCESS"
+	INIT          SubscriptionEvent = "INIT"
+	CANCEL        SubscriptionEvent = "CANCEL"
 
 	// status
+
 	ORDER_ADDED            = "ORDER_ADDED"
 	ORDER_FILLED           = "ORDER_FILLED"
 	ORDER_PARTIALLY_FILLED = "ORDER_PARTIALLY_FILLED"
 	ORDER_CANCELLED        = "ORDER_CANCELLED"
-	TRADES_CANCELLED       = "TRADES_CANCELLED"
-	UPDATE_STATUS          = "UPDATE"
-	ERROR_STATUS           = "ERROR"
-	FILLED                 = "FILLED"
-	CANCELLED              = "CANCELLED"
 
-	TRADE_PENDING = "TRADE_PENDING"
-	TRADE_SUCCESS = "TRADE_SUCCESS"
-	TRADE_ERROR   = "TRADE_ERROR"
-	TRADE_INVALID = "TRADE_INVALID"
+	UPDATE_STATUS = "UPDATE"
+	ERROR_STATUS  = "ERROR"
+	FILLED        = "FILLED"
+	CANCELLED     = "CANCELLED"
+
+	TRADES_CANCELLED = "TRADES_CANCELLED"
+	TRADE_PENDING    = "TRADE_PENDING"
+	TRADE_SUCCESS    = "TRADE_SUCCESS"
+	TRADE_ERROR      = "TRADE_ERROR"
+	TRADE_INVALID    = "TRADE_INVALID"
 
 	// channel
 	TradeChannel     = "trades"

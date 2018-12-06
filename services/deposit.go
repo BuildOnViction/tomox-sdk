@@ -161,8 +161,14 @@ func (s *DepositService) SaveAssociationStatusByChainAddress(addressAssociation 
 	userAddress := common.HexToAddress(addressAssociation.AssociatedAddress)
 	address := common.HexToAddress(addressAssociation.Address)
 
-	// send message to channel deposit
-	ws.SendDepositMessage(types.UPDATE_STATUS, userAddress, addressAssociation)
+	// send message to channel deposit to noti the status, should limit the txEnvelope < 100
+	// if not it would be very slow
+	if status == types.SUCCESS {
+		ws.SendDepositMessage(types.SUCCESS_EVENT, userAddress, addressAssociation)
+	} else if status != types.PENDING {
+		// just pending and return the status
+		ws.SendDepositMessage(types.PENDING, userAddress, status)
+	}
 
 	return s.associationDao.SaveAssociationStatus(addressAssociation.Chain, address, status)
 }

@@ -76,6 +76,7 @@ func RegisterDepositConnection(a common.Address, c *Client) {
 func SendDepositMessage(msgType types.SubscriptionEvent, a common.Address, payload interface{}) {
 	conn := GetDepositConnections(a)
 	if conn == nil {
+		logger.Infof("No connection found")
 		return
 	}
 
