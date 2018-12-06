@@ -127,12 +127,12 @@ func getOHLCVSubscribeRequest(baseToken, quoteToken common.Address) *types.Webso
 		},
 	}
 }
-func getWebsocketMessage(channel, t, hash string, data interface{}) types.WebsocketMessage {
+func getWebsocketMessage(channel string, msgType types.SubscriptionEvent, hash string, data interface{}) types.WebsocketMessage {
 	return types.WebsocketMessage{
 		Channel: channel,
 		Event: types.WebsocketEvent{
-			Type:    t,
-			Hash:    "",
+			Type:    msgType,
+			Hash:    hash,
 			Payload: data,
 		},
 	}
@@ -167,7 +167,7 @@ func newObClient(t *testing.T, baseToken, quoteToken common.Address, testData in
 		}
 	}
 
-	expectedRes := getWebsocketMessage(ws.OrderBookChannel, "INIT", "", testData)
+	expectedRes := getWebsocketMessage(ws.OrderBookChannel, types.INIT, "", testData)
 
 	assert.Equal(t, expectedRes, obClient.ResponseLogs[0])
 	return obClient
@@ -183,7 +183,7 @@ func newTradeClient(t *testing.T, baseToken, quoteToken common.Address, testData
 	tradeClient.Requests <- getTradeSubscribeRequest(baseToken, quoteToken)
 	time.Sleep(time.Second)
 
-	expectedRes := getWebsocketMessage(ws.TradeChannel, "INIT", "", testData)
+	expectedRes := getWebsocketMessage(ws.TradeChannel, types.INIT, "", testData)
 	assert.Equal(t, expectedRes, tradeClient.ResponseLogs[0])
 
 	return tradeClient
@@ -200,7 +200,7 @@ func newOHLCVClient(t *testing.T, baseToken, quoteToken common.Address, testData
 	ohlcvClient.Requests <- getOHLCVSubscribeRequest(baseToken, quoteToken)
 	time.Sleep(time.Second)
 
-	expectedRes := getWebsocketMessage(ws.OHLCVChannel, "INIT", "", testData)
+	expectedRes := getWebsocketMessage(ws.OHLCVChannel, types.INIT, "", testData)
 	assert.Equal(t, expectedRes, ohlcvClient.ResponseLogs[0])
 	return ohlcvClient
 }
