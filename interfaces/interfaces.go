@@ -66,8 +66,8 @@ type ConfigDao interface {
 	GetAddressIndex(chain types.Chain) (uint64, error)
 	IncrementAddressIndex(chain types.Chain) error
 	ResetBlockCounters() error
-	GetEthereumBlockToProcess() (uint64, error)
-	SaveLastProcessedEthereumBlock(block uint64) error
+	GetBlockToProcess(chain types.Chain) (uint64, error)
+	SaveLastProcessedBlock(chain types.Chain, block uint64) error
 	Drop()
 }
 
@@ -285,6 +285,7 @@ type DepositService interface {
 	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
 	// SetDelegate to endpoint
 	MinimumValueWei() *big.Int
+	MinimumValueSat() int64
 
 	SetDelegate(handler SwapEngineHandler)
 

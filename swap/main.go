@@ -19,6 +19,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/swap/queue"
+	"github.com/tomochain/backend-matching-engine/swap/storage"
 	"github.com/tomochain/backend-matching-engine/swap/tomochain"
 	"github.com/tomochain/backend-matching-engine/utils"
 )
@@ -174,8 +175,16 @@ func NewEngine(cfg *config.Config) *Engine {
 }
 
 // SetStorage : update storage mechanism
-func (engine *Engine) SetStorage(storage ethereum.Storage) {
-	engine.ethereumListener.Storage = storage
+func (engine *Engine) SetStorage(storage storage.Storage) {
+
+	// set storage for both bitcoin and ethereum
+	if engine.ethereumListener != nil {
+		engine.ethereumListener.Storage = storage
+	}
+
+	if engine.bitcoinListener != nil {
+		engine.bitcoinListener.Storage = storage
+	}
 }
 
 // SetQueue : update queue mechanism, may be rabbitmq implementation

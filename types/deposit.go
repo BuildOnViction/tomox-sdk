@@ -13,14 +13,19 @@ import (
 type AssetCode string
 
 const (
-	AssetCodeETH AssetCode = "ETH"
-
-	CreateOffer   = "CreateOffer"
-	CreateAccount = "CreateAccount"
-	RemoveSigner  = "RemoveSigner"
+	AssetCodeETH  AssetCode = "ETH"
+	AssetCodeBTC  AssetCode = "BTC"
+	CreateOffer             = "CreateOffer"
+	CreateAccount           = "CreateAccount"
+	RemoveSigner            = "RemoveSigner"
 )
 
 type Chain string
+
+const (
+	ChainEthereum Chain = "ethereum"
+	ChainBitcoin  Chain = "bitcoin"
+)
 
 func NewChain(str interface{}) Chain {
 	var chain Chain
@@ -49,11 +54,6 @@ func (s *Chain) String() string {
 func (s *Chain) Bytes() []byte {
 	return []byte(*s)
 }
-
-const (
-	SwapSchemaVersion uint64 = 2
-	ChainEthereum     Chain  = "ethereum"
-)
 
 type AddressAssociation struct {
 	// Chain is the name of the payment origin chain

@@ -18,6 +18,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/swap"
+	"github.com/tomochain/backend-matching-engine/swap/bitcoin"
 	"github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/httputils"
@@ -318,7 +319,87 @@ func (e *depositEndpoint) handleNewDeposit(ev *types.WebsocketEvent, c *ws.Clien
 
 }
 
+func (e *depositEndpoint) processNewTransaction(queueTx *types.DepositTransaction, addressAssociation *types.AddressAssociationRecord) error {
+	// Add transaction as processing. this should be end point or tokenService
+	// if have many nodes, should use queue instead
+
+	// if addressAssociation.Status == types.PENDING || addressAssociation.Status == types.SUCCESS {
+	if addressAssociation.Status == types.SUCCESS {
+		// is processing or processed, just skip
+		logger.Debug("Transaction already processed, skipping")
+		return nil
+	}
+
+	err := e.processTransaction(addressAssociation)
+	if err != nil {
+		return err
+	}
+
+	// add queue transaction
+	err = e.depositService.QueueAdd(queueTx)
+	if err != nil {
+		return errors.Wrap(err, "Error adding transaction to the processing queue")
+	}
+
+	logger.Info("Transaction added to transaction queue: %v", queueTx)
+	// Broadcast event to address stream using websocket
+	logger.Infof("Broadcasting event: %v", queueTx)
+	logger.Info("Transaction processed successfully")
+	return nil
+}
+
 /***** events from engine ****/
+
+// onNewBitcoinTransaction checks if transaction is valid and adds it to
+// the transactions queue for TomochainAccountConfigurator to consume.
+//
+// Transaction added to transactions queue should be in a format described in
+// types.DepositTransaction (especialy amounts). Pooling service should not have to deal with any
+// conversions.
+func (e *depositEndpoint) OnNewBitcoinTransaction(transaction bitcoin.Transaction) error {
+	logger.Infof("Processing transaction: %v", transaction)
+
+	// Let's check if tx is valid first.
+
+	// Check if value is above minimum required
+	minimumValueSat := e.depositService.MinimumValueSat()
+	if transaction.ValueSat < minimumValueSat {
+		logger.Debugf("Value is : %s, below minimum required amount: %s, skipping", transaction.ValueSat, minimumValueSat)
+		return nil
+	}
+
+	addressTo := common.HexToAddress(transaction.To)
+
+	addressAssociation, err := e.depositService.GetAssociationByChainAddress(types.ChainBitcoin, addressTo)
+
+	if err != nil {
+		logger.Errorf("Chain: %s, Got error: %v", types.ChainBitcoin, err)
+		return nil
+	}
+
+	// there is no address association in the database
+	if addressAssociation == nil {
+		logger.Info("Transaction not found, skipping")
+		return nil
+	}
+
+	logger.Infof("Got Association: %v", addressAssociation)
+
+	// Add tx to the processing queue
+	queueTx := &types.DepositTransaction{
+		Chain:         types.ChainBitcoin,
+		TransactionID: transaction.Hash,
+		AssetCode:     types.AssetCodeBTC,
+		PairName:      addressAssociation.PairName,
+		// Amount in the base unit of currency.
+		Amount:            transaction.ValueToWei(),
+		AssociatedAddress: addressAssociation.AssociatedAddress,
+	}
+
+	return e.processNewTransaction(queueTx, addressAssociation)
+
+}
+
 // onNewEthereumTransaction checks if transaction is valid and adds it to
 // the transactions queue for TomochainAccountConfigurator to consume.
 //
@@ -361,37 +442,12 @@ func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transact
 		AssetCode:     types.AssetCodeETH,
 		PairName:      addressAssociation.PairName,
 		// Amount in the base unit of currency.
-		Amount:            transaction.ValueWei.String(),
+		// Amount:            transaction.ValueWei.String(),
+		Amount:            transaction.ValueToWei(),
 		AssociatedAddress: addressAssociation.AssociatedAddress,
 	}
 
-	// Add transaction as processing. this should be end point or tokenService
-	// if have many nodes, should use queue instead
-
-	// if addressAssociation.Status == types.PENDING || addressAssociation.Status == types.SUCCESS {
-	if addressAssociation.Status == types.SUCCESS {
-		// is processing or processed, just skip
-		logger.Debug("Transaction already processed, skipping")
-		return nil
-	}
-
-	err = e.processTransaction(addressAssociation)
-	if err != nil {
-		return err
-	}
-
-	// add queue transaction
-	err = e.depositService.QueueAdd(queueTx)
-	if err != nil {
-		return errors.Wrap(err, "Error adding transaction to the processing queue")
-	}
-
-	logger.Info("Transaction added to transaction queue: %v", queueTx)
-
-	// Broadcast event to address stream using websocket
-	logger.Infof("Broadcasting event: %v", transaction)
-	logger.Info("Transaction processed successfully")
-	return nil
+	return e.processNewTransaction(queueTx, addressAssociation)
 }
 
 func (e *depositEndpoint) processTokenTransaction(addressAssociation *types.AddressAssociationRecord, quoteAmount *big.Int) error {

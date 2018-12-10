@@ -14,6 +14,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/swap"
 	swapConfig "github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils/binance"
 	"github.com/tomochain/backend-matching-engine/utils/math"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -96,12 +97,12 @@ func (s *DepositService) RecoveryTransaction(chain types.Chain, address common.A
 }
 
 /***** implement Storage interface ***/
-func (s *DepositService) GetEthereumBlockToProcess() (uint64, error) {
-	return s.configDao.GetEthereumBlockToProcess()
+func (s *DepositService) GetBlockToProcess(chain types.Chain) (uint64, error) {
+	return s.configDao.GetBlockToProcess(chain)
 }
 
-func (s *DepositService) SaveLastProcessedEthereumBlock(block uint64) error {
-	return s.configDao.SaveLastProcessedEthereumBlock(block)
+func (s *DepositService) SaveLastProcessedBlock(chain types.Chain, block uint64) error {
+	return s.configDao.SaveLastProcessedBlock(chain, block)
 }
 
 func (s *DepositService) SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error {
@@ -125,6 +126,10 @@ func (s *DepositService) QueuePool() (<-chan *types.DepositTransaction, error) {
 
 func (s *DepositService) MinimumValueWei() *big.Int {
 	return s.swapEngine.MinimumValueWei()
+}
+
+func (s *DepositService) MinimumValueSat() int64 {
+	return s.swapEngine.MinimumValueSat()
 }
 
 func (s *DepositService) GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error) {
@@ -174,7 +179,17 @@ func (s *DepositService) SaveAssociationStatusByChainAddress(addressAssociation 
 }
 
 func (s *DepositService) getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol string, quoteAmount *big.Int) (*big.Int, error) {
-	return quoteAmount, nil
+	lastPrice, err := binance.GetLastPrice(baseTokenSymbol, quoteTokenSymbol)
+	if err != nil {
+		return quoteAmount, nil
+	}
+	exchangeRate, ok := new(big.Int).SetString(lastPrice, 10)
+	if !ok {
+		return quoteAmount, nil
+	}
+	// last price is the price in quoteToken for a baseToken, also means baseToken/quoteToken exchange rate
+	baseAmount := math.Mul(quoteAmount, exchangeRate)
+	return baseAmount, nil
 }
 
 func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error) {

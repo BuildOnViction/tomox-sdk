@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/swap/storage"
 	"github.com/tomochain/backend-matching-engine/utils"
 	bip32 "github.com/tyler-smith/go-bip32"
 )
@@ -21,7 +22,7 @@ var (
 
 // Listener listens for transactions using geth RPC. It calls TransactionHandler for each new
 // transactions. It will reprocess the block if TransactionHandler returns error. It will
-// start from the block number returned from Storage.GetEthereumBlockToProcess or the latest block
+// start from the block number returned from Storage.GetBlockToProcess("ethereum") or the latest block
 // if it returned 0. Transactions can be processed more than once, it's TransactionHandler
 // responsibility to ignore duplicates.
 // You can run multiple Listeners if Storage is implemented correctly.
@@ -29,8 +30,8 @@ var (
 // Listener requires geth 1.7.0.
 type Listener struct {
 	Enabled              bool
-	Client               Client  `inject:""`
-	Storage              Storage `inject:""`
+	Client               Client          `inject:""`
+	Storage              storage.Storage `inject:""`
 	NetworkID            string
 	ConfirmedBlockNumber uint64
 	TransactionHandler   TransactionHandler
@@ -39,17 +40,6 @@ type Listener struct {
 type Client interface {
 	NetworkID(ctx context.Context) (*big.Int, error)
 	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
-}
-
-// Storage is an interface that must be implemented by an object using
-// persistent storage.
-type Storage interface {
-	// GetEthereumBlockToProcess gets the number of Ethereum block to process. `0` means the
-	// processing should start from the current block.
-	GetEthereumBlockToProcess() (uint64, error)
-	// SaveLastProcessedEthereumBlock should update the number of the last processed Ethereum
-	// block. It should only update the block if block > current block in atomic transaction.
-	SaveLastProcessedEthereumBlock(block uint64) error
 }
 
 type TransactionHandler func(transaction Transaction) error

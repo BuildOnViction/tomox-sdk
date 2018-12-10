@@ -27,3 +27,9 @@ func TestTransactionAmount(t *testing.T) {
 		assert.Equal(t, test.expectedTomoAmount, amount)
 	}
 }
+
+func TestTransactionWeiAmount(t *testing.T) {
+	transaction := Transaction{ValueSat: 1e7} // 0.1 BTC
+	weiAmount := transaction.ValueToWei()
+	t.Logf("Wei amount :%s", weiAmount)
+}

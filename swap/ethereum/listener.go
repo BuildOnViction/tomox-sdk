@@ -5,9 +5,10 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/core/types"
+	ethereumTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 const (
@@ -19,7 +20,7 @@ func (l *Listener) Start() error {
 
 	logger.Info("EthereumListener starting")
 
-	blockNumber, err := l.Storage.GetEthereumBlockToProcess()
+	blockNumber, err := l.Storage.GetBlockToProcess(types.ChainEthereum)
 	if err != nil {
 		err = errors.Wrap(err, "Error getting ethereum block to process from DB")
 		logger.Error(err)
@@ -116,7 +117,7 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 		}
 
 		// Persist block number
-		err = l.Storage.SaveLastProcessedEthereumBlock(blockNumber)
+		err = l.Storage.SaveLastProcessedBlock(types.ChainEthereum, blockNumber)
 		if err != nil {
 			logger.Errorf("Error saving last processed block: %s", err)
 			time.Sleep(1 * time.Second)
@@ -128,7 +129,7 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 }
 
 // getBlock returns (nil, nil) if block has not been found (not exists yet)
-func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
+func (l *Listener) getBlock(blockNumber uint64) (*ethereumTypes.Block, error) {
 	var blockNumberInt *big.Int
 	if blockNumber > 0 {
 		blockNumberInt = big.NewInt(int64(blockNumber))
@@ -151,7 +152,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
 	return block, nil
 }
 
-func (l *Listener) processBlock(block *types.Block) error {
+func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 	// empty block
 	if block == nil {

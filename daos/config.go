@@ -14,6 +14,8 @@ const (
 	schemaVersionKey        = "swap_schema_version"
 	ethereumAddressIndexKey = "ethereum_address_index"
 	ethereumLastBlockKey    = "ethereum_last_block"
+	bitcoinAddressIndexKey  = "bitcoin_address_index"
+	bitcoinLastBlockKey     = "bitcoin_last_block"
 	defaultBlockIndex       = 0
 )
 
@@ -56,6 +58,8 @@ func (dao *ConfigDao) getAddressIndexKey(chain types.Chain) (string, error) {
 	switch chain {
 	case types.ChainEthereum:
 		return ethereumAddressIndexKey, nil
+	case types.ChainBitcoin:
+		return bitcoinAddressIndexKey, nil
 	default:
 		return "", errors.New("Invalid chain")
 	}
@@ -114,14 +118,31 @@ func (dao *ConfigDao) IncrementAddressIndex(chain types.Chain) error {
 	return err
 }
 
-func (dao *ConfigDao) GetEthereumBlockToProcess() (uint64, error) {
-	return dao.getUint64ValueFromKey(ethereumLastBlockKey)
+func (dao *ConfigDao) GetBlockToProcess(chain types.Chain) (uint64, error) {
+	switch chain {
+	case types.ChainEthereum:
+		return dao.getUint64ValueFromKey(ethereumLastBlockKey)
+	case types.ChainBitcoin:
+		return dao.getUint64ValueFromKey(bitcoinLastBlockKey)
+	default:
+		return 0, errors.New("Invalid chain")
+	}
+
 }
 
-func (dao *ConfigDao) SaveLastProcessedEthereumBlock(block uint64) error {
+func (dao *ConfigDao) SaveLastProcessedBlock(chain types.Chain, block uint64) error {
 	// update database
+	var key string
+	switch chain {
+	case types.ChainEthereum:
+		key = ethereumLastBlockKey
+	case types.ChainBitcoin:
+		key = bitcoinLastBlockKey
+	default:
+		return errors.New("Invalid chain")
+	}
 
-	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"key": ethereumLastBlockKey}, bson.M{
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"key": key}, bson.M{
 		"$set": bson.M{
 			"value": block,
 		},
@@ -138,5 +159,9 @@ func (dao *ConfigDao) Drop() {
 // ResetBlockCounters changes last processed bitcoin and ethereum block to default value.
 // Used in stress tests.
 func (dao *ConfigDao) ResetBlockCounters() error {
-	return dao.SaveLastProcessedEthereumBlock(defaultBlockIndex)
+	err := dao.SaveLastProcessedBlock(types.ChainEthereum, defaultBlockIndex)
+	if err != nil {
+		return err
+	}
+	return dao.SaveLastProcessedBlock(types.ChainBitcoin, defaultBlockIndex)
 }

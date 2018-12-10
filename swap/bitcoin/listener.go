@@ -7,7 +7,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/stellar/go/support/errors"
+	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/types"
 )
 
 func (l *Listener) Start() error {
@@ -30,7 +31,7 @@ func (l *Listener) Start() error {
 		return errors.New("Invalid genesis hash")
 	}
 
-	blockNumber, err := l.Storage.GetBitcoinBlockToProcess()
+	blockNumber, err := l.Storage.GetBlockToProcess(types.ChainBitcoin)
 	if err != nil {
 		err = errors.Wrap(err, "Error getting bitcoin block to process from DB")
 		logger.Error(err)
@@ -93,7 +94,7 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 		}
 
 		// Persist block number
-		err = l.Storage.SaveLastProcessedBitcoinBlock(blockNumber)
+		err = l.Storage.SaveLastProcessedBlock(types.ChainBitcoin, blockNumber)
 		if err != nil {
 			logger.Errorf("Error saving last processed block, err: %v", err)
 			time.Sleep(time.Second)

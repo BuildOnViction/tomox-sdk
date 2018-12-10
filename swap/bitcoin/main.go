@@ -7,6 +7,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/swap/storage"
 	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tyler-smith/go-bip32"
 )
@@ -22,15 +23,15 @@ var (
 
 // Listener listens for transactions using bitcoin-core RPC. It calls TransactionHandler for each new
 // transactions. It will reprocess the block if TransactionHandler returns error. It will
-// start from the block number returned from Storage.GetBitcoinBlockToProcess or the latest block
+// start from the block number returned from Storage.GetBlockToProcess("bitcoin") or the latest block
 // if it returned 0. Transactions can be processed more than once, it's TransactionHandler
 // responsibility to ignore duplicates.
 // Listener tracks only P2PKH payments.
 // You can run multiple Listeners if Storage is implemented correctly.
 type Listener struct {
 	Enabled              bool
-	Client               Client  `inject:""`
-	Storage              Storage `inject:""`
+	Client               Client          `inject:""`
+	Storage              storage.Storage `inject:""`
 	TransactionHandler   TransactionHandler
 	Testnet              bool
 	ConfirmedBlockNumber uint64
@@ -41,17 +42,6 @@ type Client interface {
 	GetBlockCount() (int64, error)
 	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
 	GetBlock(blockHash *chainhash.Hash) (*wire.MsgBlock, error)
-}
-
-// Storage is an interface that must be implemented by an object using
-// persistent storage.
-type Storage interface {
-	// GetBitcoinBlockToProcess gets the number of Bitcoin block to process. `0` means the
-	// processing should start from the current block.
-	GetBitcoinBlockToProcess() (uint64, error)
-	// SaveLastProcessedBitcoinBlock should update the number of the last processed Bitcoin
-	// block. It should only update the block if block > current block in atomic transaction.
-	SaveLastProcessedBitcoinBlock(block uint64) error
 }
 
 type TransactionHandler func(transaction Transaction) error
