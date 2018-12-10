@@ -55,6 +55,7 @@ func NewEngine(cfg *config.Config) *Engine {
 		// config ethereum listener
 		ethereumListener.Enabled = true
 		ethereumListener.NetworkID = cfg.Ethereum.NetworkID
+		ethereumListener.ConfirmedBlockNumber = cfg.Ethereum.ConfirmedBlockNumber
 		ethereumListener.Client = ethereumClient
 
 		engine.minimumValueEth = cfg.Ethereum.MinimumValueEth

@@ -6,6 +6,7 @@ deposit:
     network_id: 8888
     rpc_server: localhost:8545
     token_price: 1
+    confirmed_block_number: 30
   tomochain:
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A

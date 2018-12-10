@@ -68,9 +68,11 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 			// stop listener
 			break
 		}
+		blockNumberAhead := blockNumber + l.ConfirmedBlockNumber
+
 		block, err := l.getBlock(blockNumber)
 		if err != nil {
-			logger.Errorf("Error getting block, blockNumber: %d", blockNumber)
+			logger.Errorf("Error getting block, blockNumber: %d", blockNumberAhead)
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -101,6 +103,9 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
+
+		// now process the current block after number of block confirmation
+		block, err = l.getBlock(blockNumber)
 
 		err = l.processBlock(block)
 		if err != nil {
@@ -146,6 +151,12 @@ func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
 }
 
 func (l *Listener) processBlock(block *types.Block) error {
+
+	// empty block
+	if block == nil {
+		return errors.New("Block is not found")
+	}
+
 	transactions := block.Transactions()
 
 	blockTime := time.Unix(block.Time().Int64(), 0)

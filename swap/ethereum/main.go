@@ -28,11 +28,12 @@ var (
 // Listener ignores contract creation transactions.
 // Listener requires geth 1.7.0.
 type Listener struct {
-	Enabled            bool
-	Client             Client  `inject:""`
-	Storage            Storage `inject:""`
-	NetworkID          string
-	TransactionHandler TransactionHandler
+	Enabled              bool
+	Client               Client  `inject:""`
+	Storage              Storage `inject:""`
+	NetworkID            string
+	ConfirmedBlockNumber uint64
+	TransactionHandler   TransactionHandler
 }
 
 type Client interface {

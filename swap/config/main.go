@@ -18,6 +18,9 @@ type EthereumConfig struct {
 	TokenPrice string `mapstructure:"token_price"`
 	// Host only
 	RpcServer string `mapstructure:"rpc_server"`
+
+	// Block number to confirm
+	ConfirmedBlockNumber uint64 `mapstructure:"confirmed_block_number"`
 }
 
 type TomochainConfig struct {

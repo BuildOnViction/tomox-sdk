@@ -3,6 +3,7 @@ package tomochain
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
+	"strconv"
 
 	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/types"
@@ -75,8 +76,8 @@ func (ac *AccountConfigurator) removeTemporarySigner(chain types.Chain, destinat
 // buildUnlockAccountTransaction creates and returns unlock account transaction.
 func (ac *AccountConfigurator) buildUnlockAccountTransaction(source string) (*types.AssociationTransaction, error) {
 	// Remove signer, ac.LockUnixTimestamp
-
-	return ac.buildTransaction(source, ac.signerPrivateKey, types.RemoveSigner)
+	// do not submit and wait for MinTime: LockUnixTimestamp
+	return ac.buildTransaction(source, ac.signerPrivateKey, types.RemoveSigner, strconv.FormatUint(ac.LockUnixTimestamp, 10))
 }
 
 // this will create hex data of rlp encode data
