@@ -109,9 +109,11 @@ func NewRouter(
 	walletService := services.NewWalletService(walletDao)
 
 	// txservice for deposit
+	// wallet := &types.NewWalletFromPrivateKey(app.Config.Deposit.Tomochain.SignerPrivateKey)
+	// we already have them so no need to re-calculate
 	wallet := &types.Wallet{
-		Address:    app.Config.Deposit.SignerPublicKey(),
-		PrivateKey: app.Config.Deposit.SignerPrivateKey(),
+		Address:    app.Config.Deposit.Tomochain.GetPublicKey(),
+		PrivateKey: app.Config.Deposit.Tomochain.GetPrivateKey(),
 	}
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)

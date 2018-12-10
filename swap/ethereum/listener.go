@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tomochain/backend-matching-engine/errors"
-	demo "github.com/tomochain/orderbook/common"
 )
 
 const (
@@ -16,14 +15,14 @@ const (
 	timeout = 15
 )
 
-func (l *Listener) Start(rpcServer string) error {
+func (l *Listener) Start() error {
 
-	demo.LogInfo("EthereumListener starting")
+	logger.Info("EthereumListener starting")
 
 	blockNumber, err := l.Storage.GetEthereumBlockToProcess()
 	if err != nil {
 		err = errors.Wrap(err, "Error getting ethereum block to process from DB")
-		demo.LogError(err.Error())
+		logger.Error(err)
 		return err
 	}
 
@@ -33,7 +32,7 @@ func (l *Listener) Start(rpcServer string) error {
 	id, err := l.Client.NetworkID(ctx)
 	if err != nil {
 		err = errors.Wrap(err, "Error getting ethereum network ID")
-		demo.LogError(err.Error())
+		logger.Error(err)
 		return err
 	}
 
@@ -68,9 +67,11 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 			// stop listener
 			break
 		}
+
+		// process next amount of confirmed blocks to make sure
 		blockNumberAhead := blockNumber + l.ConfirmedBlockNumber
 
-		block, err := l.getBlock(blockNumber)
+		block, err := l.getBlock(blockNumberAhead)
 		if err != nil {
 			logger.Errorf("Error getting block, blockNumber: %d", blockNumberAhead)
 			time.Sleep(1 * time.Second)

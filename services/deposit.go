@@ -12,7 +12,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
 	"github.com/tomochain/backend-matching-engine/swap"
-	swapEthereum "github.com/tomochain/backend-matching-engine/swap/ethereum"
+	swapConfig "github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/utils/math"
 	"gopkg.in/mgo.v2/bson"
@@ -72,11 +72,11 @@ func (s *DepositService) GenerateAddress(chain types.Chain) (common.Address, uin
 
 	err := s.configDao.IncrementAddressIndex(chain)
 	if err != nil {
-		return swapEthereum.EmptyAddress, 0, err
+		return swapConfig.EmptyAddress, 0, err
 	}
 	index, err := s.configDao.GetAddressIndex(chain)
 	if err != nil {
-		return swapEthereum.EmptyAddress, 0, err
+		return swapConfig.EmptyAddress, 0, err
 	}
 	logger.Infof("Current index: %d", index)
 	address, err := s.swapEngine.EthereumAddressGenerator().Generate(index)

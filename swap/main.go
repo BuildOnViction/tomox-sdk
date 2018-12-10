@@ -8,11 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/labstack/gommon/log"
 	"github.com/tomochain/backend-matching-engine/errors"
 	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/swap/bitcoin"
 	"github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/swap/queue"
@@ -27,26 +30,36 @@ var logger = utils.EngineLogger
 const ProtocolVersion int = 2
 
 type Engine struct {
-	Config                       *config.Config                 `inject:""`
-	ethereumListener             *ethereum.Listener             `inject:""`
-	ethereumAddressGenerator     *ethereum.AddressGenerator     `inject:""`
+	Config *config.Config `inject:""`
+
+	bitcoinListener         *bitcoin.Listener         `inject:""`
+	bitcoinAddressGenerator *bitcoin.AddressGenerator `inject:""`
+
+	ethereumListener         *ethereum.Listener         `inject:""`
+	ethereumAddressGenerator *ethereum.AddressGenerator `inject:""`
+
 	tomochainAccountConfigurator *tomochain.AccountConfigurator `inject:""`
 	transactionsQueue            queue.Queue                    `inject:""`
 
 	minimumValueEth string
-	signerPublicKey common.Address
+	minimumValueBtc string
 
+	// decimals in bitcoin is small
 	minimumValueSat int64
 	minimumValueWei *big.Int
+
+	signerPublicKey common.Address
 }
 
-func NewEngine(cfg *config.Config) *Engine {
-	engine := &Engine{
-		signerPublicKey: cfg.SignerPublicKey(),
-	}
-	if cfg.Ethereum != nil {
+func (engine *Engine) configEthereum() {
+	if engine.Config.Ethereum != nil {
+		if engine.Config.Ethereum.MasterPublicKey == "" {
+			logger.Error("Error: Ethereum master public key is not set")
+			return
+		}
+
 		ethereumListener := &ethereum.Listener{}
-		ethereumClient, err := ethclient.Dial(fmt.Sprintf("http://%s", cfg.Ethereum.RpcServer))
+		ethereumClient, err := ethclient.Dial(fmt.Sprintf("http://%s", engine.Config.Ethereum.RpcServer))
 		if err != nil {
 			logger.Error("Error connecting to geth")
 			os.Exit(-1)
@@ -54,13 +67,13 @@ func NewEngine(cfg *config.Config) *Engine {
 
 		// config ethereum listener
 		ethereumListener.Enabled = true
-		ethereumListener.NetworkID = cfg.Ethereum.NetworkID
-		ethereumListener.ConfirmedBlockNumber = cfg.Ethereum.ConfirmedBlockNumber
+		ethereumListener.NetworkID = engine.Config.Ethereum.NetworkID
+		ethereumListener.ConfirmedBlockNumber = engine.Config.Ethereum.ConfirmedBlockNumber
 		ethereumListener.Client = ethereumClient
 
-		engine.minimumValueEth = cfg.Ethereum.MinimumValueEth
+		engine.minimumValueEth = engine.Config.Ethereum.MinimumValueEth
 
-		ethereumAddressGenerator, err := ethereum.NewAddressGenerator(cfg.Ethereum.MasterPublicKey)
+		ethereumAddressGenerator, err := ethereum.NewAddressGenerator(engine.Config.Ethereum.MasterPublicKey)
 		if err != nil {
 			log.Error(err)
 			os.Exit(-1)
@@ -70,23 +83,93 @@ func NewEngine(cfg *config.Config) *Engine {
 		engine.ethereumListener = ethereumListener
 	}
 
-	if cfg.Tomochain != nil {
+}
 
-		tomochainAccountConfigurator := tomochain.NewAccountConfigurator(cfg)
+func (engine *Engine) configBitcoin() {
+	if engine.Config.Bitcoin != nil {
+		if engine.Config.Bitcoin.MasterPublicKey == "" {
+			logger.Error("Error: Bitcoin master public key is not set")
+			return
+		}
+
+		bitcoinListener := &bitcoin.Listener{}
+		connConfig := &rpcclient.ConnConfig{
+			Host:         engine.Config.Bitcoin.RpcServer,
+			User:         engine.Config.Bitcoin.RpcUser,
+			Pass:         engine.Config.Bitcoin.RpcPass,
+			HTTPPostMode: true,
+			DisableTLS:   true,
+		}
+		// do not receive notifications
+		bitcoinClient, err := rpcclient.New(connConfig, nil)
+		if err != nil {
+			logger.Error("Error connecting to bitcoin-core")
+			os.Exit(-1)
+		}
+
+		// config bitcoin listener
+		bitcoinListener.Enabled = true
+		bitcoinListener.Testnet = engine.Config.Bitcoin.Testnet
+		bitcoinListener.ConfirmedBlockNumber = engine.Config.Bitcoin.ConfirmedBlockNumber
+		bitcoinListener.Client = bitcoinClient
+
+		engine.minimumValueBtc = engine.Config.Bitcoin.MinimumValueBtc
+
+		var chainParams *chaincfg.Params
+
+		if bitcoinListener.Testnet {
+			chainParams = &chaincfg.TestNet3Params
+		} else {
+			chainParams = &chaincfg.MainNetParams
+		}
+
+		bitcoinAddressGenerator, err := bitcoin.NewAddressGenerator(
+			engine.Config.Bitcoin.MasterPublicKey, chainParams)
+		if err != nil {
+			log.Error(err)
+			os.Exit(-1)
+		}
+
+		engine.bitcoinAddressGenerator = bitcoinAddressGenerator
+		engine.bitcoinListener = bitcoinListener
+
+	}
+}
+
+func (engine *Engine) configTomochain() {
+	if engine.Config.Tomochain != nil {
+		// get signer public key
+		engine.signerPublicKey = engine.Config.Tomochain.GetPublicKey()
+		// tomochain account configurator
+		tomochainAccountConfigurator := tomochain.NewAccountConfigurator(engine.Config.Tomochain)
 		tomochainAccountConfigurator.Enabled = true
 
-		if cfg.Tomochain.StartingBalance == "" {
+		if engine.Config.Tomochain.StartingBalance == "" {
 			tomochainAccountConfigurator.StartingBalance = "100.00"
 		}
 
-		if cfg.Ethereum != nil {
-			tomochainAccountConfigurator.TokenPriceETH = cfg.Ethereum.TokenPrice
+		if engine.Config.Ethereum != nil {
+			tomochainAccountConfigurator.TokenPriceETH = engine.Config.Ethereum.TokenPrice
+		}
+
+		if engine.Config.Bitcoin != nil {
+			tomochainAccountConfigurator.TokenPriceBTC = engine.Config.Bitcoin.TokenPrice
 		}
 
 		engine.tomochainAccountConfigurator = tomochainAccountConfigurator
 	}
+}
 
-	engine.Config = cfg
+func NewEngine(cfg *config.Config) *Engine {
+	engine := &Engine{
+		Config: cfg,
+	}
+
+	// config blockchains
+	engine.configEthereum()
+	engine.configBitcoin()
+	engine.configEthereum()
+
 	return engine
 }
 
@@ -102,7 +185,14 @@ func (engine *Engine) SetQueue(queue queue.Queue) {
 
 func (engine *Engine) SetDelegate(handler interfaces.SwapEngineHandler) {
 	// delegate some handlers
-	engine.ethereumListener.TransactionHandler = handler.OnNewEthereumTransaction
+	if engine.ethereumListener != nil && handler.OnNewEthereumTransaction != nil {
+		engine.ethereumListener.TransactionHandler = handler.OnNewEthereumTransaction
+	}
+
+	if engine.bitcoinListener != nil && handler.OnNewBitcoinTransaction != nil {
+		engine.bitcoinListener.TransactionHandler = handler.OnNewBitcoinTransaction
+	}
+
 	engine.tomochainAccountConfigurator.OnSubmitTransaction = handler.OnSubmitTransaction
 	engine.tomochainAccountConfigurator.OnAccountCreated = handler.OnTomochainAccountCreated
 	engine.tomochainAccountConfigurator.OnExchanged = handler.OnExchanged
@@ -112,19 +202,43 @@ func (engine *Engine) SetDelegate(handler interfaces.SwapEngineHandler) {
 
 func (engine *Engine) Start() error {
 
+	if !engine.bitcoinListener.Enabled && !engine.ethereumListener.Enabled {
+		return errors.New("At least one listener (BitcoinListener or EthereumListener) must be enabled")
+	}
+
 	var err error
-	engine.minimumValueWei, err = ethereum.EthToWei(engine.minimumValueEth)
-	if err != nil {
-		return errors.Wrap(err, "Invalid minimum accepted Ethereum transaction value")
+
+	if engine.ethereumListener.Enabled {
+		engine.minimumValueWei, err = ethereum.EthToWei(engine.minimumValueEth)
+		if err != nil {
+			return errors.Wrapf(err, "Invalid minimum accepted Ethereum transaction value: %s", engine.minimumValueEth)
+		}
+
+		if engine.minimumValueWei.Cmp(new(big.Int)) == 0 {
+			return errors.New("Minimum accepted Ethereum transaction value must be larger than 0")
+		}
+
+		err = engine.ethereumListener.Start()
+		if err != nil {
+			return errors.Wrap(err, "Error starting EthereumListener")
+		}
 	}
 
-	if engine.minimumValueWei.Cmp(new(big.Int)) == 0 {
-		return errors.New("Minimum accepted Ethereum transaction value must be larger than 0")
-	}
+	if engine.bitcoinListener.Enabled {
+		engine.minimumValueSat, err = bitcoin.BtcToSat(engine.minimumValueBtc)
 
-	err = engine.ethereumListener.Start(engine.Config.Ethereum.RpcServer)
-	if err != nil {
-		return errors.Wrap(err, "Error starting EthereumListener")
+		if err != nil {
+			return errors.Wrapf(err, "Invalid minimum accepted Bitcoin transaction value: %s"+engine.minimumValueBtc)
+		}
+
+		if engine.minimumValueSat == 0 {
+			return errors.New("Minimum accepted Bitcoin transaction value must be larger than 0")
+		}
+
+		err = engine.bitcoinListener.Start()
+		if err != nil {
+			return errors.Wrap(err, "Error starting BitcoinListener")
+		}
 	}
 
 	err = engine.tomochainAccountConfigurator.Start()
@@ -150,12 +264,16 @@ func (engine *Engine) TomochainAccountConfigurator() *tomochain.AccountConfigura
 	return engine.tomochainAccountConfigurator
 }
 
+func (engine *Engine) SignerPublicKey() common.Address {
+	return engine.signerPublicKey
+}
+
 func (engine *Engine) MinimumValueEth() string {
 	return engine.minimumValueEth
 }
 
-func (engine *Engine) SignerPublicKey() common.Address {
-	return engine.signerPublicKey
+func (engine *Engine) MinimumValueBtc() string {
+	return engine.minimumValueBtc
 }
 
 func (engine *Engine) MinimumValueSat() int64 {

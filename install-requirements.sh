@@ -15,6 +15,12 @@ go get github.com/gorilla/mux
 go get github.com/labstack/gommon/log
 go get github.com/pkg/errors
 
+# bitcoin
+go get github.com/btcsuite/btcd
+go get github.com/btcsuite/btcutil
+go get github.com/btcsuite/btclog
+go get github.com/btcsuite/websocket
+go get github.com/btcsuite/go-socks
 
 # testing
 go get github.com/go-test/deep

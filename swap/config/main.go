@@ -5,8 +5,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tomochain/backend-matching-engine/swap/ethereum"
 )
+
+const (
+	TomoAmountPrecision = 7
+)
+
+var EmptyAddress = common.HexToAddress("0x0")
 
 type EthereumConfig struct {
 	NetworkID       string `mapstructure:"network_id"`
@@ -21,6 +26,25 @@ type EthereumConfig struct {
 
 	// Block number to confirm
 	ConfirmedBlockNumber uint64 `mapstructure:"confirmed_block_number"`
+}
+
+type BitcoinConfig struct {
+	MasterPublicKey string `mapstructure:"master_public_key"`
+	// Minimum value of transaction accepted by Bifrost in BTC.
+	// Everything below will be ignored.
+	MinimumValueBtc string `mapstructure:"minimum_value_btc"`
+	// TokenPrice is a price of one token in BTC
+	TokenPrice string `mapstructure:"token_price"`
+	// Host only
+	RpcServer string `mapstructure:"rpc_server"`
+	RpcUser   string `mapstructure:"rpc_user"`
+	RpcPass   string `mapstructure:"rpc_pass"`
+
+	// Block number to confirm
+	ConfirmedBlockNumber uint64 `mapstructure:"confirmed_block_number"`
+
+	// Is testnet or mainnet
+	Testnet bool `mapstructure:"testnet"`
 }
 
 type TomochainConfig struct {
@@ -46,34 +70,35 @@ type TomochainConfig struct {
 	signerPrivateKey *ecdsa.PrivateKey
 }
 
-type Config struct {
-	Ethereum  *EthereumConfig  `mapstructure:"ethereum"`
-	Tomochain *TomochainConfig `mapstructure:"tomochain"`
-}
-
-func (c *Config) SignerPrivateKey() *ecdsa.PrivateKey {
-	if c.Tomochain.signerPrivateKey == nil {
+func (c *TomochainConfig) GetPrivateKey() *ecdsa.PrivateKey {
+	if c.signerPrivateKey == nil {
 		// from private key to sign smart contract
 		// may contain 0x must use FromHex instead of HexString to bytes directly
-		keyBytes := common.FromHex(c.Tomochain.SignerPrivateKey)
-		c.Tomochain.signerPrivateKey, _ = crypto.ToECDSA(keyBytes)
+		keyBytes := common.FromHex(c.SignerPrivateKey)
+		c.signerPrivateKey, _ = crypto.ToECDSA(keyBytes)
 
 		// fmt.Printf("address key:%s, err: %v", privkey, err)
 
 	}
 
-	return c.Tomochain.signerPrivateKey
+	return c.signerPrivateKey
 }
 
-func (c *Config) SignerPublicKey() common.Address {
-	if c.Tomochain == nil {
-		return ethereum.EmptyAddress
+func (c *TomochainConfig) GetPublicKey() common.Address {
+	if c == nil {
+		return EmptyAddress
 	}
-	privkey := c.SignerPrivateKey()
+	privkey := c.GetPrivateKey()
 	if privkey == nil {
-		return ethereum.EmptyAddress
+		return EmptyAddress
 	}
 
 	address := crypto.PubkeyToAddress(privkey.PublicKey)
 	return address
+}
+
+type Config struct {
+	Ethereum  *EthereumConfig  `mapstructure:"ethereum"`
+	Bitcoin   *BitcoinConfig   `mapstructure:"bitcoin"`
+	Tomochain *TomochainConfig `mapstructure:"tomochain"`
 }

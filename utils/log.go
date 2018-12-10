@@ -9,8 +9,16 @@ import (
 	logging "github.com/op/go-logging"
 )
 
+// TODO: add log prefix to params
+const (
+	LogPrefix = "tomochain"
+)
+
 var Logger = NewLogger("main", "./logs/main.log")
 var EngineLogger = NewLogger("engine", "./logs/engine.log")
+var EthereumListenerLogger = NewLogger("ethereum", "./logs/ethereum.log")
+var BitcoinListenerLogger = NewLogger("bitcoin", "./logs/bitcoin.log")
+var EthereumLogger = NewLogger("engine", "./logs/engine.log")
 var APILogger = NewLogger("api", "./logs/api.log")
 var RabbitLogger = NewLogger("rabbitmq", "./logs/rabbit.log")
 var TerminalLogger = NewColoredLogger()
@@ -26,7 +34,7 @@ func NewStandardOutputLogger() *logging.Logger {
 	logDir := path.Join(path.Dir(fileName), "../logs/")
 	mainLogFile := path.Join(path.Dir(fileName), "../logs/main.log")
 
-	logger, err := logging.GetLogger("api")
+	logger, err := logging.GetLogger("main")
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +53,7 @@ func NewStandardOutputLogger() *logging.Logger {
 	}
 
 	writer := io.MultiWriter(os.Stdout, mainLog)
-	backend := logging.NewLogBackend(writer, "", 0)
+	backend := logging.NewLogBackend(writer, LogPrefix, 0)
 
 	formattedBackend := logging.NewBackendFormatter(backend, format)
 	leveledBackend := logging.AddModuleLevel(formattedBackend)
@@ -60,7 +68,7 @@ func NewLogger(module string, logFile string) *logging.Logger {
 	mainLogFile := path.Join(path.Dir(fileName), "../logs/main.log")
 	logFile = path.Join(path.Dir(fileName), "../", logFile)
 
-	logger, err := logging.GetLogger("api")
+	logger, err := logging.GetLogger(module)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +92,7 @@ func NewLogger(module string, logFile string) *logging.Logger {
 	}
 
 	writer := io.MultiWriter(os.Stdout, mainLog, log)
-	backend := logging.NewLogBackend(writer, "", 0)
+	backend := logging.NewLogBackend(writer, LogPrefix, 0)
 
 	formattedBackend := logging.NewBackendFormatter(backend, format)
 	leveledBackend := logging.AddModuleLevel(formattedBackend)
@@ -100,7 +108,7 @@ func NewFileLogger(module string, logFile string) *logging.Logger {
 	logDir := path.Join(path.Dir(fileName), "../logs/")
 	logFile = path.Join(path.Dir(fileName), "../", logFile)
 
-	logger, err := logging.GetLogger("api")
+	logger, err := logging.GetLogger(module)
 	if err != nil {
 		panic(err)
 	}
@@ -119,7 +127,7 @@ func NewFileLogger(module string, logFile string) *logging.Logger {
 	}
 
 	writer := io.MultiWriter(log)
-	backend := logging.NewLogBackend(writer, "", 0)
+	backend := logging.NewLogBackend(writer, LogPrefix, 0)
 	formattedBackend := logging.NewBackendFormatter(backend, format)
 	leveledBackend := logging.AddModuleLevel(formattedBackend)
 
@@ -146,7 +154,7 @@ func NewColoredLogger() *logging.Logger {
 	)
 
 	writer := io.MultiWriter(os.Stdout)
-	backend := logging.NewLogBackend(writer, "", 0)
+	backend := logging.NewLogBackend(writer, LogPrefix, 0)
 
 	formattedBackend := logging.NewBackendFormatter(backend, format)
 	leveledBackend := logging.AddModuleLevel(formattedBackend)

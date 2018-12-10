@@ -51,14 +51,14 @@ type AccountConfigurator struct {
 	accountStatusMutex sync.Mutex
 }
 
-func NewAccountConfigurator(cfg *config.Config) *AccountConfigurator {
+func NewAccountConfigurator(c *config.TomochainConfig) *AccountConfigurator {
 	return &AccountConfigurator{
-		IssuerPublicKey:       cfg.Tomochain.IssuerPublicKey,
-		DistributionPublicKey: cfg.Tomochain.DistributionPublicKey,
-		signerPublicKey:       cfg.SignerPublicKey(),
-		signerPrivateKey:      cfg.SignerPrivateKey(),
-		TokenAssetCode:        cfg.Tomochain.TokenAssetCode,
-		StartingBalance:       cfg.Tomochain.StartingBalance,
-		LockUnixTimestamp:     cfg.Tomochain.LockUnixTimestamp,
+		IssuerPublicKey:       c.IssuerPublicKey,
+		DistributionPublicKey: c.DistributionPublicKey,
+		signerPublicKey:       c.GetPublicKey(),
+		signerPrivateKey:      c.GetPrivateKey(),
+		TokenAssetCode:        c.TokenAssetCode,
+		StartingBalance:       c.StartingBalance,
+		LockUnixTimestamp:     c.LockUnixTimestamp,
 	}
 }

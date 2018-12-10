@@ -10,6 +10,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
 	"github.com/tomochain/backend-matching-engine/rabbitmq"
+	swapBitcoin "github.com/tomochain/backend-matching-engine/swap/bitcoin"
 	swapEthereum "github.com/tomochain/backend-matching-engine/swap/ethereum"
 	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/tomochain/backend-matching-engine/ws"
@@ -298,6 +299,7 @@ type DepositService interface {
 
 type SwapEngineHandler interface {
 	OnNewEthereumTransaction(transaction swapEthereum.Transaction) error
+	OnNewBitcoinTransaction(transaction swapBitcoin.Transaction) error
 	OnSubmitTransaction(chain types.Chain, destination string, transaction *types.AssociationTransaction) error
 	OnTomochainAccountCreated(chain types.Chain, destination string)
 	OnExchanged(chain types.Chain, destination string)

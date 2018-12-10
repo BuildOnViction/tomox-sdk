@@ -5,10 +5,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/swap/config"
 	"github.com/tyler-smith/go-bip32"
 )
-
-var EmptyAddress = common.HexToAddress("0x0")
 
 // NewAddressGenerator : generate new address from master key : cfg.Ethereum.MasterPublicKey
 func NewAddressGenerator(masterPublicKeyString string) (*AddressGenerator, error) {
@@ -27,12 +26,12 @@ func NewAddressGenerator(masterPublicKeyString string) (*AddressGenerator, error
 // common.Address is pointer already, it is slice
 func (g *AddressGenerator) Generate(index uint64) (common.Address, error) {
 	if g.masterPublicKey == nil {
-		return EmptyAddress, errors.New("No master public key set")
+		return config.EmptyAddress, errors.New("No master public key set")
 	}
 
 	accountKey, err := g.masterPublicKey.NewChildKey(uint32(index))
 	if err != nil {
-		return EmptyAddress, errors.Wrap(err, "Error creating new child key")
+		return config.EmptyAddress, errors.Wrap(err, "Error creating new child key")
 	}
 
 	x, y := secp256k1.DecompressPubkey(accountKey.Key)
