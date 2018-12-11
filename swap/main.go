@@ -169,7 +169,8 @@ func NewEngine(cfg *config.Config) *Engine {
 	// config blockchains
 	engine.configEthereum()
 	engine.configBitcoin()
-	engine.configEthereum()
+
+	engine.configTomochain()
 
 	return engine
 }
@@ -211,13 +212,16 @@ func (engine *Engine) SetDelegate(handler interfaces.SwapEngineHandler) {
 
 func (engine *Engine) Start() error {
 
-	if !engine.bitcoinListener.Enabled && !engine.ethereumListener.Enabled {
+	ethereumEnabled := engine.ethereumListener != nil && engine.ethereumListener.Enabled
+	bitcoinEnabled := engine.bitcoinListener != nil && engine.bitcoinListener.Enabled
+
+	if !ethereumEnabled && !bitcoinEnabled {
 		return errors.New("At least one listener (BitcoinListener or EthereumListener) must be enabled")
 	}
 
 	var err error
 
-	if engine.ethereumListener.Enabled {
+	if ethereumEnabled {
 		engine.minimumValueWei, err = ethereum.EthToWei(engine.minimumValueEth)
 		if err != nil {
 			return errors.Wrapf(err, "Invalid minimum accepted Ethereum transaction value: %s", engine.minimumValueEth)
@@ -233,7 +237,7 @@ func (engine *Engine) Start() error {
 		}
 	}
 
-	if engine.bitcoinListener.Enabled {
+	if bitcoinEnabled {
 		engine.minimumValueSat, err = bitcoin.BtcToSat(engine.minimumValueBtc)
 
 		if err != nil {
