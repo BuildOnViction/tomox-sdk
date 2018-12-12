@@ -118,7 +118,10 @@ func (t *Trade) Validate() error {
 		return errors.New("Trade 'amount' parameter should be positive")
 	}
 
-	//TODO add validations for hashes and addresses
+	// validations for hash
+	if t.Hash != t.ComputeHash() {
+		return errors.New("Trade 'hash' is incorrect")
+	}
 	return nil
 }
 
@@ -313,6 +316,18 @@ func (t *Trade) ComputeHash() common.Hash {
 	sha.Write(t.MakerOrderHash.Bytes())
 	sha.Write(t.TakerOrderHash.Bytes())
 	return common.BytesToHash(sha.Sum(nil))
+}
+
+func (t *Trade) Sign(w *Wallet) error {
+	hash := t.ComputeHash()
+	sig, err := w.SignHash(hash)
+	if err != nil {
+		return err
+	}
+
+	t.Hash = hash
+	t.Signature = sig
+	return nil
 }
 
 func (t *Trade) Pair() (*Pair, error) {

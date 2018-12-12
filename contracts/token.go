@@ -81,7 +81,7 @@ func (t *Token) Transfer(receiver common.Address, amount *big.Int) (*eth.Transac
 
 	tx, err := t.Interface.Transfer(opts, receiver, amount)
 	if err != nil {
-		return nil, errors.New("Error making Transfer() transaction")
+		return nil, errors.Errorf("Error making Transfer() transaction: %v", err)
 	}
 
 	return tx, nil
@@ -92,7 +92,7 @@ func (t *Token) TransferFromCustomWallet(w *types.Wallet, receiver common.Addres
 
 	tx, err := t.Interface.Transfer(opts, receiver, amount)
 	if err != nil {
-		return nil, errors.New("Error making Transfer() transaction")
+		return nil, errors.Errorf("Error making Transfer() transaction: %v", err)
 	}
 
 	return tx, nil
@@ -102,7 +102,7 @@ func (t *Token) TransferFrom(sender, receiver common.Address, amount *big.Int) (
 	opts, _ := t.GetTxSendOptions()
 	tx, err := t.Interface.TransferFrom(opts, sender, receiver, amount)
 	if err != nil {
-		return nil, errors.New("Error making TransferFrom() transaction")
+		return nil, errors.Errorf("Error making TransferFrom() transaction: %v", err)
 	}
 
 	fmt.Printf("Transfered %v tokens from %v to %v", amount, sender, receiver)

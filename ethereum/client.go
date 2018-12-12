@@ -20,7 +20,7 @@ func (b *SimulatedClient) PendingBalanceAt(ctx context.Context, acc common.Addre
 	return nil, errors.New("PendingBalanceAt is not implemented on the simulated backend")
 }
 
-func NewSimulatedClient(accs []common.Address) *SimulatedClient {
+func NewSimulatedClientWithGasLimit(accs []common.Address, gasLimit uint64) *SimulatedClient {
 	weiBalance := &big.Int{}
 	ether := big.NewInt(1e18)
 	etherBalance := big.NewInt(1000)
@@ -38,6 +38,11 @@ func NewSimulatedClient(accs []common.Address) *SimulatedClient {
 		}
 	}
 
-	client := backends.NewSimulatedBackend(alloc, 5e6)
+	client := backends.NewSimulatedBackend(alloc, gasLimit)
+
 	return &SimulatedClient{client}
+}
+
+func NewSimulatedClient(accs []common.Address) *SimulatedClient {
+	return NewSimulatedClientWithGasLimit(accs, 5e6)
 }

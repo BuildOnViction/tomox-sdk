@@ -78,7 +78,7 @@ func (e *Exchange) DefaultTxOptions() (*bind.TransactOpts, error) {
 		logger.Error(err)
 		return nil, err
 	}
-
+	// logger.Infof("Public key: %s", crypto.PubkeyToAddress(wallet.PrivateKey.PublicKey).Hex())
 	opts := bind.NewKeyedTransactor(wallet.PrivateKey)
 	return opts, nil
 }
