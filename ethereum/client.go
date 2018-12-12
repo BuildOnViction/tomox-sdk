@@ -22,7 +22,7 @@ func (b *SimulatedClient) PendingBalanceAt(ctx context.Context, acc common.Addre
 func NewSimulatedClient(accs []common.Address) *SimulatedClient {
 	weiBalance := &big.Int{}
 	ether := big.NewInt(1e18)
-	etherBalance := big.NewInt(1000)
+	etherBalance := big.NewInt(1e8)
 
 	alloc := make(core.GenesisAlloc)
 	weiBalance.Mul(etherBalance, ether)

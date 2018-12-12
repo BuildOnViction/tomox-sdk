@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/tomochain/backend-matching-engine/errors"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/tomochain/backend-matching-engine/utils/math"
 )
 
@@ -51,13 +53,27 @@ func (s *ValidatorService) ValidateBalance(o *types.Order) error {
 		return err
 	}
 
-	sellTokenBalance, err := s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken())
+	// sellTokenBalance, err := s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken())
+	var sellTokenBalance *big.Int
+	var sellTokenAllowance *big.Int
+
+	// we implement retries in the case the provider connection fell asleep
+	err = utils.Retry(3, func() error {
+		sellTokenBalance, err = s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken())
+		return err
+	})
+
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	sellTokenAllowance, err := s.ethereumProvider.Allowance(o.UserAddress, exchangeAddress, o.SellToken())
+	// sellTokenAllowance, err := s.ethereumProvider.Allowance(o.UserAddress, exchangeAddress, o.SellToken())
+	err = utils.Retry(3, func() error {
+		sellTokenAllowance, err = s.ethereumProvider.Allowance(o.UserAddress, exchangeAddress, o.SellToken())
+		return err
+	})
+
 	if err != nil {
 		logger.Error(err)
 		return err
