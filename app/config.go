@@ -11,7 +11,10 @@ import (
 
 // Config stores the application-wide configurations
 var Config appConfig
+
 var logger = utils.Logger
+
+// var logger = utils.NoopLogger
 
 type appConfig struct {
 	// the path to the error message file. Defaults to "config/errors.yaml"

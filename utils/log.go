@@ -2,6 +2,7 @@ package utils
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -21,6 +22,8 @@ var BitcoinListenerLogger = NewLogger("bitcoin", "./logs/bitcoin.log")
 var EthereumLogger = NewLogger("engine", "./logs/engine.log")
 var APILogger = NewLogger("api", "./logs/api.log")
 var RabbitLogger = NewLogger("rabbitmq", "./logs/rabbit.log")
+
+var NoopLogger = NewNoopLogger()
 var TerminalLogger = NewColoredLogger()
 
 var StdoutLogger = NewStandardOutputLogger()
@@ -28,6 +31,18 @@ var MainLogger = NewMainLogger()
 var ErrorLogger = NewErrorLogger()
 var WebsocketMessagesLogger = NewFileLogger("websocket", "./logs/websocket.log")
 var OperatorMessagesLogger = NewFileLogger("operator", "./logs/operator.log")
+
+func NewNoopLogger() *logging.Logger {
+	logger, err := logging.GetLogger("noop")
+	if err != nil {
+		panic(err)
+	}
+	noopBackend := logging.NewLogBackend(ioutil.Discard, "", 0)
+	formattedBackend := logging.NewBackendFormatter(noopBackend, logging.DefaultFormatter)
+	leveledBackend := logging.AddModuleLevel(formattedBackend)
+	logger.SetBackend(leveledBackend)
+	return logger
+}
 
 func NewStandardOutputLogger() *logging.Logger {
 	_, fileName, _, _ := runtime.Caller(1)

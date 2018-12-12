@@ -56,7 +56,7 @@ func TestBalanceOf(t *testing.T) {
 		t.Errorf("Could not deploy token: %v", err)
 	}
 
-	simulator := deployer.Client.(*ethereum.SimulatedClient)
+	simulator := deployer.GetSimulator()
 
 	etherBalance, _ := simulator.BalanceAt(context.Background(), wallet.Address, nil)
 	t.Logf("Ether balance is: %s", etherBalance.String())

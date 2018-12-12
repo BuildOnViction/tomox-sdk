@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/backend-matching-engine/utils/math"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
@@ -22,13 +23,19 @@ func (b *SimulatedClient) PendingBalanceAt(ctx context.Context, acc common.Addre
 func NewSimulatedClient(accs []common.Address) *SimulatedClient {
 	weiBalance := &big.Int{}
 	ether := big.NewInt(1e18)
-	etherBalance := big.NewInt(1e8)
+	etherBalance := big.NewInt(1000)
+	firstEtherBalance := big.NewInt(1e8)
 
 	alloc := make(core.GenesisAlloc)
 	weiBalance.Mul(etherBalance, ether)
+	firstWeiBalance := math.Mul(firstEtherBalance, ether)
 
-	for _, a := range accs {
-		(alloc)[a] = core.GenesisAccount{Balance: weiBalance}
+	for index, a := range accs {
+		if index == 0 {
+			alloc[a] = core.GenesisAccount{Balance: firstWeiBalance}
+		} else {
+			alloc[a] = core.GenesisAccount{Balance: weiBalance}
+		}
 	}
 
 	client := backends.NewSimulatedBackend(alloc, 5e6)

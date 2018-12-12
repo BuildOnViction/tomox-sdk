@@ -1,12 +1,14 @@
 package contracts_test
 
 import (
+	"context"
 	"log"
 	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/daos"
 	"github.com/tomochain/backend-matching-engine/ethereum"
 	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/tomochain/backend-matching-engine/types"
@@ -23,6 +25,11 @@ func SetupTest() (*testutils.Deployer, *types.Wallet, common.Address, common.Add
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 	log.SetPrefix("\nLOG: ")
 
+	_, err = daos.InitSession(nil)
+	if err != nil {
+		panic(err)
+	}
+	// wallet := testutils.GetTestWallet()
 	wallet := testutils.GetTestWallet1()
 	maker := testutils.GetTestWallet2()
 	taker := testutils.GetTestWallet3()
@@ -129,6 +136,12 @@ func TestTrade(t *testing.T) {
 		t.Errorf("Could not set operator: %v", err)
 	}
 
+	simulator := deployer.GetSimulator()
+	etherBalance, _ := simulator.BalanceAt(context.Background(), admin.Address, nil)
+	t.Logf("Ether balance is: %s", etherBalance.String())
+
+	return
+
 	//Initially Maker owns 1e18 units of sellToken and Taker owns 1e18 units buyToken
 	sellToken, sellTokenAddr, _, err := deployer.DeployToken(maker.Address, sellAmount)
 	if err != nil {
@@ -140,7 +153,6 @@ func TestTrade(t *testing.T) {
 		t.Errorf("Error deploying token 2: %v", err)
 	}
 
-	simulator := deployer.Client.(*ethereum.SimulatedClient)
 	simulator.Commit()
 
 	exchange.PrintErrors()
