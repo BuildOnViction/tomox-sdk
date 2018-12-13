@@ -128,8 +128,8 @@ func transfer(tokenAddressStr, receiver string, amount int64) error {
 	err := dexApp.LoadConfig(configFile, "")
 
 	fmt.Printf("Private key: %s", dexApp.Config.Deposit.Tomochain.SignerPrivateKey)
-	dexApp.Config.Deposit.SignerPublicKey()
-	privateKey := dexApp.Config.Deposit.SignerPrivateKey()
+	dexApp.Config.Deposit.Tomochain.GetPublicKey()
+	privateKey := dexApp.Config.Deposit.Tomochain.GetPrivateKey()
 	if privateKey == nil {
 		return nil
 	}
