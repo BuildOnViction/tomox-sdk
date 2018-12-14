@@ -1,13 +1,18 @@
 package contracts
 
 import (
+	"context"
 	"log"
 	"math/big"
 	"strconv"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
+	etherTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/trie"
 	"github.com/tomochain/backend-matching-engine/app"
 	"github.com/tomochain/backend-matching-engine/daos"
 	"github.com/tomochain/backend-matching-engine/ethereum"
@@ -298,4 +303,45 @@ func TestTrade(t *testing.T) {
 	if buyTokenMakerBalance.Cmp(amount) != 0 {
 		t.Errorf("Expected Maker balance of buyToken to be equal to %v but got %v instead", amount, buyTokenMakerBalance)
 	}
+}
+
+func TestReadTrie(t *testing.T) {
+	var (
+		key0, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+		key1, _ = crypto.HexToECDSA("8a1f9a8f95be41cd7ccb6168179afb4504aefe388d1e14474d32c45c72ce7b7a")
+		key2, _ = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
+		addr0   = crypto.PubkeyToAddress(key0.PublicKey)
+		addr1   = crypto.PubkeyToAddress(key1.PublicKey)
+		addr2   = crypto.PubkeyToAddress(key2.PublicKey)
+		ctx     = context.Background()
+	)
+
+	simulatedBackend := backends.NewSimulatedBackend(core.GenesisAlloc{
+		addr0: {Balance: big.NewInt(1000000000)},
+		addr1: {Balance: big.NewInt(1000000000)},
+		addr2: {Balance: big.NewInt(1000000000)},
+	}, 10000000)
+
+	database := simulatedBackend.Database()
+
+	triedb := trie.NewDatabase(database)
+
+	tx := etherTypes.NewTransaction(
+		0,
+		addr1,
+		big.NewInt(100),
+		21000,
+		nil,
+		nil,
+	)
+
+	tx, _ = etherTypes.SignTx(tx, etherTypes.HomesteadSigner{}, key0)
+	simulatedBackend.SendTransaction(ctx, tx)
+	simulatedBackend.Commit()
+
+	balance, _ := simulatedBackend.BalanceAt(ctx, addr0, nil)
+
+	t.Logf("Balance of account0: %s", balance.String())
+
+	utils.PrintJSON(triedb.Nodes())
 }
