@@ -4,6 +4,7 @@ const MongoClient = require('mongodb').MongoClient;
 const faker = require('faker');
 const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
 const sleep = require('sleep');
+const moment = require('moment');
 // default quote
 // each pair has 2 orders
 const numberOfOrders = argv.number || 2;
@@ -78,8 +79,8 @@ const seed = async () => {
   while (true) {
     for (let pair of pairs) {
       let trades = [];
-      let start = new Date(2017, 6, 1);
-      let end = new Date(Date.now());
+      let start = moment().subtract(1, 'seconds');
+      let end = moment().add(1, 'seconds');
       let pricingData = generatePricingData(start, end);
 
       for (let i = 0; i < numberOfOrders; i++) {

@@ -101,7 +101,7 @@ const interpolatePrice = (pricingData, timestamp) => {
     : pricingData[0].price;
   let nextPrice = pricingData[nextTimestampIndex]
     ? pricingData[nextTimestampIndex].price
-    : pricingdata[pricingData.length - 1].price;
+    : pricingData[pricingData.length - 1].price;
   let previousTimestamp = pricingData[previousTimestampIndex]
     ? pricingData[previousTimestampIndex].timestamp
     : pricingData[0].timestamp;
