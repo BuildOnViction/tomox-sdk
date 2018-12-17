@@ -25,25 +25,15 @@
       "lockedBalance": "0",
       "symbol": "LOOM"
     },
-    "0x0eF81acfE6B89294D2227B735351061E8aC410f6": {
-      "address": "0x0eF81acfE6B89294D2227B735351061E8aC410f6",
+    "0x327D264B3346Ff43389E3058B5792FBf18d2A58F": {
+      "address": "0x327D264B3346Ff43389E3058B5792FBf18d2A58F",
       "allowance": "10000000000000000000000000000",
       "balance": "10000000000000000000000000000",
       "id": {
-        "$oid": "5b8ba0bf65aeac1346bf7768"
+        "$oid": "5b8ba09da75a9b1320ca4976"
       },
       "lockedBalance": "0",
-      "symbol": "DAI"
-    },
-    "0x2E5Cba4a9dE2eD824a6ed711601c7974Ac66F5a7": {
-      "address": "0x2E5Cba4a9dE2eD824a6ed711601c7974Ac66F5a7",
-      "allowance": "10000000000000000000000000000",
-      "balance": "10000000000000000000000000000",
-      "id": {
-        "$oid": "5b8ba09da75a9b1320ca497a"
-      },
-      "lockedBalance": "0",
-      "symbol": "BAT"
+      "symbol": "ZRX"
     },
     "0x3568cd4CC9e038f74dE3155B8F0F39d2200F5c80": {
       "address": "0x3568cd4CC9e038f74dE3155B8F0F39d2200F5c80",
@@ -95,6 +85,16 @@
       "lockedBalance": "0",
       "symbol": "MKR"
     },
+    "0x50A1a1E3BE83A713e349F9cF7D6d426157Fd0c9E": {
+      "address": "0x50A1a1E3BE83A713e349F9cF7D6d426157Fd0c9E",
+      "allowance": "10000000000000000000000000000",
+      "balance": "10000000000000000000000000000",
+      "id": {
+        "$oid": "5b8ba0bf65aeac1346bf7768"
+      },
+      "lockedBalance": "0",
+      "symbol": "DAI"
+    },
     "0x53DDd545882dec853226dC8255268C7760276695": {
       "address": "0x53DDd545882dec853226dC8255268C7760276695",
       "allowance": "500000000000000000000000",
@@ -105,17 +105,6 @@
       "lockedBalance": "0",
       "pendingBalance": "\u003cnil\u003e",
       "symbol": "WETH"
-    },
-    "0x620C38566BAD7a895cce707F42DCd5eaC1f94861": {
-      "address": "0x620C38566BAD7a895cce707F42DCd5eaC1f94861",
-      "allowance": "1000000000000000000000000",
-      "balance": "10000000000000000000000000000",
-      "id": {
-        "$oid": "5b8ba09da75a9b1320ca4977"
-      },
-      "lockedBalance": "0",
-      "pendingBalance": "\u003cnil\u003e",
-      "symbol": "AE"
     },
     "0x64EA5929AeeE16C6f2200E4Bcc89BD802dFB25fb": {
       "address": "0x64EA5929AeeE16C6f2200E4Bcc89BD802dFB25fb",
@@ -177,16 +166,6 @@
       "lockedBalance": "0",
       "symbol": "LRC"
     },
-    "0xB37e9e3cDAAD5EE365FD464654992F87994cf3f5": {
-      "address": "0xB37e9e3cDAAD5EE365FD464654992F87994cf3f5",
-      "allowance": "10000000000000000000000000000",
-      "balance": "10000000000000000000000000000",
-      "id": {
-        "$oid": "5b8ba09da75a9b1320ca4976"
-      },
-      "lockedBalance": "0",
-      "symbol": "ZRX"
-    },
     "0xB3f8C4d9ADC29BB5305ef589F6f9B0dEB3A150F1": {
       "address": "0xB3f8C4d9ADC29BB5305ef589F6f9B0dEB3A150F1",
       "allowance": "10000000000000000000000000000",
@@ -227,15 +206,26 @@
       "lockedBalance": "0",
       "symbol": "DGX"
     },
-    "0xd645C13C35141d61f273EDc0F546beF48a48001D": {
-      "address": "0xd645C13C35141d61f273EDc0F546beF48a48001D",
+    "0xad1f26248d9d22fbB2315ADf97Cf9FFbAAeDa1f8": {
+      "address": "0xad1f26248d9d22fbB2315ADf97Cf9FFbAAeDa1f8",
       "allowance": "10000000000000000000000000000",
       "balance": "10000000000000000000000000000",
       "id": {
-        "$oid": "5b8ba09da75a9b1320ca4974"
+        "$oid": "5b8ba09da75a9b1320ca497a"
       },
       "lockedBalance": "0",
-      "symbol": "TOMO"
+      "symbol": "BAT"
+    },
+    "0xb18e4f6EB7C2cAaC3F0EbAd06bdF2D207671e872": {
+      "address": "0xb18e4f6EB7C2cAaC3F0EbAd06bdF2D207671e872",
+      "allowance": "1000000000000000000000000",
+      "balance": "10000000000000000000000000000",
+      "id": {
+        "$oid": "5b8ba09da75a9b1320ca4977"
+      },
+      "lockedBalance": "0",
+      "pendingBalance": "\u003cnil\u003e",
+      "symbol": "AE"
     },
     "0xfc3f744ef066F8C4E20E9cF8dF145014228296a8": {
       "address": "0xfc3f744ef066F8C4E20E9cF8dF145014228296a8",
