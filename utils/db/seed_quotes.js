@@ -21,7 +21,7 @@ const {
   baseTokens,
   contractAddresses,
   decimals
-} = require('../../config');
+} = require('./utils/config');
 
 let documents = [];
 let addresses = contractAddresses[networkID];
