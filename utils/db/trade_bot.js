@@ -2,7 +2,6 @@ const argv = require('yargs').argv;
 const utils = require('ethers').utils;
 const MongoClient = require('mongodb').MongoClient;
 const faker = require('faker');
-const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
 const sleep = require('sleep');
 const moment = require('moment');
 // default quote
@@ -11,7 +10,7 @@ const numberOfOrders = argv.number || 2;
 const timeInterval = argv.interval || 5; // 5 seconds
 const quoteTokenSymbol = argv.quote || 'WETH';
 const { generatePricingData, interpolatePrice } = require('./utils/prices');
-const { DB_NAME, addresses } = require('./utils/config');
+const { DB_NAME, addresses, mongoUrl } = require('./utils/config');
 let exchangeAddress = '0xc1F424996039cc5B037dfB073bcd6e6915F0dfab';
 let minAmount = 0.1;
 let maxAmount = 10000;

@@ -5,28 +5,27 @@ const create = async () => {
     mongoUrl,
     { useNewUrlParser: true }
   );
-  console.log('Creating config collection');
+  console.log('Creating tokens collection');
   const db = client.db(DB_NAME);
   try {
-    const response = await db.createCollection('config', {
+    const response = await db.createCollection('tokens', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['key'],
+          required: ['symbol', 'contractAddress', 'decimals'],
           properties: {
-            key: {
+            symbol: {
+              bsonType: 'string',
+              description: 'must be a string and is required'
+            },
+            contractAddress: {
               bsonType: 'string'
             },
-            value: {
-              bsonType: [
-                'int',
-                'long',
-                'string',
-                'array',
-                'bool',
-                'date',
-                'object'
-              ]
+            quote: {
+              bsonType: 'bool'
+            },
+            decimals: {
+              bsonType: 'int'
             },
             createdAt: {
               bsonType: 'date'

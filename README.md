@@ -39,13 +39,9 @@ _If you need to generate genesis block, take a look at [seed-data](./utils/seed-
 # start dockers including mongo, rabbitmq
 yarn start-env
 # generate seeds data
-yarn generate-seeds
-# seed the sample data
 yarn seeds
 # If you need to reset
 yarn restart-env
-# Short cut to reset and seed again:
-yarn reseeds
 # If you need to run mongod outside docker-compose
 mongod --dbpath utils/datadir
 # this will start the server in hot-reload mode

@@ -1,13 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const faker = require('faker');
 const process = require('process');
 const argv = require('yargs').argv;
 const utils = require('ethers').utils;
 const MongoClient = require('mongodb').MongoClient;
-const { getNetworkID } = require('./utils/helpers');
-const { DB_NAME } = require('./utils/config');
-const network = argv.network;
-const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
+const { getNetworkID, queryToken } = require('./utils/helpers');
+const { DB_NAME, mongoUrl, network } = require('./utils/config');
 const networkID = getNetworkID(network);
 
 const truffleBuildPath = path.join(
@@ -33,6 +32,7 @@ const seed = async () => {
       mongoUrl,
       { useNewUrlParser: true }
     );
+    console.log('Seeding tokens');
     db = client.db(DB_NAME);
 
     documents = baseTokens.map(symbol => ({
@@ -40,11 +40,11 @@ const seed = async () => {
       contractAddress: utils.getAddress(addresses[symbol]),
       decimals: decimals[symbol],
       quote: false,
-      createdAt: Date(),
-      updatedAt: Date()
+      createdAt: new Date(faker.fake('{{date.recent}}'))
     }));
 
     response = await db.collection('tokens').insertMany(documents);
+    console.log(response);
     client.close();
   } catch (e) {
     throw new Error(e.message);

@@ -5,34 +5,26 @@ const create = async () => {
     mongoUrl,
     { useNewUrlParser: true }
   );
-  console.log('Creating config collection');
+  console.log('Creating wallets collection');
   const db = client.db(DB_NAME);
   try {
-    const response = await db.createCollection('config', {
+    const response = await db.createCollection('wallets', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['key'],
+          required: ['address', 'privateKey'],
           properties: {
-            key: {
+            address: {
               bsonType: 'string'
             },
-            value: {
-              bsonType: [
-                'int',
-                'long',
-                'string',
-                'array',
-                'bool',
-                'date',
-                'object'
-              ]
+            privateKey: {
+              bsonType: 'string'
             },
-            createdAt: {
-              bsonType: 'date'
+            admin: {
+              bsonType: 'bool'
             },
-            updatedAt: {
-              bsonType: 'date'
+            operator: {
+              bsonType: 'bool'
             }
           }
         }

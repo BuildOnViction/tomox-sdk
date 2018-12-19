@@ -1,26 +1,25 @@
 const { utils } = require('ethers');
 const fs = require('fs');
 const path = require('path');
-
+const argv = require('yargs').argv;
+const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
+const network = argv.network || 'local';
 // __dirname is running folder, __filename is current included file
 const tokenContent = fs
-  .readFileSync(path.resolve(__dirname, '../../seed-data/tokens.bson'))
+  .readFileSync(
+    process.env.TOKEN_ADDRESSES ||
+      path.resolve(
+        __dirname,
+        '../../../../dex-client/src/config/addresses.json'
+      )
+  )
   .toString();
 
-const initMap = { '8888': {} };
-const symbols = [];
-const contractAddresses = tokenContent
-  .split('\n')
-  .filter(line => line.length)
-  .reduce((map, line) => {
-    try {
-      const token = JSON.parse(line);
-      // console.log(token);
-      initMap['8888'][token.symbol] = token.contractAddress;
-      symbols.push(token.symbol);
-    } catch (e) {}
-    return initMap;
-  }, initMap);
+const contractAddresses = JSON.parse(tokenContent);
+// all token symbols but Exchange
+const symbols = Object.keys(contractAddresses['8888']).filter(
+  symbol => symbol !== 'Exchange'
+);
 
 const quoteTokens = ['WETH', 'DAI'];
 const baseTokens = symbols.filter(symbol => !quoteTokens.includes(symbol));
@@ -33,10 +32,6 @@ const makeFees = {
   DAI: utils
     .bigNumberify(10)
     .pow(18)
-    .div(2),
-  USDC: utils
-    .bigNumberify(10)
-    .pow(6)
     .div(2)
 };
 
@@ -48,10 +43,6 @@ const takeFees = {
   DAI: utils
     .bigNumberify(10)
     .pow(18)
-    .div(2),
-  USDC: utils
-    .bigNumberify(10)
-    .pow(6)
     .div(2)
 };
 
@@ -81,5 +72,7 @@ module.exports = {
   takeFees,
   makeFees,
   decimals,
+  mongoUrl,
+  network,
   contractAddresses
 };

@@ -1,11 +1,11 @@
 const MongoClient = require('mongodb').MongoClient;
 const argv = require('yargs').argv;
-const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
 const collection = argv.collection;
-const { DB_NAME } = require('./utils/config');
+const { DB_NAME, mongoUrl } = require('./utils/config');
 let client, db, response;
 
 const drop = async () => {
+  console.log('Dropping ' + collection + ' collections');
   try {
     client = await MongoClient.connect(
       mongoUrl,

@@ -1,8 +1,7 @@
 const argv = require('yargs').argv;
-const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
 const user = argv.user;
 const pwd = argv.password;
-const { DB_NAME } = require('./utils/config');
+const { DB_NAME, mongoUrl } = require('./utils/config');
 const MongoClient = require('mongodb').MongoClient;
 let client, db;
 

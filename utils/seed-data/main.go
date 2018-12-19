@@ -60,9 +60,9 @@ func init() {
 				return batch(
 					filePath,
 					generateConfig,
-					generateTokens,
-					generatePairs,
-					generateAccounts,
+					// generateTokens,
+					// generatePairs,
+					// generateAccounts,
 				)
 			},
 			Flags: []cli.Flag{

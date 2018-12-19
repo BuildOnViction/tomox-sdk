@@ -1,10 +1,9 @@
 const utils = require('ethers').utils;
+const faker = require('faker');
 const argv = require('yargs').argv;
 const MongoClient = require('mongodb').MongoClient;
 const { getNetworkID, getPriceMultiplier } = require('./utils/helpers');
-const { DB_NAME } = require('./utils/config');
-const network = argv.network;
-const mongoUrl = argv.mongo_url;
+const { DB_NAME, mongoUrl, network } = require('./utils/config');
 const networkID = getNetworkID(network);
 
 let client, db;
@@ -41,17 +40,22 @@ const seed = async () => {
           quoteTokenSymbol: quote.symbol,
           quoteTokenAddress: utils.getAddress(quote.contractAddress),
           quoteTokenDecimals: quote.decimals,
-          priceMultiplier: getPriceMultiplier(token.decimals, quote.decimals),
+          priceMultiplier: getPriceMultiplier(
+            token.decimals,
+            quote.decimals
+          ).toString(),
           active: true,
           makeFee: quote.makeFee,
           takeFee: quote.takeFee,
-          createdAt: Date(),
-          updatedAt: Date()
+          createdAt: new Date(faker.fake('{{date.recent}}'))
         });
       });
     });
 
+    console.log(pairs);
+
     const response = await db.collection('pairs').insertMany(pairs);
+    console.log(response);
   } catch (e) {
     console.log(e.message);
   } finally {

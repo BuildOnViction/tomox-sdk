@@ -1,17 +1,29 @@
-const utils = require('ethers').utils;
+const { utils, Wallet } = require('ethers');
 const MongoClient = require('mongodb').MongoClient;
+const Long = require('mongodb').Long;
 const faker = require('faker');
 const argv = require('yargs').argv;
+const { getNetworkID } = require('./utils/helpers');
 const {
   generatePricingData,
   interpolatePrice,
   generateRandomPricepointRange
 } = require('./utils/prices');
-const { DB_NAME, addresses } = require('./utils/config');
-const mongoUrl = argv.mongo_url || 'mongodb://localhost:27017';
+const {
+  DB_NAME,
+  addresses,
+  mongoUrl,
+  keys,
+  network
+} = require('./utils/config');
+
+const networkID = getNetworkID(network);
+const walletKeys = keys[networkID];
 
 // each pair has 1000 orders
-const numberOfOrders = argv.number || 50000;
+const numberOfOrders = argv.number || 5000;
+
+var wallet = new Wallet(walletKeys[0]);
 
 let exchangeAddress = '0x7400d4d4263a3330beeb2a0d2674f0456054f217';
 let minTimeStamp = 1500000000000;
@@ -214,72 +226,82 @@ const seed = async () => {
 
   //we choose a limited number of user accounts
   // addresses = addresses.slice(0,4)
+  try {
+    for (let i = 0; i < numberOfOrders; i++) {
+      let pair = randomElement(pairs);
+      let side = randomSide();
+      let baseToken = pair.baseTokenAddress;
+      let quoteToken = pair.quoteTokenAddress;
+      let hash = randomHash();
+      let status = randomOrderStatus();
+      let amount = randomBigAmount();
+      let pricepoint =
+        side == 'BUY'
+          ? String(randInt(pair.minPricepoint, pair.averagePricePoint))
+          : String(randInt(pair.averagePricePoint, pair.maxPricepoint));
+      let userAddress = randomElement(addresses);
+      let pairName = `${pair.baseTokenSymbol}/${pair.quoteTokenSymbol}`;
+      let makeFee = 0;
+      let takeFee = 0;
+      let filledAmount;
+      let createdAt = new Date(faker.fake('{{date.recent}}'));
 
-  for (let i = 0; i < numberOfOrders; i++) {
-    let pair = randomElement(pairs);
-    let side = randomSide();
-    let baseToken = pair.baseTokenAddress;
-    let quoteToken = pair.quoteTokenAddress;
-    let hash = randomHash();
-    let status = randomOrderStatus();
-    let amount = randomBigAmount();
-    let pricepoint =
-      side == 'BUY'
-        ? String(randInt(pair.minPricepoint, pair.averagePricePoint))
-        : String(randInt(pair.averagePricePoint, pair.maxPricepoint));
-    let userAddress = randomElement(addresses);
-    let pairName = `${pair.baseTokenSymbol}/${pair.quoteTokenSymbol}`;
-    let makeFee = 0;
-    let takeFee = 0;
-    let filledAmount;
-    let createdAt = new Date(faker.fake('{{date.recent}}'));
+      switch (status) {
+        case 'OPEN':
+          filledAmount = '0';
+          break;
+        case 'NEW':
+          filledAmount = '0';
+          break;
+        case 'PARTIALLY_FILLED':
+          filledAmount = String(randInt(0, amount));
+          break;
+        case 'FILLED':
+          filledAmount = amount;
+          break;
+        case 'INVALID':
+          filledAmount = '0';
+          break;
+        case 'ERROR':
+          filledAmount = '0';
+          break;
+        default:
+          filledAmount = '0';
+      }
 
-    switch (status) {
-      case 'OPEN':
-        filledAmount = '0';
-        break;
-      case 'NEW':
-        filledAmount = '0';
-        break;
-      case 'PARTIALLY_FILLED':
-        filledAmount = String(randInt(0, amount));
-        break;
-      case 'FILLED':
-        filledAmount = amount;
-        break;
-      case 'INVALID':
-        filledAmount = '0';
-        break;
-      case 'ERROR':
-        filledAmount = '0';
-        break;
-      default:
-        filledAmount = '0';
+      const signature = await wallet.signMessage(utils.arrayify(hash));
+      const { r, s, v } = utils.splitSignature(signature);
+
+      let order = {
+        exchangeAddress: utils.getAddress(exchangeAddress),
+        userAddress: utils.getAddress(userAddress),
+        baseToken: utils.getAddress(baseToken),
+        quoteToken: utils.getAddress(quoteToken),
+        pairName,
+        hash,
+        side,
+        status,
+        makeFee: Long.fromInt(makeFee),
+        takeFee: Long.fromInt(takeFee),
+        amount,
+        pricepoint,
+        filledAmount,
+        createdAt,
+        nonce: faker.random.number().toString(),
+        signature: { r, s, v }
+      };
+
+      orders.push(order);
     }
 
-    let order = {
-      exchangeAddress: utils.getAddress(exchangeAddress),
-      userAddress: utils.getAddress(userAddress),
-      baseToken: utils.getAddress(baseToken),
-      quoteToken: utils.getAddress(quoteToken),
-      pairName,
-      hash,
-      side,
-      status,
-      makeFee,
-      takeFee,
-      amount,
-      pricepoint,
-      filledAmount,
-      createdAt
-    };
-
-    orders.push(order);
+    const ordersInsertResponse = await db
+      .collection('orders')
+      .insertMany(orders);
+  } catch (e) {
+    console.log(e);
+  } finally {
+    client.close();
   }
-
-  const ordersInsertResponse = await db.collection('orders').insertMany(orders);
-
-  client.close();
 };
 
 seed();
