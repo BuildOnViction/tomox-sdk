@@ -104,15 +104,15 @@ func (s *ValidatorService) ValidateBalance(o *types.Order) error {
 	if availableSellTokenAllowance.Cmp(totalRequiredAmount) == -1 {
 		return fmt.Errorf("Insufficient %v Balance", o.SellTokenSymbol())
 	}
-
-	sellTokenBalanceRecord := balanceRecord[o.SellToken()]
-	if sellTokenBalanceRecord == nil {
-		return errors.New("Account error: Balance record not found")
+	if o.Side == "SELL" {
+		sellTokenBalanceRecord := balanceRecord[o.SellToken()]
+		if sellTokenBalanceRecord == nil {
+			return errors.New("Account error: Balance record not found")
+		}
+		sellTokenBalanceRecord.Balance.Set(sellTokenBalance)
+		sellTokenBalanceRecord.Allowance.Set(sellTokenAllowance)
+		err = s.accountDao.UpdateTokenBalance(o.UserAddress, o.SellToken(), sellTokenBalanceRecord)
 	}
-
-	sellTokenBalanceRecord.Balance.Set(sellTokenBalance)
-	sellTokenBalanceRecord.Allowance.Set(sellTokenAllowance)
-	err = s.accountDao.UpdateTokenBalance(o.UserAddress, o.SellToken(), sellTokenBalanceRecord)
 	if err != nil {
 		logger.Error(err)
 		return err
