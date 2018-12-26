@@ -229,8 +229,8 @@ func (o *Order) BuyToken() common.Address {
 }
 
 func (o *Order) QuoteAmount(p *Pair) *big.Int {
-	pairMultiplier := p.PairMultiplier()
-	return math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
+	pricePointMultiplier := p.PricepointMultiplier()
+	return math.Div(math.Mul(o.Amount, o.PricePoint), pricePointMultiplier)
 }
 
 // SellAmount
@@ -254,10 +254,10 @@ func (o *Order) BuyAmount() *big.Int {
 func (o *Order) RequiredSellAmount(p *Pair) *big.Int {
 	var requiredSellTokenAmount *big.Int
 
-	pairMultiplier := p.PairMultiplier()
+	pricePointMultiplier := p.PricepointMultiplier()
 
 	if o.Side == BUY {
-		requiredSellTokenAmount = math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
+		requiredSellTokenAmount = math.Div(math.Mul(o.Amount, o.PricePoint), pricePointMultiplier)
 	} else {
 		requiredSellTokenAmount = o.Amount
 	}
@@ -268,10 +268,10 @@ func (o *Order) RequiredSellAmount(p *Pair) *big.Int {
 func (o *Order) TotalRequiredSellAmount(p *Pair) *big.Int {
 	var requiredSellTokenAmount *big.Int
 
-	pairMultiplier := p.PairMultiplier()
+	pricePointMultiplier := p.PricepointMultiplier()
 
 	if o.Side == BUY {
-		sellAmount := math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
+		sellAmount := math.Div(math.Mul(o.Amount, o.PricePoint), pricePointMultiplier)
 		fee := math.Max(p.MakeFee, p.TakeFee)
 		requiredSellTokenAmount = math.Add(sellAmount, fee)
 	} else {
