@@ -574,10 +574,9 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limi
 		},
 		bson.M{
 			"$project": bson.M{
-				"_id":        0,
-				"pricepoint": 1,
-				// "pricepoint": bson.M{"$toString": "$_id"},
-				"amount": bson.M{"$toString": "$amount"},
+				"_id": 0,
+				"pricepoint": bson.M{"$toString": "$pricepoint"},
+				"amount":     bson.M{"$toString": "$amount"},
 			},
 		},
 	}
