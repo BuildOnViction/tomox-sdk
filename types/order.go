@@ -326,6 +326,18 @@ func (o *Order) QuoteTokenSymbol() string {
 	return o.PairName[strings.IndexByte(o.PairName, '/')+1:]
 }
 
+type OrderData struct {
+	Pair        PairID   `json:"id,omitempty" bson:"_id"`
+	OrderVolume *big.Int `json:"orderVolume,omitempty" bson:"orderVolume"`
+	OrderCount  *big.Int `json:"orderCount,omitempty" bson:"orderCount"`
+	BestPrice   *big.Int `json:"bestPrice,omitempty" bson:"bestPrice"`
+}
+
+func (o *OrderData) AddressCode() string {
+	code := o.Pair.BaseToken.Hex() + "::" + o.Pair.QuoteToken.Hex()
+	return code
+}
+
 // JSON Marshal/Unmarshal interface
 
 // MarshalJSON implements the json.Marshal interface

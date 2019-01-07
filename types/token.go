@@ -16,10 +16,12 @@ type Token struct {
 	ID              bson.ObjectId  `json:"-" bson:"_id"`
 	Name            string         `json:"name" bson:"name"`
 	Symbol          string         `json:"symbol" bson:"symbol"`
+	Address         common.Address `json:"address" bson:"address"`
 	Image           Image          `json:"image" bson:"image"`
 	ContractAddress common.Address `json:"contractAddress" bson:"contractAddress"`
 	Decimals        int            `json:"decimals" bson:"decimals"`
 	Active          bool           `json:"active" bson:"active"`
+	Listed          bool           `json:"listed" bson:"listed"`
 	Quote           bool           `json:"quote" bson:"quote"`
 	MakeFee         *big.Int       `json:"makeFee,omitempty" bson:"makeFee,omitempty"`
 	TakeFee         *big.Int       `json:"takeFee,omitempty" bson:"makeFee,omitempty"`

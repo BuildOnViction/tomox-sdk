@@ -45,6 +45,7 @@ type OrderDao interface {
 	GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side string) (*big.Int, error)
 	FindAndModify(h common.Hash, o *types.Order) (*types.Order, error)
 	Drop() error
+	Aggregate(q []bson.M) ([]*types.OrderData, error)
 }
 
 type AccountDao interface {
@@ -98,6 +99,8 @@ type PairDao interface {
 	GetByName(name string) (*types.Pair, error)
 	GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol string) (*types.Pair, error)
 	GetByTokenAddress(baseToken, quoteToken common.Address) (*types.Pair, error)
+	GetListedPairs() ([]types.Pair, error)
+	GetUnlistedPairs() ([]types.Pair, error)
 }
 
 type TradeDao interface {
@@ -214,11 +217,14 @@ type OrderBookService interface {
 
 type PairService interface {
 	Create(pair *types.Pair) error
+	CreatePairs(token common.Address) ([]*types.Pair, error)
 	GetByID(id bson.ObjectId) (*types.Pair, error)
 	GetByTokenAddress(bt, qt common.Address) (*types.Pair, error)
 	GetTokenPairData(bt, qt common.Address) ([]*types.Tick, error)
-	GetAllTokenPairData() ([]*types.Tick, error)
+	GetAllTokenPairData() ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
+	GetListedPairs() ([]types.Pair, error)
+	GetUnlistedPairs() ([]types.Pair, error)
 }
 
 type TokenService interface {
@@ -341,4 +347,6 @@ type EthereumProvider interface {
 	BalanceOf(owner common.Address, token common.Address) (*big.Int, error)
 	Allowance(owner, spender, token common.Address) (*big.Int, error)
 	ExchangeAllowance(owner, token common.Address) (*big.Int, error)
+	Decimals(token common.Address) (uint8, error)
+	Symbol(token common.Address) (string, error)
 }

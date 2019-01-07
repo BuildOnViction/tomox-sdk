@@ -20,6 +20,7 @@ type Pair struct {
 	QuoteTokenSymbol   string         `json:"quoteTokenSymbol,omitempty" bson:"quoteTokenSymbol"`
 	QuoteTokenAddress  common.Address `json:"quoteTokenAddress,omitempty" bson:"quoteTokenAddress"`
 	QuoteTokenDecimals int            `json:"quoteTokenDecimals,omitempty" bson:"quoteTokenDecimals"`
+	Listed             bool           `json:"listed,omitempty" bson:"listed"`
 	PriceMultiplier    *big.Int       `json:"priceMultiplier,omitempty" bson:"priceMultiplier"`
 	Active             bool           `json:"active,omitempty" bson:"active"`
 	MakeFee            *big.Int       `json:"makeFee,omitempty" bson:"makeFee"`
@@ -176,4 +177,26 @@ func (p *Pair) GetOrderBookKeys() (sell, buy string) {
 
 func (p *Pair) GetKVPrefix() string {
 	return p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
+}
+
+type PairData struct {
+	Pair        PairID   `json:"id,omitempty" bson:"_id"`
+	Close       *big.Int `json:"close,omitempty" bson:"close"`
+	Count       *big.Int `json:"count,omitempty" bson:"count"`
+	High        *big.Int `json:"high,omitempty" bson:"high"`
+	Low         *big.Int `json:"low,omitempty" bson:"low"`
+	Open        *big.Int `json:"open,omitempty" bson:"open"`
+	Volume      *big.Int `json:"volume,omitempty" bson:"volume"`
+	Timestamp   int64    `json:"timestamp,omitempty" bson:"timestamp"`
+	OrderVolume *big.Int `json:"orderVolume,omitempty" bson:"orderVolume"`
+	OrderCount  *big.Int `json:"orderCount,omitempty" bson:"orderCount"`
+	AskPrice    *big.Int `json:"askPrice,omitempty" bson:"askPrice"`
+	BidPrice    *big.Int `json:"bidPrice,omitempty" bson:"bidPrice"`
+	Price       *big.Int `json:"price,omitempty" bson:"price"`
+	Rank        int      `json:"rank,omitempty" bson:"rank"`
+}
+
+func (p *PairData) AddressCode() string {
+	code := p.Pair.BaseToken.Hex() + "::" + p.Pair.QuoteToken.Hex()
+	return code
 }
