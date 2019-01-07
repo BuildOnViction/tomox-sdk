@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"math/big"
 	"time"
 
@@ -194,6 +195,65 @@ type PairData struct {
 	BidPrice    *big.Int `json:"bidPrice,omitempty" bson:"bidPrice"`
 	Price       *big.Int `json:"price,omitempty" bson:"price"`
 	Rank        int      `json:"rank,omitempty" bson:"rank"`
+}
+
+func (p *PairData) MarshalJSON() ([]byte, error) {
+	pairData := map[string]interface{}{
+		"pair": map[string]interface{}{
+			"pairName":   p.Pair.PairName,
+			"baseToken":  p.Pair.BaseToken.Hex(),
+			"quoteToken": p.Pair.QuoteToken.Hex(),
+		},
+		"timestamp": p.Timestamp,
+		"rank":      p.Rank,
+	}
+
+	if p.Open != nil {
+		pairData["open"] = p.Open.String()
+	}
+
+	if p.High != nil {
+		pairData["high"] = p.High.String()
+	}
+
+	if p.Low != nil {
+		pairData["low"] = p.Low.String()
+	}
+
+	if p.Volume != nil {
+		pairData["volume"] = p.Volume.String()
+	}
+
+	if p.Close != nil {
+		pairData["close"] = p.Close.String()
+	}
+
+	if p.Count != nil {
+		pairData["count"] = p.Count.String()
+	}
+
+	if p.OrderVolume != nil {
+		pairData["orderVolume"] = p.OrderVolume.String()
+	}
+
+	if p.OrderCount != nil {
+		pairData["orderCount"] = p.OrderCount.String()
+	}
+
+	if p.AskPrice != nil {
+		pairData["askPrice"] = p.AskPrice.String()
+	}
+
+	if p.BidPrice != nil {
+		pairData["bidPrice"] = p.BidPrice.String()
+	}
+
+	if p.Price != nil {
+		pairData["price"] = p.Price.String()
+	}
+
+	bytes, err := json.Marshal(pairData)
+	return bytes, err
 }
 
 func (p *PairData) AddressCode() string {
