@@ -139,7 +139,7 @@ func (e *pairEndpoint) HandleGetPairData(w http.ResponseWriter, r *http.Request)
 		res, err := e.pairService.GetAllTokenPairData()
 		if err != nil {
 			logger.Error(err)
-			httputils.WriteError(w, http.StatusInternalServerError, "")
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

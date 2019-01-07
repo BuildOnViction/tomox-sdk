@@ -76,6 +76,40 @@ func (dao *PairDao) GetAll() ([]types.Pair, error) {
 	return res, nil
 }
 
+func (dao *PairDao) GetListedPairs() ([]types.Pair, error) {
+	var res []types.Pair
+
+	sort := []string{"-rank"}
+	err := db.GetAndSort(dao.dbName, dao.collectionName, bson.M{"active": true, "listed": true}, sort, 0, 0, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		res = []types.Pair{}
+	}
+
+	return res, nil
+}
+
+func (dao *PairDao) GetUnlistedPairs() ([]types.Pair, error) {
+	var res []types.Pair
+
+	sort := []string{"-rank"}
+	err := db.GetAndSort(dao.dbName, dao.collectionName, bson.M{"active": true, "listed": false}, sort, 0, 0, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		res = []types.Pair{}
+	}
+
+	return res, nil
+}
+
 func (dao *PairDao) GetActivePairs() ([]*types.Pair, error) {
 	var res []*types.Pair
 

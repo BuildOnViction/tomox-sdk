@@ -574,7 +574,7 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limi
 		},
 		bson.M{
 			"$project": bson.M{
-				"_id": 0,
+				"_id":        0,
 				"pricepoint": bson.M{"$toString": "$pricepoint"},
 				"amount":     bson.M{"$toString": "$amount"},
 			},
@@ -738,4 +738,16 @@ func (dao *OrderDao) Drop() error {
 	}
 
 	return nil
+}
+
+// Aggregate function calls the aggregate pipeline of mongodb
+func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
+	orderData := []*types.OrderData{}
+	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orderData)
+	if err != nil {
+		logger.Error(err)
+		return []*types.OrderData{}, err
+	}
+
+	return orderData, nil
 }
