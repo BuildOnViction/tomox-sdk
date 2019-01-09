@@ -362,9 +362,9 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 
 	if o.Signature != nil {
 		order["signature"] = map[string]interface{}{
-			"v": o.Signature.V,
-			"r": o.Signature.R,
-			"s": o.Signature.S,
+			"V": o.Signature.V,
+			"R": o.Signature.R,
+			"S": o.Signature.S,
 		}
 	}
 
@@ -442,11 +442,10 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 
 	if order["signature"] != nil {
 		signature := order["signature"].(map[string]interface{})
-		logger.Debugf("Signature: %v#", signature)
 		o.Signature = &Signature{
-			V: byte(signature["v"].(float64)),
-			R: common.HexToHash(signature["r"].(string)),
-			S: common.HexToHash(signature["s"].(string)),
+			V: byte(signature["V"].(float64)),
+			R: common.HexToHash(signature["R"].(string)),
+			S: common.HexToHash(signature["S"].(string)),
 		}
 	}
 
