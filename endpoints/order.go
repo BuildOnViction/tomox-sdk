@@ -228,7 +228,7 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 
 	logger.Debugf("Payload: %v#", ev.Payload)
 
-	err = json.Unmarshal(bytes, o)
+	err = json.Unmarshal(bytes, &o)
 	if err != nil {
 		logger.Error(err)
 		c.SendOrderErrorMessage(err, o.Hash)

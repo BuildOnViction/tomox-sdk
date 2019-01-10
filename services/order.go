@@ -145,9 +145,6 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return errors.New("Pair not found")
 	}
 
-	utils.PrintJSON(o.QuoteAmount(p).String())
-	utils.PrintJSON(p.MinQuoteAmount().String())
-
 	if math.IsStrictlySmallerThan(o.QuoteAmount(p), p.MinQuoteAmount()) {
 		return errors.New("Order amount too low")
 	}
@@ -159,7 +156,7 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
-	err = s.validator.ValidateBalance(o)
+	err = s.validator.ValidateAvailableBalance(o)
 	if err != nil {
 		logger.Error(err)
 		return err
