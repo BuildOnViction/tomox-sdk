@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 echo "Update config"
 go run utils/seed-data/main.go seeds
 
@@ -27,5 +28,5 @@ node utils/db/seed_quotes.js
 node utils/db/seed_pairs.js
 node utils/db/seed_config.js
 # node utils/db/seed_orders.js
-node utils/db/seed_trades.js
+#node utils/db/seed_trades.js
 node utils/db/seed_wallets.js
