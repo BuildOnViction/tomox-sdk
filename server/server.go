@@ -44,16 +44,7 @@ func Start() {
 
 	rabbitConn := rabbitmq.InitConnection(app.Config.RabbitMQURL)
 
-	var provider *ethereum.EthereumProvider
-
-	if app.Config.Simulated {
-		provider = ethereum.NewSimulatedEthereumProvider([]common.Address{
-			common.HexToAddress("0x28074f8D0fD78629CD59290Cac185611a8d60109"),
-			common.HexToAddress("0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c"),
-		})
-	} else {
-		provider = ethereum.NewWebsocketProvider()
-	}
+	provider := ethereum.NewWebsocketProvider()
 
 	router := NewRouter(provider, rabbitConn)
 	// http.Handle("/", router)
