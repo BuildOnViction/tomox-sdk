@@ -103,23 +103,23 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	callOpts := txq.GetTxCallOptions()
 	gasLimit, err := txq.Exchange.CallBatchTrades(m, callOpts)
 	if err != nil {
+		txq.HandleTradeInvalid(m)
 		logger.Error(err)
 		return err
 	}
 
-	if gasLimit < 120000 {
+	//a low gas limit means that the transaction returned before being completed
+	//and is therefore not valid.
+	if gasLimit < 140000 {
 		logger.Warning("GAS LIMIT: ", gasLimit)
-		err = txq.Broker.PublishTradeInvalidMessage(m)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
-
+		txq.HandleTradeInvalid(m)
+		logger.Error(err)
 		return errors.New("Invalid Trade")
 	}
 
 	nonce, err := txq.EthereumProvider.GetPendingNonceAt(txq.Wallet.Address)
 	if err != nil {
+		txq.HandleError(m)
 		logger.Error(err)
 		return err
 	}
@@ -128,6 +128,7 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	txOpts.Nonce = big.NewInt(int64(nonce))
 	tx, err := txq.Exchange.ExecuteBatchTrades(m, txOpts)
 	if err != nil {
+		txq.HandleError(m)
 		logger.Error(err)
 		return err
 	}
@@ -175,10 +176,21 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	return nil
 }
 
-func (txq *TxQueue) HandleTxError(m *types.Matches) error {
-	logger.Infof("Transaction failed: %v", m)
+func (txq *TxQueue) HandleTradeInvalid(m *types.Matches) error {
+	logger.Errorf("Trade invalid: %v", m)
 
-	errType := "Transaction failed"
+	err := txq.Broker.PublishTradeInvalidMessage(m)
+	if err != nil {
+		logger.Error(err)
+	}
+
+	return nil
+}
+
+func (txq *TxQueue) HandleTxError(m *types.Matches) error {
+	logger.Errorf("Transaction Error: %v", m)
+
+	errType := "Transaction error"
 	err := txq.Broker.PublishTxErrorMessage(m, errType)
 	if err != nil {
 		logger.Error(err)
@@ -194,6 +206,18 @@ func (txq *TxQueue) HandleTxSuccess(m *types.Matches, receipt *eth.Receipt) erro
 	if err != nil {
 		logger.Error(err)
 		return err
+	}
+
+	return nil
+}
+
+func (txq *TxQueue) HandleError(m *types.Matches) error {
+	logger.Errorf("Operator Error: %v", m)
+
+	errType := "Server error"
+	err := txq.Broker.PublishErrorMessage(m, errType)
+	if err != nil {
+		logger.Error(err)
 	}
 
 	return nil
