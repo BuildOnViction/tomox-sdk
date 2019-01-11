@@ -237,7 +237,7 @@ func (s *OrderService) HandleOperatorMessages(msg *types.OperatorMessage) error 
 	case types.TRADE_ERROR:
 		s.handleOperatorTradeError(msg)
 	case types.TRADE_INVALID:
-		s.handleOperatorTradeError(msg)
+		s.handleOperatorTradeInvalid(msg)
 	default:
 		s.handleOperatorUnknownMessage(msg)
 	}
@@ -288,9 +288,9 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 // The request signature message also signals the client to sign trades.
 func (s *OrderService) handleEngineOrderMatched(res *types.EngineResponse) {
 	o := res.Order //res.Order is the "taker" order
+	taker := o.UserAddress
 	matches := *res.Matches
 
-	taker := o.UserAddress
 	orders := []*types.Order{o}
 	validMatches := types.Matches{TakerOrder: o}
 	invalidMatches := types.Matches{TakerOrder: o}
@@ -317,18 +317,22 @@ func (s *OrderService) handleEngineOrderMatched(res *types.EngineResponse) {
 		}
 	}
 
-	err := s.tradeDao.Create(validMatches.Trades...)
-	if err != nil {
-		logger.Error(err)
-		ws.SendOrderMessage("ERROR", taker, err)
-		return
-	}
+	if validMatches.Length() > 0 {
+		err := s.tradeDao.Create(validMatches.Trades...)
+		if err != nil {
+			logger.Error(err)
+			ws.SendOrderMessage("ERROR", taker, err)
+			return
+		}
 
-	err = s.broker.PublishTrades(&validMatches)
-	if err != nil {
-		logger.Error(err)
-		ws.SendOrderMessage("ERROR", taker, err)
-		return
+		err = s.broker.PublishTrades(&validMatches)
+		if err != nil {
+			logger.Error(err)
+			ws.SendOrderMessage("ERROR", taker, err)
+			return
+		}
+
+		ws.SendOrderMessage("ORDER_MATCHED", taker, types.OrderMatchedPayload{&matches})
 	}
 
 	// we only update the orderbook with the current set of orders if there are no invalid matches.
@@ -405,6 +409,40 @@ func (s *OrderService) handleOperatorTradeSuccess(msg *types.OperatorMessage) {
 // but ended up failing. It updates the trade status in the db.
 // orderbook.
 func (s *OrderService) handleOperatorTradeError(msg *types.OperatorMessage) {
+	matches := msg.Matches
+	trades := matches.Trades
+	orders := matches.MakerOrders
+
+	errType := msg.ErrorType
+	if errType != "" {
+		logger.Error("")
+	}
+
+	for _, t := range trades {
+		err := s.tradeDao.UpdateTradeStatus(t.Hash, "ERROR")
+		if err != nil {
+			logger.Error(err)
+		}
+
+		t.Status = "ERROR"
+	}
+
+	taker := trades[0].Taker
+	ws.SendOrderMessage("ORDER_ERROR", taker, matches)
+
+	for _, o := range orders {
+		maker := o.UserAddress
+		ws.SendOrderMessage("ORDER_ERROR", maker, o)
+	}
+
+	s.broadcastTradeUpdate(trades)
+}
+
+// handleOperatorTradeInvalid handles the case where one of the two orders is invalid
+// which can be the case for example if one of the account addresses does suddendly
+// not have enough tokens to satisfy the order. Ultimately, the goal would be to
+// reinclude the non-invalid orders in the orderbook
+func (s *OrderService) handleOperatorTradeInvalid(msg *types.OperatorMessage) {
 	matches := msg.Matches
 	trades := matches.Trades
 	orders := matches.MakerOrders
