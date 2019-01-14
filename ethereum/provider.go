@@ -5,15 +5,16 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/swarm/api/client"
+	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
+	"github.com/tomochain/backend-matching-engine/interfaces"
+	"github.com/tomochain/backend-matching-engine/utils"
 )
 
 type EthereumProvider struct {
@@ -133,6 +134,64 @@ func (e *EthereumProvider) GetPendingNonceAt(a common.Address) (uint64, error) {
 	}
 
 	return nonce, nil
+}
+
+func (e *EthereumProvider) Decimals(token common.Address) (uint8, error) {
+	var tokenInterface *contractsinterfaces.ERC20
+	var err error
+
+	// retry in case the connection with the ethereum client is asleep
+	err = utils.Retry(3, func() error {
+		tokenInterface, err = contractsinterfaces.NewERC20(token, e.Client)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	opts := &bind.CallOpts{Pending: true}
+	decimals, err := tokenInterface.Decimals(opts)
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	return decimals, nil
+}
+
+func (e *EthereumProvider) Symbol(token common.Address) (string, error) {
+	// retry in case the connection with the ethereum client is asleep
+	var tokenInterface *contractsinterfaces.ERC20
+	var err error
+
+	err = utils.Retry(3, func() error {
+		tokenInterface, err = contractsinterfaces.NewERC20(token, e.Client)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		logger.Error(err)
+		return "", err
+	}
+
+	opts := &bind.CallOpts{Pending: true}
+	symbol, err := tokenInterface.Symbol(opts)
+	if err != nil {
+		logger.Error(err)
+		return "", err
+	}
+
+	return symbol, nil
 }
 
 func (e *EthereumProvider) BalanceOf(owner common.Address, token common.Address) (*big.Int, error) {
