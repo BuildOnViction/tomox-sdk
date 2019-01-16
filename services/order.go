@@ -198,19 +198,10 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 	return nil
 }
 
-func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
-	ws.SendOrderMessage("ORDER_CANCELLED", res.Order.UserAddress, res.Order)
-	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
-	return
-}
-
 // HandleEngineResponse listens to messages incoming from the engine and handles websocket
 // responses and database updates accordingly
 func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 	switch res.Status {
-	case types.ERROR_STATUS:
-		s.handleEngineError(res)
 	case types.ORDER_ADDED:
 		s.handleEngineOrderAdded(res)
 	case types.ORDER_FILLED:
@@ -221,57 +212,13 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 		s.handleOrderCancelled(res)
 	case types.TRADES_CANCELLED:
 		s.handleOrdersInvalidated(res)
+	case types.ERROR_STATUS:
+		s.handleEngineError(res)
 	default:
 		s.handleEngineUnknownMessage(res)
 	}
 
 	return nil
-}
-
-func (s *OrderService) HandleOperatorMessages(msg *types.OperatorMessage) error {
-	switch msg.MessageType {
-	case types.TRADE_PENDING:
-		s.handleOperatorTradePending(msg)
-	case types.TRADE_SUCCESS:
-		s.handleOperatorTradeSuccess(msg)
-	case types.TRADE_ERROR:
-		s.handleOperatorTradeError(msg)
-	case types.TRADE_INVALID:
-		s.handleOperatorTradeInvalid(msg)
-	default:
-		s.handleOperatorUnknownMessage(msg)
-	}
-
-	return nil
-}
-
-func (s *OrderService) handleOrdersInvalidated(res *types.EngineResponse) error {
-	orders := res.InvalidatedOrders
-	trades := res.CancelledTrades
-
-	for _, o := range *orders {
-		ws.SendOrderMessage("ORDER_INVALIDATED", o.UserAddress, o)
-	}
-
-	if orders != nil && len(*orders) != 0 {
-		s.broadcastOrderBookUpdate(*orders)
-	}
-
-	if orders != nil && len(*orders) != 0 {
-		s.broadcastRawOrderBookUpdate(*orders)
-	}
-
-	if trades != nil && len(*trades) != 0 {
-		s.broadcastTradeUpdate(*trades)
-	}
-
-	return nil
-}
-
-// handleEngineError returns an websocket error message to the client and recovers orders on the
-func (s *OrderService) handleEngineError(res *types.EngineResponse) {
-	o := res.Order
-	ws.SendOrderMessage("ERROR", o.UserAddress, nil)
 }
 
 // handleEngineOrderAdded returns a websocket message informing the client that his order has been added
@@ -344,15 +291,63 @@ func (s *OrderService) handleEngineOrderMatched(res *types.EngineResponse) {
 	}
 }
 
+func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
+	ws.SendOrderMessage("ORDER_CANCELLED", res.Order.UserAddress, res.Order)
+	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+	return
+}
+
+func (s *OrderService) handleOrdersInvalidated(res *types.EngineResponse) error {
+	orders := res.InvalidatedOrders
+	trades := res.CancelledTrades
+
+	for _, o := range *orders {
+		ws.SendOrderMessage("ORDER_INVALIDATED", o.UserAddress, o)
+	}
+
+	if orders != nil && len(*orders) != 0 {
+		s.broadcastOrderBookUpdate(*orders)
+	}
+
+	if orders != nil && len(*orders) != 0 {
+		s.broadcastRawOrderBookUpdate(*orders)
+	}
+
+	if trades != nil && len(*trades) != 0 {
+		s.broadcastTradeUpdate(*trades)
+	}
+
+	return nil
+}
+
+// handleEngineError returns an websocket error message to the client and recovers orders on the
+func (s *OrderService) handleEngineError(res *types.EngineResponse) {
+	o := res.Order
+	ws.SendOrderMessage("ERROR", o.UserAddress, nil)
+}
+
 // handleEngineUnknownMessage returns a websocket messsage in case the engine resonse is not recognized
 func (s *OrderService) handleEngineUnknownMessage(res *types.EngineResponse) {
 	log.Print("Receiving unknown engine message")
 	utils.PrintJSON(res)
 }
 
-func (s *OrderService) handleOperatorUnknownMessage(msg *types.OperatorMessage) {
-	log.Print("Receiving unknown message")
-	utils.PrintJSON(msg)
+func (s *OrderService) HandleOperatorMessages(msg *types.OperatorMessage) error {
+	switch msg.MessageType {
+	case types.TRADE_PENDING:
+		s.handleOperatorTradePending(msg)
+	case types.TRADE_SUCCESS:
+		s.handleOperatorTradeSuccess(msg)
+	case types.TRADE_ERROR:
+		s.handleOperatorTradeError(msg)
+	case types.TRADE_INVALID:
+		s.handleOperatorTradeInvalid(msg)
+	default:
+		s.handleOperatorUnknownMessage(msg)
+	}
+
+	return nil
 }
 
 func (s *OrderService) handleOperatorTradePending(msg *types.OperatorMessage) {
@@ -470,6 +465,11 @@ func (s *OrderService) handleOperatorTradeInvalid(msg *types.OperatorMessage) {
 	}
 
 	s.broadcastTradeUpdate(trades)
+}
+
+func (s *OrderService) handleOperatorUnknownMessage(msg *types.OperatorMessage) {
+	log.Print("Receiving unknown message")
+	utils.PrintJSON(msg)
 }
 
 func (s *OrderService) broadcastOrderBookUpdate(orders []*types.Order) {
