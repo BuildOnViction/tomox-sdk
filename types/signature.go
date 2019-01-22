@@ -17,9 +17,9 @@ type Signature struct {
 }
 
 type SignatureRecord struct {
-	V byte   `json:"v" bson:"v"`
-	R string `json:"r" bson:"r"`
-	S string `json:"s" bson:"s"`
+	V byte   `json:"V" bson:"V"`
+	R string `json:"R" bson:"R"`
+	S string `json:"S" bson:"S"`
 }
 
 // NewSignature function decodes []byte to Signature type
