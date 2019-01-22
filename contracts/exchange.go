@@ -243,6 +243,7 @@ func (e *Exchange) CallBatchTrades(matches *types.Matches, call *ethereum.CallMs
 	call.Data = data
 	gasLimit, err := e.Client.(bind.ContractBackend).EstimateGas(context.Background(), *call)
 	if err != nil {
+		return 2000000, nil
 		logger.Error(err)
 		return 0, err
 	}
