@@ -126,6 +126,10 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 
 	txOpts := txq.GetTxSendOptions()
 	txOpts.Nonce = big.NewInt(int64(nonce))
+	// TODO: Fix these 2 lines later
+	txOpts.GasLimit = gasLimit
+	txOpts.GasPrice = big.NewInt(1)
+	// *****
 	tx, err := txq.Exchange.ExecuteBatchTrades(m, txOpts)
 	if err != nil {
 		txq.HandleError(m)
@@ -156,7 +160,9 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 		return err
 	}
 
-	if receipt.Status == 0 {
+	// len(receipt.PostState) == 0 so it can work with dex-protocol
+	// Because only transaction after Byzantium hard fork has Status field
+	if receipt.Status == 0 && len(receipt.PostState) == 0 {
 		logger.Errorf("Reverted transaction: %v", receipt)
 		err := txq.HandleTxError(m)
 		if err != nil {
