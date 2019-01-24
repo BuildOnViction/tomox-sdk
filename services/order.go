@@ -335,12 +335,14 @@ func (s *OrderService) handleEngineUnknownMessage(res *types.EngineResponse) {
 
 func (s *OrderService) HandleOperatorMessages(msg *types.OperatorMessage) error {
 	switch msg.MessageType {
-	case types.TRADE_PENDING:
-		s.handleOperatorTradePending(msg)
-	case types.TRADE_SUCCESS:
-		s.handleOperatorTradeSuccess(msg)
 	case types.TRADE_ERROR:
 		s.handleOperatorTradeError(msg)
+	case types.TRADE_TX_PENDING:
+		s.handleOperatorTradeTxPending(msg)
+	case types.TRADE_TX_SUCCESS:
+		s.handleOperatorTradeTxSuccess(msg)
+	case types.TRADE_TX_ERROR:
+		s.handleOperatorTradeTxError(msg)
 	case types.TRADE_INVALID:
 		s.handleOperatorTradeInvalid(msg)
 	default:
@@ -350,7 +352,7 @@ func (s *OrderService) HandleOperatorMessages(msg *types.OperatorMessage) error 
 	return nil
 }
 
-func (s *OrderService) handleOperatorTradePending(msg *types.OperatorMessage) {
+func (s *OrderService) handleOperatorTradeTxPending(msg *types.OperatorMessage) {
 	matches := msg.Matches
 	trades := matches.Trades
 	orders := matches.MakerOrders
@@ -368,7 +370,7 @@ func (s *OrderService) handleOperatorTradePending(msg *types.OperatorMessage) {
 
 // handleOperatorTradeSuccess handles successfull trade messages from the orderbook. It updates
 // the trade status in the database and
-func (s *OrderService) handleOperatorTradeSuccess(msg *types.OperatorMessage) {
+func (s *OrderService) handleOperatorTradeTxSuccess(msg *types.OperatorMessage) {
 	matches := msg.Matches
 	hashes := []common.Hash{}
 	trades := matches.Trades
@@ -395,6 +397,37 @@ func (s *OrderService) handleOperatorTradeSuccess(msg *types.OperatorMessage) {
 		match := matches.NthMatch(i)
 		maker := match.MakerOrders[0].UserAddress
 		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{match})
+	}
+
+	s.broadcastTradeUpdate(trades)
+}
+
+// handleOperatorTradeTxError handles cases where a blockchain transaction is reverted
+func (s *OrderService) handleOperatorTradeTxError(msg *types.OperatorMessage) {
+	matches := msg.Matches
+	trades := matches.Trades
+	orders := matches.MakerOrders
+
+	errType := msg.ErrorType
+	if errType != "" {
+		logger.Error("")
+	}
+
+	for _, t := range trades {
+		err := s.tradeDao.UpdateTradeStatus(t.Hash, "ERROR")
+		if err != nil {
+			logger.Error(err)
+		}
+
+		t.Status = "ERROR"
+	}
+
+	taker := trades[0].Taker
+	ws.SendOrderMessage("ORDER_ERROR", taker, matches)
+
+	for _, o := range orders {
+		maker := o.UserAddress
+		ws.SendOrderMessage("ORDER_ERROR", maker, o)
 	}
 
 	s.broadcastTradeUpdate(trades)
