@@ -92,7 +92,7 @@ func (c *Connection) PublishTradeCancelMessage(matches *types.Matches) error {
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: "TRADE_CANCEL",
+		MessageType: types.TRADES_CANCELLED,
 		Matches:     matches,
 	}
 
@@ -116,7 +116,7 @@ func (c *Connection) PublishTradeSuccessMessage(matches *types.Matches) error {
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: "TRADE_SUCCESS",
+		MessageType: types.TRADE_TX_SUCCESS,
 		Matches:     matches,
 	}
 
@@ -138,7 +138,7 @@ func (c *Connection) PublishErrorMessage(matches *types.Matches, errType string)
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: "TRADE_ERROR",
+		MessageType: types.TRADE_ERROR,
 		Matches:     matches,
 		ErrorType:   errType,
 	}
@@ -163,7 +163,7 @@ func (c *Connection) PublishTxErrorMessage(matches *types.Matches, errType strin
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: "TRADE_ERROR",
+		MessageType: types.TRADE_ERROR,
 		Matches:     matches,
 		ErrorType:   errType,
 	}
@@ -187,7 +187,7 @@ func (c *Connection) PublishTradeInvalidMessage(matches *types.Matches) error {
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: "TRADE_INVALID",
+		MessageType: types.TRADE_INVALID,
 		Matches:     matches,
 	}
 
@@ -210,7 +210,7 @@ func (c *Connection) PublishTradeSentMessage(matches *types.Matches) error {
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: "TRADE_PENDING",
+		MessageType: types.TRADE_TX_PENDING,
 		Matches:     matches,
 	}
 
