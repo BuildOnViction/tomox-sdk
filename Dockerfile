@@ -9,8 +9,8 @@ RUN go get github.com/golang/dep/cmd/dep
 RUN apt-get update
 RUN apt-get install multitail
 
-RUN mkdir -p /go/src/github.com/tomochain/backend-matching-engine
-WORKDIR /go/src/github.com/tomochain/backend-matching-engine
+RUN mkdir -p /go/src/github.com/tomochain/dex-server
+WORKDIR /go/src/github.com/tomochain/dex-server
 
 ADD Gopkg.toml Gopkg.toml
 ADD Gopkg.lock Gopkg.lock

@@ -3,8 +3,8 @@ package daos
 import (
 	"reflect"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/utils"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

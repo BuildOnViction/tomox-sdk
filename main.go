@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tomochain/backend-matching-engine/server"
+import "github.com/tomochain/dex-server/server"
 
 func main() {
 	server.Start()

@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/streadway/amqp"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
 )
 
 type TxQueue struct {

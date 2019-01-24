@@ -1,8 +1,8 @@
 package crons
 
 import (
-	"github.com/tomochain/backend-matching-engine/services"
 	"github.com/robfig/cron"
+	"github.com/tomochain/dex-server/services"
 )
 
 // CronService contains the services required to initialize crons

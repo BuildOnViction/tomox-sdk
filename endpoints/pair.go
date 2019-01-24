@@ -7,10 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/gorilla/mux"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/services"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/services"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/httputils"
 )
 
 type pairEndpoint struct {

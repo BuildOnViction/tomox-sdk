@@ -5,9 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 	mgo "gopkg.in/mgo.v2"
 )
 

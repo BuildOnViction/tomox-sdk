@@ -18,9 +18,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
-	dexApp "github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/ethereum"
+	dexApp "github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/ethereum"
 	"gopkg.in/urfave/cli.v1"
 )
 

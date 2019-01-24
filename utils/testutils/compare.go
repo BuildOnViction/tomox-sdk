@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/types"
 	"gopkg.in/mgo.v2/dbtest"
 )
 

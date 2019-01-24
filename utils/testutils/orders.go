@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/types"
 	"gopkg.in/mgo.v2/bson"
 )
 

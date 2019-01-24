@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/backend-matching-engine/swap/config"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/swap/config"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 )
 
 // Status describes status of account processing

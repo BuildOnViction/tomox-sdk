@@ -4,8 +4,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/swap/config"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/swap/config"
 	"github.com/tyler-smith/go-bip32"
 )
 

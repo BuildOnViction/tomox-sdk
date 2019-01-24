@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/utils/math"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"gopkg.in/mgo.v2/bson"

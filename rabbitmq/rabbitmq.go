@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/streadway/amqp"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/utils"
 )
 
 // Conn is singleton rabbitmq connection

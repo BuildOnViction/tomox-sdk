@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
 )
 
 func (ac *AccountConfigurator) Start() error {
@@ -37,7 +37,7 @@ func (ac *AccountConfigurator) logStats() {
 			// stop logging
 			break
 		}
-		logger.Infof("statuses: %v", ac.accountStatus)
+		//logger.Infof("statuses: %v", ac.accountStatus)
 		time.Sleep(15 * time.Second)
 	}
 }

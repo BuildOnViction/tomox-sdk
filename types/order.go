@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/utils/math"
 	"gopkg.in/mgo.v2/bson"
 )
 

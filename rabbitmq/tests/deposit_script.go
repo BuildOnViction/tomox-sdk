@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
 )
 
 func SetupTest() *rabbitmq.Connection {
