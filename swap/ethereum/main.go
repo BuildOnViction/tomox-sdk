@@ -5,9 +5,9 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/swap/storage"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/swap/storage"
+	"github.com/tomochain/dex-server/utils"
 	bip32 "github.com/tyler-smith/go-bip32"
 )
 

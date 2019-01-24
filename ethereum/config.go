@@ -1,8 +1,8 @@
 package ethereum
 
 import (
-	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/utils"
 )
 
 var logger = utils.Logger

@@ -11,18 +11,18 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/gorilla/mux"
 
-	// "github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
+	// "github.com/tomochain/dex-server/contracts/contractsinterfaces"
 
-	"github.com/tomochain/backend-matching-engine/contracts"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/swap"
-	"github.com/tomochain/backend-matching-engine/swap/bitcoin"
-	"github.com/tomochain/backend-matching-engine/swap/ethereum"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/contracts"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/swap"
+	"github.com/tomochain/dex-server/swap/bitcoin"
+	"github.com/tomochain/dex-server/swap/ethereum"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/httputils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type depositEndpoint struct {

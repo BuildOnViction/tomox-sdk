@@ -5,11 +5,11 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/dex-server/utils/math"
 )
 
 type ValidatorService struct {

@@ -5,15 +5,15 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 )
 
 var logger = utils.Logger

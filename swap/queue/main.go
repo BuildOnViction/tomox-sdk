@@ -1,6 +1,6 @@
 package queue
 
-import "github.com/tomochain/backend-matching-engine/types"
+import "github.com/tomochain/dex-server/types"
 
 // Queue implements transactions queue.
 // The queue must not allow duplicates (including history) or must implement deduplication

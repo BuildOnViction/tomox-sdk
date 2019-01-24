@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"

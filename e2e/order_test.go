@@ -10,15 +10,15 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/daos"
-	"github.com/tomochain/backend-matching-engine/ethereum"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/daos"
+	"github.com/tomochain/dex-server/ethereum"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type OrderTestSetup struct {

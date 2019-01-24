@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/streadway/amqp"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/types"
 )
 
 func (c *Connection) SubscribeOperator(fn func(*types.OperatorMessage) error) error {

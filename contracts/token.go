@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
 )
 
 type Token struct {

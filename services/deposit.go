@@ -4,18 +4,18 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/ws"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/backend-matching-engine/ethereum"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/swap"
-	swapConfig "github.com/tomochain/backend-matching-engine/swap/config"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/binance"
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/ethereum"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/swap"
+	swapConfig "github.com/tomochain/dex-server/swap/config"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/binance"
+	"github.com/tomochain/dex-server/utils/math"
 	"gopkg.in/mgo.v2/bson"
 )
 

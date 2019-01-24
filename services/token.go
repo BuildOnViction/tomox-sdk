@@ -1,11 +1,11 @@
 package services
 
 import (
-	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/interfaces"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/types"
 )
 
 // TokenService struct with daos required, responsible for communicating with daos.

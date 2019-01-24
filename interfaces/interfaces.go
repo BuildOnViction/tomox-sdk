@@ -8,12 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	swapBitcoin "github.com/tomochain/backend-matching-engine/swap/bitcoin"
-	swapEthereum "github.com/tomochain/backend-matching-engine/swap/ethereum"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	swapBitcoin "github.com/tomochain/dex-server/swap/bitcoin"
+	swapEthereum "github.com/tomochain/dex-server/swap/ethereum"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/ws"
 	"gopkg.in/mgo.v2/bson"
 )
 

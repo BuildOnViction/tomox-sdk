@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/utils/math"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"

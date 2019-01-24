@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
 )
 
 // WalletService struct with daos required, responsible for communicating with daos

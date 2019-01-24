@@ -1,5 +1,5 @@
 package contracts
 
-import "github.com/tomochain/backend-matching-engine/utils"
+import "github.com/tomochain/dex-server/utils"
 
 var logger = utils.Logger

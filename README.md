@@ -24,7 +24,7 @@ You need to run `./install-requirements.sh` to install all required libraries
 
 ```bash
 cd dex-server
-export BACKEND=$GOPATH/src/github.com/tomochain/backend-matching-engine
+export BACKEND=$GOPATH/src/github.com/tomochain/dex-server
 mkdir -p $BACKEND
 ln -sF $PWD $BACKEND
 cd $BACKEND
