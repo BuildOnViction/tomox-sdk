@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/utils/httputils"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type orderEndpoint struct {

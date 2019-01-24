@@ -7,8 +7,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
 )
 
 func (l *Listener) Start() error {

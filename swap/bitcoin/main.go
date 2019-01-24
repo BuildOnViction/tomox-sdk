@@ -6,9 +6,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/swap/storage"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/swap/storage"
+	"github.com/tomochain/dex-server/utils"
 	"github.com/tyler-smith/go-bip32"
 )
 

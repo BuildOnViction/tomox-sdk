@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/types"
 )
 
 func (c *Connection) SubscribeEngineResponses(fn func(*types.EngineResponse) error) error {

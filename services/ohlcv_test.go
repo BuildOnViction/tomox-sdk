@@ -12,9 +12,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/daos"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/daos"
+	"github.com/tomochain/dex-server/types"
 	"gopkg.in/mgo.v2/bson"
 )
 

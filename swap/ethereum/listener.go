@@ -7,8 +7,8 @@ import (
 
 	ethereumTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/tomochain/backend-matching-engine/errors"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
 )
 
 const (
@@ -161,12 +161,12 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 	transactions := block.Transactions()
 
-	blockTime := time.Unix(block.Time().Int64(), 0)
-	logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
-		block.NumberU64(),
-		blockTime,
-		len(transactions),
-	)
+	//blockTime := time.Unix(block.Time().Int64(), 0)
+	//logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
+	//	block.NumberU64(),
+	//	blockTime,
+	//	len(transactions),
+	//)
 
 	for _, transaction := range transactions {
 		to := transaction.To()

@@ -3,7 +3,7 @@ package ws
 import (
 	"fmt"
 
-	"github.com/tomochain/backend-matching-engine/errors"
+	"github.com/tomochain/dex-server/errors"
 )
 
 const (

@@ -4,12 +4,12 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
+	"github.com/tomochain/dex-server/rabbitmq"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/utils/testutils/mocks"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/dex-server/utils/testutils/mocks"
 )
 
 func TestCancelTrades(t *testing.T) {

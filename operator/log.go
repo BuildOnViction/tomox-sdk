@@ -1,8 +1,8 @@
 package operator
 
 // import (
-// 	"github.com/tomochain/backend-matching-engine/types"
-// 	"github.com/tomochain/backend-matching-engine/utils"
+// 	"github.com/tomochain/dex-server/types"
+// 	"github.com/tomochain/dex-server/utils"
 // 	logging "github.com/op/go-logging"
 // )
 
