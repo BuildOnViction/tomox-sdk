@@ -128,7 +128,6 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	txOpts.Nonce = big.NewInt(int64(nonce))
 	// TODO: Fix these 2 lines later
 	txOpts.GasLimit = gasLimit
-	txOpts.GasPrice = big.NewInt(1)
 	// *****
 	tx, err := txq.Exchange.ExecuteBatchTrades(m, txOpts)
 	if err != nil {
