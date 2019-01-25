@@ -51,8 +51,8 @@ module.exports = {
         '1': (process.env.TOMO_MAINNET_KEYS || '').split(','),
         '4': (process.env.TOMO_RINKEBY_KEYS || '').split(','),
         '8888': [
-            '0x3411b45169aa5a8312e51357db68621031020dcf46011d7431db1bbb6d3922ce',
-            '0x75c3e3150c0127af37e7e9df51430d36faa4c4660b6984c1edff254486d834e9',
+            '0x7f4c1bacba63f05827f6d8fc0e22cf68c42005775a7f73abff7d819986bae77c',
+            '0x2c52197df32aa00940685ae94aeb4b8b6f4c81e2c5f9d289ec76eb614adb9686',
         ],
     },
     quoteTokens,
