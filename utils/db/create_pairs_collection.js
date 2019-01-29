@@ -1,14 +1,14 @@
-const MongoClient = require('mongodb').MongoClient;
-const { DB_NAME, mongoUrl } = require('./utils/config');
+const MongoClient = require('mongodb').MongoClient
+const { DB_NAME, mongoUrl } = require('./utils/config')
 const create = async () => {
   const client = await MongoClient.connect(
     mongoUrl,
-    { useNewUrlParser: true }
-  );
-  const db = client.db(DB_NAME);
-  console.log('Creating pairs collection');
+    { useNewUrlParser: true },
+  )
+  const db = client.db(DB_NAME)
+  console.log('Creating pairs collection')
   try {
-    const response = await db.createCollection('pairs', {
+    await db.createCollection('pairs', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
@@ -16,56 +16,51 @@ const create = async () => {
           properties: {
             baseTokenSymbol: {
               bsonType: 'string',
-              description: 'must be a a string and is not required'
+              description: 'must be a a string and is not required',
             },
             baseTokenAddress: {
               bsonType: 'string',
-              description: 'must be a string and is required'
+              description: 'must be a string and is required',
             },
             baseTokenDecimals: {
-              bsonType: 'int'
+              bsonType: 'int',
             },
             quoteTokenSymbol: {
               bsonType: 'string',
-              description: 'must be a string and is required'
+              description: 'must be a string and is required',
             },
             quoteTokenAddress: {
               bsonType: 'string',
-              description: 'must be a string and is required'
+              description: 'must be a string and is required',
             },
             quoteTokenDecimals: {
-              bsonType: 'int'
-            },
-            priceMultiplier: {
-              bsonType: 'string'
+              bsonType: 'int',
             },
             active: {
               bsonType: 'bool',
-              description: 'must be a boolean and is not required'
+              description: 'must be a boolean and is not required',
             },
             makeFee: {
-              bsonType: 'string'
+              bsonType: 'string',
             },
             takeFee: {
-              bsonType: 'string'
+              bsonType: 'string',
             },
             createdAt: {
-              bsonType: 'date'
+              bsonType: 'date',
             },
             updatedAt: {
-              bsonType: 'date'
-            }
-          }
-        }
-      }
-    });
-
-    console.log(response);
+              bsonType: 'date',
+            },
+          },
+        },
+      },
+    })
   } catch (e) {
-    console.log(e);
+    console.log(e)
   } finally {
-    client.close();
+    client.close()
   }
-};
+}
 
-create();
+create()

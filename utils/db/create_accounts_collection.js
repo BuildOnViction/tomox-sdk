@@ -1,39 +1,37 @@
-const MongoClient = require('mongodb').MongoClient;
-const { DB_NAME, mongoUrl } = require('./utils/config');
+const MongoClient = require('mongodb').MongoClient
+const { DB_NAME, mongoUrl } = require('./utils/config')
 const create = async () => {
   const client = await MongoClient.connect(
     mongoUrl,
-    { useNewUrlParser: true }
-  );
-  console.log('Creating accounts collection');
-  const db = client.db(DB_NAME);
+    { useNewUrlParser: true },
+  )
+  console.log('Creating accounts collection')
+  const db = client.db(DB_NAME)
   try {
-    const response = await db.createCollection('accounts', {
+    await db.createCollection('accounts', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
           required: ['address'],
           properties: {
             address: {
-              bsonType: 'string'
+              bsonType: 'string',
             },
             tokenBalances: {
-              bsonType: 'object'
+              bsonType: 'object',
             },
             isBlocked: {
-              bsonType: 'bool'
-            }
-          }
-        }
-      }
-    });
-
-    console.log(response);
+              bsonType: 'bool',
+            },
+          },
+        },
+      },
+    })
   } catch (e) {
-    console.log(e);
+    console.log(e)
   } finally {
-    client.close();
+    client.close()
   }
-};
+}
 
-create();
+create()

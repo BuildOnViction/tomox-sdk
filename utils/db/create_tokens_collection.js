@@ -1,14 +1,14 @@
-const MongoClient = require('mongodb').MongoClient;
-const { DB_NAME, mongoUrl } = require('./utils/config');
+const MongoClient = require('mongodb').MongoClient
+const { DB_NAME, mongoUrl } = require('./utils/config')
 const create = async () => {
   const client = await MongoClient.connect(
     mongoUrl,
-    { useNewUrlParser: true }
-  );
-  console.log('Creating tokens collection');
-  const db = client.db(DB_NAME);
+    { useNewUrlParser: true },
+  )
+  console.log('Creating tokens collection')
+  const db = client.db(DB_NAME)
   try {
-    const response = await db.createCollection('tokens', {
+    await db.createCollection('tokens', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
@@ -16,34 +16,32 @@ const create = async () => {
           properties: {
             symbol: {
               bsonType: 'string',
-              description: 'must be a string and is required'
+              description: 'must be a string and is required',
             },
             contractAddress: {
-              bsonType: 'string'
+              bsonType: 'string',
             },
             quote: {
-              bsonType: 'bool'
+              bsonType: 'bool',
             },
             decimals: {
-              bsonType: 'int'
+              bsonType: 'int',
             },
             createdAt: {
-              bsonType: 'date'
+              bsonType: 'date',
             },
             updatedAt: {
-              bsonType: 'date'
-            }
-          }
-        }
-      }
-    });
-
-    console.log(response);
+              bsonType: 'date',
+            },
+          },
+        },
+      },
+    })
   } catch (e) {
-    console.log(e);
+    console.log(e)
   } finally {
-    client.close();
+    client.close()
   }
-};
+}
 
-create();
+create()
