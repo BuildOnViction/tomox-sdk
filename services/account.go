@@ -95,11 +95,22 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		a.TokenBalances[t.ContractAddress] = &types.TokenBalance{
 			Address:        t.ContractAddress,
 			Symbol:         t.Symbol,
-			Balance:        big.NewInt(0),
-			Allowance:      big.NewInt(0),
-			LockedBalance:  big.NewInt(0),
-			PendingBalance: big.NewInt(0),
+			Balance:        big.NewInt(types.DefaultTestBalance()),
+			Allowance:      big.NewInt(types.DefaultTestAllowance()),
+			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
+	}
+
+	nativeCurrency := types.GetNativeCurrency()
+
+	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
+		Address:        nativeCurrency.Address,
+		Symbol:         nativeCurrency.Symbol,
+		Balance:        big.NewInt(types.DefaultTestBalance()),
+		Allowance:      big.NewInt(types.DefaultTestAllowance()),
+		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
 
 	err = s.accountDao.Create(a)
