@@ -41,7 +41,7 @@ const decimals = symbols.reduce((map, symbol) => {
 
 const nativeCurrency = {
     symbol: 'TOMO',
-    address: '0x0',
+    address: '0x0000000000000000000000000000000000000001',
     decimals: 18,
     makerFee: utils.bigNumberify(10).pow(18).div(250),
     takerFee: utils.bigNumberify(10).pow(18).div(250),

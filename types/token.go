@@ -60,7 +60,7 @@ type NativeCurrency struct {
 
 func GetNativeCurrency() NativeCurrency {
 	return NativeCurrency{
-		Address: common.HexToAddress("0x0"),
+		Address: common.HexToAddress("0x1"),
 		Symbol:  "TOMO",
 	}
 }
