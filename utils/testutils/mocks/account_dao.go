@@ -148,20 +148,6 @@ func (_m *AccountDao) GetTokenBalances(owner common.Address) (map[common.Address
 	return r0, r1
 }
 
-// UpdateAllowance provides a mock function with given fields: owner, token, allowance
-func (_m *AccountDao) UpdateAllowance(owner common.Address, token common.Address, allowance *big.Int) error {
-	ret := _m.Called(owner, token, allowance)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(common.Address, common.Address, *big.Int) error); ok {
-		r0 = rf(owner, token, allowance)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // UpdateBalance provides a mock function with given fields: owner, token, balance
 func (_m *AccountDao) UpdateBalance(owner common.Address, token common.Address, balance *big.Int) error {
 	ret := _m.Called(owner, token, balance)

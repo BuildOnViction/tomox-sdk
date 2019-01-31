@@ -21,13 +21,12 @@ type Account struct {
 	UpdatedAt     time.Time                        `json:"updatedAt" bson:"updatedAt"`
 }
 
-// TokenBalance holds the Balance, Allowance and the Locked balance values for a single Ethereum token
-// Balance, Allowance and Locked Balance are stored as big.Int as they represent uint256 values
+// TokenBalance holds the Balance and the Locked balance values for a single Ethereum token
+// Balance and Locked Balance are stored as big.Int as they represent uint256 values
 type TokenBalance struct {
 	Address        common.Address `json:"address" bson:"address"`
 	Symbol         string         `json:"symbol" bson:"symbol"`
 	Balance        *big.Int       `json:"balance" bson:"balance"`
-	Allowance      *big.Int       `json:"allowance" bson:"allowance"`
 	PendingBalance *big.Int       `json:"pendingBalance" bson:"pendingBalance"`
 	LockedBalance  *big.Int       `json:"lockedBalance" bson:"lockedBalance"`
 }
@@ -47,7 +46,6 @@ type TokenBalanceRecord struct {
 	Address        string `json:"address" bson:"address"`
 	Symbol         string `json:"symbol" bson:"symbol"`
 	Balance        string `json:"balance" bson:"balance"`
-	Allowance      string `json:"allowance" bson:"allowance"`
 	PendingBalance string `json:"pendingBalance" base:"pendingBalance"`
 	LockedBalance  string `json:"lockedBalance" bson:"lockedBalance"`
 }
@@ -66,7 +64,6 @@ func (a *Account) GetBSON() (interface{}, error) {
 			Address:        value.Address.Hex(),
 			Symbol:         value.Symbol,
 			Balance:        value.Balance.String(),
-			Allowance:      value.Allowance.String(),
 			LockedBalance:  value.LockedBalance.String(),
 			PendingBalance: value.PendingBalance.String(),
 		}
@@ -97,8 +94,6 @@ func (a *Account) SetBSON(raw bson.Raw) error {
 
 		balance := new(big.Int)
 		balance, _ = balance.SetString(value.Balance, 10)
-		allowance := new(big.Int)
-		allowance, _ = allowance.SetString(value.Allowance, 10)
 		lockedBalance := new(big.Int)
 		lockedBalance, _ = lockedBalance.SetString(value.LockedBalance, 10)
 		pendingBalance := new(big.Int)
@@ -108,7 +103,6 @@ func (a *Account) SetBSON(raw bson.Raw) error {
 			Address:        common.HexToAddress(value.Address),
 			Symbol:         value.Symbol,
 			Balance:        balance,
-			Allowance:      allowance,
 			LockedBalance:  lockedBalance,
 			PendingBalance: pendingBalance,
 		}
@@ -142,7 +136,6 @@ func (a *Account) MarshalJSON() ([]byte, error) {
 			"address":        balance.Address.Hex(),
 			"symbol":         balance.Symbol,
 			"balance":        balance.Balance.String(),
-			"allowance":      balance.Allowance.String(),
 			"lockedBalance":  balance.LockedBalance.String(),
 			"pendingBalance": balance.PendingBalance.String(),
 		}
@@ -187,16 +180,11 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 			}
 
 			tb.Balance = new(big.Int)
-			tb.Allowance = new(big.Int)
 			tb.LockedBalance = new(big.Int)
 			tb.PendingBalance = new(big.Int)
 
 			if tokenBalance["balance"] != nil {
 				tb.Balance.UnmarshalJSON([]byte(tokenBalance["balance"].(string)))
-			}
-
-			if tokenBalance["allowance"] != nil {
-				tb.Allowance.UnmarshalJSON([]byte(tokenBalance["allowance"].(string)))
 			}
 
 			if tokenBalance["lockedBalance"] != nil {
@@ -235,7 +223,6 @@ func (a *AccountBSONUpdate) GetBSON() (interface{}, error) {
 			Address:        value.Address.Hex(),
 			Symbol:         value.Symbol,
 			Balance:        value.Balance.String(),
-			Allowance:      value.Allowance.String(),
 			LockedBalance:  value.LockedBalance.String(),
 			PendingBalance: value.PendingBalance.String(),
 		}

@@ -58,7 +58,6 @@ type AccountDao interface {
 	UpdateTokenBalance(owner common.Address, token common.Address, tokenBalance *types.TokenBalance) (err error)
 	UpdateBalance(owner common.Address, token common.Address, balance *big.Int) (err error)
 	FindOrCreate(addr common.Address) (*types.Account, error)
-	UpdateAllowance(owner common.Address, token common.Address, allowance *big.Int) (err error)
 	Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error
 	Drop()
 }

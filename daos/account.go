@@ -182,7 +182,6 @@ func (dao *AccountDao) UpdateTokenBalance(owner, token common.Address, tokenBala
 	updateQuery := bson.M{
 		"$set": bson.M{
 			"tokenBalances." + token.Hex() + ".balance":        tokenBalance.Balance.String(),
-			"tokenBalances." + token.Hex() + ".allowance":      tokenBalance.Allowance.String(),
 			"tokenBalances." + token.Hex() + ".lockedBalance":  tokenBalance.LockedBalance.String(),
 			"tokenBalances." + token.Hex() + ".pendingBalance": tokenBalance.PendingBalance.String(),
 		},
@@ -198,19 +197,6 @@ func (dao *AccountDao) UpdateBalance(owner common.Address, token common.Address,
 	}
 	updateQuery := bson.M{
 		"$set": bson.M{"tokenBalances." + token.Hex() + ".balance": balance.String()},
-	}
-
-	err := db.Update(dao.dbName, dao.collectionName, q, updateQuery)
-	return err
-}
-
-func (dao *AccountDao) UpdateAllowance(owner common.Address, token common.Address, allowance *big.Int) error {
-	q := bson.M{
-		"address": owner.Hex(),
-	}
-
-	updateQuery := bson.M{
-		"$set": bson.M{"tokenBalances." + token.Hex() + ".allowance": allowance.String()},
 	}
 
 	err := db.Update(dao.dbName, dao.collectionName, q, updateQuery)
