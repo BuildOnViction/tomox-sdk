@@ -59,6 +59,7 @@ type AccountDao interface {
 	UpdateBalance(owner common.Address, token common.Address, balance *big.Int) (err error)
 	FindOrCreate(addr common.Address) (*types.Account, error)
 	UpdateAllowance(owner common.Address, token common.Address, allowance *big.Int) (err error)
+	Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error
 	Drop()
 }
 
@@ -270,6 +271,7 @@ type AccountService interface {
 	FindOrCreate(a common.Address) (*types.Account, error)
 	GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error)
 	GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error)
+	Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error
 }
 
 type DepositService interface {

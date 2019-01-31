@@ -6,8 +6,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/types"
-	mgo "gopkg.in/mgo.v2"
+	"github.com/tomochain/dex-server/utils/math"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -212,6 +214,45 @@ func (dao *AccountDao) UpdateAllowance(owner common.Address, token common.Addres
 	}
 
 	err := db.Update(dao.dbName, dao.collectionName, q, updateQuery)
+	return err
+}
+
+func (dao *AccountDao) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
+
+	currentTokenBalanceFromAddress, err := dao.GetTokenBalances(fromAddress)
+
+	if err != nil {
+		return err
+	}
+
+	if math.IsStrictlySmallerThan(math.Mul(currentTokenBalanceFromAddress[token].Balance, big.NewInt(1e18)), amount) {
+		return errors.New("Not enough balance")
+	}
+
+	qFrom := bson.M{
+		"address": fromAddress.Hex(),
+	}
+	updateQueryFrom := bson.M{
+		"$set": bson.M{"tokenBalances." + token.Hex() + ".balance": (math.Sub(currentTokenBalanceFromAddress[token].Balance, amount)).String()},
+	}
+
+	err = db.Update(dao.dbName, dao.collectionName, qFrom, updateQueryFrom)
+
+	currentTokenBalanceToAddress, err := dao.GetTokenBalances(toAddress)
+
+	if err != nil {
+		return err
+	}
+
+	qTo := bson.M{
+		"address": toAddress.Hex(),
+	}
+	updateQueryTo := bson.M{
+		"$set": bson.M{"tokenBalances." + token.Hex() + ".balance": (math.Add(currentTokenBalanceToAddress[token].Balance, amount)).String()},
+	}
+
+	err = db.Update(dao.dbName, dao.collectionName, qTo, updateQueryTo)
+
 	return err
 }
 

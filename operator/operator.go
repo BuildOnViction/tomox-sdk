@@ -57,6 +57,7 @@ func NewOperator(
 	provider interfaces.EthereumProvider,
 	exchange interfaces.Exchange,
 	conn *rabbitmq.Connection,
+	accountService interfaces.AccountService,
 ) (*Operator, error) {
 	txqueues := []*TxQueue{}
 	addressIndex := make(map[common.Address]*TxQueue)
@@ -83,6 +84,7 @@ func NewOperator(
 			w,
 			exchange,
 			conn,
+			accountService,
 		)
 
 		if err != nil {
