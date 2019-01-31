@@ -22,11 +22,8 @@ node utils/db/create_config_collection.js
 
 
 echo "Seed data"
-node utils/db/seed_accounts.js
 node utils/db/seed_tokens.js
 node utils/db/seed_quotes.js
 node utils/db/seed_pairs.js
 node utils/db/seed_config.js
-# node utils/db/seed_orders.js
-#node utils/db/seed_trades.js
 node utils/db/seed_wallets.js

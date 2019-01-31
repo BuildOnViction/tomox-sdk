@@ -53,6 +53,42 @@ type Image struct {
 	Meta map[string]interface{} `json:"meta" bson:"meta"`
 }
 
+type NativeCurrency struct {
+	Address common.Address `json:"address" bson:"address"`
+	Symbol  string         `json:"symbol" bson:"symbol"`
+}
+
+func GetNativeCurrency() NativeCurrency {
+	return NativeCurrency{
+		Address: common.HexToAddress("0x0"),
+		Symbol:  "TOMO",
+	}
+}
+
+// DefaultTestBalance returns the default balance
+// Only for testing/mock purpose
+func DefaultTestBalance() int64 {
+	return 1000
+}
+
+// DefaultTestBalance returns the default allowance
+// Only for testing/mock purpose
+func DefaultTestAllowance() int64 {
+	return 1000
+}
+
+// DefaultTestBalance returns the default locked balance
+// Only for testing/mock purpose
+func DefaultTestLockedBalance() int64 {
+	return 0
+}
+
+// DefaultTestBalance returns the default pending balance
+// Only for testing/mock purpose
+func DefaultTestPendingBalance() int64 {
+	return 0
+}
+
 // Validate function is used to verify if an instance of
 // struct satisfies all the conditions for a valid instance
 func (t Token) Validate() error {
