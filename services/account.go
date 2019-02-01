@@ -50,10 +50,20 @@ func (s *AccountService) Create(a *types.Account) error {
 		a.TokenBalances[token.ContractAddress] = &types.TokenBalance{
 			Address:        token.ContractAddress,
 			Symbol:         token.Symbol,
-			Balance:        big.NewInt(0),
-			LockedBalance:  big.NewInt(0),
-			PendingBalance: big.NewInt(0),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
+	}
+
+	nativeCurrency := types.GetNativeCurrency()
+
+	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
+		Address:        nativeCurrency.Address,
+		Symbol:         nativeCurrency.Symbol,
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
 
 	if a != nil {
