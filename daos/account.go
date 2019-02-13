@@ -171,7 +171,11 @@ func (dao *AccountDao) GetTokenBalance(owner common.Address, token common.Addres
 	//bytes, _ := bson.Marshal(res[0])
 	//bson.Unmarshal(bytes, &a)
 
-	return res[0].TokenBalances[token], nil
+	if len(res) > 0 {
+		return res[0].TokenBalances[token], nil
+	}
+
+	return nil, errors.New("Account does not exist")
 }
 
 func (dao *AccountDao) UpdateTokenBalance(owner, token common.Address, tokenBalance *types.TokenBalance) error {
