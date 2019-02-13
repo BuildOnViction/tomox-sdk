@@ -21,7 +21,7 @@ const symbols = Object.keys(contractAddresses['8888']).filter(
     symbol => symbol !== 'Exchange',
 )
 
-const quoteTokens = ['WETH', 'DAI']
+const quoteTokens = []
 const baseTokens = symbols.filter(symbol => !quoteTokens.includes(symbol))
 
 const makeFees = {
@@ -38,6 +38,14 @@ const decimals = symbols.reduce((map, symbol) => {
     map[symbol] = 18
     return map
 }, {})
+
+const nativeCurrency = {
+    symbol: 'TOMO',
+    address: '0x0000000000000000000000000000000000000001',
+    decimals: 18,
+    makerFee: utils.bigNumberify(10).pow(18).div(250),
+    takerFee: utils.bigNumberify(10).pow(18).div(250),
+}
 
 module.exports = {
     DB_NAME: 'tomodex',
@@ -63,4 +71,5 @@ module.exports = {
     mongoUrl,
     network,
     contractAddresses,
+    nativeCurrency,
 }

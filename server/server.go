@@ -132,6 +132,7 @@ func NewRouter(
 		provider,
 		exchange,
 		rabbitConn,
+		accountService,
 	)
 
 	if err != nil {

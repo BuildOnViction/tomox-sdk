@@ -97,7 +97,8 @@ func (e *accountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r 
 	b, err := e.accountService.GetTokenBalance(addr, tokenAddr)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusNotFound, err.Error())
+		return
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, b)
