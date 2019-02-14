@@ -36,6 +36,19 @@ type OHLCVParams struct {
 	Units    string          `json:"units"`
 }
 
+func (t *Tick) AveragePrice() *big.Int {
+	return math.Avg(t.Open, t.Close)
+}
+
+// RoundedVolume returns the value exchanged during this tick in the currency for which the 'exchangeRate' param
+// was provided.
+func (t *Tick) ConvertedVolume(p *Pair, exchangeRate float64) float64 {
+	valueAsToken := math.DivideToFloat(t.Volume, p.BaseTokenMultiplier())
+	value := valueAsToken / exchangeRate
+
+	return value
+}
+
 // MarshalJSON returns the json encoded byte array representing the trade struct
 func (t *Tick) MarshalJSON() ([]byte, error) {
 	tick := map[string]interface{}{
@@ -136,25 +149,10 @@ func (t *Tick) GetBSON() (interface{}, error) {
 		return nil, err
 	}
 
-	o, err := bson.ParseDecimal128(t.Open.String())
-	if err != nil {
-		return nil, err
-	}
-
-	h, err := bson.ParseDecimal128(t.High.String())
-	if err != nil {
-		return nil, err
-	}
-
-	l, err := bson.ParseDecimal128(t.Low.String())
-	if err != nil {
-		return nil, err
-	}
-
-	c, err := bson.ParseDecimal128(t.Close.String())
-	if err != nil {
-		return nil, err
-	}
+	o := t.Open.String()
+	h := t.High.String()
+	l := t.Low.String()
+	c := t.Close.String()
 
 	v, err := bson.ParseDecimal128(t.Volume.String())
 	if err != nil {
@@ -164,10 +162,10 @@ func (t *Tick) GetBSON() (interface{}, error) {
 	return struct {
 		ID        PairID          `json:"id,omitempty" bson:"_id"`
 		Count     bson.Decimal128 `json:"count" bson:"count"`
-		Open      bson.Decimal128 `json:"open" bson:"open"`
-		High      bson.Decimal128 `json:"high" bson:"high"`
-		Low       bson.Decimal128 `json:"low" bson:"low"`
-		Close     bson.Decimal128 `json:"close" bson:"close"`
+		Open      string          `json:"open" bson:"open"`
+		High      string          `json:"high" bson:"high"`
+		Low       string          `json:"low" bson:"low"`
+		Close     string          `json:"close" bson:"close"`
 		Volume    bson.Decimal128 `json:"volume" bson:"volume"`
 		Timestamp int64           `json:"timestamp" bson:"timestamp"`
 	}{
@@ -197,10 +195,10 @@ func (t *Tick) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		Pair      PairIDRecord    `json:"pair,omitempty" bson:"_id"`
 		Count     bson.Decimal128 `json:"count" bson:"count"`
-		Open      bson.Decimal128 `json:"open" bson:"open"`
-		High      bson.Decimal128 `json:"high" bson:"high"`
-		Low       bson.Decimal128 `json:"low" bson:"low"`
-		Close     bson.Decimal128 `json:"close" bson:"close"`
+		Open      string          `json:"open" bson:"open"`
+		High      string          `json:"high" bson:"high"`
+		Low       string          `json:"low" bson:"low"`
+		Close     string          `json:"close" bson:"close"`
 		Volume    bson.Decimal128 `json:"volume" bson:"volume"`
 		Timestamp int64           `json:"timestamp" bson:"timestamp"`
 	})
@@ -216,18 +214,11 @@ func (t *Tick) SetBSON(raw bson.Raw) error {
 		QuoteToken: common.HexToAddress(decoded.Pair.QuoteToken),
 	}
 
-	t.Count = new(big.Int)
-	t.Close = new(big.Int)
-	t.High = new(big.Int)
-	t.Low = new(big.Int)
-	t.Open = new(big.Int)
-	t.Volume = new(big.Int)
-
 	count := decoded.Count.String()
-	o := decoded.Open.String()
-	h := decoded.High.String()
-	l := decoded.Low.String()
-	c := decoded.Close.String()
+	o := decoded.Open
+	h := decoded.High
+	l := decoded.Low
+	c := decoded.Close
 	v := decoded.Volume.String()
 
 	t.Count = math.ToBigInt(count)

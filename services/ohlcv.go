@@ -74,10 +74,6 @@ func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, uni
 	currentTimestamp := time.Now().Unix()
 
 	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
-	toDecimal := bson.M{"$addFields": bson.M{
-		"priceDecimal":  bson.M{"$toDecimal": "$pricepoint"},
-		"amountDecimal": bson.M{"$toDecimal": "$amount"},
-	}}
 
 	modTime, intervalInSeconds := getModTime(currentTimestamp, duration, unit)
 	group, addFields := getGroupAddFieldBson("$createdAt", unit, duration)
@@ -93,7 +89,7 @@ func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, uni
 	match = getMatchQuery(start, end, pairs...)
 	match = bson.M{"$match": match}
 	group = bson.M{"$group": group}
-	query := []bson.M{match, toDecimal, group, addFields, sort}
+	query := []bson.M{match, group, addFields, sort}
 
 	res, err := s.tradeDao.Aggregate(query)
 	if err != nil {
@@ -190,11 +186,11 @@ func getGroupAddFieldBson(key, units string, duration int64) (bson.M, bson.M) {
 	one, _ := bson.ParseDecimal128("1")
 	group = bson.M{
 		"count":  bson.M{"$sum": one},
-		"high":   bson.M{"$max": "$priceDecimal"},
-		"low":    bson.M{"$min": "$priceDecimal"},
-		"open":   bson.M{"$first": "$priceDecimal"},
-		"close":  bson.M{"$last": "$priceDecimal"},
-		"volume": bson.M{"$sum": "$amountDecimal"},
+		"high":   bson.M{"$max": "$pricepoint"},
+		"low":    bson.M{"$min": "$pricepoint"},
+		"open":   bson.M{"$first": "$pricepoint"},
+		"close":  bson.M{"$last": "$pricepoint"},
+		"volume": bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
 	}
 
 	groupID := make(bson.M)

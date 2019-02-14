@@ -54,6 +54,11 @@ func NewTradeDao() *TradeDao {
 		Key: []string{"createdAt", "status", "baseToken", "quoteToken"},
 	}
 
+	i8 := mgo.Index{
+		Key:       []string{"pricepoint"},
+		Collation: &mgo.Collation{NumericOrdering: true, Locale: "en"},
+	}
+
 	err := db.Session.DB(dbName).C(collection).EnsureIndex(i1)
 	if err != nil {
 		panic(err)
@@ -85,6 +90,11 @@ func NewTradeDao() *TradeDao {
 	}
 
 	err = db.Session.DB(dbName).C(collection).EnsureIndex(i7)
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Session.DB(dbName).C(collection).EnsureIndex(i8)
 	if err != nil {
 		panic(err)
 	}

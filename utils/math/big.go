@@ -43,6 +43,12 @@ func BigIntToBigFloat(a *big.Int) *big.Float {
 	return b
 }
 
+func DivideToFloat(a, b *big.Int) float64 {
+	res, _ := big.NewRat(1, 1).SetFrac(a, b).Float64()
+
+	return res
+}
+
 func ToDecimal(value *big.Int) float64 {
 	bigFloatValue := BigIntToBigFloat(value)
 	result := DivFloat(bigFloatValue, big.NewFloat(1e18))
