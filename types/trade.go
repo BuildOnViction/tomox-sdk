@@ -27,16 +27,13 @@ type Trade struct {
 	MakerOrderHash common.Hash    `json:"makerOrderHash" bson:"makerOrderHash"`
 	TakerOrderHash common.Hash    `json:"takerOrderHash" bson:"takerOrderHash"`
 	Hash           common.Hash    `json:"hash" bson:"hash"`
-	// side and signature will be omit
-	Side       string      `json:"side" bson:"side"`
-	Signature  *Signature  `json:"signature" bson:"signature"`
-	TxHash     common.Hash `json:"txHash" bson:"txHash"`
-	PairName   string      `json:"pairName" bson:"pairName"`
-	CreatedAt  time.Time   `json:"createdAt" bson:"createdAt"`
-	UpdatedAt  time.Time   `json:"updatedAt" bson:"updatedAt"`
-	PricePoint *big.Int    `json:"pricepoint" bson:"pricepoint"`
-	Status     string      `json:"status" bson:"status"`
-	Amount     *big.Int    `json:"amount" bson:"amount"`
+	TxHash         common.Hash    `json:"txHash" bson:"txHash"`
+	PairName       string         `json:"pairName" bson:"pairName"`
+	CreatedAt      time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt"`
+	PricePoint     *big.Int       `json:"pricepoint" bson:"pricepoint"`
+	Status         string         `json:"status" bson:"status"`
+	Amount         *big.Int       `json:"amount" bson:"amount"`
 }
 
 type TradeRecord struct {
@@ -243,6 +240,11 @@ func (t *Trade) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (t *Trade) QuoteAmount(p *Pair) *big.Int {
+	pairMultiplier := p.PairMultiplier()
+	return math.Div(math.Mul(t.Amount, t.PricePoint), pairMultiplier)
+}
+
 func (t *Trade) GetBSON() (interface{}, error) {
 	tr := TradeRecord{
 		ID:             t.ID,
@@ -316,18 +318,6 @@ func (t *Trade) ComputeHash() common.Hash {
 	sha.Write(t.MakerOrderHash.Bytes())
 	sha.Write(t.TakerOrderHash.Bytes())
 	return common.BytesToHash(sha.Sum(nil))
-}
-
-func (t *Trade) Sign(w *Wallet) error {
-	hash := t.ComputeHash()
-	sig, err := w.SignHash(hash)
-	if err != nil {
-		return err
-	}
-
-	t.Hash = hash
-	t.Signature = sig
-	return nil
 }
 
 func (t *Trade) Pair() (*Pair, error) {

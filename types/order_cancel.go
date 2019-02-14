@@ -37,9 +37,9 @@ func (oc *OrderCancel) MarshalJSON() ([]byte, error) {
 		"orderHash": oc.OrderHash,
 		"hash":      oc.Hash,
 		"signature": map[string]interface{}{
-			"v": oc.Signature.V,
-			"r": oc.Signature.R,
-			"s": oc.Signature.S,
+			"V": oc.Signature.V,
+			"R": oc.Signature.R,
+			"S": oc.Signature.S,
 		},
 	}
 
@@ -72,9 +72,9 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{
-		V: byte(sig["v"].(float64)),
-		R: common.HexToHash(sig["r"].(string)),
-		S: common.HexToHash(sig["s"].(string)),
+		V: byte(sig["V"].(float64)),
+		R: common.HexToHash(sig["R"].(string)),
+		S: common.HexToHash(sig["S"].(string)),
 	}
 
 	return nil
