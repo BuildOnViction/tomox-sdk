@@ -39,10 +39,6 @@ type OperatorInterface interface {
 	SubscribeOperatorMessages(fn func(*types.OperatorMessage) error) error
 	QueueTrade(o *types.Order, t *types.Trade) error
 	GetShortestQueue() (*TxQueue, int, error)
-	SetFeeAccount(account common.Address) (*eth.Transaction, error)
-	SetOperator(account common.Address, isOperator bool) (*eth.Transaction, error)
-	FeeAccount() (common.Address, error)
-	Operator(addr common.Address) (bool, error)
 }
 
 // NewOperator creates a new operator struct. It creates an exchange contract instance from the
@@ -271,64 +267,6 @@ func (op *Operator) GetShortestQueue() (*TxQueue, int, error) {
 	}
 
 	return shortest, min, nil
-}
-
-// SetFeeAccount sets the fee account of the exchange contract. The fee account receives
-// the trading fees whenever a trade is settled.
-func (op *Operator) SetFeeAccount(account common.Address) (*eth.Transaction, error) {
-	txOpts, err := op.GetTxSendOptions()
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	tx, err := op.Exchange.SetFeeAccount(account, txOpts)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return tx, nil
-}
-
-// SetOperator updates the operator settings of the given address. Only addresses with an
-// operator access can execute Withdraw and Trade transactions to the Exchange smart contract
-func (op *Operator) SetOperator(account common.Address, isOperator bool) (*eth.Transaction, error) {
-	txOpts, err := op.GetTxSendOptions()
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	tx, err := op.Exchange.SetOperator(account, isOperator, txOpts)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return tx, nil
-}
-
-// FeeAccount is the Ethereum towards the exchange trading fees are sent
-func (op *Operator) FeeAccount() (common.Address, error) {
-	account, err := op.Exchange.FeeAccount()
-	if err != nil {
-		logger.Error(err)
-		return common.Address{}, err
-	}
-
-	return account, nil
-}
-
-// Operator returns true if the given address is an operator of the exchange and returns false otherwise
-func (op *Operator) Operator(addr common.Address) (bool, error) {
-	isOperator, err := op.Exchange.Operator(addr)
-	if err != nil {
-		logger.Error(err)
-		return false, err
-	}
-
-	return isOperator, nil
 }
 
 func (op *Operator) PurgeQueues() error {
