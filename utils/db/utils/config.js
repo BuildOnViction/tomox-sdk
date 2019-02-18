@@ -16,10 +16,8 @@ const tokenContent = fs
     .toString()
 
 const contractAddresses = JSON.parse(tokenContent)
-// all token symbols but Exchange
-const symbols = Object.keys(contractAddresses['8888']).filter(
-    symbol => symbol !== 'Exchange',
-)
+
+const symbols = Object.keys(contractAddresses['8888'])
 
 const quoteTokens = []
 const baseTokens = symbols.filter(symbol => !quoteTokens.includes(symbol))
