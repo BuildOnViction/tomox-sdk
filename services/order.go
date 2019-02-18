@@ -570,3 +570,7 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 	id := utils.GetTradeChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
 	ws.GetTradeSocket().BroadcastMessage(id, trades)
 }
+
+func (s *OrderService) SyncOrders() {
+
+}
