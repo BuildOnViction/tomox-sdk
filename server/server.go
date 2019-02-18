@@ -110,7 +110,7 @@ func NewRouter(
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 
 	// start cron service
-	cronService := crons.NewCronService(ohlcvService)
+	cronService := crons.NewCronService(ohlcvService, orderService)
 
 	// get exchange contract instance
 	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
