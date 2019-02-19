@@ -153,9 +153,9 @@ func NewRouter(
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)
+	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 	rabbitConn.SubscribeTrades(op.HandleTrades)
 	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
-	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 
 	cronService.InitCrons()
 	return r
