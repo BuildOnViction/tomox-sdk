@@ -571,6 +571,18 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 	ws.GetTradeSocket().BroadcastMessage(id, trades)
 }
 
-func (s *OrderService) SyncOrders() {
+func (s *OrderService) SyncOrderBook() {
+	orders, err := s.orderDao.GetNewOrders()
 
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+
+	err = s.orderDao.SyncNewOrders(orders)
+
+	if err != nil {
+		logger.Error(err)
+		return
+	}
 }

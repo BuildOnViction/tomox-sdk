@@ -5,10 +5,11 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils/math"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -796,4 +797,52 @@ func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
 	}
 
 	return orderData, nil
+}
+
+func (dao *OrderDao) AddNewOrder(o *types.Order) error {
+	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	var result interface{}
+	err = rpcClient.Call(&result, "tomox_addNewOrder", o)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (dao *OrderDao) GetNewOrders() ([]*types.Order, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		return []*types.Order{}, err
+	}
+
+	var orders []*types.Order
+	err = rpcClient.Call(&orders, "tomox_getNewOrders")
+
+	if err != nil {
+		return []*types.Order{}, err
+	}
+
+	return orders, nil
+}
+
+func (dao *OrderDao) SyncNewOrders(orders []*types.Order) error {
+	for _, o := range orders {
+		dao.FindAndModify(o.Hash, o)
+	}
+
+	return nil
 }
