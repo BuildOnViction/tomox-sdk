@@ -26,6 +26,6 @@ func NewCronService(
 func (s *CronService) InitCrons() {
 	c := cron.New()
 	s.tickStreamingCron(c)
-	s.syncOrdersCron(c)
+	s.syncOrderBookCron(c)
 	c.Start()
 }
