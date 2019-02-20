@@ -571,18 +571,53 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 	ws.GetTradeSocket().BroadcastMessage(id, trades)
 }
 
-func (s *OrderService) SyncOrderBook() {
+func (s *OrderService) SyncOrderBook() error {
 	orders, err := s.orderDao.GetNewOrders()
 
 	if err != nil {
 		logger.Error(err)
-		return
+		return err
+	}
+
+	for _, o := range orders {
+		switch o.Status {
+		case "OPEN":
+			res := &types.EngineResponse{
+				Status:  "ORDER_CANCELLED",
+				Order:   o,
+				Matches: nil,
+			}
+
+			// Note: Plug the option for orders like FOC, Limit here (if needed)
+			err = s.broker.PublishEngineResponse(res)
+			if err != nil {
+				logger.Error(err)
+				return err
+			}
+
+			return nil
+
+		case "CANCELLED":
+			res := &types.EngineResponse{
+				Status:  "ORDER_CANCELLED",
+				Order:   o,
+				Matches: nil,
+			}
+
+			err = s.broker.PublishEngineResponse(res)
+			if err != nil {
+				logger.Error(err)
+				return err
+			}
+
+			return nil
+		}
 	}
 
 	err = s.orderDao.SyncNewOrders(orders)
 
 	if err != nil {
 		logger.Error(err)
-		return
+		return err
 	}
 }
