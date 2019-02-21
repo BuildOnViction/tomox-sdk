@@ -620,4 +620,6 @@ func (s *OrderService) SyncOrderBook() error {
 		logger.Error(err)
 		return err
 	}
+
+	return nil
 }
