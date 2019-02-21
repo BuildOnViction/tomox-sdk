@@ -3,6 +3,13 @@ const path = require('path')
 const utils = require('ethers').utils
 const program = require('commander')
 
+const { getNetworkID } = require('./utils/helpers')
+
+const network = process.argv[2]
+if (!network) console.log('Usage: node approve_tokens {network}')
+
+const networkID = getNetworkID(network) || '8888'
+
 require('dotenv').config()
 
 program
@@ -17,8 +24,6 @@ const TRUFFLE_BUILD_PATH = path.resolve(
 const contractConfig = require(path.resolve(TRUFFLE_BUILD_PATH, '../../config'))
 
 const ignoreFilesPattern = /(?:RewardCollector|RewardPools|Migrations|Owned|SafeMath)\.json$/
-
-const networkID = process.env.DEFAULT_NETWORK_ID || '8888'
 
 const contracts = {
   [networkID]: {},
