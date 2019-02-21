@@ -21,7 +21,9 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "commander": "^2.19.0",
     "date-fns": "^1.29.0",
+    "dotenv": "^6.2.0",
     "ethers": "^4.0.13",
     "faker": "^4.1.0",
     "moment": "^2.23.0",

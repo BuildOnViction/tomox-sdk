@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+echo "Query Tokens From dex-smart-contract"
+node utils/db/query_tokens.js
+
 echo "Update config"
 go run utils/seed-data/main.go seeds
 
