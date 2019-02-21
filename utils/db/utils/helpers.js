@@ -5,6 +5,8 @@ const getNetworkID = networkName => {
         mainnet: '1',
         homestead: '1',
         rinkeby: '4',
+        tomochain: '88',
+        tomochainTestnet: '89',
         local: '8888',
     }[networkName]
 }
