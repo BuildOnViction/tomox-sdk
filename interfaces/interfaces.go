@@ -347,8 +347,6 @@ type EthereumProvider interface {
 	GetBalanceAt(a common.Address) (*big.Int, error)
 	GetPendingNonceAt(a common.Address) (uint64, error)
 	BalanceOf(owner common.Address, token common.Address) (*big.Int, error)
-	Allowance(owner, spender, token common.Address) (*big.Int, error)
-	ExchangeAllowance(owner, token common.Address) (*big.Int, error)
 	Decimals(token common.Address) (uint8, error)
 	Symbol(token common.Address) (string, error)
 }
