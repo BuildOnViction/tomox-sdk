@@ -44,7 +44,7 @@ func Start() {
 
 	rabbitConn := rabbitmq.InitConnection(app.Config.RabbitMQURL)
 
-	provider := ethereum.NewDefaultEthereumProvider()
+	provider := ethereum.NewWebsocketProvider()
 
 	router := NewRouter(provider, rabbitConn)
 	// http.Handle("/", router)
