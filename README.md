@@ -52,8 +52,6 @@ docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
 
 # REST API
 
-Download [tomo-dex.postman_collection.json](tomo-dex.postman_collection.json)
-
 See [REST_API.md](REST_API.md)
 
 # Websocket API
