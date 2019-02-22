@@ -6,7 +6,7 @@ const program = require('commander')
 const { getNetworkID } = require('./utils/helpers')
 
 const network = process.argv[2]
-if (!network) console.log('Usage: node approve_tokens {network}')
+if (!network) console.log('Usage: node query_tokens {network}')
 
 const networkID = getNetworkID(network) || '8888'
 
@@ -52,7 +52,7 @@ files
 
 console.log(contracts)
 fs.writeFileSync(
-  'utils/db/utils/addresses.json',
+  'deployment/utils/addresses.json',
   JSON.stringify(contracts, null, 2),
   'utf8'
 )
