@@ -33,8 +33,6 @@ dep ensure
 
 **Start the development**
 
-_If you need to generate genesis block, take a look at [seed-data](./utils/seed-data/README.md)_
-
 ```bash
 # start dockers including mongo, rabbitmq
 yarn start-env
