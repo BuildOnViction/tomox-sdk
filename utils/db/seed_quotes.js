@@ -9,15 +9,10 @@ const { getNetworkID } = require('./utils/helpers')
 const { DB_NAME, mongoUrl, network } = require('./utils/config')
 const networkID = getNetworkID(network)
 
-const truffleBuildPath = path.join(
-  `${process.env.TOMO_DEX_PATH}`,
-  `/build/contracts`,
-)
 const {
   quoteTokens,
   makeFees,
   takeFees,
-  baseTokens,
   contractAddresses,
   decimals,
 } = require('./utils/config')
