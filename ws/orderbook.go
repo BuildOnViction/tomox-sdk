@@ -5,7 +5,7 @@ import (
 	"github.com/tomochain/dex-server/types"
 )
 
-var orderbook *OrderBookSocket
+var orderbookSocket *OrderBookSocket
 
 // OrderBookSocket holds the map of subscribtions subscribed to pair channels
 // corresponding to the key/event they have subscribed to.
@@ -23,11 +23,11 @@ func NewOrderBookSocket() *OrderBookSocket {
 
 // GetOrderBookSocket return singleton instance of PairSockets type struct
 func GetOrderBookSocket() *OrderBookSocket {
-	if orderbook == nil {
-		orderbook = NewOrderBookSocket()
+	if orderbookSocket == nil {
+		orderbookSocket = NewOrderBookSocket()
 	}
 
-	return orderbook
+	return orderbookSocket
 }
 
 // Subscribe handles the subscription of connection to get
