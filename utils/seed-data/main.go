@@ -16,10 +16,18 @@ var (
 	app = cli.NewApp()
 )
 
-func batch(filePath string, funcs ...func(string) error) error {
+var networks = map[string]string{
+	"ethereum":         "1",
+	"rinkeby":          "4",
+	"tomochain":        "88",
+	"tomochainTestnet": "89",
+	"development":      "8888",
+}
+
+func batch(filePath string, networkId string, funcs ...func(string, string) error) error {
 	var err error
 	for _, funcObj := range funcs {
-		err = funcObj(filePath)
+		err = funcObj(filePath, networkId)
 		if err != nil {
 			break
 		}
@@ -34,13 +42,15 @@ func init() {
 			Name: "seeds",
 			Action: func(c *cli.Context) error {
 				filePath := c.String("ccf")
+				networkId := getNetworkID(os.Args[2])
 				return batch(
 					filePath,
+					networkId,
 					generateConfig,
 				)
 			},
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-config-folder, ccf", Value: "../db/utils"},
+				cli.StringFlag{Name: "contract-config-folder, ccf", Value: "../../deployment/utils"},
 			},
 		},
 	}
@@ -64,7 +74,7 @@ func getAbsolutePath(basePath, folder string) string {
 
 }
 
-func getGroupsFromContractResultFile(contractResultFile string) map[string]interface{} {
+func getGroupsFromContractResultFile(contractResultFile string, networkId string) map[string]interface{} {
 	// // now matching data from contract-resultFile
 	// resultData, _ := ioutil.ReadFile(contractResultFile)
 	// // ?m: is notation tell this will match multiline
@@ -80,20 +90,32 @@ func getGroupsFromContractResultFile(contractResultFile string) map[string]inter
 	var ret map[string]interface{}
 	bytes, _ := ioutil.ReadFile(contractResultFile)
 	json.Unmarshal(bytes, &ret)
-	// TODO: Fix this hard-coded part 8888
-	return ret["8888"].(map[string]interface{})
+
+	return ret[networkId].(map[string]interface{})
 }
 
-func generateConfig(filePath string) error {
+func generateConfig(filePath string, networkId string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
 	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
 
-	groups := getGroupsFromContractResultFile(contractResultFile)
+	groups := getGroupsFromContractResultFile(contractResultFile, networkId)
 
 	configPath := path.Join(basePath, "../../config")
 	v := viper.New()
-	v.SetConfigName("config.sample")
+
+	// Choose config file based on deployment network
+	switch networkId {
+	case networks["tomochain"]:
+		v.SetConfigName("config.prod")
+	case networks["tomochainTestnet"]:
+		v.SetConfigName("config.dev")
+	case networks["development"]:
+		v.SetConfigName("config.local")
+	default:
+		v.SetConfigName("config.local")
+	}
+
 	v.SetConfigType("yaml")
 	v.AddConfigPath(configPath)
 
@@ -104,11 +126,14 @@ func generateConfig(filePath string) error {
 	ethereumConfig := v.GetStringMap("ethereum")
 
 	ethereumConfig["exchange_address"] = groups["Exchange"]
-	ethereumConfig["weth_address"] = groups["WETH"]
 
 	v.SetDefault("ethereum", ethereumConfig)
 
 	err := v.WriteConfigAs(path.Join(configPath, "config.yaml"))
 
 	return err
+}
+
+func getNetworkID(networkName string) string {
+	return networks[networkName]
 }

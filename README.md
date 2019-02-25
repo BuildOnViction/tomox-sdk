@@ -14,47 +14,11 @@ The matching-engine will be soon moved to blockchain services.
 
 ## Deployment guide step by step
 
-https://github.com/tomochain/dex-client/blob/master/Deployment_step_by_step.md
-
-## Booting up the server
-
-**Install the dependencies**
-
-You need to run `./install-requirements.sh` to install all required libraries
-
-```bash
-cd dex-server
-export BACKEND=$GOPATH/src/github.com/tomochain/dex-server
-mkdir -p $BACKEND
-ln -sF $PWD $BACKEND
-cd $BACKEND
-dep ensure
-```
-
-**Start the development**
-
-_If you need to generate genesis block, take a look at [seed-data](./utils/seed-data/README.md)_
-
-```bash
-# start dockers including mongo, rabbitmq
-yarn start-env
-# generate seeds data
-yarn seeds
-# If you need to reset
-yarn restart-env
-# If you need to run mongod outside docker-compose
-mongod --dbpath utils/datadir
-# this will start the server in hot-reload mode
-yarn start
-# check rabbitmq
-docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
-```
+https://github.com/tomochain/dex-smart-contract/blob/develop/Deployment_step_by_step.md
 
 =======
 
 # REST API
-
-Download [tomo-dex.postman_collection.json](tomo-dex.postman_collection.json)
 
 See [REST_API.md](REST_API.md)
 

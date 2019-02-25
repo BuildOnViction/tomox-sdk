@@ -1,30 +1,24 @@
 const fs = require('fs')
-const argv = require('yargs').argv
+const path = require('path')
 const faker = require('faker')
 const process = require('process')
+const argv = require('yargs').argv
 const utils = require('ethers').utils
-const path = require('path')
 const MongoClient = require('mongodb').MongoClient
 const { getNetworkID } = require('./utils/helpers')
 const { DB_NAME, mongoUrl, network } = require('./utils/config')
 const networkID = getNetworkID(network)
 
-const truffleBuildPath = path.join(
-  `${process.env.TOMO_DEX_PATH}`,
-  `/build/contracts`,
-)
 const {
-  quoteTokens,
-  makeFees,
-  takeFees,
   baseTokens,
   contractAddresses,
   decimals,
 } = require('./utils/config')
 
+// console.log(quoteTokens, baseTokens, decimals);
+
 let documents = []
 let addresses = contractAddresses[networkID]
-
 let client, db
 
 const seed = async () => {
@@ -33,16 +27,14 @@ const seed = async () => {
       mongoUrl,
       { useNewUrlParser: true },
     )
-    console.log('Seeding quotes tokens')
+    console.log('Seeding tokens')
     db = client.db(DB_NAME)
 
-    documents = quoteTokens.map(symbol => ({
+    documents = baseTokens.map(symbol => ({
       symbol: symbol,
       contractAddress: utils.getAddress(addresses[symbol]),
       decimals: decimals[symbol],
-      makeFee: makeFees[symbol].toString(),
-      takeFee: takeFees[symbol].toString(),
-      quote: true,
+      quote: false,
       createdAt: new Date(faker.fake('{{date.recent}}')),
     }))
 
