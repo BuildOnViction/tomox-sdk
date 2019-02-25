@@ -7,7 +7,7 @@ import (
 
 var orderbookSocket *OrderBookSocket
 
-// OrderBookSocket holds the map of subscribtions subscribed to pair channels
+// OrderBookSocket holds the map of subscriptions subscribed to orderbook channels
 // corresponding to the key/event they have subscribed to.
 type OrderBookSocket struct {
 	subscriptions     map[string]map[*Client]bool
@@ -21,7 +21,7 @@ func NewOrderBookSocket() *OrderBookSocket {
 	}
 }
 
-// GetOrderBookSocket return singleton instance of PairSockets type struct
+// GetOrderBookSocket return singleton instance of OrderBookSocket type struct
 func GetOrderBookSocket() *OrderBookSocket {
 	if orderbookSocket == nil {
 		orderbookSocket = NewOrderBookSocket()
@@ -49,6 +49,7 @@ func (s *OrderBookSocket) Subscribe(channelID string, c *Client) error {
 	}
 
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
+
 	return nil
 }
 
@@ -93,17 +94,22 @@ func (s *OrderBookSocket) BroadcastMessage(channelID string, p interface{}) erro
 	return nil
 }
 
-// SendErrorMessage sends error message on orderbookchannel
-func (s *OrderBookSocket) SendErrorMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, types.ERROR, data)
+// SendMessage sends a websocket message on the orderbook channel
+func (s *OrderBookSocket) SendMessage(c *Client, msgType types.SubscriptionEvent, p interface{}) {
+	c.SendMessage(OrderBookChannel, msgType, p)
 }
 
-// SendInitMessage sends INIT message on orderbookchannel on subscription event
+// SendInitMessage sends INIT message on orderbook channel on subscription event
 func (s *OrderBookSocket) SendInitMessage(c *Client, data interface{}) {
 	c.SendMessage(OrderBookChannel, types.INIT, data)
 }
 
-// SendUpdateMessage sends UPDATE message on orderbookchannel as new data is created
+// SendUpdateMessage sends UPDATE message on orderbook channel as new data is created
 func (s *OrderBookSocket) SendUpdateMessage(c *Client, data interface{}) {
 	c.SendMessage(OrderBookChannel, types.UPDATE, data)
+}
+
+// SendErrorMessage sends error message on orderbook channel
+func (s *OrderBookSocket) SendErrorMessage(c *Client, data interface{}) {
+	c.SendMessage(OrderBookChannel, types.ERROR, data)
 }
