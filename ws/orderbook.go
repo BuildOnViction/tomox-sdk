@@ -53,17 +53,20 @@ func (s *OrderBookSocket) Subscribe(channelID string, c *Client) error {
 	return nil
 }
 
-// UnsubscribeHandler returns function of type unsubscribe handler,
-// it handles the unsubscription of pair in case of connection closing.
-func (s *OrderBookSocket) UnsubscribeHandler(channelID string) func(c *Client) {
+// UnsubscribeHandler unsubscribes a connection from a certain orderbook channel id
+func (s *OrderBookSocket) UnsubscribeChannelHandler(channelID string) func(c *Client) {
 	return func(c *Client) {
 		s.UnsubscribeChannel(channelID, c)
 	}
 }
 
-// Unsubscribe is used to unsubscribe the connection from listening to the key
-// subscribed to. It can be called on unsubscription message from user or due to some other reason by
-// system
+func (s *OrderBookSocket) UnsubscribeHandler() func(c *Client) {
+	return func(c *Client) {
+		s.Unsubscribe(c)
+	}
+}
+
+// Unsubscribe removes a websocket connection from the orderbook channel updates
 func (s *OrderBookSocket) UnsubscribeChannel(channelID string, c *Client) {
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
