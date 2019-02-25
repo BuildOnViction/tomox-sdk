@@ -52,16 +52,20 @@ func (s *PriceBoardSocket) Subscribe(channelID string, c *Client) error {
 	return nil
 }
 
-// UnsubscribeHandler returns function of type unsubscribe handler,
-// it handles the unsubscription of pair in case of connection closing.
-func (s *PriceBoardSocket) UnsubscribeHandler(channelID string) func(c *Client) {
+// UnsubscribeHandler unsubscribes a connection from a certain price board channel id
+func (s *PriceBoardSocket) UnsubscribeChannelHandler(channelID string) func(c *Client) {
 	return func(c *Client) {
 		s.UnsubscribeChannel(channelID, c)
 	}
 }
 
-// Unsubscribe is used to unsubscribe the connection from listening to the key subscribed to.
-// It can be called on unsubscription message from user or due to some other reason by system
+func (s *PriceBoardSocket) UnsubscribeHandler() func(c *Client) {
+	return func(c *Client) {
+		s.Unsubscribe(c)
+	}
+}
+
+// Unsubscribe removes a websocket connection from the price board channel updates
 func (s *PriceBoardSocket) UnsubscribeChannel(channelID string, c *Client) {
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
@@ -70,8 +74,8 @@ func (s *PriceBoardSocket) UnsubscribeChannel(channelID string, c *Client) {
 }
 
 func (s *PriceBoardSocket) Unsubscribe(c *Client) {
-	channelIds := s.subscriptionsList[c]
-	if channelIds == nil {
+	channelIDs := s.subscriptionsList[c]
+	if channelIDs == nil {
 		return
 	}
 

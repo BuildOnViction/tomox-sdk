@@ -254,6 +254,12 @@ type TradeService interface {
 	Unsubscribe(c *ws.Client)
 }
 
+type PriceBoardService interface {
+	Subscribe(c *ws.Client, bt, qt common.Address)
+	UnsubscribeChannel(c *ws.Client, bt, qt common.Address)
+	Unsubscribe(c *ws.Client)
+}
+
 type TxService interface {
 	GetTxCallOptions() *bind.CallOpts
 	GetTxSendOptions() (*bind.TransactOpts, error)
