@@ -124,6 +124,7 @@ func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {
 	}
 
 	socket := ws.GetTradeSocket()
+
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
 		err := map[string]string{"Message": "Invalid payload"}
