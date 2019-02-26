@@ -111,7 +111,7 @@ func NewRouter(
 	priceBoardService := services.NewPriceBoardService(tradeDao)
 
 	// start cron service
-	cronService := crons.NewCronService(ohlcvService)
+	cronService := crons.NewCronService(ohlcvService, priceBoardService)
 
 	// get exchange contract instance
 	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
