@@ -142,6 +142,10 @@ func getModTime(ts, interval int64, unit string) (int64, int64) {
 		intervalInSeconds = interval
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
 
+	case "min":
+		intervalInSeconds = interval * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
 	case "hour":
 		intervalInSeconds = interval * 60 * 60
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
@@ -163,10 +167,6 @@ func getModTime(ts, interval int64, unit string) (int64, int64) {
 		// Number of days in current year
 		d := time.Date(time.Now().Year()+1, 1, 1, 0, 0, 0, 0, time.UTC).Sub(time.Date(time.Now().Year(), 0, 0, 0, 0, 0, 0, time.UTC)).Hours() / 24
 		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
-		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
-
-	case "min":
-		intervalInSeconds = interval * 60
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
 	}
 

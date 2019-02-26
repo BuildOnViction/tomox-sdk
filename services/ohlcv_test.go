@@ -24,7 +24,7 @@ type TickSorter []*types.Tick
 
 func (a TickSorter) Len() int           { return len(a) }
 func (a TickSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a TickSorter) Less(i, j int) bool { return a[i].Ts < a[j].Ts }
+func (a TickSorter) Less(i, j int) bool { return a[i].Timestamp < a[j].Timestamp }
 
 var durations = map[string][]int64{
 	"year":  {1},
@@ -94,8 +94,6 @@ func TestOHLCV(t *testing.T) {
 		TakerOrderHash: common.HexToHash("0x4ac68946450e5a6273b92d81aa58f288d7b5515942456b89fb5c7e982efead7c"),
 		Hash:           common.HexToHash("0x4ac68946450e5a6273b92d81aa58f288d7b5515942456b89fb5c7e982efeas3f"),
 		PairName:       pair.Name,
-		Signature:      &types.Signature{},
-		Side:           "BUY",
 		PricePoint:     big.NewInt(9987),
 		Amount:         big.NewInt(125772),
 	}
@@ -128,7 +126,7 @@ func TestOHLCV(t *testing.T) {
 
 	for unit, durationSlice := range durations {
 		for _, duration := range durationSlice {
-			response, err := ohlcvService.GetOHLCV([]types.PairAddresses{pair}, duration, unit, 0, time.Now().Unix())
+			response, err := ohlcvService.GetOHLCV([]types.PairAddresses{*pair}, duration, unit, 0, time.Now().Unix())
 			if err != nil {
 				t.Errorf("%s", err)
 				return
@@ -198,31 +196,31 @@ func addTick(unit string, duration int64, ts int64, trade *types.Trade) {
 func tradeToTick(trade *types.Trade, tick *types.Tick, ts int64) *types.Tick {
 	if tick == nil {
 		tick = &types.Tick{
-			ID: types.TickID{
-				Pair:       trade.PairName,
+			Pair: types.PairID{
+				PairName:   trade.PairName,
 				BaseToken:  trade.BaseToken,
 				QuoteToken: trade.QuoteToken,
 			},
-			O:     trade.PricePoint,
-			H:     trade.PricePoint,
-			L:     trade.PricePoint,
-			C:     trade.PricePoint,
-			V:     trade.Amount,
-			Count: big.NewInt(1),
-			Ts:    ts * 1000,
+			Open:      trade.PricePoint,
+			High:      trade.PricePoint,
+			Low:       trade.PricePoint,
+			Close:     trade.PricePoint,
+			Volume:    trade.Amount,
+			Count:     big.NewInt(1),
+			Timestamp: ts * 1000,
 		}
 	} else {
-		tick.C = trade.PricePoint
+		tick.Close = trade.PricePoint
 		tv := new(big.Int)
-		tv.Add(tick.V, trade.Amount)
-		tick.V = tv
+		tv.Add(tick.Volume, trade.Amount)
+		tick.Volume = tv
 
 		tick.Count.Add(tick.Count, big.NewInt(1))
-		if trade.PricePoint.Cmp(tick.H) == 1 {
-			tick.H = trade.PricePoint
+		if trade.PricePoint.Cmp(tick.High) == 1 {
+			tick.High = trade.PricePoint
 		}
-		if trade.PricePoint.Cmp(tick.L) == -1 {
-			tick.L = trade.PricePoint
+		if trade.PricePoint.Cmp(tick.Low) == -1 {
+			tick.Low = trade.PricePoint
 		}
 	}
 	return tick
