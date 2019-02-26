@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/math"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -49,11 +50,20 @@ func (s *AccountService) Create(a *types.Account) error {
 		a.TokenBalances[token.ContractAddress] = &types.TokenBalance{
 			Address:        token.ContractAddress,
 			Symbol:         token.Symbol,
-			Balance:        big.NewInt(0),
-			Allowance:      big.NewInt(0),
-			LockedBalance:  big.NewInt(0),
-			PendingBalance: big.NewInt(0),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
+	}
+
+	nativeCurrency := types.GetNativeCurrency()
+
+	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
+		Address:        nativeCurrency.Address,
+		Symbol:         nativeCurrency.Symbol,
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
 
 	if a != nil {
@@ -95,11 +105,20 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		a.TokenBalances[t.ContractAddress] = &types.TokenBalance{
 			Address:        t.ContractAddress,
 			Symbol:         t.Symbol,
-			Balance:        big.NewInt(0),
-			Allowance:      big.NewInt(0),
-			LockedBalance:  big.NewInt(0),
-			PendingBalance: big.NewInt(0),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
+	}
+
+	nativeCurrency := types.GetNativeCurrency()
+
+	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
+		Address:        nativeCurrency.Address,
+		Symbol:         nativeCurrency.Symbol,
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
 
 	err = s.accountDao.Create(a)
@@ -129,4 +148,8 @@ func (s *AccountService) GetTokenBalance(owner common.Address, token common.Addr
 
 func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
 	return s.accountDao.GetTokenBalances(owner)
+}
+
+func (s *AccountService) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
+	return s.accountDao.Transfer(token, fromAddress, toAddress, amount)
 }

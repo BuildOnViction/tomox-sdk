@@ -24,9 +24,9 @@ logs:
   operator: ./operator.log
 
 ethereum:
-  # Will connect to Tomochain Mainnet
-  http_url: https://rpc.tomochain.com
-  ws_url: wss://ws.tomochain.com
+  # Will connect to Tomochain Testnet
+  http_url: https://testnet.tomochain.com
+  ws_url: wss://testnet.tomochain.com/ws
   bzz_url: http://localhost:8542
   exchange_address: 0xd68c26b99a40227C4AbE51020eDFd9BbA438B297
   weth_address: 0xd645C13C35141d61f273EDc0F546beF48a48001D

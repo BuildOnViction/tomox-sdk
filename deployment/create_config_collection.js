@@ -1,21 +1,21 @@
-const MongoClient = require('mongodb').MongoClient;
-const { DB_NAME, mongoUrl } = require('./utils/config');
+const MongoClient = require('mongodb').MongoClient
+const { DB_NAME, mongoUrl } = require('./utils/config')
 const create = async () => {
   const client = await MongoClient.connect(
     mongoUrl,
-    { useNewUrlParser: true }
-  );
-  console.log('Creating config collection');
-  const db = client.db(DB_NAME);
+    { useNewUrlParser: true },
+  )
+  console.log('Creating config collection')
+  const db = client.db(DB_NAME)
   try {
-    const response = await db.createCollection('config', {
+    await db.createCollection('config', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
           required: ['key'],
           properties: {
             key: {
-              bsonType: 'string'
+              bsonType: 'string',
             },
             value: {
               bsonType: [
@@ -25,26 +25,24 @@ const create = async () => {
                 'array',
                 'bool',
                 'date',
-                'object'
-              ]
+                'object',
+              ],
             },
             createdAt: {
-              bsonType: 'date'
+              bsonType: 'date',
             },
             updatedAt: {
-              bsonType: 'date'
-            }
-          }
-        }
-      }
-    });
-
-    console.log(response);
+              bsonType: 'date',
+            },
+          },
+        },
+      },
+    })
   } catch (e) {
-    console.log(e);
+    console.log(e)
   } finally {
-    client.close();
+    client.close()
   }
-};
+}
 
-create();
+create()

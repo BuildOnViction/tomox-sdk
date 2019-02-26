@@ -741,6 +741,13 @@ func (o *OrderData) AddressCode() string {
 	return code
 }
 
+func (o *OrderData) ConvertedVolume(p *Pair, exchangeRate float64) float64 {
+	valueAsToken := math.DivideToFloat(o.OrderVolume, p.BaseTokenMultiplier())
+	value := valueAsToken / exchangeRate
+
+	return value
+}
+
 func (o *OrderData) MarshalJSON() ([]byte, error) {
 	orderData := map[string]interface{}{
 		"pair": map[string]interface{}{

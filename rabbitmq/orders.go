@@ -40,62 +40,6 @@ func (c *Connection) SubscribeOrders(fn func(*Message) error) error {
 	return nil
 }
 
-func (c *Connection) SubscribeTrades(fn func(*types.OperatorMessage) error) error {
-	ch := c.GetChannel("tradeSubscribe")
-	q := c.GetQueue(ch, "trades")
-
-	go func() {
-		msgs, err := c.Consume(ch, q)
-		if err != nil {
-			logger.Error(err)
-		}
-
-		forever := make(chan bool)
-
-		go func() {
-			for d := range msgs {
-				msg := &types.OperatorMessage{}
-				err := json.Unmarshal(d.Body, msg)
-				if err != nil {
-					logger.Error(err)
-					continue
-				}
-
-				go fn(msg)
-			}
-		}()
-
-		<-forever
-	}()
-	return nil
-}
-
-func (c *Connection) PublishTrades(matches *types.Matches) error {
-	ch := c.GetChannel("tradePublish")
-	q := c.GetQueue(ch, "trades")
-
-	msg := &types.OperatorMessage{
-		MessageType: "NEW_ORDER",
-		Matches:     matches,
-	}
-
-	logger.Info("operator/", msg.String())
-
-	b, err := json.Marshal(msg)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = c.Publish(ch, q, b)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
 func (c *Connection) PublishNewOrderMessage(o *types.Order) error {
 	b, err := json.Marshal(o)
 	if err != nil {

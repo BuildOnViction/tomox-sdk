@@ -37,9 +37,9 @@ func (oc *OrderCancel) MarshalJSON() ([]byte, error) {
 		"orderHash": oc.OrderHash,
 		"hash":      oc.Hash,
 		"signature": map[string]interface{}{
-			"v": oc.Signature.V,
-			"r": oc.Signature.R,
-			"s": oc.Signature.S,
+			"V": oc.Signature.V,
+			"R": oc.Signature.R,
+			"S": oc.Signature.S,
 		},
 	}
 
@@ -72,6 +72,8 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{
+		// TODO: Refactor this part to uppercase later
+		// At the moment, client send lowercase of v, r, s
 		V: byte(sig["v"].(float64)),
 		R: common.HexToHash(sig["r"].(string)),
 		S: common.HexToHash(sig["s"].(string)),

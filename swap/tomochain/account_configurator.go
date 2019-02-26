@@ -37,7 +37,7 @@ func (ac *AccountConfigurator) logStats() {
 			// stop logging
 			break
 		}
-		//logger.Infof("statuses: %v", ac.accountStatus)
+		logger.Infof("statuses: %v", ac.accountStatus)
 		time.Sleep(15 * time.Second)
 	}
 }
