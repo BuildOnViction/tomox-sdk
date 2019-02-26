@@ -93,7 +93,6 @@ func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, uni
 
 	query := []bson.M{match, group, addFields, sort}
 
-	utils.PrintJSON(query)
 	res, err := s.tradeDao.Aggregate(query)
 	if err != nil {
 		return nil, err
