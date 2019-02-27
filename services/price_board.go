@@ -89,11 +89,8 @@ func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, durat
 	group := getGroupBson()
 	group = bson.M{"$group": group}
 
-	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
+	query := []bson.M{match, group}
 
-	query := []bson.M{match, group, sort}
-
-	utils.PrintJSON(query)
 	res, err := s.TradeDao.Aggregate(query)
 	if err != nil {
 		return nil, err

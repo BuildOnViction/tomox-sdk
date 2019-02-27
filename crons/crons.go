@@ -7,18 +7,21 @@ import (
 
 // CronService contains the services required to initialize crons
 type CronService struct {
-	ohlcvService      *services.OHLCVService
-	priceBoardService *services.PriceBoardService
+	OHLCVService      *services.OHLCVService
+	PriceBoardService *services.PriceBoardService
+	PairService       *services.PairService
 }
 
 // NewCronService returns a new instance of CronService
 func NewCronService(
 	ohlcvService *services.OHLCVService,
 	priceBoardService *services.PriceBoardService,
+	pairService *services.PairService,
 ) *CronService {
 	return &CronService{
-		ohlcvService:      ohlcvService,
-		priceBoardService: priceBoardService,
+		OHLCVService:      ohlcvService,
+		PriceBoardService: priceBoardService,
+		PairService:       pairService,
 	}
 }
 
