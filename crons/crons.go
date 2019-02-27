@@ -26,6 +26,7 @@ func NewCronService(
 func (s *CronService) InitCrons() {
 	c := cron.New()
 	s.tickStreamingCron(c)
-	s.getFiatPriceCron(c)
+	//s.getFiatPriceCron(c)
+	s.startPriceBoardCron(c)
 	c.Start()
 }

@@ -14,12 +14,12 @@ import (
 // TradeService struct with daos required, responsible for communicating with daos.
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type PriceBoardService struct {
-	tradeDao interfaces.TradeDao
+	TradeDao interfaces.TradeDao
 }
 
 // NewTradeService returns a new instance of TradeService
-func NewPriceBoardService(TradeDao interfaces.TradeDao) *PriceBoardService {
-	return &PriceBoardService{TradeDao}
+func NewPriceBoardService(tradeDao interfaces.TradeDao) *PriceBoardService {
+	return &PriceBoardService{TradeDao: tradeDao}
 }
 
 // Subscribe
@@ -86,15 +86,15 @@ func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, durat
 	match = getMatchQuery(start, end, pairs...)
 	match = bson.M{"$match": match}
 
-	addFields := make(bson.M)
-	group, addFields := getGroupBson()
+	group := getGroupBson()
 	group = bson.M{"$group": group}
 
 	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
 
-	query := []bson.M{match, group, addFields, sort}
+	query := []bson.M{match, group, sort}
 
-	res, err := s.tradeDao.Aggregate(query)
+	utils.PrintJSON(query)
+	res, err := s.TradeDao.Aggregate(query)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +107,8 @@ func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, durat
 }
 
 // query for grouping of the documents into one
-func getGroupBson() (bson.M, bson.M) {
-	var group, addFields bson.M
+func getGroupBson() bson.M {
+	var group bson.M
 
 	one, _ := bson.ParseDecimal128("1")
 	group = bson.M{
@@ -119,8 +119,28 @@ func getGroupBson() (bson.M, bson.M) {
 		"close":  bson.M{"$last": "$pricepoint"},
 		"volume": bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
 	}
+	groupID := make(bson.M)
+	groupID["pairName"] = "$pairName"
+	groupID["baseToken"] = "$baseToken"
+	groupID["quoteToken"] = "$quoteToken"
+	group["_id"] = groupID
 
-	group["_id"] = nil
+	return group
+}
 
-	return group, addFields
+func (s *PriceBoardService) SyncFiatPrice() {
+	//client := &http.Client{}
+	//req, err := http.NewRequest("GET", "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=ETH,TOMO&convert=USD", nil)
+	//req.Header.Add("X-CMC_PRO_API_KEY", `a928d4ca-37cc-41b8-a9ea-5a65ae025aa5`)
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+	//
+	//body, err := ioutil.ReadAll(resp.Body)
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+	//
+	//log.Println(string(body))
 }

@@ -1,7 +1,6 @@
 package crons
 
 import (
-	"fmt"
 	"github.com/robfig/cron"
 )
 
@@ -15,6 +14,6 @@ func (s *CronService) getFiatPriceCron(c *cron.Cron) {
 // and broadcasts the tick to the client subscribed to pair's respective channel
 func (s *CronService) getFiatPrice() func() {
 	return func() {
-		fmt.Println("getFiatPrice")
+		s.priceBoardService.SyncFiatPrice()
 	}
 }
