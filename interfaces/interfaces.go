@@ -137,6 +137,10 @@ type TokenDao interface {
 	Drop() error
 }
 
+type PriceBoardDao interface {
+	GetLatestQuotes() ([]byte, error)
+}
+
 type Exchange interface {
 	GetAddress() common.Address
 	GetTxCallOptions() *bind.CallOpts

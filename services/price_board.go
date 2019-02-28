@@ -14,12 +14,19 @@ import (
 // TradeService struct with daos required, responsible for communicating with daos.
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type PriceBoardService struct {
-	TradeDao interfaces.TradeDao
+	TradeDao      interfaces.TradeDao
+	PriceBoardDao interfaces.PriceBoardDao
 }
 
 // NewTradeService returns a new instance of TradeService
-func NewPriceBoardService(tradeDao interfaces.TradeDao) *PriceBoardService {
-	return &PriceBoardService{TradeDao: tradeDao}
+func NewPriceBoardService(
+	tradeDao interfaces.TradeDao,
+	priceBoardDao interfaces.PriceBoardDao,
+) *PriceBoardService {
+	return &PriceBoardService{
+		TradeDao:      tradeDao,
+		PriceBoardDao: priceBoardDao,
+	}
 }
 
 // Subscribe
@@ -126,18 +133,14 @@ func getGroupBson() bson.M {
 }
 
 func (s *PriceBoardService) SyncFiatPrice() {
-	//client := &http.Client{}
-	//req, err := http.NewRequest("GET", "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=ETH,TOMO&convert=USD", nil)
-	//req.Header.Add("X-CMC_PRO_API_KEY", `a928d4ca-37cc-41b8-a9ea-5a65ae025aa5`)
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
-	//
-	//body, err := ioutil.ReadAll(resp.Body)
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
-	//
-	//log.Println(string(body))
+	lq, err := s.PriceBoardDao.GetLatestQuotes()
+
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+
+	if lq["status"] == 0 {
+
+	}
 }

@@ -53,6 +53,10 @@ type appConfig struct {
 	Ethereum map[string]string `mapstructure:"ethereum"`
 
 	Deposit *config.Config `mapstructure:"deposit"`
+
+	CoinmarketcapAPIUrl string `mapstructure:"coinmarketcap_api_url"`
+
+	CoinmarketcapAPIKey string `mapstructure:"coinmarketcap_api_key"`
 }
 
 func (config appConfig) Validate() error {
