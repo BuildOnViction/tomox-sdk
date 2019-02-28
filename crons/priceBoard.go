@@ -19,8 +19,8 @@ func (s *CronService) startPriceBoardCron(c *cron.Cron) {
 		log.Println(err.Error())
 	}
 
-	for _, pair := range pairs {
-		c.AddFunc("*/3 * * * * *", s.getPriceBoardData(pair.BaseTokenAddress, pair.QuoteTokenAddress))
+	for _, p := range pairs {
+		c.AddFunc("*/3 * * * * *", s.getPriceBoardData(p.BaseTokenAddress, p.QuoteTokenAddress))
 	}
 }
 
