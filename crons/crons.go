@@ -7,7 +7,7 @@ import (
 
 // CronService contains the services required to initialize crons
 type CronService struct {
-	orderService 	  *services.OrderService
+	orderService      *services.OrderService
 	OHLCVService      *services.OHLCVService
 	PriceBoardService *services.PriceBoardService
 	PairService       *services.PairService
@@ -24,8 +24,9 @@ func NewCronService(
 		OHLCVService:      ohlcvService,
 		PriceBoardService: priceBoardService,
 		PairService:       pairService,
-		orderService: 	   orderService,
+		orderService:      orderService,
 	}
+}
 
 // InitCrons is responsible for initializing all the crons in the system
 func (s *CronService) InitCrons() {
