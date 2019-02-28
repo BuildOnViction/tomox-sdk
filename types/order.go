@@ -880,3 +880,16 @@ func (o *OrderData) SetBSON(raw bson.Raw) error {
 
 	return nil
 }
+
+const TopicLength = 4 // in bytes
+type TopicType [TopicLength]byte
+
+// Message is the RPC representation of a TomoX message.
+type Message struct {
+	TTL       uint32    `json:"ttl"`
+	Timestamp uint32    `json:"timestamp"`
+	Topic     TopicType `json:"topic"`
+	Payload   []byte    `json:"payload"`
+	Padding   []byte    `json:"padding"`
+	Hash      []byte    `json:"hash"`
+}

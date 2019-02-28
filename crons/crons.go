@@ -34,6 +34,6 @@ func (s *CronService) InitCrons() {
 	s.tickStreamingCron(c)
 	s.syncOrderBookCron(c)
 	//s.getFiatPriceCron(c)
-	s.startPriceBoardCron(c)
+	//s.startPriceBoardCron(c)
 	c.Start()
 }

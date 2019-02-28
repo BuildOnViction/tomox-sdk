@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"encoding/json"
 	"math/big"
 	"time"
 
@@ -736,7 +737,16 @@ func (dao *OrderDao) AddNewOrder(o *types.Order) error {
 	}
 
 	var result interface{}
-	err = rpcClient.Call(&result, "tomox_addNewOrder", o)
+	params := make(map[string]interface{})
+	params["topic"] = "0x00000001"
+	params["payload"], err = json.Marshal(o)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = rpcClient.Call(&result, "tomoX_post", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -776,19 +786,90 @@ func (dao *OrderDao) GetNewOrders() ([]*types.Order, error) {
 		return []*types.Order{}, err
 	}
 
-	var orders []*types.Order
-	err = rpcClient.Call(&orders, "tomox_getNewOrders")
+	var messages []*types.Message
+	params := "c175f845be4c64bb2383b367c5ca7b3b53951b974cf36aaee874ef9855640363"
+	err = rpcClient.Call(&messages, "tomoX_getFilterMessages", params)
 
-	if err != nil {
-		return []*types.Order{}, err
+	result := make([]*types.Order, 0)
+
+	for _, message := range messages {
+		var o *types.Order
+		err := json.Unmarshal(message.Payload, &o)
+
+		if err != nil {
+			logger.Error(err)
+			return []*types.Order{}, err
+		}
+
+		result = append(result, o)
 	}
 
-	return orders, nil
+	return result, nil
 }
 
 func (dao *OrderDao) SyncNewOrders(orders []*types.Order) error {
 	for _, o := range orders {
 		dao.FindAndModify(o.Hash, o)
+	}
+
+	return nil
+}
+
+func (dao *OrderDao) AddTopic(t []string) error {
+	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	var result interface{}
+	params := make(map[string]interface{})
+	params["topics"] = t
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = rpcClient.Call(&result, "tomoX_newMessageFilter", params)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	logger.Debug(result)
+
+	logger.Debug("#########")
+
+	return nil
+}
+
+func (dao *OrderDao) DeleteTopic(t string) error {
+	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	var result interface{}
+	params := t
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = rpcClient.Call(&result, "tomoX_deleteMessageFilter", params)
+
+	if err != nil {
+		logger.Error(err)
+		return err
 	}
 
 	return nil

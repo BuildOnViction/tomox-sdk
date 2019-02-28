@@ -48,6 +48,8 @@ type OrderDao interface {
 	CancelOrder(o *types.Order) error
 	GetNewOrders() ([]*types.Order, error)
 	SyncNewOrders(orders []*types.Order) error
+	AddTopic(t []string) error
+	DeleteTopic(t string) error
 }
 
 type AccountDao interface {
