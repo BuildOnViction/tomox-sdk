@@ -13,6 +13,7 @@ const (
 	OrderBookChannel    = "orderbook"
 	TokenChannel        = "tokens"
 	OHLCVChannel        = "ohlcv"
+	PriceBoardChannel   = "price_board"
 	DepositChannel      = "deposit"
 )
 

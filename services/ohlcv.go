@@ -67,28 +67,30 @@ func (s *OHLCVService) Subscribe(conn *ws.Client, p *types.SubscriptionPayload) 
 // unit: sec,min,hour,day,week,month,yr
 // timeInterval: 0-2 entries (0 argument: latest data,1st argument: from timestamp, 2nd argument: to timestamp)
 func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {
-	match := make(bson.M)
-	addFields := make(bson.M)
 	res := make([]*types.Tick, 0)
 
 	currentTimestamp := time.Now().Unix()
 
-	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
-
 	modTime, intervalInSeconds := getModTime(currentTimestamp, duration, unit)
-	group, addFields := getGroupAddFieldBson("$createdAt", unit, duration)
 
-	end := time.Unix(currentTimestamp, 0)
 	start := time.Unix(modTime-intervalInSeconds, 0)
+	end := time.Unix(currentTimestamp, 0)
 
 	if len(timeInterval) >= 1 {
 		end = time.Unix(timeInterval[1], 0)
 		start = time.Unix(timeInterval[0], 0)
 	}
 
+	match := make(bson.M)
 	match = getMatchQuery(start, end, pairs...)
 	match = bson.M{"$match": match}
+
+	addFields := make(bson.M)
+	group, addFields := getGroupAddFieldBson("$createdAt", unit, duration)
 	group = bson.M{"$group": group}
+
+	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
+
 	query := []bson.M{match, group, addFields, sort}
 
 	res, err := s.tradeDao.Aggregate(query)
@@ -140,6 +142,10 @@ func getModTime(ts, interval int64, unit string) (int64, int64) {
 		intervalInSeconds = interval
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
 
+	case "min":
+		intervalInSeconds = interval * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
 	case "hour":
 		intervalInSeconds = interval * 60 * 60
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
@@ -161,10 +167,6 @@ func getModTime(ts, interval int64, unit string) (int64, int64) {
 		// Number of days in current year
 		d := time.Date(time.Now().Year()+1, 1, 1, 0, 0, 0, 0, time.UTC).Sub(time.Date(time.Now().Year(), 0, 0, 0, 0, 0, 0, time.UTC)).Hours() / 24
 		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
-		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
-
-	case "min":
-		intervalInSeconds = interval * 60
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
 	}
 

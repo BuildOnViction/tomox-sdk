@@ -35,23 +35,23 @@ server_port: 8080
 simulated: false
 take_fee: 10000
 tick_duration:
-  day:
-    - 1
-  hour:
-    - 1
   min:
     - 1
     - 5
     - 15
+    - 30
+  hour:
+    - 1
+    - 4
+    - 12
+  day:
+    - 1
+  week:
+    - 1
   month:
     - 1
     - 3
     - 6
     - 9
-  sec:
-    - 5
-    - 30
-  week:
-    - 1
   year:
     - 1

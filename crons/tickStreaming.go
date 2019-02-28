@@ -28,7 +28,7 @@ func (s *CronService) tickStreamingCron(c *cron.Cron) {
 func (s *CronService) tickStream(unit string, duration int64) func() {
 	return func() {
 		p := make([]types.PairAddresses, 0)
-		ticks, err := s.ohlcvService.GetOHLCV(p, duration, unit)
+		ticks, err := s.OHLCVService.GetOHLCV(p, duration, unit)
 		if err != nil {
 			log.Printf("%s", err)
 			return

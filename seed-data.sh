@@ -1,29 +1,34 @@
 #!/usr/bin/env bash
+NETWORK="tomochainTestnet"
+
+echo "Query Tokens From dex-smart-contract"
+node deployment/query_tokens.js $NETWORK
+
 echo "Update config"
-go run utils/seed-data/main.go seeds
+go run utils/seed-data/main.go seeds $NETWORK
 
 echo "Drop existing collections"
-node utils/db/drop_collection.js --collection pairs
-node utils/db/drop_collection.js --collection tokens
-node utils/db/drop_collection.js --collection orders
-node utils/db/drop_collection.js --collection trades
-node utils/db/drop_collection.js --collection wallets
-node utils/db/drop_collection.js --collection accounts
-node utils/db/drop_collection.js --collection config
+node deployment/drop_collection.js --collection pairs --network=$NETWORK
+node deployment/drop_collection.js --collection tokens --network=$NETWORK
+node deployment/drop_collection.js --collection orders --network=$NETWORK
+node deployment/drop_collection.js --collection trades --network=$NETWORK
+node deployment/drop_collection.js --collection wallets --network=$NETWORK
+node deployment/drop_collection.js --collection accounts --network=$NETWORK
+node deployment/drop_collection.js --collection config --network=$NETWORK
 
 echo "Create collections"
-node utils/db/create_accounts_collection.js
-node utils/db/create_orders_collection.js
-node utils/db/create_pairs_collection.js
-node utils/db/create_tokens_collection.js
-node utils/db/create_trades_collection.js
-node utils/db/create_wallets_collection.js
-node utils/db/create_config_collection.js
+node deployment/create_accounts_collection.js --network=$NETWORK
+node deployment/create_orders_collection.js --network=$NETWORK
+node deployment/create_pairs_collection.js --network=$NETWORK
+node deployment/create_tokens_collection.js --network=$NETWORK
+node deployment/create_trades_collection.js --network=$NETWORK
+node deployment/create_wallets_collection.js --network=$NETWORK
+node deployment/create_config_collection.js --network=$NETWORK
 
 
 echo "Seed data"
-node utils/db/seed_tokens.js
-node utils/db/seed_quotes.js
-node utils/db/seed_pairs.js
-node utils/db/seed_config.js
-node utils/db/seed_wallets.js
+node deployment/seed_tokens.js --network=$NETWORK
+node deployment/seed_quotes.js --network=$NETWORK
+node deployment/seed_pairs.js --network=$NETWORK
+node deployment/seed_config.js --network=$NETWORK
+node deployment/seed_wallets.js --network=$NETWORK

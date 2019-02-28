@@ -211,40 +211,6 @@ func (e *EthereumProvider) BalanceOf(owner common.Address, token common.Address)
 	return b, nil
 }
 
-func (e *EthereumProvider) Allowance(owner, spender, token common.Address) (*big.Int, error) {
-	tokenInterface, err := contractsinterfaces.NewToken(token, e.Client)
-	if err != nil {
-		return nil, err
-	}
-
-	opts := &bind.CallOpts{Pending: true}
-	a, err := tokenInterface.Allowance(opts, owner, spender)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return a, nil
-}
-
-func (e *EthereumProvider) ExchangeAllowance(owner, token common.Address) (*big.Int, error) {
-	tokenInterface, err := contractsinterfaces.NewToken(token, e.Client)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	exchange := common.HexToAddress(app.Config.Ethereum["exchange_address"])
-	opts := &bind.CallOpts{Pending: true}
-	a, err := tokenInterface.Allowance(opts, owner, exchange)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return a, nil
-}
-
 // func (e *EthereumProvider) NewTokenInstance(
 // 	w interfaces.WalletService,
 // 	tx interfaces.TxService,

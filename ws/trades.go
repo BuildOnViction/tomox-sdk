@@ -98,11 +98,6 @@ func (s *TradeSocket) SendMessage(c *Client, msgType types.SubscriptionEvent, p 
 	c.SendMessage(TradeChannel, msgType, p)
 }
 
-// SendErrorMessage sends an error message on the trade channel
-func (s *TradeSocket) SendErrorMessage(c *Client, p interface{}) {
-	c.SendMessage(TradeChannel, types.ERROR, p)
-}
-
 // SendInitMessage is responsible for sending message on trade ohlcv channel at subscription
 func (s *TradeSocket) SendInitMessage(c *Client, p interface{}) {
 	c.SendMessage(TradeChannel, types.INIT, p)
@@ -111,4 +106,9 @@ func (s *TradeSocket) SendInitMessage(c *Client, p interface{}) {
 // SendUpdateMessage is responsible for sending message on trade ohlcv channel at subscription
 func (s *TradeSocket) SendUpdateMessage(c *Client, p interface{}) {
 	c.SendMessage(TradeChannel, types.UPDATE, p)
+}
+
+// SendErrorMessage sends an error message on the trade channel
+func (s *TradeSocket) SendErrorMessage(c *Client, p interface{}) {
+	c.SendMessage(TradeChannel, types.ERROR, p)
 }

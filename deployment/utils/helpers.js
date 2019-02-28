@@ -2,10 +2,11 @@ const { utils } = require('ethers')
 
 const getNetworkID = networkName => {
     return {
-        mainnet: '1',
-        homestead: '1',
+        ethereum: '1',
         rinkeby: '4',
-        local: '8888',
+        tomochain: '88',
+        tomochainTestnet: '89',
+        development: '8888',
     }[networkName]
 }
 
