@@ -26,3 +26,6 @@ go get github.com/btcsuite/go-socks/socks
 go get github.com/go-test/deep
 go get github.com/stretchr/testify
 go get gopkg.in/tomb.v2
+
+#json
+go get github.com/tidwall/gjson
