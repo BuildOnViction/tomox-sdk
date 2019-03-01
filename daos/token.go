@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -118,6 +119,21 @@ func (dao *TokenDao) GetByAddress(addr common.Address) (*types.Token, error) {
 	}
 
 	return &resp[0], nil
+}
+
+func (dao *TokenDao) UpdateFiatPriceBySymbol(symbol string, price float64) error {
+	fmt.Println(symbol)
+	fmt.Println(price)
+	q := bson.M{"symbol": symbol}
+	update := bson.M{"$set": bson.M{"usd": fmt.Sprintf("%f", price)}}
+
+	err := db.Update(dao.dbName, dao.collectionName, q, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
 }
 
 // Drop drops all the order documents in the current database

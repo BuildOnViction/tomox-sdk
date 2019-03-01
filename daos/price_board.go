@@ -1,12 +1,14 @@
 package daos
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/errors"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/tidwall/gjson"
+	"github.com/tomochain/dex-server/app"
 )
 
 type PriceBoardDao struct {
@@ -17,7 +19,7 @@ func NewPriceBoardDao() *PriceBoardDao {
 	return &PriceBoardDao{}
 }
 
-func (dao *PriceBoardDao) GetLatestQuotes() ([]byte, error) {
+func (dao *PriceBoardDao) GetLatestQuotes() (map[string]float64, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", app.Config.CoinmarketcapAPIUrl, "/cryptocurrency/quotes/latest?symbol=ETH,TOMO&convert=USD"), nil)
 	req.Header.Add("X-CMC_PRO_API_KEY", app.Config.CoinmarketcapAPIKey)
@@ -30,7 +32,24 @@ func (dao *PriceBoardDao) GetLatestQuotes() ([]byte, error) {
 
 	if err != nil {
 		log.Fatalln(err)
+		return nil, err
 	}
 
-	return json.Marshal(body)
+	status := gjson.Get(string(body), "status")
+	statusErrorCode := status.Get("error_code")
+	statusErrorMessage := status.Get("error_message")
+
+	if statusErrorCode.Int() != 0 {
+		logger.Error(statusErrorMessage.String())
+		return nil, errors.New(statusErrorMessage.String())
+	}
+
+	data := gjson.Get(string(body), "data")
+	result := make(map[string]float64)
+	data.ForEach(func(key, value gjson.Result) bool {
+		result[key.String()] = value.Get("quote.USD.price").Float()
+		return true // keep iterating
+	})
+
+	return result, nil
 }

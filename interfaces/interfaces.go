@@ -134,11 +134,12 @@ type TokenDao interface {
 	GetByAddress(owner common.Address) (*types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
 	GetBaseTokens() ([]types.Token, error)
+	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
 }
 
 type PriceBoardDao interface {
-	GetLatestQuotes() ([]byte, error)
+	GetLatestQuotes() (map[string]float64, error)
 }
 
 type Exchange interface {

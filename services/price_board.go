@@ -14,16 +14,19 @@ import (
 // TradeService struct with daos required, responsible for communicating with daos.
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type PriceBoardService struct {
+	TokenDao      interfaces.TokenDao
 	TradeDao      interfaces.TradeDao
 	PriceBoardDao interfaces.PriceBoardDao
 }
 
 // NewTradeService returns a new instance of TradeService
 func NewPriceBoardService(
+	tokenDao interfaces.TokenDao,
 	tradeDao interfaces.TradeDao,
 	priceBoardDao interfaces.PriceBoardDao,
 ) *PriceBoardService {
 	return &PriceBoardService{
+		TokenDao:      tokenDao,
 		TradeDao:      tradeDao,
 		PriceBoardDao: priceBoardDao,
 	}
@@ -133,14 +136,18 @@ func getGroupBson() bson.M {
 }
 
 func (s *PriceBoardService) SyncFiatPrice() {
-	lq, err := s.PriceBoardDao.GetLatestQuotes()
+	prices, err := s.PriceBoardDao.GetLatestQuotes()
 
 	if err != nil {
 		logger.Error(err)
 		return
 	}
 
-	if lq["status"] == 0 {
+	for k, v := range prices {
+		err := s.TokenDao.UpdateFiatPriceBySymbol(k, v)
 
+		if err != nil {
+			logger.Error(err)
+		}
 	}
 }
