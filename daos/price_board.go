@@ -21,7 +21,10 @@ func NewPriceBoardDao() *PriceBoardDao {
 
 func (dao *PriceBoardDao) GetLatestQuotes() (map[string]float64, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", app.Config.CoinmarketcapAPIUrl, "/cryptocurrency/quotes/latest?symbol=ETH,TOMO&convert=USD"), nil)
+	url := fmt.Sprintf("%s/cryptocurrency/quotes/latest?symbol=%s&convert=USD", app.Config.CoinmarketcapAPIUrl, app.Config.SupportedCurrencies)
+
+	req, err := http.NewRequest("GET", url, nil)
+
 	req.Header.Add("X-CMC_PRO_API_KEY", app.Config.CoinmarketcapAPIKey)
 	resp, err := client.Do(req)
 	if err != nil {
