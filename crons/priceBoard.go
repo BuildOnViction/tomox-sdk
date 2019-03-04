@@ -44,11 +44,28 @@ func (s *CronService) getPriceBoardData(bt, qt common.Address) func() {
 			return
 		}
 
-		for _, tick := range ticks {
-			baseTokenAddress := tick.Pair.BaseToken
-			quoteTokenAddress := tick.Pair.QuoteToken
-			id := utils.GetPriceBoardChannelID(baseTokenAddress, quoteTokenAddress)
-			ws.GetPriceBoardSocket().BroadcastMessage(id, tick)
+		quoteToken, err := s.PriceBoardService.TokenDao.GetByAddress(qt)
+
+		if err != nil {
+			log.Printf("%s", err)
+			return
 		}
+
+		lastTradePrice, err := s.PriceBoardService.TradeDao.GetLatestTrade(bt, qt)
+
+		if err != nil {
+			log.Printf("%s", err)
+			return
+		}
+
+		id := utils.GetPriceBoardChannelID(bt, qt)
+
+		result := types.PriceBoardData{
+			Ticks:          ticks,
+			PriceUSD:       quoteToken.USD,
+			LastTradePrice: lastTradePrice.PricePoint.String(),
+		}
+
+		ws.GetPriceBoardSocket().BroadcastMessage(id, result)
 	}
 }
