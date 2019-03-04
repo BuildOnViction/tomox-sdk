@@ -57,6 +57,8 @@ type appConfig struct {
 	CoinmarketcapAPIUrl string `mapstructure:"coinmarketcap_api_url"`
 
 	CoinmarketcapAPIKey string `mapstructure:"coinmarketcap_api_key"`
+
+	SupportedCurrencies string `mapstructure:"supported_currencies"`
 }
 
 func (config appConfig) Validate() error {
