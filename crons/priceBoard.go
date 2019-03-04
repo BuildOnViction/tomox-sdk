@@ -51,7 +51,13 @@ func (s *CronService) getPriceBoardData(bt, qt common.Address) func() {
 			return
 		}
 
-		lastTradePrice, err := s.PriceBoardService.TradeDao.GetLatestTrade(bt, qt)
+		var lastTradePrice string
+		lastTrade, err := s.PriceBoardService.TradeDao.GetLatestTrade(bt, qt)
+		if lastTrade == nil {
+			lastTradePrice = "?"
+		} else {
+			lastTradePrice = lastTrade.PricePoint.String()
+		}
 
 		if err != nil {
 			log.Printf("%s", err)
@@ -63,7 +69,7 @@ func (s *CronService) getPriceBoardData(bt, qt common.Address) func() {
 		result := types.PriceBoardData{
 			Ticks:          ticks,
 			PriceUSD:       quoteToken.USD,
-			LastTradePrice: lastTradePrice.PricePoint.String(),
+			LastTradePrice: lastTradePrice,
 		}
 
 		ws.GetPriceBoardSocket().BroadcastMessage(id, result)
