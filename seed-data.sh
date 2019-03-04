@@ -28,7 +28,6 @@ node deployment/create_config_collection.js --network=$NETWORK
 
 echo "Seed data"
 node deployment/seed_tokens.js --network=$NETWORK
-node deployment/seed_quotes.js --network=$NETWORK
 node deployment/seed_pairs.js --network=$NETWORK
 node deployment/seed_config.js --network=$NETWORK
 node deployment/seed_wallets.js --network=$NETWORK
