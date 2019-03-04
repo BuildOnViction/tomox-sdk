@@ -1,21 +1,20 @@
-const fs = require('fs')
-const path = require('path')
 const faker = require('faker')
-const process = require('process')
-const argv = require('yargs').argv
 const utils = require('ethers').utils
 const MongoClient = require('mongodb').MongoClient
+
 const { getNetworkID } = require('./utils/helpers')
 const { DB_NAME, mongoUrl, network } = require('./utils/config')
 const networkID = getNetworkID(network)
 
 const {
-  baseTokens,
+  nativeCurrency,
+  symbols,
+  quoteTokens,
   contractAddresses,
   decimals,
+  makeFees,
+  takeFees,
 } = require('./utils/config')
-
-// console.log(quoteTokens, baseTokens, decimals);
 
 let documents = []
 let addresses = contractAddresses[networkID]
@@ -27,16 +26,52 @@ const seed = async () => {
       mongoUrl,
       { useNewUrlParser: true },
     )
-    console.log('Seeding tokens')
+    console.log('Seeding tokens collection')
     db = client.db(DB_NAME)
 
-    documents = baseTokens.map(symbol => ({
-      symbol: symbol,
-      contractAddress: utils.getAddress(addresses[symbol]),
-      decimals: decimals[symbol],
-      quote: false,
-      createdAt: new Date(faker.fake('{{date.recent}}')),
-    }))
+    documents = symbols.map(symbol => {
+
+      if (quoteTokens.includes(symbol)) {
+        return {
+          symbol: symbol,
+          contractAddress: utils.getAddress(addresses[symbol]),
+          decimals: decimals[symbol],
+          makeFee: makeFees[symbol].toString(),
+          takeFee: takeFees[symbol].toString(),
+          quote: true,
+          createdAt: new Date(faker.fake('{{date.recent}}')),
+        }
+      }
+
+      return {
+        symbol: symbol,
+        contractAddress: utils.getAddress(addresses[symbol]),
+        decimals: decimals[symbol],
+        quote: false,
+        createdAt: new Date(faker.fake('{{date.recent}}')),
+      }
+    })
+
+    // Add TOMO symbol
+    if (quoteTokens.includes(nativeCurrency.symbol)) {
+      documents.push({
+        symbol: nativeCurrency.symbol,
+        contractAddress: utils.getAddress(nativeCurrency.address),
+        decimals: nativeCurrency.decimals,
+        makeFee: makeFees[nativeCurrency.symbol].toString(),
+        takeFee: takeFees[nativeCurrency.symbol].toString(),
+        quote: true,
+        createdAt: new Date(faker.fake('{{date.recent}}')),
+      })
+    } else {
+      documents.push({
+        symbol: nativeCurrency.symbol,
+        contractAddress: utils.getAddress(nativeCurrency.address),
+        decimals: nativeCurrency.decimals,
+        quote: false,
+        createdAt: new Date(faker.fake('{{date.recent}}')),
+      })
+    }
 
     if (documents && documents.length > 0) {
       await db.collection('tokens').insertMany(documents)
