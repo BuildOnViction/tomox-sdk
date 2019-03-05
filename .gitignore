@@ -56,6 +56,7 @@ vendor/
 /node_modules
 package-lock.json
 yarn.lock
+/deployment/utils/addresses.json
 
 # This file includes artifacts of Go build that should not be checked in.
 # For files created by specific development environment (e.g. editor),

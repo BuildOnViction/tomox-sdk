@@ -27,6 +27,9 @@ const create = async () => {
             decimals: {
               bsonType: 'int',
             },
+            usd: {
+              bsonType: 'string'
+            },
             createdAt: {
               bsonType: 'date',
             },

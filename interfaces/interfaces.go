@@ -125,6 +125,7 @@ type TradeDao interface {
 	GetAllTradesByPairAddress(bt, qt common.Address) ([]*types.Trade, error)
 	FindAndModify(h common.Hash, t *types.Trade) (*types.Trade, error)
 	GetByUserAddress(a common.Address) ([]*types.Trade, error)
+	GetLatestTrade(bt, qt common.Address) (*types.Trade, error)
 	UpdateTradeStatus(h common.Hash, status string) error
 	UpdateTradeStatuses(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	UpdateTradeStatusesByOrderHashes(status string, hashes ...common.Hash) ([]*types.Trade, error)
@@ -135,10 +136,15 @@ type TokenDao interface {
 	Create(token *types.Token) error
 	GetAll() ([]types.Token, error)
 	GetByID(id bson.ObjectId) (*types.Token, error)
-	GetByAddress(owner common.Address) (*types.Token, error)
+	GetByAddress(addr common.Address) (*types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
 	GetBaseTokens() ([]types.Token, error)
+	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
+}
+
+type PriceBoardDao interface {
+	GetLatestQuotes() (map[string]float64, error)
 }
 
 type Exchange interface {

@@ -31,9 +31,9 @@ func NewCronService(
 // InitCrons is responsible for initializing all the crons in the system
 func (s *CronService) InitCrons() {
 	c := cron.New()
-	s.tickStreamingCron(c)
-	s.syncOrderBookCron(c)
-	//s.getFiatPriceCron(c)
-	//s.startPriceBoardCron(c)
+	s.tickStreamingCron(c)   // Cron to fetch OHLCV data
+	s.getFiatPriceCron(c)    // Cron to query USD price from coinmarketcap.com and update "tokens" collection
+	s.startPriceBoardCron(c) // Cron to fetch data for top price board
+	s.syncOrderBookCron(c)   // Cron to sync order book from nodes
 	c.Start()
 }
