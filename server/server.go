@@ -61,11 +61,6 @@ func Start() {
 	panic(http.ListenAndServe(address, handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
 }
 
-func NewSwapEngine() *swap.Engine {
-	swapEngine := swap.NewEngine(app.Config.Deposit)
-	return swapEngine
-}
-
 func NewRouter(
 	provider *ethereum.EthereumProvider,
 	rabbitConn *rabbitmq.Connection,
@@ -86,7 +81,7 @@ func NewRouter(
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
-	swapEngine := NewSwapEngine()
+	swapEngine := swap.NewEngine(app.Config.Deposit)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao)
