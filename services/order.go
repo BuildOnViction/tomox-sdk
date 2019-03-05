@@ -579,11 +579,18 @@ func (s *OrderService) SyncOrderBook() error {
 		return err
 	}
 
+	err = s.orderDao.SyncNewOrders(orders)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
 	for _, o := range orders {
 		switch o.Status {
 		case "OPEN":
 			res := &types.EngineResponse{
-				Status:  "ORDER_CANCELLED",
+				Status:  types.ORDER_ADDED,
 				Order:   o,
 				Matches: nil,
 			}
@@ -599,7 +606,22 @@ func (s *OrderService) SyncOrderBook() error {
 
 		case "CANCELLED":
 			res := &types.EngineResponse{
-				Status:  "ORDER_CANCELLED",
+				Status:  types.ORDER_CANCELLED,
+				Order:   o,
+				Matches: nil,
+			}
+
+			err = s.broker.PublishEngineResponse(res)
+			if err != nil {
+				logger.Error(err)
+				return err
+			}
+
+			return nil
+
+		default:
+			res := &types.EngineResponse{
+				Status:  types.ERROR_STATUS,
 				Order:   o,
 				Matches: nil,
 			}
@@ -612,13 +634,6 @@ func (s *OrderService) SyncOrderBook() error {
 
 			return nil
 		}
-	}
-
-	err = s.orderDao.SyncNewOrders(orders)
-
-	if err != nil {
-		logger.Error(err)
-		return err
 	}
 
 	return nil
