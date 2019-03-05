@@ -44,7 +44,7 @@ type OrderDao interface {
 	FindAndModify(h common.Hash, o *types.Order) (*types.Order, error)
 	Drop() error
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
-	AddNewOrder(o *types.Order) error
+	AddNewOrder(o *types.Order, topic string) error
 	CancelOrder(o *types.Order) error
 	GetNewOrders() ([]*types.Order, error)
 	SyncNewOrders(orders []*types.Order) error

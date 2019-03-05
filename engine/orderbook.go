@@ -40,14 +40,38 @@ type OrderBook struct {
 	mutex        *sync.Mutex
 }
 
+func NewOrderBook(
+	rabbitMQConn *rabbitmq.Connection,
+	orderDao interfaces.OrderDao,
+	tradeDao interfaces.TradeDao,
+	p *types.Pair,
+) *OrderBook {
+
+	err := orderDao.AddTopic([]string{p.Encoded()})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	return &OrderBook{
+		rabbitMQConn: rabbitMQConn,
+		orderDao:     orderDao,
+		tradeDao:     tradeDao,
+		pair:         p,
+		mutex:        &sync.Mutex{},
+	}
+}
+
 // newOrder calls buyOrder/sellOrder based on type of order recieved and
 // publishes the response back to rabbitmq
-func (ob *OrderBook) newOrder(o *types.Order) (err error) {
+func (ob *OrderBook) newOrder(o *types.Order) error {
 	// Attain lock on engineResource, so that recovery or cancel order function doesn't interfere
 	ob.mutex.Lock()
 	defer ob.mutex.Unlock()
 
-	err = ob.orderDao.AddNewOrder(o)
+	topic := ob.pair.Encoded()
+
+	err := ob.orderDao.AddNewOrder(o, topic)
 
 	if err != nil {
 		logger.Error(err)

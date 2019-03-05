@@ -3,14 +3,12 @@ package engine
 import (
 	"encoding/json"
 	"io/ioutil"
-	"sync"
-
-	"github.com/tomochain/dex-server/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/swarm/storage/feed"
 	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
+	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/ethereum"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/rabbitmq"
@@ -43,13 +41,7 @@ func NewEngine(
 
 	obs := map[string]*OrderBook{}
 	for _, p := range pairs {
-		ob := &OrderBook{
-			rabbitMQConn: rabbitMQConn,
-			orderDao:     orderDao,
-			tradeDao:     tradeDao,
-			pair:         &p,
-			mutex:        &sync.Mutex{},
-		}
+		ob := NewOrderBook(rabbitMQConn, orderDao, tradeDao, &p)
 
 		obs[p.Code()] = ob
 	}

@@ -726,7 +726,7 @@ func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
 	return orderData, nil
 }
 
-func (dao *OrderDao) AddNewOrder(o *types.Order) error {
+func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
 
 	defer rpcClient.Close()
@@ -738,7 +738,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order) error {
 
 	var result interface{}
 	params := make(map[string]interface{})
-	params["topic"] = "0x00000001"
+	params["topic"] = topic
 	params["payload"], err = json.Marshal(o)
 
 	if err != nil {

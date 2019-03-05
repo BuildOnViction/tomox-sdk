@@ -1,7 +1,9 @@
 package types
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -94,99 +96,6 @@ func (p *Pair) MarshalJSON() ([]byte, error) {
 	return json.Marshal(pair)
 }
 
-type PairAddresses struct {
-	Name       string         `json:"name" bson:"name"`
-	BaseToken  common.Address `json:"baseToken" bson:"baseToken"`
-	QuoteToken common.Address `json:"quoteToken" bson:"quoteToken"`
-}
-
-type PairAddressesRecord struct {
-	Name       string `json:"name" bson:"name"`
-	BaseToken  string `json:"baseToken" bson:"baseToken"`
-	QuoteToken string `json:"quoteToken" bson:"quoteToken"`
-}
-
-type PairRecord struct {
-	ID bson.ObjectId `json:"id" bson:"_id"`
-
-	BaseTokenSymbol    string    `json:"baseTokenSymbol" bson:"baseTokenSymbol"`
-	BaseTokenAddress   string    `json:"baseTokenAddress" bson:"baseTokenAddress"`
-	BaseTokenDecimals  int       `json:"baseTokenDecimals" bson:"baseTokenDecimals"`
-	QuoteTokenSymbol   string    `json:"quoteTokenSymbol" bson:"quoteTokenSymbol"`
-	QuoteTokenAddress  string    `json:"quoteTokenAddress" bson:"quoteTokenAddress"`
-	QuoteTokenDecimals int       `json:"quoteTokenDecimals" bson:"quoteTokenDecimals"`
-	Active             bool      `json:"active" bson:"active"`
-	Listed             bool      `json:"listed" bson:"listed"`
-	MakeFee            string    `json:"makeFee" bson:"makeFee"`
-	TakeFee            string    `json:"takeFee" bson:"takeFee"`
-	Rank               int       `json:"rank" bson:"rank"`
-	CreatedAt          time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt          time.Time `json:"updatedAt" bson:"updatedAt"`
-}
-
-func (p *Pair) BaseTokenMultiplier() *big.Int {
-	return math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
-}
-
-func (p *Pair) QuoteTokenMultiplier() *big.Int {
-	return math.Exp(big.NewInt(10), big.NewInt(int64(p.QuoteTokenDecimals)))
-}
-
-func (p *Pair) PairMultiplier() *big.Int {
-	defaultMultiplier := math.Exp(big.NewInt(10), big.NewInt(18))
-	baseTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
-
-	return math.Mul(defaultMultiplier, baseTokenMultiplier)
-}
-
-func (p *Pair) PricepointMultiplier() *big.Int {
-	baseTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
-	quoteTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.QuoteTokenDecimals)))
-	defaultMultiplier := math.Exp(big.NewInt(10), big.NewInt(9))
-
-	return math.Div(math.Mul(baseTokenMultiplier, defaultMultiplier), quoteTokenMultiplier)
-}
-
-func (p *Pair) DecimalsMultiplier() *big.Int {
-	decimalsDiff := math.Sub(big.NewInt(int64(p.BaseTokenDecimals)), big.NewInt(int64(p.QuoteTokenDecimals)))
-	return math.Exp(big.NewInt(10), decimalsDiff)
-}
-
-func (p *Pair) Code() string {
-	code := p.BaseTokenSymbol + "/" + p.QuoteTokenSymbol + "::" + p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
-	return code
-}
-
-func (p *Pair) AddressCode() string {
-	code := p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
-	return code
-}
-
-func (p *Pair) Name() string {
-	name := p.BaseTokenSymbol + "/" + p.QuoteTokenSymbol
-	return name
-}
-
-func (p *Pair) ParseAmount(a *big.Int) float64 {
-	nominator := a
-	denominator := p.BaseTokenMultiplier()
-	amount := math.DivideToFloat(nominator, denominator)
-
-	return amount
-}
-
-func (p *Pair) ParsePricePoint(pp *big.Int) float64 {
-	nominator := pp
-	denominator := math.Mul(math.Exp(big.NewInt(10), big.NewInt(18)), p.QuoteTokenMultiplier())
-	price := math.DivideToFloat(nominator, denominator)
-
-	return price
-}
-
-func (p *Pair) MinQuoteAmount() *big.Int {
-	return math.Add(math.Mul(big.NewInt(2), p.MakeFee), math.Mul(big.NewInt(2), p.TakeFee))
-}
-
 func (p *Pair) SetBSON(raw bson.Raw) error {
 	decoded := &PairRecord{}
 
@@ -238,6 +147,74 @@ func (p *Pair) GetBSON() (interface{}, error) {
 	}, nil
 }
 
+func (p *Pair) BaseTokenMultiplier() *big.Int {
+	return math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
+}
+
+func (p *Pair) QuoteTokenMultiplier() *big.Int {
+	return math.Exp(big.NewInt(10), big.NewInt(int64(p.QuoteTokenDecimals)))
+}
+
+func (p *Pair) PairMultiplier() *big.Int {
+	defaultMultiplier := math.Exp(big.NewInt(10), big.NewInt(18))
+	baseTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
+
+	return math.Mul(defaultMultiplier, baseTokenMultiplier)
+}
+
+func (p *Pair) PricepointMultiplier() *big.Int {
+	baseTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
+	quoteTokenMultiplier := math.Exp(big.NewInt(10), big.NewInt(int64(p.QuoteTokenDecimals)))
+	defaultMultiplier := math.Exp(big.NewInt(10), big.NewInt(9))
+
+	return math.Div(math.Mul(baseTokenMultiplier, defaultMultiplier), quoteTokenMultiplier)
+}
+
+func (p *Pair) DecimalsMultiplier() *big.Int {
+	decimalsDiff := math.Sub(big.NewInt(int64(p.BaseTokenDecimals)), big.NewInt(int64(p.QuoteTokenDecimals)))
+	return math.Exp(big.NewInt(10), decimalsDiff)
+}
+
+func (p *Pair) Code() string {
+	code := p.BaseTokenSymbol + "/" + p.QuoteTokenSymbol + "::" + p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
+	return code
+}
+
+func (p *Pair) AddressCode() string {
+	code := p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
+	return code
+}
+
+func (p *Pair) Name() string {
+	name := p.BaseTokenSymbol + "/" + p.QuoteTokenSymbol
+	return name
+}
+
+func (p *Pair) Encoded() string {
+	b := []byte(p.Name())
+	return fmt.Sprintf("0x%s", hex.EncodeToString(b))
+}
+
+func (p *Pair) ParseAmount(a *big.Int) float64 {
+	nominator := a
+	denominator := p.BaseTokenMultiplier()
+	amount := math.DivideToFloat(nominator, denominator)
+
+	return amount
+}
+
+func (p *Pair) ParsePricePoint(pp *big.Int) float64 {
+	nominator := pp
+	denominator := math.Mul(math.Exp(big.NewInt(10), big.NewInt(18)), p.QuoteTokenMultiplier())
+	price := math.DivideToFloat(nominator, denominator)
+
+	return price
+}
+
+func (p *Pair) MinQuoteAmount() *big.Int {
+	return math.Add(math.Mul(big.NewInt(2), p.MakeFee), math.Mul(big.NewInt(2), p.TakeFee))
+}
+
 func (p Pair) ValidateAddresses() error {
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.BaseTokenAddress, validation.Required),
@@ -264,6 +241,36 @@ func (p *Pair) GetOrderBookKeys() (sell, buy string) {
 
 func (p *Pair) GetKVPrefix() string {
 	return p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
+}
+
+type PairAddresses struct {
+	Name       string         `json:"name" bson:"name"`
+	BaseToken  common.Address `json:"baseToken" bson:"baseToken"`
+	QuoteToken common.Address `json:"quoteToken" bson:"quoteToken"`
+}
+
+type PairAddressesRecord struct {
+	Name       string `json:"name" bson:"name"`
+	BaseToken  string `json:"baseToken" bson:"baseToken"`
+	QuoteToken string `json:"quoteToken" bson:"quoteToken"`
+}
+
+type PairRecord struct {
+	ID bson.ObjectId `json:"id" bson:"_id"`
+
+	BaseTokenSymbol    string    `json:"baseTokenSymbol" bson:"baseTokenSymbol"`
+	BaseTokenAddress   string    `json:"baseTokenAddress" bson:"baseTokenAddress"`
+	BaseTokenDecimals  int       `json:"baseTokenDecimals" bson:"baseTokenDecimals"`
+	QuoteTokenSymbol   string    `json:"quoteTokenSymbol" bson:"quoteTokenSymbol"`
+	QuoteTokenAddress  string    `json:"quoteTokenAddress" bson:"quoteTokenAddress"`
+	QuoteTokenDecimals int       `json:"quoteTokenDecimals" bson:"quoteTokenDecimals"`
+	Active             bool      `json:"active" bson:"active"`
+	Listed             bool      `json:"listed" bson:"listed"`
+	MakeFee            string    `json:"makeFee" bson:"makeFee"`
+	TakeFee            string    `json:"takeFee" bson:"takeFee"`
+	Rank               int       `json:"rank" bson:"rank"`
+	CreatedAt          time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt          time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 type PairData struct {
