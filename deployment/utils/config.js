@@ -13,23 +13,37 @@ const contractAddresses = JSON.parse(tokenContent)
 
 const symbols = Object.keys(contractAddresses[networkId])
 
-const quoteTokens = []
-const baseTokens = symbols.filter(symbol => !quoteTokens.includes(symbol))
+const quoteTokens = ['TOMO', 'BTC', 'ETH', 'USDT']
+
+const supportedPairs = [
+  'ETH/TOMO',
+  'ETH/BTC',
+  'BTC/USDT',
+  'ETH/USDT',
+  'TOMO/BTC',
+  'TOMO/ETH',
+]
 
 const makeFees = {
-  WETH: utils.bigNumberify(10).pow(18).div(250),
-  DAI: utils.bigNumberify(10).pow(18).div(2),
+  TOMO: utils.bigNumberify(10).pow(18).div(250),
+  BTC: utils.bigNumberify(10).pow(18).div(250),
+  ETH: utils.bigNumberify(10).pow(18).div(250),
+  USDT: utils.bigNumberify(10).pow(18).div(250),
 }
 
 const takeFees = {
-  WETH: utils.bigNumberify(10).pow(18).div(250),
-  DAI: utils.bigNumberify(10).pow(18).div(2),
+  TOMO: utils.bigNumberify(10).pow(18).div(250),
+  BTC: utils.bigNumberify(10).pow(18).div(250),
+  ETH: utils.bigNumberify(10).pow(18).div(250),
+  USDT: utils.bigNumberify(10).pow(18).div(250),
 }
 
-const decimals = symbols.reduce((map, symbol) => {
-  map[symbol] = 18
-  return map
-}, {})
+const decimals = {
+  'TOMO': 18,
+  'BTC': 8,
+  'ETH': 18,
+  'USDT': 18,
+}
 
 const nativeCurrency = {
   symbol: 'TOMO',
@@ -58,8 +72,9 @@ module.exports = {
       '0x2c52197df32aa00940685ae94aeb4b8b6f4c81e2c5f9d289ec76eb614adb9686',
     ],
   },
+  symbols,
   quoteTokens,
-  baseTokens,
+  supportedPairs,
   takeFees,
   makeFees,
   decimals,
