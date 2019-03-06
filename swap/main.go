@@ -74,7 +74,7 @@ func (engine *Engine) configEthereum() {
 		}
 
 		ethereumListener := &ethereum.Listener{}
-		ethereumClient, err := ethclient.Dial(fmt.Sprintf("http://%s", engine.Config.Ethereum.RpcServer))
+		ethereumClient, err := ethclient.Dial(fmt.Sprintf("%s", engine.Config.Ethereum.RpcServer))
 		if err != nil {
 			logger.Error("Error connecting to geth")
 			os.Exit(-1)
