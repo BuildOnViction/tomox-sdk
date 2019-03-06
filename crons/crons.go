@@ -2,15 +2,16 @@ package crons
 
 import (
 	"github.com/robfig/cron"
+	"github.com/tomochain/dex-server/engine"
 	"github.com/tomochain/dex-server/services"
 )
 
 // CronService contains the services required to initialize crons
 type CronService struct {
-	orderService      *services.OrderService
 	OHLCVService      *services.OHLCVService
 	PriceBoardService *services.PriceBoardService
 	PairService       *services.PairService
+	Engine            *engine.Engine
 }
 
 // NewCronService returns a new instance of CronService
@@ -18,13 +19,13 @@ func NewCronService(
 	ohlcvService *services.OHLCVService,
 	priceBoardService *services.PriceBoardService,
 	pairService *services.PairService,
-	orderService *services.OrderService,
+	engine *engine.Engine,
 ) *CronService {
 	return &CronService{
 		OHLCVService:      ohlcvService,
 		PriceBoardService: priceBoardService,
 		PairService:       pairService,
-		orderService:      orderService,
+		Engine:            engine,
 	}
 }
 

@@ -703,6 +703,80 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 	return math.ToBigInt(res[0]["amount"]), nil
 }
 
+func (dao *OrderDao) GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error) {
+	var orders []*types.Order
+	decimalPricepoint, _ := bson.ParseDecimal128(o.PricePoint.String())
+
+	q := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"baseToken":  o.BaseToken.Hex(),
+				"quoteToken": o.QuoteToken.Hex(),
+				"side":       types.BUY,
+			},
+		},
+		bson.M{
+			"$addFields": bson.M{
+				"priceDecimal": bson.M{"$toDecimal": "$pricepoint"},
+			},
+		},
+		bson.M{
+			"$match": bson.M{
+				"priceDecimal": bson.M{"$gte": decimalPricepoint},
+			},
+		},
+		bson.M{
+			"$sort": bson.M{"priceDecimal": -1, "createdAt": 1},
+		},
+	}
+
+	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (dao *OrderDao) GetMatchingSellOrders(o *types.Order) ([]*types.Order, error) {
+	var orders []*types.Order
+	decimalPricepoint, _ := bson.ParseDecimal128(o.PricePoint.String())
+
+	q := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"baseToken":  o.BaseToken.Hex(),
+				"quoteToken": o.QuoteToken.Hex(),
+				"side":       types.SELL,
+			},
+		},
+		bson.M{
+			"$addFields": bson.M{
+				"priceDecimal": bson.M{"$toDecimal": "$pricepoint"},
+			},
+		},
+		bson.M{
+			"$match": bson.M{
+				"priceDecimal": bson.M{"$lte": decimalPricepoint},
+			},
+		},
+		bson.M{
+			"$sort": bson.M{"priceDecimal": 1, "createdAt": 1},
+		},
+	}
+
+	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return orders, nil
+}
+
 // Drop drops all the order documents in the current database
 func (dao *OrderDao) Drop() error {
 	err := db.DropCollection(dao.dbName, dao.collectionName)
@@ -746,6 +820,8 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		return err
 	}
 
+	logger.Debug(params)
+
 	err = rpcClient.Call(&result, "tomoX_post", params)
 
 	if err != nil {
@@ -777,7 +853,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order) error {
 	return nil
 }
 
-func (dao *OrderDao) GetNewOrders() ([]*types.Order, error) {
+func (dao *OrderDao) GetNewOrders(topic string) ([]*types.Order, error) {
 	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
 
 	defer rpcClient.Close()
@@ -787,7 +863,7 @@ func (dao *OrderDao) GetNewOrders() ([]*types.Order, error) {
 	}
 
 	var messages []*types.Message
-	params := "c175f845be4c64bb2383b367c5ca7b3b53951b974cf36aaee874ef9855640363"
+	params := topic
 	err = rpcClient.Call(&messages, "tomoX_getFilterMessages", params)
 
 	result := make([]*types.Order, 0)
@@ -815,36 +891,33 @@ func (dao *OrderDao) SyncNewOrders(orders []*types.Order) error {
 	return nil
 }
 
-func (dao *OrderDao) AddTopic(t []string) error {
+func (dao *OrderDao) AddTopic(t []string) (string, error) {
 	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
 
 	defer rpcClient.Close()
 
 	if err != nil {
 		logger.Error(err)
-		return err
+		return "", err
 	}
 
-	var result interface{}
+	var result string
 	params := make(map[string]interface{})
 	params["topics"] = t
 
 	if err != nil {
 		logger.Error(err)
-		return err
+		return "", err
 	}
 
 	err = rpcClient.Call(&result, "tomoX_newMessageFilter", params)
 
 	if err != nil {
 		logger.Error(err)
-		return err
+		return "", err
 	}
-	logger.Debug(result)
 
-	logger.Debug("#########")
-
-	return nil
+	return result, nil
 }
 
 func (dao *OrderDao) DeleteTopic(t string) error {

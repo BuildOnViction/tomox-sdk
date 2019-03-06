@@ -32,6 +32,8 @@ type OrderDao interface {
 	GetByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
+	GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error)
+	GetMatchingSellOrders(o *types.Order) ([]*types.Order, error)
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
 	UpdateOrderFilledAmounts(h []common.Hash, values []*big.Int) ([]*types.Order, error)
 	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.Order, error)
@@ -46,9 +48,9 @@ type OrderDao interface {
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 	AddNewOrder(o *types.Order, topic string) error
 	CancelOrder(o *types.Order) error
-	GetNewOrders() ([]*types.Order, error)
+	GetNewOrders(topic string) ([]*types.Order, error)
 	SyncNewOrders(orders []*types.Order) error
-	AddTopic(t []string) error
+	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
 }
 

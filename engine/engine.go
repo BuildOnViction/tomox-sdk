@@ -244,3 +244,98 @@ func (e *Engine) handleInvalidateTakerOrders(bytes []byte) error {
 
 	return nil
 }
+
+func (e *Engine) SyncOrderBook(p *types.Pair) error {
+	logger.Debugf("*#####%s", p.Code())
+	ob := e.orderbooks[p.Code()]
+	orders, err := ob.orderDao.GetNewOrders(ob.topic)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = ob.orderDao.SyncNewOrders(orders)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	for _, o := range orders {
+		res := &types.EngineResponse{}
+		if o.Side == "SELL" {
+			res, err = ob.sellOrder(o)
+			if err != nil {
+				logger.Error(err)
+				return err
+			}
+
+		} else if o.Side == "BUY" {
+			res, err = ob.buyOrder(o)
+			if err != nil {
+				logger.Error(err)
+				return err
+			}
+		}
+
+		// Note: Plug the option for orders like FOC, Limit here (if needed)
+		err = ob.rabbitMQConn.PublishEngineResponse(res)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	}
+
+	//for _, o := range orders {
+	//	switch o.Status {
+	//	case "OPEN":
+	//		res := &types.EngineResponse{
+	//			Status:  types.ORDER_ADDED,
+	//			Order:   o,
+	//			Matches: nil,
+	//		}
+	//
+	//		// Note: Plug the option for orders like FOC, Limit here (if needed)
+	//		err = e.rabbitMQConn.PublishEngineResponse(res)
+	//		if err != nil {
+	//			logger.Error(err)
+	//			return err
+	//		}
+	//
+	//		return nil
+	//
+	//	case "CANCELLED":
+	//		res := &types.EngineResponse{
+	//			Status:  types.ORDER_CANCELLED,
+	//			Order:   o,
+	//			Matches: nil,
+	//		}
+	//
+	//		err = e.rabbitMQConn.PublishEngineResponse(res)
+	//		if err != nil {
+	//			logger.Error(err)
+	//			return err
+	//		}
+	//
+	//		return nil
+	//
+	//	default:
+	//		res := &types.EngineResponse{
+	//			Status:  types.ERROR_STATUS,
+	//			Order:   o,
+	//			Matches: nil,
+	//		}
+	//
+	//		err = e.rabbitMQConn.PublishEngineResponse(res)
+	//		if err != nil {
+	//			logger.Error(err)
+	//			return err
+	//		}
+	//
+	//		return nil
+	//	}
+	//}
+
+	return nil
+}
