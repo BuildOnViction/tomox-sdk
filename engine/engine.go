@@ -260,13 +260,6 @@ func (e *Engine) SyncOrderBook(p *types.Pair) error {
 		return err
 	}
 
-	err = ob.orderDao.SyncNewOrders(orders)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
 	for _, o := range orders {
 		res := &types.EngineResponse{}
 		if o.Side == "SELL" {
@@ -291,6 +284,13 @@ func (e *Engine) SyncOrderBook(p *types.Pair) error {
 			return err
 		}
 	}
+
+	//err = ob.orderDao.SyncNewOrders(orders)
+	//
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
 
 	//for _, o := range orders {
 	//	switch o.Status {
