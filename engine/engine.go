@@ -248,6 +248,11 @@ func (e *Engine) handleInvalidateTakerOrders(bytes []byte) error {
 func (e *Engine) SyncOrderBook(p *types.Pair) error {
 	logger.Debugf("*#####%s", p.Code())
 	ob := e.orderbooks[p.Code()]
+
+	if ob.topic == "" {
+		return errors.New("Orderbook topic is missing")
+	}
+
 	orders, err := ob.orderDao.GetNewOrders(ob.topic)
 
 	if err != nil {

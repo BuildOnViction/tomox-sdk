@@ -22,6 +22,10 @@ func (s *CronService) syncOrderBookCron(c *cron.Cron) {
 
 func (s *CronService) syncOrderBook(p *types.Pair) func() {
 	return func() {
-		s.Engine.SyncOrderBook(p)
+		err := s.Engine.SyncOrderBook(p)
+
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}
 }
