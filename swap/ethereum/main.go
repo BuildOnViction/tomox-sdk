@@ -8,7 +8,6 @@ import (
 	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/swap/storage"
 	"github.com/tomochain/dex-server/utils"
-	bip32 "github.com/tyler-smith/go-bip32"
 )
 
 var logger = utils.EthereumListenerLogger
@@ -49,10 +48,6 @@ type Transaction struct {
 	// Value in Wei
 	ValueWei *big.Int
 	To       string
-}
-
-type AddressGenerator struct {
-	masterPublicKey *bip32.Key
 }
 
 func EthToWei(eth string) (*big.Int, error) {

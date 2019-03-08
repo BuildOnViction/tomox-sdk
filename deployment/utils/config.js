@@ -13,16 +13,16 @@ const contractAddresses = JSON.parse(tokenContent)
 
 const symbols = Object.keys(contractAddresses[networkId])
 
-// const quoteTokens = ['TOMO', 'BTC', 'ETH', 'USDT']
-const quoteTokens = ['TOMO']
+const quoteTokens = ['TOMO', 'BTC', 'ETH', 'USDT']
+// const quoteTokens = ['TOMO']
 
 const supportedPairs = [
   'ETH/TOMO',
-  // 'ETH/BTC',
-  // 'BTC/USDT',
-  // 'ETH/USDT',
-  // 'TOMO/BTC',
-  // 'TOMO/ETH',
+  'ETH/BTC',
+  'BTC/USDT',
+  'ETH/USDT',
+  'TOMO/BTC',
+  'TOMO/ETH',
 ]
 
 const makeFees = {
@@ -56,12 +56,6 @@ const nativeCurrency = {
 
 module.exports = {
   DB_NAME: 'tomodex',
-  addresses: [
-    '0x28074f8D0fD78629CD59290Cac185611a8d60109',
-    '0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c',
-    '0x53ee745b3d30d692dc016450fef68a898c16fa44',
-    '0xe0a1240b358dfa6c167edea09c763ae9f3b51ea0',
-  ],
   keys: {
     '1': (process.env.TOMO_MAINNET_KEYS || '').split(','),
     '4': (process.env.TOMO_RINKEBY_KEYS || '').split(','),
