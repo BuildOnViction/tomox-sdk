@@ -23,8 +23,7 @@ const getEthereumBlockNumber = async networkName => {
       httpProvider = ethers.getDefaultProvider('ropsten')
       break
     case 'tomochain':
-      console.log("#213")
-      httpProvider = ethers.getDefaultProvider('ethereum')
+      httpProvider = ethers.getDefaultProvider('homestead')
       break
     default:
       httpProvider = ethers.getDefaultProvider('ropsten')
