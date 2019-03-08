@@ -38,6 +38,7 @@ func (l *Listener) Start() error {
 	}
 
 	if id.String() != l.NetworkID {
+		logger.Error("Invalid network ID (have=%s, want=%s)", id.String(), l.NetworkID)
 		return errors.Errorf("Invalid network ID (have=%s, want=%s)", id.String(), l.NetworkID)
 	}
 
@@ -135,7 +136,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*ethereumTypes.Block, error) {
 		blockNumberInt = big.NewInt(int64(blockNumber))
 	}
 
-	d := time.Now().Add(5 * time.Second)
+	d := time.Now().Add(10 * time.Second)
 	ctx, cancel := context.WithDeadline(context.Background(), d)
 	defer cancel()
 
@@ -161,12 +162,12 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 	transactions := block.Transactions()
 
-	blockTime := time.Unix(block.Time().Int64(), 0)
-	logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
-		block.NumberU64(),
-		blockTime,
-		len(transactions),
-	)
+	//blockTime := time.Unix(block.Time().Int64(), 0)
+	//logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
+	//	block.NumberU64(),
+	//	blockTime,
+	//	len(transactions),
+	//)
 
 	for _, transaction := range transactions {
 		to := transaction.To()
@@ -193,7 +194,7 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 		}
 	}
 
-	// logger.Infof("Processed block")
+	logger.Infof("Processed block")
 
 	return nil
 }

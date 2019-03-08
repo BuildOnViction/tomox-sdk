@@ -407,14 +407,14 @@ func (e *depositEndpoint) OnNewBitcoinTransaction(transaction bitcoin.Transactio
 // types.DepositTransaction (especialy amounts). Pooling service should not have to deal with any
 // conversions.
 func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transaction) error {
-	logger.Infof("Processing transaction: %v", transaction)
+	//logger.Infof("Processing transaction: %v", transaction)
 
 	// Let's check if tx is valid first.
 
 	// Check if value is above minimum required
 	minimumValueWei := e.depositService.MinimumValueWei()
 	if transaction.ValueWei.Cmp(minimumValueWei) < 0 {
-		logger.Debugf("Value is : %s, below minimum required amount: %s, skipping", transaction.ValueWei, minimumValueWei)
+		//logger.Debugf("Value is : %s, below minimum required amount: %s, skipping", transaction.ValueWei, minimumValueWei)
 		return nil
 	}
 
@@ -429,7 +429,7 @@ func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transact
 
 	// there is no address association in the database
 	if addressAssociation == nil {
-		logger.Info("Transaction not found, skipping")
+		//logger.Info("Deposit transaction not found, skipping")
 		return nil
 	}
 
@@ -498,15 +498,18 @@ func (e *depositEndpoint) processTokenTransaction(addressAssociation *types.Addr
 	<-done
 
 	if len(logs) != 1 {
+		logger.Error("Events log has not the correct length")
 		return errors.Errorf("Events log has not the correct length")
 	}
 
 	parsedTransfer := logs[0]
 
 	if parsedTransfer.To != receiver {
+		logger.Error("Event 'To' field is not correct")
 		return errors.Errorf("Event 'To' field is not correct")
 	}
 	if parsedTransfer.Value.Cmp(tokenAmount) != 0 {
+		logger.Error("Event 'Amount' field is not correct")
 		return errors.Errorf("Event 'Amount' field is not correct")
 	}
 

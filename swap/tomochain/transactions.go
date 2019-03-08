@@ -42,8 +42,15 @@ func (ac *AccountConfigurator) configureAccountTransaction(depositTransaction *t
 
 	// // Send WETH token using smart contract
 	// exchange by rate from regulator service
-	transaction, err := ac.buildTransaction(depositTransaction.AssociatedAddress, ac.signerPrivateKey,
-		types.CreateOffer, depositTransaction.Amount, tokenPrice, depositTransaction.PairName)
+	transaction, err := ac.buildTransaction(
+		depositTransaction.AssociatedAddress,
+		ac.signerPrivateKey,
+		types.CreateOffer,
+		// 3 fields below are "params"
+		depositTransaction.Amount,
+		tokenPrice,
+		depositTransaction.PairName,
+	)
 	if err != nil {
 		return errors.Wrap(err, "Error building a transaction")
 	}
