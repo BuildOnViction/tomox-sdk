@@ -49,7 +49,7 @@ ethereum:
 deposit:
   ethereum:
     # for demo we can deposit in the same network
-    network_id: 8888
+    network_id: 3
     master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
     minimum_value_eth: 0.00001
     token_price: 1
@@ -60,7 +60,7 @@ deposit:
     # using this private key, or secret from ENV to run smart contract
     issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
-    signer_private_key: 0x3411b45169aa5a8312e51357db68621031020dcf46011d7431db1bbb6d3922ce
+    signer_private_key: 0x7f4c1bacba63f05827f6d8fc0e22cf68c42005775a7f73abff7d819986bae77c
     starting_balance: 100.00
     lock_unix_timestamp: 0
 
