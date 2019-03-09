@@ -194,7 +194,7 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 		}
 	}
 
-	logger.Infof("Processed block")
+	logger.Infof("Processed block %d", block.Number())
 
 	return nil
 }
