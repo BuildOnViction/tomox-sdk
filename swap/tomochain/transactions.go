@@ -36,6 +36,10 @@ func (ac *AccountConfigurator) configureAccountTransaction(depositTransaction *t
 	switch depositTransaction.AssetCode {
 	case types.AssetCodeETH:
 		tokenPrice = ac.TokenPriceETH
+		break
+	case types.AssetCodeBTC:
+		tokenPrice = ac.TokenPriceBTC
+		break
 	default:
 		return errors.Errorf("Invalid intermediateAssetCode: $%s", depositTransaction.AssetCode)
 	}

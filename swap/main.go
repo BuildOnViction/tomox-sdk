@@ -273,6 +273,10 @@ func (engine *Engine) EthereumAddressGenerator() *ethereum.AddressGenerator {
 	return engine.ethereumAddressGenerator
 }
 
+func (engine *Engine) BitcoinAddressGenerator() *bitcoin.AddressGenerator {
+	return engine.bitcoinAddressGenerator
+}
+
 func (engine *Engine) TomochainAccountConfigurator() *tomochain.AccountConfigurator {
 	return engine.tomochainAccountConfigurator
 }
