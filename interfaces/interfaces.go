@@ -287,9 +287,6 @@ type DepositService interface {
 	GetSchemaVersion() uint64
 	RecoveryTransaction(chain types.Chain, address common.Address) error
 
-	// Get Token Amount base on Exchange rate of the orderbook
-	GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error)
-
 	// one for wallet, one for relayer
 	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
 	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)

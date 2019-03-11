@@ -450,7 +450,7 @@ func (e *depositEndpoint) OnNewEthereumTransaction(transaction ethereum.Transact
 	return e.processNewTransaction(queueTx, addressAssociation)
 }
 
-func (e *depositEndpoint) processTokenTransaction(addressAssociation *types.AddressAssociationRecord, quoteAmount *big.Int) error {
+func (e *depositEndpoint) processTokenTransaction(addressAssociation *types.AddressAssociationRecord, depositAmount *big.Int) error {
 	// here we update the transaction status and send token via smart contract
 	contractAddress := common.HexToAddress(addressAssociation.BaseTokenAddress)
 	receiver := common.HexToAddress(addressAssociation.AssociatedAddress)
@@ -469,7 +469,7 @@ func (e *depositEndpoint) processTokenTransaction(addressAssociation *types.Addr
 	logs := []*contractsinterfaces.TokenTransfer{}
 
 	// now calculate tokenAmount
-	tokenAmount, err := e.depositService.GetBaseTokenAmount(addressAssociation.PairName, quoteAmount)
+	tokenAmount := depositAmount
 
 	if err != nil {
 		return errors.Errorf("Could not convert to token amount to transfer: %s", err.Error())
@@ -551,15 +551,20 @@ func (e *depositEndpoint) OnSubmitTransaction(chain types.Chain, destination str
 
 		// first param is amount, second param is the price of coin, such as ether
 		amount := associationTransaction.Params[0]
-		quoteAmount := new(big.Int)
-		quoteAmount, ok := quoteAmount.SetString(amount, 10)
+		// tokenPrice := associationTransaction.Params[1]
+		// TODO: Implement deposit fee here if needed.
+		// Update deposit amount based on token price here, token price is <= 1
+		// depositAmount = amount * tokenPrice
+		// amount * (1 - token price) is the deposit fee that the exchange will receive
+		depositAmount := new(big.Int)
+		depositAmount, ok := depositAmount.SetString(amount, 10)
 		if !ok {
 			e.depositService.SaveAssociationStatusByChainAddress(addressAssociation, types.FAILED)
 			return errors.Errorf("Could not convert to token amount: %s", amount)
 		}
 
 		// now process token transfer
-		err = e.processTokenTransaction(addressAssociation, quoteAmount)
+		err = e.processTokenTransaction(addressAssociation, depositAmount)
 		// update success if there is no error
 		if err != nil {
 			e.depositService.SaveAssociationStatusByChainAddress(addressAssociation, types.FAILED)
