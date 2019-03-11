@@ -162,6 +162,8 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 	transactions := block.Transactions()
 
+	logger.Infof("Start processing block %d, total transactions: %d", block.Number(), len(transactions))
+
 	//blockTime := time.Unix(block.Time().Int64(), 0)
 	//logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
 	//	block.NumberU64(),
