@@ -667,7 +667,6 @@ func (e *depositEndpoint) processTransaction(addressAssociation *types.AddressAs
 	// update status is pending, if is pending or success then return true, to tell it stop
 	// otherwise return false, then update the status is pending, on success update it success,
 	// on faile update it fail, so next time it will return false again to re-process
-	// default contractAddress is e.depositService.WethAddress(),
 	// call smart contract and listen to event, then update to mongodb via DAO
 
 	// re-set status as pending and wait for confirmation, this is even for retrying a failed transaction

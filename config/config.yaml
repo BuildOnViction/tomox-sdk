@@ -18,11 +18,9 @@ deposit:
     token_asset_code: WETH
 error_file: config/errors.yaml
 ethereum:
-  bzz_url: http://localhost:8542
   decimal: 8
   fee_account: 0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c
   http_url: http://localhost:8545
-  weth_address: 0xd645C13C35141d61f273EDc0F546beF48a48001D
   ws_url: ws://localhost:8545
 jwt_signing_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
 jwt_verification_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d

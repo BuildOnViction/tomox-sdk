@@ -59,11 +59,6 @@ func (s *DepositService) EthereumClient() interfaces.EthereumClient {
 	return provider.Client
 }
 
-func (s *DepositService) WethAddress() common.Address {
-	provider := s.engine.Provider().(*ethereum.EthereumProvider)
-	return provider.Config.WethAddress()
-}
-
 func (s *DepositService) SetDelegate(handler interfaces.SwapEngineHandler) {
 	// set event handler delegate to this service
 	s.swapEngine.SetDelegate(handler)

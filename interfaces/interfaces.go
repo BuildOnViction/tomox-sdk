@@ -309,7 +309,6 @@ type DepositService interface {
 
 	// help creating token
 	EthereumClient() EthereumClient
-	WethAddress() common.Address
 }
 
 type SwapEngineHandler interface {
@@ -331,7 +330,6 @@ type ValidatorService interface {
 type EthereumConfig interface {
 	GetURL() string
 	ExchangeAddress() common.Address
-	WethAddress() common.Address
 }
 
 type EthereumClient interface {
