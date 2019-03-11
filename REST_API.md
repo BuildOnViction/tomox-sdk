@@ -160,13 +160,6 @@ Retrieve the list of filled order for an Ethereum address.
 
 - {address} is an Ethereum address
 
-### GET /orders/feeds/{address}?tokenAddress={tokenAddress}
-
-Retrieve the list of filled order for an Ethereum address from Swarm Feed.
-
-- {address} is an Ethereum address
-- {tokenAddress} is the token address
-
 # OHLCV resource
 
 ### GET /ohlcv?baseToken={baseToken}&quoteToken={quoteToken}&pairName={pairName}&unit={unit}&duration={duration}&from={from}&to={to}

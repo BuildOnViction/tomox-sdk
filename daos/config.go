@@ -30,7 +30,7 @@ type ConfigDao struct {
 // NewBalanceDao returns a new instance of AddressDao
 func NewConfigDao() *ConfigDao {
 	dbName := app.Config.DBName
-	// we save deposit information in swarm feed and use config for retrieving params.
+	// we save deposit information and use config for retrieving params.
 	collection := "config"
 	index := mgo.Index{
 		Key:    []string{"key"},

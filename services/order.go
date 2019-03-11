@@ -78,26 +78,6 @@ func (s *OrderService) GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	return s.orderDao.GetByHashes(hashes)
 }
 
-func (s *OrderService) GetByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error) {
-	// topic, _ := feed.NewTopic("Token", []byte("TOMO"))
-	// try to decode
-	var feeds []types.OrderFeed
-
-	err := s.engine.GetFeed(userAddress, tokenAddress.Bytes(), &feeds)
-
-	if err != nil {
-		return nil, fmt.Errorf("Error decoding feed updates: %s", err)
-	}
-
-	var messages []*types.OrderRecord
-	for _, feed := range feeds {
-		message, _ := feed.GetBSON()
-		messages = append(messages, message)
-	}
-
-	return messages, nil
-}
-
 // // GetByAddress fetches the detailed document of a token using its contract address
 // func (s *OrderService) GetTokenByAddress(addr common.Address) (*types.Token, error) {
 // 	return s.tokenDao.GetByAddress(addr)

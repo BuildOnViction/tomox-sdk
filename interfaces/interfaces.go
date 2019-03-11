@@ -169,9 +169,6 @@ type Engine interface {
 	// CancelOrder(order *types.Order) (*types.EngineResponse, error)
 	// DeleteOrder(o *types.Order) error
 	Provider() EthereumProvider
-
-	// Feed method
-	GetFeed(a common.Address, topic []byte, result interface{}) error
 }
 
 type WalletService interface {
@@ -198,7 +195,6 @@ type EthereumService interface {
 
 type OrderService interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
-	GetByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
@@ -295,7 +291,6 @@ type DepositService interface {
 	GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error)
 
 	// one for wallet, one for relayer
-	GetAssociationByUserAddress(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
 	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
 	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
 

@@ -31,7 +31,6 @@ func ServeOrderResource(
 	e := &orderEndpoint{orderService, accountService}
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
-	r.HandleFunc("/orders/feeds/{address}", e.handleGetOrderFeeds).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
@@ -74,45 +73,6 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, orders)
-}
-
-func (e *orderEndpoint) handleGetOrderFeeds(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	vars := mux.Vars(r)
-	addr := vars["address"]
-	address := v.Get("tokenAddress")
-
-	if addr == "" {
-		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
-		return
-	}
-
-	if !common.IsHexAddress(addr) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid User Address")
-		return
-	}
-
-	if address == "" || !common.IsHexAddress(address) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
-		return
-	}
-
-	tokenAddress := common.HexToAddress(address)
-	userAddress := common.HexToAddress(addr)
-	// token, err := e.orderService.GetTokenByAddress(tokenAddress)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	httputils.WriteError(w, http.StatusInternalServerError, "")
-	// 	return
-	// }
-
-	messages, err := e.orderService.GetByTopic(userAddress, tokenAddress)
-	if err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, messages)
 }
 
 func (e *orderEndpoint) handleGetPositions(w http.ResponseWriter, r *http.Request) {

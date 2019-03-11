@@ -239,17 +239,3 @@ func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.In
 
 	return tokenAmount, nil
 }
-
-// Create function performs the DB insertion task for Balance collection
-func (s *DepositService) GetAssociationByUserAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error) {
-	// get from feed
-	var addressAssociationFeed types.AddressAssociationFeed
-	err := s.engine.GetFeed(userAddress, chain.Bytes(), &addressAssociationFeed)
-
-	logger.Infof("feed :%v", addressAssociationFeed)
-
-	if err == nil {
-		return addressAssociationFeed.GetJSON()
-	}
-	return nil, err
-}

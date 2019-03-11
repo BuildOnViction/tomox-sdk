@@ -60,7 +60,7 @@ func (ac *AccountConfigurator) ConfigureAccount(depositTransaction *types.Deposi
 		if ac.Enabled == false {
 			break
 		}
-		// get from feed
+
 		_, exists, err := ac.getAccount(depositTransaction.Chain, depositTransaction.AssociatedAddress)
 		if err != nil {
 			logger.Errorf("Error loading account from Tomochain: %s", err.Error())
@@ -90,7 +90,7 @@ func (ac *AccountConfigurator) ConfigureAccount(depositTransaction *types.Deposi
 	ac.setAccountStatus(depositTransaction.AssociatedAddress, StatusWaitingForSigner)
 
 	// Wait for signer changes...
-	// check if association feed is correct
+	// check if association is correct
 	for {
 		if ac.Enabled == false {
 			break

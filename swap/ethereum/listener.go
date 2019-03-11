@@ -178,10 +178,6 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 		// this is the address that we need to check in address association
 		// server will store associate like ethereumAddress => userAddress
-		// user will store in feed with topic ethereum like {ethereumAddress}
-		// if server has problem, client can use this feed to refer to ethereumAddress
-		// and check for transaction, then check against current blockchain
-		// for server, it is just an indexer to help process faster
 		tx := Transaction{
 			Hash:     transaction.Hash().Hex(),
 			ValueWei: transaction.Value(),
