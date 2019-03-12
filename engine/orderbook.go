@@ -50,7 +50,7 @@ func NewOrderBook(
 	p *types.Pair,
 ) *OrderBook {
 
-	t, err := orderDao.AddTopic([]string{p.Encoded()})
+	t, err := orderDao.AddTopic([]string{p.EncodedTopic()})
 
 	if err != nil {
 		logger.Error(err)
@@ -73,7 +73,7 @@ func (ob *OrderBook) newOrder(o *types.Order) error {
 	ob.mutex.Lock()
 	defer ob.mutex.Unlock()
 
-	topic := ob.pair.Encoded()
+	topic := ob.pair.EncodedTopic()
 
 	err := ob.orderDao.AddNewOrder(o, topic)
 

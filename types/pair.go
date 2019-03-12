@@ -190,9 +190,18 @@ func (p *Pair) Name() string {
 	return name
 }
 
-func (p *Pair) Encoded() string {
+func (p *Pair) EncodedTopic() string {
 	b := []byte(p.Name())
-	return fmt.Sprintf("0x%s", hex.EncodeToString(b))
+	s := hex.EncodeToString(b)
+
+	// Padding zero if the encoded topic length is not valid
+	if len(s) < TopicLength*2 {
+		ps := fmt.Sprintf("%016s", s) // 16 = TopicLength * 2
+
+		return fmt.Sprintf("0x%s", ps)
+	}
+
+	return fmt.Sprintf("0x%s", s)
 }
 
 func (p *Pair) ParseAmount(a *big.Int) float64 {

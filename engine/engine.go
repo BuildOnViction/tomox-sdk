@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/ethereum"
@@ -203,7 +204,7 @@ func (e *Engine) SyncOrderBook(p types.Pair) error {
 	ob := e.orderbooks[p.Code()]
 
 	if ob.topic == "" {
-		return errors.New("Orderbook topic is missing")
+		return errors.New(fmt.Sprintf("Orderbook topic is missing: %s", p.Name()))
 	}
 
 	orders, err := ob.orderDao.GetNewOrders(ob.topic)
