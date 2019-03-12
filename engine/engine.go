@@ -198,7 +198,7 @@ func (e *Engine) handleInvalidateTakerOrders(bytes []byte) error {
 	return nil
 }
 
-func (e *Engine) SyncOrderBook(p *types.Pair) error {
+func (e *Engine) SyncOrderBook(p types.Pair) error {
 	logger.Debugf("*#####%s", p.Code())
 	ob := e.orderbooks[p.Code()]
 

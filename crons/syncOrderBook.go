@@ -16,11 +16,11 @@ func (s *CronService) syncOrderBookCron(c *cron.Cron) {
 	}
 
 	for _, p := range pairs {
-		c.AddFunc("*/2 * * * * *", s.syncOrderBook(&p))
+		c.AddFunc("*/2 * * * * *", s.syncOrderBook(p))
 	}
 }
 
-func (s *CronService) syncOrderBook(p *types.Pair) func() {
+func (s *CronService) syncOrderBook(p types.Pair) func() {
 	return func() {
 		err := s.Engine.SyncOrderBook(p)
 
