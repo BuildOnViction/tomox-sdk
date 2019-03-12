@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-NETWORK="tomochainTestnet"
+NETWORK="development"
 
 echo "Query Tokens From dex-smart-contract"
 node deployment/query_tokens.js $NETWORK

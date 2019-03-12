@@ -21,7 +21,7 @@ type AssociationDao struct {
 // NewBalanceDao returns a new instance of AddressDao
 func NewAssociationDao() *AssociationDao {
 	dbName := app.Config.DBName
-	// we save deposit information in swarm feed and use config for retrieving params.
+	// we save deposit information and use config for retrieving params.
 	collection := "associations"
 	index := mgo.Index{
 		Key:    []string{"chain", "address"},

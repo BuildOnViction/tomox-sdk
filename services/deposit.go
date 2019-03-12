@@ -2,20 +2,16 @@ package services
 
 import (
 	"math/big"
-	"strings"
-
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/ws"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/ethereum"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/rabbitmq"
 	"github.com/tomochain/dex-server/swap"
 	swapConfig "github.com/tomochain/dex-server/swap/config"
 	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/binance"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/dex-server/ws"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -57,11 +53,6 @@ func NewDepositService(
 func (s *DepositService) EthereumClient() interfaces.EthereumClient {
 	provider := s.engine.Provider().(*ethereum.EthereumProvider)
 	return provider.Client
-}
-
-func (s *DepositService) WethAddress() common.Address {
-	provider := s.engine.Provider().(*ethereum.EthereumProvider)
-	return provider.Config.WethAddress()
 }
 
 func (s *DepositService) SetDelegate(handler interfaces.SwapEngineHandler) {
@@ -176,80 +167,4 @@ func (s *DepositService) SaveAssociationStatusByChainAddress(addressAssociation 
 	}
 
 	return s.associationDao.SaveAssociationStatus(addressAssociation.Chain, address, status)
-}
-
-func (s *DepositService) getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol string, quoteAmount *big.Int) (*big.Int, error) {
-	lastPrice, err := binance.GetLastPrice(baseTokenSymbol, quoteTokenSymbol)
-	if err != nil {
-		return quoteAmount, nil
-	}
-	exchangeRate, ok := new(big.Int).SetString(lastPrice, 10)
-	if !ok {
-		return quoteAmount, nil
-	}
-	// last price is the price in quoteToken for a baseToken, also means baseToken/quoteToken exchange rate
-	baseAmount := math.Mul(quoteAmount, exchangeRate)
-	return baseAmount, nil
-}
-
-func (s *DepositService) GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error) {
-
-	tokenSymbols := strings.Split(pairName, "/")
-	if len(tokenSymbols) != 2 {
-		return nil, errors.Errorf("Pair name is wrong format: %s", pairName)
-	}
-	baseTokenSymbol := strings.ToUpper(tokenSymbols[0])
-	quoteTokenSymbol := strings.ToUpper(tokenSymbols[1])
-
-	// this is 1:1 exchange
-	if baseTokenSymbol == quoteTokenSymbol {
-		return quoteAmount, nil
-	}
-
-	pair, err := s.pairDao.GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol)
-	if err != nil {
-		return nil, err
-	}
-
-	if pair == nil {
-		// there is no exchange rate yet
-		return s.getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol, quoteAmount)
-	}
-
-	logger.Debugf("Got pair :%v", pair)
-
-	// get best Bid, the highest bid available
-	bids, err := s.orderDao.GetSideOrderBook(pair, types.BUY, -1, 1)
-	if err != nil {
-		return nil, err
-	}
-
-	// if there is no exchange rate, should return one from oracle service like coin market cap
-	if len(bids) < 1 {
-		return s.getTokenAmountFromOracle(baseTokenSymbol, quoteTokenSymbol, quoteAmount)
-	}
-
-	pricepoint := math.ToBigInt(bids[0]["pricepoint"])
-	if math.IsZero(pricepoint) {
-		return nil, errors.New("Pricepoint is zero")
-	}
-
-	// calculate the tokenAmount
-	tokenAmount := math.Div(math.Mul(quoteAmount, pair.PricepointMultiplier()), pricepoint)
-
-	return tokenAmount, nil
-}
-
-// Create function performs the DB insertion task for Balance collection
-func (s *DepositService) GetAssociationByUserAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociation, error) {
-	// get from feed
-	var addressAssociationFeed types.AddressAssociationFeed
-	err := s.engine.GetFeed(userAddress, chain.Bytes(), &addressAssociationFeed)
-
-	logger.Infof("feed :%v", addressAssociationFeed)
-
-	if err == nil {
-		return addressAssociationFeed.GetJSON()
-	}
-	return nil, err
 }

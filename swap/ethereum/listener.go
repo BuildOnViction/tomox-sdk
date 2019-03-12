@@ -38,6 +38,7 @@ func (l *Listener) Start() error {
 	}
 
 	if id.String() != l.NetworkID {
+		logger.Error("Invalid network ID (have=%s, want=%s)", id.String(), l.NetworkID)
 		return errors.Errorf("Invalid network ID (have=%s, want=%s)", id.String(), l.NetworkID)
 	}
 
@@ -135,7 +136,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*ethereumTypes.Block, error) {
 		blockNumberInt = big.NewInt(int64(blockNumber))
 	}
 
-	d := time.Now().Add(5 * time.Second)
+	d := time.Now().Add(10 * time.Second)
 	ctx, cancel := context.WithDeadline(context.Background(), d)
 	defer cancel()
 
@@ -161,12 +162,14 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 	transactions := block.Transactions()
 
-	blockTime := time.Unix(block.Time().Int64(), 0)
-	logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
-		block.NumberU64(),
-		blockTime,
-		len(transactions),
-	)
+	logger.Infof("Start processing block %d, total transactions: %d", block.Number(), len(transactions))
+
+	//blockTime := time.Unix(block.Time().Int64(), 0)
+	//logger.Infof("Processing block: blockNumber:%d, blockTime:%v, transactions:%d",
+	//	block.NumberU64(),
+	//	blockTime,
+	//	len(transactions),
+	//)
 
 	for _, transaction := range transactions {
 		to := transaction.To()
@@ -177,10 +180,6 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 
 		// this is the address that we need to check in address association
 		// server will store associate like ethereumAddress => userAddress
-		// user will store in feed with topic ethereum like {ethereumAddress}
-		// if server has problem, client can use this feed to refer to ethereumAddress
-		// and check for transaction, then check against current blockchain
-		// for server, it is just an indexer to help process faster
 		tx := Transaction{
 			Hash:     transaction.Hash().Hex(),
 			ValueWei: transaction.Value(),
@@ -193,7 +192,7 @@ func (l *Listener) processBlock(block *ethereumTypes.Block) error {
 		}
 	}
 
-	// logger.Infof("Processed block")
+	logger.Infof("Processed block %d", block.Number())
 
 	return nil
 }
