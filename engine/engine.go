@@ -2,7 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/ethereum"
