@@ -16,8 +16,6 @@ The matching-engine will be soon moved to blockchain services.
 
 https://github.com/tomochain/dex-smart-contract/blob/develop/Deployment_step_by_step.md
 
-=======
-
 # REST API
 
 See [REST_API.md](REST_API.md)

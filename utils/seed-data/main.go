@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -24,10 +22,10 @@ var networks = map[string]string{
 	"development":      "8888",
 }
 
-func batch(filePath string, networkId string, funcs ...func(string, string) error) error {
+func batch(networkId string, funcs ...func(string) error) error {
 	var err error
 	for _, funcObj := range funcs {
-		err = funcObj(filePath, networkId)
+		err = funcObj(networkId)
 		if err != nil {
 			break
 		}
@@ -41,16 +39,11 @@ func init() {
 		cli.Command{
 			Name: "seeds",
 			Action: func(c *cli.Context) error {
-				filePath := c.String("ccf")
 				networkId := getNetworkID(os.Args[2])
 				return batch(
-					filePath,
 					networkId,
 					generateConfig,
 				)
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "contract-config-folder, ccf", Value: "../../deployment/utils"},
 			},
 		},
 	}
@@ -65,41 +58,9 @@ func main() {
 
 }
 
-func getAbsolutePath(basePath, folder string) string {
-	if folder[0] == '/' {
-		return folder
-	}
-
-	return path.Join(basePath, folder)
-
-}
-
-func getGroupsFromContractResultFile(contractResultFile string, networkId string) map[string]interface{} {
-	// // now matching data from contract-resultFile
-	// resultData, _ := ioutil.ReadFile(contractResultFile)
-	// // ?m: is notation tell this will match multiline
-	// tokenAndAddress := regexp.MustCompile(`(?m:^\s*([\w]+)\s*:\s*(.*?)\s*$)`)
-	// // TOMO: 0x4f696e8a1a3fb3aea9f72eb100ea8d97c5130b32
-	// groups = make(map[string]string)
-	// matches := tokenAndAddress.FindAllStringSubmatch(string(resultData), -1)
-	// for _, match := range matches {
-	// 	groups[match[1]] = match[2]
-	// }
-
-	// return groups
-	var ret map[string]interface{}
-	bytes, _ := ioutil.ReadFile(contractResultFile)
-	json.Unmarshal(bytes, &ret)
-
-	return ret[networkId].(map[string]interface{})
-}
-
-func generateConfig(filePath string, networkId string) error {
+func generateConfig(networkId string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	basePath := path.Dir(fileName)
-	contractResultFile := getAbsolutePath(basePath, fmt.Sprintf("%s/%s", filePath, "addresses.json"))
-
-	groups := getGroupsFromContractResultFile(contractResultFile, networkId)
 
 	configPath := path.Join(basePath, "../../config")
 	v := viper.New()
@@ -124,8 +85,6 @@ func generateConfig(filePath string, networkId string) error {
 	}
 
 	ethereumConfig := v.GetStringMap("ethereum")
-
-	ethereumConfig["exchange_address"] = groups["Exchange"]
 
 	v.SetDefault("ethereum", ethereumConfig)
 
