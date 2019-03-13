@@ -7,7 +7,7 @@
   },
   "scripts": {
     "install-requirements": "./install-requirements.sh",
-    "start-env": "docker-compose up -d rabbitmq mongodb; sleep 10",
+    "start-env": "docker-compose up -d rabbitmq mongodb",
     "reset-env": "yarn stop-env && sudo rm -rf ./utils/datadir && yarn start-env",
     "stop-env": "docker-compose down",
     "start": "TOMO_SERVER_PORT=8082 gin -a 8082 -p 8080 run main.go",
