@@ -6,7 +6,6 @@
     "url": "https://github.com/tomochain/dex-server.git"
   },
   "scripts": {
-    "install-requirements": "./install-requirements.sh",
     "start-env": "docker-compose up -d rabbitmq mongodb",
     "reset-env": "yarn stop-env && sudo rm -rf ./utils/datadir && yarn start-env",
     "stop-env": "docker-compose down",
