@@ -1,12 +1,14 @@
 package daos
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -529,4 +531,42 @@ func (dao *TradeDao) UpdateTradeStatusesByHashes(status string, hashes ...common
 // Drop drops all the order documents in the current database
 func (dao *TradeDao) Drop() {
 	db.DropCollection(dao.dbName, dao.collectionName)
+}
+
+func (dao *TradeDao) GetNewTrades(topic string) ([]*types.Trade, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		return []*types.Trade{}, err
+	}
+
+	var messages []*types.Message
+	params := topic
+	err = rpcClient.Call(&messages, "tomoX_getTrades", params)
+
+	result := make([]*types.Trade, 0)
+
+	for _, message := range messages {
+		var t *types.Trade
+		err := json.Unmarshal(message.Payload, &t)
+
+		if err != nil {
+			logger.Error(err)
+			return []*types.Trade{}, err
+		}
+
+		result = append(result, t)
+	}
+
+	return result, nil
+}
+
+func (dao *TradeDao) SyncNewTrades(trades []*types.Trade) error {
+	for _, t := range trades {
+		dao.FindAndModify(t.Hash, t)
+	}
+
+	return nil
 }

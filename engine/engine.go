@@ -200,7 +200,7 @@ func (e *Engine) handleInvalidateTakerOrders(bytes []byte) error {
 }
 
 func (e *Engine) SyncOrderBook(p types.Pair) error {
-	logger.Debugf("*#####%s", p.Code())
+	//logger.Debugf("*#####%s", p.Code())
 	ob := e.orderbooks[p.Code()]
 
 	if ob.topic == "" {
@@ -238,6 +238,83 @@ func (e *Engine) SyncOrderBook(p types.Pair) error {
 			return err
 		}
 	}
+
+	//err = ob.orderDao.SyncNewOrders(orders)
+	//
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
+
+	//for _, o := range orders {
+	//	switch o.Status {
+	//	case "OPEN":
+	//		res := &types.EngineResponse{
+	//			Status:  types.ORDER_ADDED,
+	//			Order:   o,
+	//			Matches: nil,
+	//		}
+	//
+	//		// Note: Plug the option for orders like FOC, Limit here (if needed)
+	//		err = e.rabbitMQConn.PublishEngineResponse(res)
+	//		if err != nil {
+	//			logger.Error(err)
+	//			return err
+	//		}
+	//
+	//		return nil
+	//
+	//	case "CANCELLED":
+	//		res := &types.EngineResponse{
+	//			Status:  types.ORDER_CANCELLED,
+	//			Order:   o,
+	//			Matches: nil,
+	//		}
+	//
+	//		err = e.rabbitMQConn.PublishEngineResponse(res)
+	//		if err != nil {
+	//			logger.Error(err)
+	//			return err
+	//		}
+	//
+	//		return nil
+	//
+	//	default:
+	//		res := &types.EngineResponse{
+	//			Status:  types.ERROR_STATUS,
+	//			Order:   o,
+	//			Matches: nil,
+	//		}
+	//
+	//		err = e.rabbitMQConn.PublishEngineResponse(res)
+	//		if err != nil {
+	//			logger.Error(err)
+	//			return err
+	//		}
+	//
+	//		return nil
+	//	}
+	//}
+
+	return nil
+}
+
+func (e *Engine) SyncTrades(p types.Pair) error {
+	logger.Debugf("Sync trades for pair: %s", p.Code())
+	ob := e.orderbooks[p.Code()]
+
+	if ob.topic == "" {
+		return errors.New(fmt.Sprintf("Orderbook topic is missing: %s", p.Name()))
+	}
+
+	trades, err := ob.tradeDao.GetNewTrades(ob.topic)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	logger.Debug(trades)
 
 	//err = ob.orderDao.SyncNewOrders(orders)
 	//
