@@ -13,7 +13,7 @@ const getNetworkID = networkName => {
 const getPriceMultiplier = (baseTokenDecimals, quoteTokenDecimals) => {
     let defaultPricepointMultiplier = utils.bigNumberify(1e9)
     let decimalsPricepointMultiplier = utils.bigNumberify(
-        (10 ** (baseTokenDecimals - quoteTokenDecimals)).toString(),
+        (10 ** (Math.abs(baseTokenDecimals - quoteTokenDecimals))).toString(),
     )
 
     return defaultPricepointMultiplier.mul(decimalsPricepointMultiplier)

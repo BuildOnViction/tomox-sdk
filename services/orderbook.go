@@ -76,7 +76,7 @@ func (s *OrderBookService) SubscribeOrderBook(c *ws.Client, bt, qt common.Addres
 		return
 	}
 
-	ws.RegisterConnectionUnsubscribeHandler(c, socket.UnsubscribeHandler(id))
+	ws.RegisterConnectionUnsubscribeHandler(c, socket.UnsubscribeChannelHandler(id))
 	socket.SendInitMessage(c, ob)
 }
 

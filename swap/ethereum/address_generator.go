@@ -9,6 +9,10 @@ import (
 	"github.com/tyler-smith/go-bip32"
 )
 
+type AddressGenerator struct {
+	masterPublicKey *bip32.Key
+}
+
 // NewAddressGenerator : generate new address from master key : cfg.Ethereum.MasterPublicKey
 func NewAddressGenerator(masterPublicKeyString string) (*AddressGenerator, error) {
 	deserializedMasterPublicKey, err := bip32.B58Deserialize(masterPublicKeyString)

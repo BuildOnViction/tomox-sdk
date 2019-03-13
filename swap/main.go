@@ -52,6 +52,20 @@ type Engine struct {
 	signerPublicKey common.Address
 }
 
+func NewEngine(cfg *config.Config) *Engine {
+	engine := &Engine{
+		Config: cfg,
+	}
+
+	// config blockchains
+	engine.configEthereum()
+	engine.configBitcoin()
+
+	engine.configTomochain()
+
+	return engine
+}
+
 func (engine *Engine) configEthereum() {
 	if engine.Config.Ethereum != nil {
 		if engine.Config.Ethereum.MasterPublicKey == "" {
@@ -60,7 +74,7 @@ func (engine *Engine) configEthereum() {
 		}
 
 		ethereumListener := &ethereum.Listener{}
-		ethereumClient, err := ethclient.Dial(fmt.Sprintf("http://%s", engine.Config.Ethereum.RpcServer))
+		ethereumClient, err := ethclient.Dial(fmt.Sprintf("%s", engine.Config.Ethereum.RpcServer))
 		if err != nil {
 			logger.Error("Error connecting to geth")
 			os.Exit(-1)
@@ -159,20 +173,6 @@ func (engine *Engine) configTomochain() {
 
 		engine.tomochainAccountConfigurator = tomochainAccountConfigurator
 	}
-}
-
-func NewEngine(cfg *config.Config) *Engine {
-	engine := &Engine{
-		Config: cfg,
-	}
-
-	// config blockchains
-	engine.configEthereum()
-	engine.configBitcoin()
-
-	engine.configTomochain()
-
-	return engine
 }
 
 // SetStorage : update storage mechanism

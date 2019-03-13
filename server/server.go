@@ -61,11 +61,6 @@ func Start() {
 	panic(http.ListenAndServe(address, handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
 }
 
-func NewSwapEngine() *swap.Engine {
-	swapEngine := swap.NewEngine(app.Config.Deposit)
-	return swapEngine
-}
-
 func NewRouter(
 	provider *ethereum.EthereumProvider,
 	rabbitConn *rabbitmq.Connection,
@@ -82,10 +77,11 @@ func NewRouter(
 	walletDao := daos.NewWalletDao()
 	configDao := daos.NewConfigDao()
 	associationDao := daos.NewAssociationDao()
+	priceBoardDao := daos.NewPriceBoardDao()
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
-	swapEngine := NewSwapEngine()
+	swapEngine := swap.NewEngine(app.Config.Deposit)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao)
@@ -108,9 +104,10 @@ func NewRouter(
 	}
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
+	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
 
 	// start cron service
-	cronService := crons.NewCronService(ohlcvService)
+	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService)
 
 	// get exchange contract instance
 	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
@@ -150,6 +147,7 @@ func NewRouter(
 	endpoints.ServeOrderResource(r, orderService, accountService)
 
 	endpoints.ServeDepositResource(r, depositService, walletService, txService)
+	endpoints.ServePriceBoardResource(r, priceBoardService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

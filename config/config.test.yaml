@@ -4,7 +4,7 @@ deposit:
     master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
     minimum_value_eth: 1e-05
     network_id: 8888
-    rpc_server: localhost:8545
+    rpc_server: http://localhost:8545 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
     token_price: 1
   tomochain:
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
@@ -35,23 +35,27 @@ server_port: 8080
 simulated: false
 take_fee: 10000
 tick_duration:
-  day:
-    - 1
-  hour:
-    - 1
   min:
     - 1
     - 5
     - 15
+    - 30
+  hour:
+    - 1
+    - 4
+    - 12
+  day:
+    - 1
+  week:
+    - 1
   month:
     - 1
     - 3
     - 6
     - 9
-  sec:
-    - 5
-    - 30
-  week:
-    - 1
   year:
     - 1
+
+coinmarketcap_api_url: https://pro-api.coinmarketcap.com/v1
+coinmarketcap_api_key: a928d4ca-37cc-41b8-a9ea-5a65ae025aa5
+supported_currencies: ETH,TOMO,BTC,USDT

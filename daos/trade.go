@@ -329,7 +329,7 @@ func (dao *TradeDao) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, err
 }
 
 func (dao *TradeDao) GetSortedTrades(bt, qt common.Address, n int) ([]*types.Trade, error) {
-	res := []*types.Trade{}
+	res := make([]*types.Trade, 0)
 
 	q := bson.M{"baseToken": bt.Hex(), "quoteToken": qt.Hex()}
 	sort := []string{"-createdAt"}
@@ -406,6 +406,21 @@ func (dao *TradeDao) GetByUserAddress(a common.Address) ([]*types.Trade, error) 
 	}
 
 	return res, nil
+}
+
+func (dao *TradeDao) GetLatestTrade(bt, qt common.Address) (*types.Trade, error) {
+	res, err := dao.GetSortedTrades(bt, qt, 1)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if len(res) > 0 {
+		return res[0], nil
+	}
+
+	return nil, nil
 }
 
 func (dao *TradeDao) UpdateTradeStatus(h common.Hash, status string) error {
