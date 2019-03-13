@@ -4,7 +4,7 @@ import (
 	"context"
 	"math/big"
 
-	ethereum "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
@@ -169,9 +169,6 @@ type Engine interface {
 	// CancelOrder(order *types.Order) (*types.EngineResponse, error)
 	// DeleteOrder(o *types.Order) error
 	Provider() EthereumProvider
-
-	// Feed method
-	GetFeed(a common.Address, topic []byte, result interface{}) error
 }
 
 type WalletService interface {
@@ -198,7 +195,6 @@ type EthereumService interface {
 
 type OrderService interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
-	GetByTopic(userAddress, tokenAddress common.Address) ([]*types.OrderRecord, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
@@ -291,11 +287,7 @@ type DepositService interface {
 	GetSchemaVersion() uint64
 	RecoveryTransaction(chain types.Chain, address common.Address) error
 
-	// Get Token Amount base on Exchange rate of the orderbook
-	GetBaseTokenAmount(pairName string, quoteAmount *big.Int) (*big.Int, error)
-
 	// one for wallet, one for relayer
-	GetAssociationByUserAddress(chain types.Chain, address common.Address) (*types.AddressAssociation, error)
 	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
 	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
 
@@ -314,7 +306,6 @@ type DepositService interface {
 
 	// help creating token
 	EthereumClient() EthereumClient
-	WethAddress() common.Address
 }
 
 type SwapEngineHandler interface {
@@ -336,7 +327,6 @@ type ValidatorService interface {
 type EthereumConfig interface {
 	GetURL() string
 	ExchangeAddress() common.Address
-	WethAddress() common.Address
 }
 
 type EthereumClient interface {

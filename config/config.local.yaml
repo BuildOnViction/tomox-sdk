@@ -37,11 +37,9 @@ logs:
   operator: ./operator.log
 
 ethereum:
-  http_url: http://localhost:8545
+  http_url: http://localhost:8545 # Node for TomoX Testing: http://157.230.242.26:8501
   ws_url: ws://localhost:8545
-  bzz_url: http://localhost:8542
   exchange_address: 0xd68c26b99a40227C4AbE51020eDFd9BbA438B297
-  weth_address: 0xd645C13C35141d61f273EDc0F546beF48a48001D
   fee_account: 0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c
   decimal: 8
 
@@ -49,18 +47,18 @@ ethereum:
 deposit:
   ethereum:
     # for demo we can deposit in the same network
-    network_id: 8888
+    network_id: 3
     master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
     minimum_value_eth: 0.00001
     token_price: 1
-    rpc_server: http://localhost:8545 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
+    rpc_server: https://ropsten.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
     confirmed_block_number: 30
   tomochain:
     token_asset_code: WETH
     # using this private key, or secret from ENV to run smart contract
     issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
-    signer_private_key: 0x3411b45169aa5a8312e51357db68621031020dcf46011d7431db1bbb6d3922ce
+    signer_private_key: 0x7f4c1bacba63f05827f6d8fc0e22cf68c42005775a7f73abff7d819986bae77c
     starting_balance: 100.00
     lock_unix_timestamp: 0
 

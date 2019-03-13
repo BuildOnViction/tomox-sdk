@@ -104,30 +104,6 @@ func (aar *AddressAssociationRecord) GetJSON() (*AddressAssociation, error) {
 	return aa, nil
 }
 
-type AddressAssociationFeed struct {
-	Address            []byte `json:"address"`
-	AddressIndex       uint64 `json:"addressIndex"`
-	AssociatedAddress  []byte `json:"associatedAddress"`
-	Chain              Chain  `json:"chain"`
-	CreatedAt          uint64 `json:"createdAt"`
-	TomochainPublicKey []byte `json:"tomochainPublicKey"`
-}
-
-func (aaf *AddressAssociationFeed) GetJSON() (*AddressAssociation, error) {
-	// convert back to JSON object
-	timestamp := time.Unix(int64(aaf.CreatedAt), 0)
-	aa := &AddressAssociation{
-		Chain:              aaf.Chain,
-		Address:            common.BytesToAddress(aaf.Address),
-		AddressIndex:       aaf.AddressIndex,
-		AssociatedAddress:  common.BytesToAddress(aaf.AssociatedAddress),
-		TomochainPublicKey: common.BytesToAddress(aaf.TomochainPublicKey),
-		CreatedAt:          timestamp,
-	}
-
-	return aa, nil
-}
-
 type GenerateAddressResponse struct {
 	ProtocolVersion int    `json:"protocolVersion"`
 	Chain           string `json:"chain"`
