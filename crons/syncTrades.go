@@ -22,10 +22,6 @@ func (s *CronService) syncTradesCron(c *cron.Cron) {
 
 func (s *CronService) syncTrades(p types.Pair) func() {
 	return func() {
-		err := s.Engine.SyncTrades(p)
-
-		if err != nil {
-			log.Println(err.Error())
-		}
+		s.Engine.SyncTrades(p)
 	}
 }

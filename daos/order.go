@@ -866,6 +866,10 @@ func (dao *OrderDao) GetNewOrders(topic string) ([]*types.Order, error) {
 	params := topic
 	err = rpcClient.Call(&messages, "tomoX_getFilterMessages", params)
 
+	if err != nil {
+		return []*types.Order{}, err
+	}
+
 	result := make([]*types.Order, 0)
 
 	for _, message := range messages {

@@ -546,6 +546,10 @@ func (dao *TradeDao) GetNewTrades(topic string) ([]*types.Trade, error) {
 	params := topic
 	err = rpcClient.Call(&messages, "tomoX_getTrades", params)
 
+	if err != nil {
+		return []*types.Trade{}, err
+	}
+
 	result := make([]*types.Trade, 0)
 
 	for _, message := range messages {
