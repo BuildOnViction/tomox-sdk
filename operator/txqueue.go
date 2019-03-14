@@ -163,7 +163,7 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 		}
 
 		baseTokenAmount := amounts[i]
-		quoteTokenAmount := math.Mul(amounts[i], math.Div(math.Div(mOrder.pricepoint, big.NewInt(1e18)), big.NewInt(1e18)))
+		quoteTokenAmount := math.Div(math.Div(math.Mul(amounts[i], mOrder.pricepoint), big.NewInt(1e18)), big.NewInt(1e18))
 
 		if math.IsEqual(mOrder.side, big.NewInt(0)) {
 			err := txq.AccountService.Transfer(mOrder.quoteToken, mOrder.userAddress, tOrder.userAddress, quoteTokenAmount)

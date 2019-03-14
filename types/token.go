@@ -56,14 +56,16 @@ type Image struct {
 }
 
 type NativeCurrency struct {
-	Address common.Address `json:"address" bson:"address"`
-	Symbol  string         `json:"symbol" bson:"symbol"`
+	Address  common.Address `json:"address" bson:"address"`
+	Symbol   string         `json:"symbol" bson:"symbol"`
+	Decimals int            `json:"decimals" bson:"decimals"`
 }
 
 func GetNativeCurrency() NativeCurrency {
 	return NativeCurrency{
-		Address: common.HexToAddress("0x1"),
-		Symbol:  "TOMO",
+		Address:  common.HexToAddress("0x1"),
+		Symbol:   "TOMO",
+		Decimals: 18,
 	}
 }
 

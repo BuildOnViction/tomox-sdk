@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,12 +46,16 @@ func (s *AccountService) Create(a *types.Account) error {
 	a.IsBlocked = false
 	a.TokenBalances = make(map[common.Address]*types.TokenBalance)
 
+	ten := big.NewInt(10)
+
 	// currently by default, the tokens balances are set to 0
 	for _, token := range tokens {
+		fmt.Println(int64(token.Decimals))
+		decimals := big.NewInt(int64(token.Decimals))
 		a.TokenBalances[token.ContractAddress] = &types.TokenBalance{
 			Address:        token.ContractAddress,
 			Symbol:         token.Symbol,
-			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), ten.Exp(ten, decimals, nil)),
 			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
 			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
@@ -61,7 +66,7 @@ func (s *AccountService) Create(a *types.Account) error {
 	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
 		Address:        nativeCurrency.Address,
 		Symbol:         nativeCurrency.Symbol,
-		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), ten.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)), nil)),
 		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
 		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
@@ -100,12 +105,15 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		TokenBalances: make(map[common.Address]*types.TokenBalance),
 	}
 
+	ten := big.NewInt(10)
+
 	// currently by default, the tokens balances are set to 0
 	for _, t := range tokens {
+		decimals := big.NewInt(int64(t.Decimals))
 		a.TokenBalances[t.ContractAddress] = &types.TokenBalance{
 			Address:        t.ContractAddress,
 			Symbol:         t.Symbol,
-			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), ten.Exp(ten, decimals, nil)),
 			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
 			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
@@ -116,7 +124,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
 		Address:        nativeCurrency.Address,
 		Symbol:         nativeCurrency.Symbol,
-		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), big.NewInt(1e18)),
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), ten.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)), nil)),
 		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
 		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
