@@ -27,6 +27,7 @@ type Operator struct {
 	WalletService     interfaces.WalletService
 	TradeService      interfaces.TradeService
 	OrderService      interfaces.OrderService
+	TokenService      interfaces.TokenService
 	EthereumProvider  interfaces.EthereumProvider
 	Exchange          interfaces.Exchange
 	TxQueues          []*TxQueue
@@ -54,6 +55,7 @@ func NewOperator(
 	exchange interfaces.Exchange,
 	conn *rabbitmq.Connection,
 	accountService interfaces.AccountService,
+	tokenService interfaces.TokenService,
 ) (*Operator, error) {
 	txqueues := []*TxQueue{}
 	addressIndex := make(map[common.Address]*TxQueue)
@@ -81,6 +83,7 @@ func NewOperator(
 			exchange,
 			conn,
 			accountService,
+			tokenService,
 		)
 
 		if err != nil {

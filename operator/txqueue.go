@@ -24,6 +24,7 @@ type TxQueue struct {
 	Exchange         interfaces.Exchange
 	Broker           *rabbitmq.Connection
 	AccountService   interfaces.AccountService
+	TokenService     interfaces.TokenService
 }
 
 type TxQueueOrder struct {
@@ -48,6 +49,7 @@ func NewTxQueue(
 	ex interfaces.Exchange,
 	rabbitConn *rabbitmq.Connection,
 	accountService interfaces.AccountService,
+	tokenService interfaces.TokenService,
 ) (*TxQueue, error) {
 	txq := &TxQueue{
 		Name:             n,
@@ -58,6 +60,7 @@ func NewTxQueue(
 		Exchange:         ex,
 		Broker:           rabbitConn,
 		AccountService:   accountService,
+		TokenService:     tokenService,
 	}
 
 	err := txq.PurgePendingTrades()
@@ -162,8 +165,15 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 			feeTake:     orderValues[i][9],
 		}
 
+		baseToken, err := txq.TokenService.GetByAddress(orderAddresses[i][2])
+
+		if err != nil {
+			logger.Errorf("Base token address %s not found", orderAddresses[i][2])
+			continue
+		}
+
 		baseTokenAmount := amounts[i]
-		quoteTokenAmount := math.Div(math.Div(math.Mul(amounts[i], mOrder.pricepoint), big.NewInt(1e18)), big.NewInt(1e18))
+		quoteTokenAmount := math.Div(math.Div(math.Mul(amounts[i], mOrder.pricepoint), math.Exp(big.NewInt(10), big.NewInt(int64(baseToken.Decimals)))), big.NewInt(1e18))
 
 		if math.IsEqual(mOrder.side, big.NewInt(0)) {
 			err := txq.AccountService.Transfer(mOrder.quoteToken, mOrder.userAddress, tOrder.userAddress, quoteTokenAmount)

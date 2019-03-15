@@ -75,12 +75,6 @@ func DefaultTestBalance() int64 {
 	return 1000
 }
 
-// DefaultTestBalance returns the default allowance
-// Only for testing/mock purpose
-func DefaultTestAllowance() int64 {
-	return 1000
-}
-
 // DefaultTestBalance returns the default locked balance
 // Only for testing/mock purpose
 func DefaultTestLockedBalance() int64 {
