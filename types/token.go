@@ -56,26 +56,22 @@ type Image struct {
 }
 
 type NativeCurrency struct {
-	Address common.Address `json:"address" bson:"address"`
-	Symbol  string         `json:"symbol" bson:"symbol"`
+	Address  common.Address `json:"address" bson:"address"`
+	Symbol   string         `json:"symbol" bson:"symbol"`
+	Decimals int            `json:"decimals" bson:"decimals"`
 }
 
 func GetNativeCurrency() NativeCurrency {
 	return NativeCurrency{
-		Address: common.HexToAddress("0x1"),
-		Symbol:  "TOMO",
+		Address:  common.HexToAddress("0x1"),
+		Symbol:   "TOMO",
+		Decimals: 18,
 	}
 }
 
 // DefaultTestBalance returns the default balance
 // Only for testing/mock purpose
 func DefaultTestBalance() int64 {
-	return 1000
-}
-
-// DefaultTestBalance returns the default allowance
-// Only for testing/mock purpose
-func DefaultTestAllowance() int64 {
 	return 1000
 }
 

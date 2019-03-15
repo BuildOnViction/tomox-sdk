@@ -130,6 +130,7 @@ func NewRouter(
 		exchange,
 		rabbitConn,
 		accountService,
+		tokenService,
 	)
 
 	if err != nil {
