@@ -221,7 +221,7 @@ func (e *orderEndpoint) handleCancelOrder(ev *types.WebsocketEvent, c *ws.Client
 	bytes, err := json.Marshal(ev.Payload)
 	oc := &types.OrderCancel{}
 
-	err = oc.UnmarshalJSON(bytes)
+	err = json.Unmarshal(bytes, &oc)
 	if err != nil {
 		logger.Error(err)
 		c.SendOrderErrorMessage(err, oc.Hash)
