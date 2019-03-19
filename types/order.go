@@ -7,13 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tomochain/dex-server/errors"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/utils/math"
 )
 

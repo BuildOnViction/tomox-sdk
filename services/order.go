@@ -5,18 +5,15 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/tomochain/dex-server/errors"
-
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils"
 	"github.com/tomochain/dex-server/utils/math"
 	"github.com/tomochain/dex-server/ws"
-
-	"github.com/globalsign/mgo/bson"
-
-	"github.com/tomochain/dex-server/rabbitmq"
-	"github.com/tomochain/dex-server/types"
 )
 
 // OrderService
