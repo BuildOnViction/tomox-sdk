@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/ethereum"
 	"github.com/tomochain/dex-server/interfaces"
@@ -12,7 +13,6 @@ import (
 	swapConfig "github.com/tomochain/dex-server/swap/config"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/ws"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // need to refractor using interface.SwappEngine and only expose neccessary methods

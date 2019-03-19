@@ -13,7 +13,7 @@ import (
 	"github.com/tomochain/dex-server/utils/math"
 	"github.com/tomochain/dex-server/ws"
 
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 
 	"github.com/tomochain/dex-server/rabbitmq"
 	"github.com/tomochain/dex-server/types"

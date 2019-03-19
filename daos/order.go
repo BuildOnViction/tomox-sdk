@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils/math"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // OrderDao contains:

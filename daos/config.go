@@ -3,11 +3,11 @@ package daos
 import (
 	"strconv"
 
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/types"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (

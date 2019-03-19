@@ -2,8 +2,8 @@ package services
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/interfaces"
-	"gopkg.in/mgo.v2/bson"
 
 	"github.com/tomochain/dex-server/types"
 )

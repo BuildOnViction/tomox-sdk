@@ -4,10 +4,10 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils/math"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type AccountService struct {

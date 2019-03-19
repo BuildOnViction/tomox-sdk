@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/globalsign/mgo/dbtest"
 	"github.com/tomochain/dex-server/types"
-	"gopkg.in/mgo.v2/dbtest"
 )
 
 var server dbtest.DBServer

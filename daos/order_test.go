@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
@@ -13,8 +15,6 @@ import (
 	"github.com/tomochain/dex-server/utils/math"
 	"github.com/tomochain/dex-server/utils/testutils"
 	"github.com/tomochain/dex-server/utils/units"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func init() {

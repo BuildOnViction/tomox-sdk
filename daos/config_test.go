@@ -3,9 +3,9 @@ package daos
 import (
 	"testing"
 
+	"github.com/globalsign/mgo"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
-	mgo "gopkg.in/mgo.v2"
 )
 
 func TestConfigIncrementIndex(t *testing.T) {

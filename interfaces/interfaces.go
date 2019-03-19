@@ -8,13 +8,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
 	"github.com/tomochain/dex-server/rabbitmq"
 	swapBitcoin "github.com/tomochain/dex-server/swap/bitcoin"
 	swapEthereum "github.com/tomochain/dex-server/swap/ethereum"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/ws"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type OrderDao interface {

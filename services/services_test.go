@@ -1,9 +1,9 @@
 package services
 
 import (
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/dbtest"
 	"github.com/tomochain/dex-server/daos"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/dbtest"
 	"io/ioutil"
 )
 
