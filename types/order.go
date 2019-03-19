@@ -17,13 +17,11 @@ import (
 )
 
 const (
-	BUY               = "BUY"
-	SELL              = "SELL"
-	MarketOrder       = "MO"
-	LimitOrder        = "LO"
-	StopOrder         = "SO"
-	ActionAddOrder    = "ADD"
-	ActionCancelOrder = "CANCEL"
+	BUY         = "BUY"
+	SELL        = "SELL"
+	MarketOrder = "MO"
+	LimitOrder  = "LO"
+	StopOrder   = "SO"
 )
 
 // Order contains the data related to an order sent by the user
@@ -36,7 +34,6 @@ type Order struct {
 	Status          string         `json:"status" bson:"status"`
 	Side            string         `json:"side" bson:"side"`
 	Type            string         `json:"type" bson:"type"`
-	Action          string         `json:"action" bson:"action"`
 	Hash            common.Hash    `json:"hash" bson:"hash"`
 	Signature       *Signature     `json:"signature,omitempty" bson:"signature"`
 	PricePoint      *big.Int       `json:"pricepoint" bson:"pricepoint"`
@@ -183,10 +180,6 @@ func (o *Order) Process(p *Pair) error {
 	// TODO: Handle this in Validate function
 	if o.Type != MarketOrder && o.Type != LimitOrder && o.Type != StopOrder {
 		o.Type = LimitOrder
-	}
-
-	if o.Action != ActionAddOrder && o.Action != ActionCancelOrder {
-		o.Action = ActionAddOrder
 	}
 
 	if !math.IsEqual(o.MakeFee, p.MakeFee) {
@@ -373,7 +366,6 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		"quoteToken":      o.QuoteToken,
 		"side":            o.Side,
 		"type":            o.Type,
-		"action":          o.Action,
 		"status":          o.Status,
 		"pairName":        o.PairName,
 		"amount":          o.Amount.String(),
@@ -478,10 +470,6 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 		o.Type = order["type"].(string)
 	}
 
-	if order["action"] != nil {
-		o.Action = order["action"].(string)
-	}
-
 	if order["status"] != nil {
 		o.Status = order["status"].(string)
 	}
@@ -518,7 +506,6 @@ type OrderRecord struct {
 	Status          string           `json:"status" bson:"status"`
 	Side            string           `json:"side" bson:"side"`
 	Type            string           `json:"type" bson:"type"`
-	Action          string           `json:"action" bson:"action"`
 	Hash            string           `json:"hash" bson:"hash"`
 	PricePoint      string           `json:"pricepoint" bson:"pricepoint"`
 	Amount          string           `json:"amount" bson:"amount"`
@@ -543,7 +530,6 @@ func (o *Order) GetBSON() (interface{}, error) {
 		Status:          o.Status,
 		Side:            o.Side,
 		Type:            o.Type,
-		Action:          o.Action,
 		Hash:            o.Hash.Hex(),
 		Amount:          o.Amount.String(),
 		PricePoint:      o.PricePoint.String(),
@@ -586,7 +572,6 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		Status          string           `json:"status" bson:"status"`
 		Side            string           `json:"side" bson:"side"`
 		Type            string           `json:"type" bson:"type"`
-		Action          string           `json:"action" bson:"action"`
 		Hash            string           `json:"hash" bson:"hash"`
 		PricePoint      string           `json:"pricepoint" bson:"pricepoint"`
 		Amount          string           `json:"amount" bson:"amount"`
@@ -618,7 +603,6 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 	o.Status = decoded.Status
 	o.Side = decoded.Side
 	o.Type = decoded.Type
-	o.Action = decoded.Action
 	o.Hash = common.HexToHash(decoded.Hash)
 
 	if decoded.Amount != "" {
@@ -663,7 +647,6 @@ func (o OrderBSONUpdate) GetBSON() (interface{}, error) {
 		"status":          o.Status,
 		"side":            o.Side,
 		"type":            o.Type,
-		"action":          o.Action,
 		"pricepoint":      o.PricePoint.String(),
 		"amount":          o.Amount.String(),
 		"nonce":           o.Nonce.String(),
