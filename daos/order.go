@@ -822,7 +822,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 
 	logger.Debug(params)
 
-	err = rpcClient.Call(&result, "tomoX_post", params)
+	err = rpcClient.Call(&result, "tomoX_createOrder", params)
 
 	if err != nil {
 		logger.Error(err)
