@@ -17,6 +17,7 @@ require (
 	github.com/deckarep/golang-set v0.0.0-20171013212420-1d4478f51bed // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
 	github.com/ethereum/go-ethereum v1.8.15
+	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
 	github.com/go-ozzo/ozzo-dbx v0.0.0-20180615163742-e984ee904f1b // indirect
 	github.com/go-ozzo/ozzo-routing v2.1.4+incompatible // indirect
 	github.com/go-ozzo/ozzo-validation v3.4.0+incompatible
