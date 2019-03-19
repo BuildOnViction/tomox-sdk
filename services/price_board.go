@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils"
 	"github.com/tomochain/dex-server/ws"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // TradeService struct with daos required, responsible for communicating with daos.

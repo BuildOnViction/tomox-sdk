@@ -27,6 +27,8 @@ github.com/ethereum/go-ethereum v1.8.15 h1:95jix4Qx65CpTBLjzrh8Jb8UR/3TaolQE82qF
 github.com/ethereum/go-ethereum v1.8.15/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHaJv9Ln3kPCZLwY=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 h1:DujepqpGd1hyOd7aW59XpK7Qymp8iy83xq74fLr21is=
+github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/go-ozzo/ozzo-dbx v0.0.0-20180615163742-e984ee904f1b/go.mod h1:48NXRgCxSU5JUSW+EA5lnokrL7ql1j6Qh2RsWeh6Fvs=
 github.com/go-ozzo/ozzo-routing v2.1.4+incompatible/go.mod h1:hvoxy5M9SJaY0viZvcCsODidtUm5CzRbYKEWuQpr+2A=
 github.com/go-ozzo/ozzo-validation v3.4.0+incompatible h1:eWAtmczpQ8DgToOVUvRjr1f4QNweasbuS5LJdoSQ3+4=

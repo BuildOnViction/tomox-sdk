@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/daos"
 	"github.com/tomochain/dex-server/types"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const timeLayoutString = "Jan 2 2006 15:04:05"

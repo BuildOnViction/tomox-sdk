@@ -5,10 +5,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/globalsign/mgo"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils"
-	mgo "gopkg.in/mgo.v2"
 )
 
 func TestDepositHistory(t *testing.T) {

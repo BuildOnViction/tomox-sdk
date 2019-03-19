@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func TestNewWallet(t *testing.T) {
