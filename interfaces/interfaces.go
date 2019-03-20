@@ -132,8 +132,6 @@ type TradeDao interface {
 	UpdateTradeStatuses(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	UpdateTradeStatusesByOrderHashes(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	Drop()
-	GetNewTrades(topic string) ([]*types.Trade, error)
-	SyncNewTrades(trades []*types.Trade) error
 }
 
 type TokenDao interface {
