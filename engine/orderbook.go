@@ -38,7 +38,7 @@ type OrderBook struct {
 	rabbitMQConn *rabbitmq.Connection
 	orderDao     interfaces.OrderDao
 	tradeDao     interfaces.TradeDao
-	pair         types.Pair
+	pair         *types.Pair
 	mutex        *sync.Mutex
 	topic        string
 }
@@ -60,7 +60,7 @@ func NewOrderBook(
 		rabbitMQConn: rabbitMQConn,
 		orderDao:     orderDao,
 		tradeDao:     tradeDao,
-		pair:         p,
+		pair:         &p,
 		mutex:        &sync.Mutex{},
 		topic:        t,
 	}
