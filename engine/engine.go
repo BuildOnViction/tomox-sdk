@@ -37,7 +37,7 @@ func NewEngine(
 
 	obs := map[string]*OrderBook{}
 	for _, p := range pairs {
-		ob := NewOrderBook(rabbitMQConn, orderDao, tradeDao, &p)
+		ob := NewOrderBook(rabbitMQConn, orderDao, tradeDao, p)
 
 		obs[p.Code()] = ob
 	}
@@ -300,7 +300,7 @@ func (e *Engine) SyncOrderBook(p types.Pair) error {
 }
 
 func (e *Engine) SyncTrades(p types.Pair) error {
-	logger.Debugf("Sync trades for pair: %s", p.Code())
+	//logger.Debugf("Sync trades for pair: %s", p.Code())
 	ob := e.orderbooks[p.Code()]
 
 	if ob.topic == "" {
@@ -310,7 +310,7 @@ func (e *Engine) SyncTrades(p types.Pair) error {
 	trades, err := ob.tradeDao.GetNewTrades(ob.topic)
 
 	if err != nil {
-		logger.Error(err)
+		//logger.Error(err)
 		return err
 	}
 
