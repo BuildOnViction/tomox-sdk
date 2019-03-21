@@ -843,7 +843,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order) error {
 	}
 
 	var result interface{}
-	err = rpcClient.Call(&result, "tomox_cancelOrder", o)
+	err = rpcClient.Call(&result, "tomoX_cancelOrder", o)
 
 	if err != nil {
 		logger.Error(err)
@@ -866,9 +866,9 @@ func (dao *OrderDao) GetNewOrders(topic string) ([]*types.Order, error) {
 	params := topic
 	err = rpcClient.Call(&messages, "tomoX_getFilterMessages", params)
 
-	if err != nil {
-		return []*types.Order{}, err
-	}
+	//if err != nil {
+	//	return []*types.Order{}, err
+	//}
 
 	result := make([]*types.Order, 0)
 
