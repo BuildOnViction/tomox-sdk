@@ -52,6 +52,7 @@ type OrderDao interface {
 	SyncNewOrders(orders []*types.Order) error
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
+	WatchChanges(ctx context.Context)
 }
 
 type AccountDao interface {

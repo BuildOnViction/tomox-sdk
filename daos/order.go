@@ -1,7 +1,9 @@
 package daos
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/tomochain/dex-server/utils"
 	"math/big"
 	"time"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/ngtuna/tomochain/tomox"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils/math"
@@ -128,6 +131,10 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	}
 
 	return dao
+}
+
+func (dao *OrderDao) GetCollection() *mgo.Collection {
+	return db.GetCollection(dao.dbName, dao.collectionName)
 }
 
 // Create function performs the DB insertion task for Order collection
@@ -862,13 +869,13 @@ func (dao *OrderDao) GetNewOrders(topic string) ([]*types.Order, error) {
 		return []*types.Order{}, err
 	}
 
-	var messages []*types.Message
+	var messages []*tomox.Message
 	params := topic
-	err = rpcClient.Call(&messages, "tomoX_getFilterMessages", params)
+	err = rpcClient.Call(&messages, "tomoX_getOrders", params)
 
-	//if err != nil {
-	//	return []*types.Order{}, err
-	//}
+	if err != nil {
+		return []*types.Order{}, err
+	}
 
 	result := make([]*types.Order, 0)
 
@@ -914,7 +921,7 @@ func (dao *OrderDao) AddTopic(t []string) (string, error) {
 		return "", err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_newMessageFilter", params)
+	err = rpcClient.Call(&result, "tomoX_newTopic", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -942,7 +949,7 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 		return err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_deleteMessageFilter", params)
+	err = rpcClient.Call(&result, "tomoX_deleteTopic", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -950,4 +957,58 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 	}
 
 	return nil
+}
+
+func (dao *OrderDao) WatchChanges(ctx context.Context) {
+	pipeline := []bson.M{}
+
+	changeStream, err := dao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{})
+
+	//defer changeStream.Close()
+
+	if err != nil {
+		logger.Error("Failed to open change stream")
+		return //exiting func
+	}
+
+	//Handling change stream in a cycle
+	go handleChangeStream(ctx, changeStream)
+}
+
+func handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
+	for {
+		select {
+		case <-ctx.Done(): // if parent context was cancelled
+			err := ct.Close() // close the stream
+			if err != nil {
+				logger.Error("Change stream closed")
+			}
+			return //exiting from the func
+		default:
+			ev := types.ChangeEvent{}
+
+			//getting next item from the steam
+			ok := ct.Next(&ev)
+
+			//if data from the stream wasn't un-marshaled, we get ok == false as a result
+			//so we need to call Err() method to get info why
+			//it'll be nil if we just have no data
+			if !ok {
+				err := ct.Err()
+				if err != nil {
+					//if err is not nil, it means something bad happened, let's finish our func
+					logger.Error(err)
+					return
+				}
+
+				logger.Debug("No changes in ChangeStream")
+			}
+
+			//if item from the stream un-marshaled successfully, do something with it
+			if ok {
+				logger.Debug(ev.OperationType)
+				utils.PrintJSON(ev.FullDocument)
+			}
+		}
+	}
 }

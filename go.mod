@@ -17,12 +17,14 @@ require (
 	github.com/deckarep/golang-set v0.0.0-20171013212420-1d4478f51bed // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
 	github.com/ethereum/go-ethereum v1.8.15
+	github.com/fjl/memsize v0.0.0-20180929194037-2a09253e352a // indirect
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-ozzo/ozzo-dbx v0.0.0-20180615163742-e984ee904f1b // indirect
 	github.com/go-ozzo/ozzo-routing v2.1.4+incompatible // indirect
 	github.com/go-ozzo/ozzo-validation v3.4.0+incompatible
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/go-test/deep v1.0.1
+	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/uuid v1.0.0 // indirect
@@ -31,14 +33,19 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
+	github.com/huin/goupnp v1.0.0 // indirect
+	github.com/jackpal/go-nat-pmp v1.0.1 // indirect
+	github.com/karalabe/hid v0.0.0-20181128192157-d815e0c1a2e2 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
+	github.com/ngtuna/tomochain v1.8.3-0.20190320102428-7a849b1b1c41
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/wstest v0.0.0-20180216222922-04b166ca0bf1
+	github.com/prometheus/prometheus v1.7.1-0.20170814170113-3101606756c5 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
 	github.com/rs/cors v1.5.0 // indirect
@@ -54,8 +61,9 @@ require (
 	github.com/valyala/fasttemplate v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20180912021107-ed65620d4bd7 // indirect
 	golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b // indirect
-	golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3 // indirect
+	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
 	golang.org/x/tools v0.0.0-20180911133044-677d2ff680c1 // indirect
+	gopkg.in/fatih/set.v0 v0.2.1 // indirect
 	gopkg.in/karalabe/cookiejar.v2 v2.0.0-20150724131613-8dcd6a7f4951 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect

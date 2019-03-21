@@ -845,3 +845,24 @@ type Message struct {
 	Padding   []byte    `json:"padding"`
 	Hash      []byte    `json:"hash"`
 }
+
+type updateDesc struct {
+	UpdatedFields map[string]interface{} `bson:"updatedFields"`
+	RemovedFields []string               `bson:"removedFields"`
+}
+
+type evNamespace struct {
+	DB   string `bson:"db"`
+	Coll string `bson:"coll"`
+}
+
+type M bson.M
+
+type ChangeEvent struct {
+	ID                interface{} `bson:"_id"`
+	OperationType     string      `bson:"operationType"`
+	FullDocument      *Order      `bson:"fullDocument,omitempty"`
+	Ns                evNamespace `bson:"ns"`
+	DocumentKey       M           `bson:"documentKey"`
+	UpdateDescription *updateDesc `bson:"updateDescription,omitempty"`
+}

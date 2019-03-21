@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -41,6 +42,9 @@ func NewEngine(
 
 		obs[p.Code()] = ob
 	}
+
+	ctx := context.Background()
+	orderDao.WatchChanges(ctx)
 
 	engine := &Engine{obs, rabbitMQConn, provider}
 	return engine

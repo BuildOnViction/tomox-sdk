@@ -41,6 +41,12 @@ func (d *Database) InitDatabase(session *mgo.Session) {
 	d.Session = session
 }
 
+func (d *Database) GetCollection(dbName, collection string) *mgo.Collection {
+	s := d.Session
+
+	return s.DB(dbName).C(collection)
+}
+
 // Create is a wrapper for mgo.Insert function.
 // It creates a copy of session initialized, sends query over this session
 // and returns the session to connection pool
