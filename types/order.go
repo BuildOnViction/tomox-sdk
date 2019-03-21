@@ -833,7 +833,7 @@ func (o *OrderData) SetBSON(raw bson.Raw) error {
 	return nil
 }
 
-const TopicLength = 8 // in bytes
+const TopicLength = 86 // in bytes
 type TopicType [TopicLength]byte
 
 // Message is the RPC representation of a TomoX message.
