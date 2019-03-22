@@ -1008,7 +1008,23 @@ func handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
 			if ok {
 				logger.Debug(ev.OperationType)
 				utils.PrintJSON(ev.FullDocument)
+				HandleDocumentType(ev)
 			}
 		}
+	}
+}
+
+func HandleDocumentType(ev types.ChangeEvent) {
+	switch ev.OperationType {
+	case types.OPERATION_TYPE_INSERT:
+		break
+	case types.OPERATION_TYPE_UPDATE:
+		break
+	case types.OPERATION_TYPE_REPLACE:
+		break
+	case types.OPERATION_TYPE_DELETE:
+		break
+	default:
+		break
 	}
 }

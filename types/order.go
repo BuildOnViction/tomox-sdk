@@ -866,3 +866,10 @@ type ChangeEvent struct {
 	DocumentKey       M           `bson:"documentKey"`
 	UpdateDescription *updateDesc `bson:"updateDescription,omitempty"`
 }
+
+const (
+	OPERATION_TYPE_INSERT  = "insert"
+	OPERATION_TYPE_UPDATE  = "update"
+	OPERATION_TYPE_REPLACE = "replace"
+	OPERATION_TYPE_DELETE  = "delete"
+)
