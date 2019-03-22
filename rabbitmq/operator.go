@@ -163,7 +163,7 @@ func (c *Connection) PublishTxErrorMessage(matches *types.Matches, errType strin
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: types.TRADE_ERROR,
+		MessageType: types.TRADE_TX_ERROR,
 		Matches:     matches,
 		ErrorType:   errType,
 	}

@@ -151,6 +151,13 @@ func (op *Operator) SubscribeOperatorMessages(fn func(*types.OperatorMessage) er
 	return nil
 }
 
+func (op *Operator) HandleError(m *types.Matches) {
+	err := op.Broker.PublishErrorMessage(m, "Server error")
+	if err != nil {
+		logger.Error(err)
+	}
+}
+
 func (op *Operator) HandleTxError(m *types.Matches, id int) {
 	errType := getErrorType(id)
 	err := op.Broker.PublishTxErrorMessage(m, errType)
@@ -216,6 +223,7 @@ func (op *Operator) HandleTrades(msg *types.OperatorMessage) error {
 	err := op.QueueTrade(msg.Matches)
 	if err != nil {
 		logger.Error(err)
+		op.HandleError(msg.Matches)
 		return err
 	}
 
