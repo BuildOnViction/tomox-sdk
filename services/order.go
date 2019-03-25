@@ -1,11 +1,13 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/interfaces"
@@ -546,4 +548,82 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 
 	id := utils.GetTradeChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
 	ws.GetTradeSocket().BroadcastMessage(id, trades)
+}
+
+func (s *OrderService) WatchChanges() {
+	s.orderDao.WatchChanges(s.handleChangeStream)
+}
+
+func (s *OrderService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
+	for {
+		select {
+		case <-ctx.Done(): // if parent context was cancelled
+			err := ct.Close() // close the stream
+			if err != nil {
+				logger.Error("Change stream closed")
+			}
+			return //exiting from the func
+		default:
+			ev := types.ChangeEvent{}
+
+			//getting next item from the steam
+			ok := ct.Next(&ev)
+
+			//if data from the stream wasn't un-marshaled, we get ok == false as a result
+			//so we need to call Err() method to get info why
+			//it'll be nil if we just have no data
+			if !ok {
+				err := ct.Err()
+				if err != nil {
+					//if err is not nil, it means something bad happened, let's finish our func
+					logger.Error(err)
+					return
+				}
+
+				logger.Debug("No changes in ChangeStream")
+			}
+
+			//if item from the stream un-marshaled successfully, do something with it
+			if ok {
+				logger.Debug(ev.OperationType)
+				s.HandleDocumentType(ev)
+			}
+		}
+	}
+}
+
+func (s *OrderService) HandleDocumentType(ev types.ChangeEvent) error {
+	res := &types.EngineResponse{}
+
+	switch ev.OperationType {
+	case types.OPERATION_TYPE_INSERT:
+		if ev.FullDocument.Status == "OPEN" {
+			res.Status = types.ORDER_ADDED
+			res.Order = ev.FullDocument
+		}
+		break
+	case types.OPERATION_TYPE_UPDATE:
+		if ev.FullDocument.Status == "CANCELLED" {
+			res.Status = types.ORDER_CANCELLED
+			res.Order = ev.FullDocument
+		}
+		break
+	case types.OPERATION_TYPE_REPLACE:
+		if ev.FullDocument.Status == "CANCELLED" {
+			res.Status = types.ORDER_CANCELLED
+			res.Order = ev.FullDocument
+		}
+		break
+	default:
+		break
+	}
+
+	utils.PrintJSON(res)
+	err := s.broker.PublishEngineResponse(res)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
 }

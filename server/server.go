@@ -156,6 +156,9 @@ func NewRouter(
 	rabbitConn.SubscribeTrades(op.HandleTrades)
 	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
 
+	// initialize MongoDB Change Streams
+	orderService.WatchChanges()
+
 	cronService.InitCrons()
 	return r
 }

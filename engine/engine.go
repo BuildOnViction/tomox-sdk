@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -42,9 +41,6 @@ func NewEngine(
 
 		obs[p.Code()] = ob
 	}
-
-	ctx := context.Background()
-	orderDao.WatchChanges(ctx)
 
 	engine := &Engine{obs, rabbitMQConn, provider}
 	return engine
@@ -235,6 +231,11 @@ func (e *Engine) SyncOrderBook(p types.Pair) error {
 			}
 		}
 
+		// TODO: Remove these lines later
+		if res.Status == types.ORDER_ADDED || res.Status == types.ORDER_CANCELLED {
+			return nil
+		}
+
 		// Note: Plug the option for orders like FOC, Limit here (if needed)
 		err = ob.rabbitMQConn.PublishEngineResponse(res)
 		if err != nil {
@@ -242,63 +243,6 @@ func (e *Engine) SyncOrderBook(p types.Pair) error {
 			return err
 		}
 	}
-
-	//err = ob.orderDao.SyncNewOrders(orders)
-	//
-	//if err != nil {
-	//	logger.Error(err)
-	//	return err
-	//}
-
-	//for _, o := range orders {
-	//	switch o.Status {
-	//	case "OPEN":
-	//		res := &types.EngineResponse{
-	//			Status:  types.ORDER_ADDED,
-	//			Order:   o,
-	//			Matches: nil,
-	//		}
-	//
-	//		// Note: Plug the option for orders like FOC, Limit here (if needed)
-	//		err = e.rabbitMQConn.PublishEngineResponse(res)
-	//		if err != nil {
-	//			logger.Error(err)
-	//			return err
-	//		}
-	//
-	//		return nil
-	//
-	//	case "CANCELLED":
-	//		res := &types.EngineResponse{
-	//			Status:  types.ORDER_CANCELLED,
-	//			Order:   o,
-	//			Matches: nil,
-	//		}
-	//
-	//		err = e.rabbitMQConn.PublishEngineResponse(res)
-	//		if err != nil {
-	//			logger.Error(err)
-	//			return err
-	//		}
-	//
-	//		return nil
-	//
-	//	default:
-	//		res := &types.EngineResponse{
-	//			Status:  types.ERROR_STATUS,
-	//			Order:   o,
-	//			Matches: nil,
-	//		}
-	//
-	//		err = e.rabbitMQConn.PublishEngineResponse(res)
-	//		if err != nil {
-	//			logger.Error(err)
-	//			return err
-	//		}
-	//
-	//		return nil
-	//	}
-	//}
 
 	return nil
 }

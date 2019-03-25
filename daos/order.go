@@ -3,7 +3,6 @@ package daos
 import (
 	"context"
 	"encoding/json"
-	"github.com/tomochain/dex-server/utils"
 	"math/big"
 	"time"
 
@@ -827,8 +826,6 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	logger.Debug(params)
-
 	err = rpcClient.Call(&result, "tomoX_createOrder", params)
 
 	if err != nil {
@@ -959,10 +956,10 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 	return nil
 }
 
-func (dao *OrderDao) WatchChanges(ctx context.Context) {
+func (dao *OrderDao) WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream)) {
 	pipeline := []bson.M{}
 
-	changeStream, err := dao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{})
+	changeStream, err := dao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
 
 	//defer changeStream.Close()
 
@@ -971,60 +968,7 @@ func (dao *OrderDao) WatchChanges(ctx context.Context) {
 		return //exiting func
 	}
 
+	ctx := context.Background()
 	//Handling change stream in a cycle
-	go handleChangeStream(ctx, changeStream)
-}
-
-func handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
-	for {
-		select {
-		case <-ctx.Done(): // if parent context was cancelled
-			err := ct.Close() // close the stream
-			if err != nil {
-				logger.Error("Change stream closed")
-			}
-			return //exiting from the func
-		default:
-			ev := types.ChangeEvent{}
-
-			//getting next item from the steam
-			ok := ct.Next(&ev)
-
-			//if data from the stream wasn't un-marshaled, we get ok == false as a result
-			//so we need to call Err() method to get info why
-			//it'll be nil if we just have no data
-			if !ok {
-				err := ct.Err()
-				if err != nil {
-					//if err is not nil, it means something bad happened, let's finish our func
-					logger.Error(err)
-					return
-				}
-
-				logger.Debug("No changes in ChangeStream")
-			}
-
-			//if item from the stream un-marshaled successfully, do something with it
-			if ok {
-				logger.Debug(ev.OperationType)
-				utils.PrintJSON(ev.FullDocument)
-				HandleDocumentType(ev)
-			}
-		}
-	}
-}
-
-func HandleDocumentType(ev types.ChangeEvent) {
-	switch ev.OperationType {
-	case types.OPERATION_TYPE_INSERT:
-		break
-	case types.OPERATION_TYPE_UPDATE:
-		break
-	case types.OPERATION_TYPE_REPLACE:
-		break
-	case types.OPERATION_TYPE_DELETE:
-		break
-	default:
-		break
-	}
+	go fn(ctx, changeStream)
 }

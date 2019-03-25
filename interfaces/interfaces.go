@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
 	"github.com/tomochain/dex-server/rabbitmq"
@@ -52,7 +53,7 @@ type OrderDao interface {
 	SyncNewOrders(orders []*types.Order) error
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
-	WatchChanges(ctx context.Context)
+	WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream))
 }
 
 type AccountDao interface {
