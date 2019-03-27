@@ -216,14 +216,14 @@ func (e *Engine) SyncOrderBook(p types.Pair) error {
 
 	for _, o := range orders {
 		res := &types.EngineResponse{}
-		if o.Side == "SELL" {
+		if o.Side == types.SELL {
 			res, err = ob.sellOrder(o)
 			if err != nil {
 				logger.Error(err)
 				return err
 			}
 
-		} else if o.Side == "BUY" {
+		} else if o.Side == types.BUY {
 			res, err = ob.buyOrder(o)
 			if err != nil {
 				logger.Error(err)

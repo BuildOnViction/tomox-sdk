@@ -15,6 +15,12 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+const (
+	TradeStatusPending = "PENDING"
+	TradeStatusSuccess = "SUCCESS"
+	TradeStatusError   = "ERROR"
+)
+
 // Trade struct holds arguments corresponding to a "Taker Order"
 // To be valid an accept by the matching engine (and ultimately the exchange smart-contract),
 // the trade signature must be made from the trader Maker account
@@ -66,7 +72,7 @@ func NewTrade(mo *Order, to *Order, amount *big.Int, pricepoint *big.Int) *Trade
 		PairName:       mo.PairName,
 		Amount:         amount,
 		PricePoint:     pricepoint,
-		Status:         PENDING,
+		Status:         TradeStatusPending,
 	}
 
 	t.Hash = t.ComputeHash()

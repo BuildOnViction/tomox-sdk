@@ -88,7 +88,7 @@ func (ob *OrderBook) newOrder(o *types.Order) error {
 // addOrder adds an order to mongo
 func (ob *OrderBook) addOrder(o *types.Order) error {
 	if o.FilledAmount == nil || math.IsZero(o.FilledAmount) {
-		o.Status = "OPEN"
+		o.Status = types.OrderStatusOpen
 	}
 
 	_, err := ob.orderDao.FindAndModify(o.Hash, o)
@@ -136,7 +136,7 @@ func (ob *OrderBook) buyOrder(o *types.Order) (*types.EngineResponse, error) {
 
 		if math.IsZero(remainingOrder.Amount) {
 			o.FilledAmount = o.Amount
-			o.Status = "FILLED"
+			o.Status = types.OrderStatusFilled
 
 			_, err := ob.orderDao.FindAndModify(o.Hash, o)
 			if err != nil {
@@ -152,7 +152,7 @@ func (ob *OrderBook) buyOrder(o *types.Order) (*types.EngineResponse, error) {
 	}
 
 	//TODO refactor
-	o.Status = "PARTIAL_FILLED"
+	o.Status = types.OrderStatusPartialFilled
 	_, err = ob.orderDao.FindAndModify(o.Hash, o)
 	if err != nil {
 		logger.Error(err)
@@ -180,7 +180,7 @@ func (ob *OrderBook) sellOrder(o *types.Order) (*types.EngineResponse, error) {
 	}
 
 	if len(matchingOrders) == 0 {
-		o.Status = "OPEN"
+		o.Status = types.OrderStatusOpen
 		ob.addOrder(o)
 
 		res.Status = "ORDER_ADDED"
@@ -201,7 +201,7 @@ func (ob *OrderBook) sellOrder(o *types.Order) (*types.EngineResponse, error) {
 
 		if math.IsZero(remainingOrder.Amount) {
 			o.FilledAmount = o.Amount
-			o.Status = "FILLED"
+			o.Status = types.OrderStatusFilled
 
 			_, err := ob.orderDao.FindAndModify(o.Hash, o)
 			if err != nil {
@@ -217,7 +217,7 @@ func (ob *OrderBook) sellOrder(o *types.Order) (*types.EngineResponse, error) {
 	}
 
 	//TODO refactor
-	o.Status = "PARTIAL_FILLED"
+	o.Status = types.OrderStatusPartialFilled
 	_, err = ob.orderDao.FindAndModify(o.Hash, o)
 	if err != nil {
 		logger.Error(err)
@@ -242,7 +242,7 @@ func (ob *OrderBook) execute(takerOrder *types.Order, makerOrder *types.Order) (
 	if math.IsStrictlyGreaterThan(makerOrder.RemainingAmount(), takerOrder.RemainingAmount()) {
 		tradeAmount = takerOrder.RemainingAmount()
 		makerOrder.FilledAmount = math.Add(makerOrder.FilledAmount, tradeAmount)
-		makerOrder.Status = "PARTIAL_FILLED"
+		makerOrder.Status = types.OrderStatusPartialFilled
 
 		_, err := ob.orderDao.FindAndModify(makerOrder.Hash, makerOrder)
 		if err != nil {
@@ -252,7 +252,7 @@ func (ob *OrderBook) execute(takerOrder *types.Order, makerOrder *types.Order) (
 	} else {
 		tradeAmount = makerOrder.RemainingAmount()
 		makerOrder.FilledAmount = makerOrder.Amount
-		makerOrder.Status = "FILLED"
+		makerOrder.Status = types.OrderStatusFilled
 
 		_, err := ob.orderDao.FindAndModify(makerOrder.Hash, makerOrder)
 		if err != nil {
@@ -272,7 +272,7 @@ func (ob *OrderBook) execute(takerOrder *types.Order, makerOrder *types.Order) (
 		Taker:          takerOrder.UserAddress,
 		PairName:       takerOrder.PairName,
 		Maker:          makerOrder.UserAddress,
-		Status:         types.PENDING,
+		Status:         types.TradeStatusPending,
 	}
 
 	trade.Hash = trade.ComputeHash()

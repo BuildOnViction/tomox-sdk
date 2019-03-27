@@ -17,11 +17,17 @@ import (
 )
 
 const (
-	BUY         = "BUY"
-	SELL        = "SELL"
+	BUY  = "BUY"
+	SELL = "SELL"
+
 	MarketOrder = "MO"
 	LimitOrder  = "LO"
 	StopOrder   = "SO"
+
+	OrderStatusOpen          = "OPEN"
+	OrderStatusPartialFilled = "PARTIAL_FILLED"
+	OrderStatusFilled        = "FILLED"
+	OrderStatusCancelled     = "CANCELLED"
 )
 
 // Order contains the data related to an order sent by the user
