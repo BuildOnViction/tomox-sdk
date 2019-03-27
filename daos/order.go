@@ -11,10 +11,10 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/ngtuna/tomochain/tomox"
 	"github.com/tomochain/dex-server/app"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomochain/tomox"
 )
 
 // OrderDao contains:

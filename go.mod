@@ -39,7 +39,6 @@ require (
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
-	github.com/ngtuna/tomochain v1.8.3-0.20190320102428-7a849b1b1c41
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709 // indirect
 	github.com/pkg/errors v0.8.1
@@ -57,6 +56,7 @@ require (
 	github.com/tidwall/gjson v1.2.1
 	github.com/tidwall/match v1.0.1 // indirect
 	github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51 // indirect
+	github.com/tomochain/tomochain v1.2.2-0.20190322023348-ced3447191f3 // indirect
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	github.com/valyala/fasttemplate v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20180912021107-ed65620d4bd7 // indirect
