@@ -1,7 +1,10 @@
 package services
 
 import (
+	"context"
+	"github.com/globalsign/mgo"
 	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
 	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils"
 	"github.com/tomochain/dex-server/ws"
@@ -13,11 +16,18 @@ import (
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type TradeService struct {
 	tradeDao interfaces.TradeDao
+	broker   *rabbitmq.Connection
 }
 
 // NewTradeService returns a new instance of TradeService
-func NewTradeService(TradeDao interfaces.TradeDao) *TradeService {
-	return &TradeService{TradeDao}
+func NewTradeService(
+	TradeDao interfaces.TradeDao,
+	broker *rabbitmq.Connection,
+) *TradeService {
+	return &TradeService{
+		TradeDao,
+		broker,
+	}
 }
 
 // Subscribe
@@ -127,6 +137,79 @@ func (s *TradeService) UpdateTradeTxHash(tr *types.Trade, txh common.Hash) error
 	tr.TxHash = txh
 
 	err := s.tradeDao.UpdateByHash(tr.Hash, tr)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *TradeService) WatchChanges() {
+	s.tradeDao.WatchChanges(s.handleChangeStream)
+}
+
+func (s *TradeService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
+	for {
+		select {
+		case <-ctx.Done(): // if parent context was cancelled
+			err := ct.Close() // close the stream
+			if err != nil {
+				logger.Error("Change stream closed")
+			}
+			return //exiting from the func
+		default:
+			ev := types.ChangeEvent{}
+
+			//getting next item from the steam
+			ok := ct.Next(&ev)
+
+			//if data from the stream wasn't un-marshaled, we get ok == false as a result
+			//so we need to call Err() method to get info why
+			//it'll be nil if we just have no data
+			if !ok {
+				err := ct.Err()
+				if err != nil {
+					//if err is not nil, it means something bad happened, let's finish our func
+					logger.Error(err)
+					return
+				}
+			}
+
+			//if item from the stream un-marshaled successfully, do something with it
+			if ok {
+				logger.Debug(ev.OperationType)
+				s.HandleDocumentType(ev)
+			}
+		}
+	}
+}
+
+func (s *TradeService) HandleDocumentType(ev types.ChangeEvent) error {
+	res := &types.EngineResponse{}
+
+	switch ev.OperationType {
+	case types.OPERATION_TYPE_INSERT:
+		if ev.FullDocument.Status == types.TradeStatusPending {
+
+		} else if ev.FullDocument.Status == types.TradeStatusSuccess {
+
+		} else if ev.FullDocument.Status == types.TradeStatusError {
+
+		} else {
+
+		}
+		break
+	case types.OPERATION_TYPE_UPDATE:
+		break
+	case types.OPERATION_TYPE_REPLACE:
+		break
+	default:
+		break
+	}
+
+	utils.PrintJSON(res)
+	err := s.broker.PublishEngineResponse(res)
 	if err != nil {
 		logger.Error(err)
 		return err
