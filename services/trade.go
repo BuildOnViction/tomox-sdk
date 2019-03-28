@@ -190,15 +190,7 @@ func (s *TradeService) HandleDocumentType(ev types.ChangeEvent) error {
 
 	switch ev.OperationType {
 	case types.OPERATION_TYPE_INSERT:
-		if ev.FullDocument.Status == types.TradeStatusPending {
-
-		} else if ev.FullDocument.Status == types.TradeStatusSuccess {
-
-		} else if ev.FullDocument.Status == types.TradeStatusError {
-
-		} else {
-
-		}
+		HandleOperationInsert(ev)
 		break
 	case types.OPERATION_TYPE_UPDATE:
 		break
@@ -216,4 +208,16 @@ func (s *TradeService) HandleDocumentType(ev types.ChangeEvent) error {
 	}
 
 	return nil
+}
+
+func HandleOperationInsert(ev types.ChangeEvent) {
+	if ev.FullDocument.Status == types.TradeStatusPending {
+
+	} else if ev.FullDocument.Status == types.TradeStatusSuccess {
+
+	} else if ev.FullDocument.Status == types.TradeStatusError {
+
+	} else {
+
+	}
 }

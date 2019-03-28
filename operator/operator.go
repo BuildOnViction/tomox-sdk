@@ -9,7 +9,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/rabbitmq"
 	"github.com/tomochain/dex-server/types"
@@ -161,13 +160,6 @@ func (op *Operator) HandleError(m *types.Matches) {
 func (op *Operator) HandleTxError(m *types.Matches, id int) {
 	errType := getErrorType(id)
 	err := op.Broker.PublishTxErrorMessage(m, errType)
-	if err != nil {
-		logger.Error(err)
-	}
-}
-
-func (op *Operator) HandleTxSuccess(m *types.Matches, receipt *eth.Receipt) {
-	err := op.Broker.PublishTradeSuccessMessage(m)
 	if err != nil {
 		logger.Error(err)
 	}
