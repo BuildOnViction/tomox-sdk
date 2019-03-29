@@ -381,3 +381,12 @@ func (t TradeBSONUpdate) GetBSON() (interface{}, error) {
 
 	return update, nil
 }
+
+type TradeChangeEvent struct {
+	ID                interface{} `bson:"_id"`
+	OperationType     string      `bson:"operationType"`
+	FullDocument      *Trade      `bson:"fullDocument,omitempty"`
+	Ns                evNamespace `bson:"ns"`
+	DocumentKey       M           `bson:"documentKey"`
+	UpdateDescription *updateDesc `bson:"updateDescription,omitempty"`
+}

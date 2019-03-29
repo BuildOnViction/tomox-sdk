@@ -135,11 +135,11 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
-	err = s.validator.ValidateAvailableBalance(o)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+	//err = s.validator.ValidateAvailableBalance(o)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
 
 	err = s.broker.PublishNewOrderMessage(o)
 	if err != nil {
@@ -564,7 +564,7 @@ func (s *OrderService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 			}
 			return //exiting from the func
 		default:
-			ev := types.ChangeEvent{}
+			ev := types.OrderChangeEvent{}
 
 			//getting next item from the steam
 			ok := ct.Next(&ev)
@@ -579,8 +579,6 @@ func (s *OrderService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 					logger.Error(err)
 					return
 				}
-
-				logger.Debug("No changes in ChangeStream")
 			}
 
 			//if item from the stream un-marshaled successfully, do something with it
@@ -592,7 +590,7 @@ func (s *OrderService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 	}
 }
 
-func (s *OrderService) HandleDocumentType(ev types.ChangeEvent) error {
+func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 	res := &types.EngineResponse{}
 
 	switch ev.OperationType {
@@ -618,7 +616,6 @@ func (s *OrderService) HandleDocumentType(ev types.ChangeEvent) error {
 		break
 	}
 
-	utils.PrintJSON(res)
 	err := s.broker.PublishEngineResponse(res)
 	if err != nil {
 		logger.Error(err)

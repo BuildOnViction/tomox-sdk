@@ -91,7 +91,7 @@ func NewRouter(
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, eng, provider)
 	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
-	tradeService := services.NewTradeService(tradeDao, rabbitConn)
+	tradeService := services.NewTradeService(orderDao, tradeDao, rabbitConn)
 
 	walletService := services.NewWalletService(walletDao)
 
@@ -158,6 +158,7 @@ func NewRouter(
 
 	// initialize MongoDB Change Streams
 	orderService.WatchChanges()
+	tradeService.WatchChanges()
 
 	cronService.InitCrons()
 	return r

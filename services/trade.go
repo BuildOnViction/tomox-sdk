@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/globalsign/mgo"
+	"github.com/tomochain/dex-server/errors"
 	"github.com/tomochain/dex-server/interfaces"
 	"github.com/tomochain/dex-server/rabbitmq"
 	"github.com/tomochain/dex-server/types"
@@ -15,18 +16,21 @@ import (
 // TradeService struct with daos required, responsible for communicating with daos.
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type TradeService struct {
+	OrderDao interfaces.OrderDao
 	tradeDao interfaces.TradeDao
 	broker   *rabbitmq.Connection
 }
 
 // NewTradeService returns a new instance of TradeService
 func NewTradeService(
-	TradeDao interfaces.TradeDao,
+	orderdao interfaces.OrderDao,
+	tradeDao interfaces.TradeDao,
 	broker *rabbitmq.Connection,
 ) *TradeService {
 	return &TradeService{
-		TradeDao,
-		broker,
+		OrderDao: orderdao,
+		tradeDao: tradeDao,
+		broker:   broker,
 	}
 }
 
@@ -159,7 +163,7 @@ func (s *TradeService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 			}
 			return //exiting from the func
 		default:
-			ev := types.ChangeEvent{}
+			ev := types.TradeChangeEvent{}
 
 			//getting next item from the steam
 			ok := ct.Next(&ev)
@@ -185,34 +189,51 @@ func (s *TradeService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 	}
 }
 
-func (s *TradeService) HandleDocumentType(ev types.ChangeEvent) error {
-	res := &types.EngineResponse{}
+func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) {
 
 	switch ev.OperationType {
 	case types.OPERATION_TYPE_INSERT:
-		HandleOperationInsert(ev)
+		s.HandleOperationInsert(ev)
 		break
 	case types.OPERATION_TYPE_UPDATE:
+		s.HandleOperationUpdate(ev)
 		break
 	case types.OPERATION_TYPE_REPLACE:
 		break
 	default:
 		break
 	}
-
-	utils.PrintJSON(res)
-	err := s.broker.PublishEngineResponse(res)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
 }
 
-func HandleOperationInsert(ev types.ChangeEvent) {
+func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
 	if ev.FullDocument.Status == types.TradeStatusPending {
+		m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
 
+		to, err := s.OrderDao.GetByHash(ev.FullDocument.TakerOrderHash)
+
+		if err != nil {
+			logger.Error(err)
+			return errors.New("Can not find taker order")
+		}
+
+		m.TakerOrder = to
+
+		mo, err := s.OrderDao.GetByHash(ev.FullDocument.MakerOrderHash)
+
+		if err != nil {
+			logger.Error(err)
+			return errors.New("Can not find maker order")
+		}
+
+		m.MakerOrders = []*types.Order{mo}
+
+		utils.PrintJSON(m)
+		err = s.broker.PublishTradeSentMessage(m)
+
+		if err != nil {
+			logger.Error(err)
+			return errors.New("Could not update")
+		}
 	} else if ev.FullDocument.Status == types.TradeStatusSuccess {
 
 	} else if ev.FullDocument.Status == types.TradeStatusError {
@@ -220,4 +241,48 @@ func HandleOperationInsert(ev types.ChangeEvent) {
 	} else {
 
 	}
+
+	return nil
+}
+
+func (s *TradeService) HandleOperationUpdate(ev types.TradeChangeEvent) error {
+	logger.Debug(ev.FullDocument.Status)
+	if ev.FullDocument.Status == types.TradeStatusPending {
+
+	} else if ev.FullDocument.Status == types.TradeStatusSuccess {
+		m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
+
+		to, err := s.OrderDao.GetByHash(ev.FullDocument.TakerOrderHash)
+
+		if err != nil {
+			logger.Error(err)
+			return errors.New("Can not find taker order")
+		}
+
+		m.TakerOrder = to
+
+		mo, err := s.OrderDao.GetByHash(ev.FullDocument.MakerOrderHash)
+
+		if err != nil {
+			logger.Error(err)
+			return errors.New("Can not find maker order")
+		}
+
+		m.MakerOrders = []*types.Order{mo}
+
+		logger.Debug("############")
+		utils.PrintJSON(m)
+		err = s.broker.PublishTradeSuccessMessage(m)
+
+		if err != nil {
+			logger.Error(err)
+			return errors.New("Could not update")
+		}
+	} else if ev.FullDocument.Status == types.TradeStatusError {
+
+	} else {
+
+	}
+
+	return nil
 }

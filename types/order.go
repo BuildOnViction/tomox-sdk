@@ -864,7 +864,7 @@ type evNamespace struct {
 
 type M bson.M
 
-type ChangeEvent struct {
+type OrderChangeEvent struct {
 	ID                interface{} `bson:"_id"`
 	OperationType     string      `bson:"operationType"`
 	FullDocument      *Order      `bson:"fullDocument,omitempty"`

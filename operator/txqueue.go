@@ -201,17 +201,17 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	}
 
 	m.Trades = updatedTrades
-	err := txq.Broker.PublishTradeSentMessage(m)
-	if err != nil {
-		logger.Error(err)
-		return errors.New("Could not update")
-	}
+	//err := txq.Broker.PublishTradeSentMessage(m)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return errors.New("Could not update")
+	//}
 
-	err = txq.HandleTxSuccess(m)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+	//err := txq.HandleTxSuccess(m)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
 
 	return nil
 }
