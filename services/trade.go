@@ -205,6 +205,7 @@ func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) {
 	}
 }
 
+// HandleOperationInsert sent WS messages to client when a trade is created with status "PENDING""
 func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
 	if ev.FullDocument.Status == types.TradeStatusPending {
 		m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
@@ -228,61 +229,100 @@ func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
 		m.MakerOrders = []*types.Order{mo}
 
 		utils.PrintJSON(m)
-		err = s.broker.PublishTradeSentMessage(m)
-
-		if err != nil {
-			logger.Error(err)
-			return errors.New("Could not update")
-		}
-	} else if ev.FullDocument.Status == types.TradeStatusSuccess {
-
-	} else if ev.FullDocument.Status == types.TradeStatusError {
-
-	} else {
-
+		s.HandleTradePending(m)
 	}
 
 	return nil
 }
 
+// HandleOperationUpdate sent WS messages to client when a trade is updated with status "SUCCESS" or "ERROR"
 func (s *TradeService) HandleOperationUpdate(ev types.TradeChangeEvent) error {
 	logger.Debug(ev.FullDocument.Status)
-	if ev.FullDocument.Status == types.TradeStatusPending {
+	m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
 
-	} else if ev.FullDocument.Status == types.TradeStatusSuccess {
-		m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
+	to, err := s.OrderDao.GetByHash(ev.FullDocument.TakerOrderHash)
 
-		to, err := s.OrderDao.GetByHash(ev.FullDocument.TakerOrderHash)
+	if err != nil {
+		logger.Error(err)
+		return errors.New("Can not find taker order")
+	}
 
-		if err != nil {
-			logger.Error(err)
-			return errors.New("Can not find taker order")
-		}
+	m.TakerOrder = to
 
-		m.TakerOrder = to
+	mo, err := s.OrderDao.GetByHash(ev.FullDocument.MakerOrderHash)
 
-		mo, err := s.OrderDao.GetByHash(ev.FullDocument.MakerOrderHash)
+	if err != nil {
+		logger.Error(err)
+		return errors.New("Can not find maker order")
+	}
 
-		if err != nil {
-			logger.Error(err)
-			return errors.New("Can not find maker order")
-		}
+	m.MakerOrders = []*types.Order{mo}
 
-		m.MakerOrders = []*types.Order{mo}
+	logger.Debug("############")
+	utils.PrintJSON(m)
 
-		logger.Debug("############")
-		utils.PrintJSON(m)
-		err = s.broker.PublishTradeSuccessMessage(m)
-
-		if err != nil {
-			logger.Error(err)
-			return errors.New("Could not update")
-		}
+	if ev.FullDocument.Status == types.TradeStatusSuccess {
+		s.HandleTradeSuccess(m)
 	} else if ev.FullDocument.Status == types.TradeStatusError {
-
-	} else {
-
+		s.HandleTradeError(m)
 	}
 
 	return nil
+}
+
+func (s *TradeService) HandleTradePending(m *types.Matches) {
+	trades := m.Trades
+	orders := m.MakerOrders
+
+	taker := trades[0].Taker
+	ws.SendOrderMessage("ORDER_PENDING", taker, types.OrderPendingPayload{Matches: m})
+
+	for _, o := range orders {
+		maker := o.UserAddress
+		ws.SendOrderMessage("ORDER_PENDING", maker, types.OrderPendingPayload{Matches: m})
+	}
+
+	s.broadcastTradeUpdate(trades)
+}
+
+func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
+	trades := m.Trades
+	// Send ORDER_SUCCESS message to order takers
+	taker := trades[0].Taker
+	ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{Matches: m})
+
+	// Send ORDER_SUCCESS message to order makers
+	for i, _ := range trades {
+		match := m.NthMatch(i)
+		maker := match.MakerOrders[0].UserAddress
+		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{Matches: m})
+	}
+
+	s.broadcastTradeUpdate(trades)
+}
+
+func (s *TradeService) HandleTradeError(m *types.Matches) {
+	trades := m.Trades
+	orders := m.MakerOrders
+
+	taker := trades[0].Taker
+	ws.SendOrderMessage("ORDER_ERROR", taker, m)
+
+	for _, o := range orders {
+		maker := o.UserAddress
+		ws.SendOrderMessage("ORDER_ERROR", maker, o)
+	}
+
+	s.broadcastTradeUpdate(trades)
+}
+
+func (s *TradeService) broadcastTradeUpdate(trades []*types.Trade) {
+	p, err := trades[0].Pair()
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+
+	id := utils.GetTradeChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
+	ws.GetTradeSocket().BroadcastMessage(id, trades)
 }

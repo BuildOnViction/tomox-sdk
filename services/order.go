@@ -368,24 +368,24 @@ func (s *OrderService) handleOperatorTradeTxSuccess(msg *types.OperatorMessage) 
 	}
 
 	// Send ORDER_SUCCESS message to order takers
-	taker := trades[0].Taker
-	ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{matches})
-
-	// Send ORDER_SUCCESS message to order makers
-	for i, _ := range trades {
-		match := matches.NthMatch(i)
-		maker := match.MakerOrders[0].UserAddress
-		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{match})
-	}
-
-	s.broadcastTradeUpdate(trades)
+	//taker := trades[0].Taker
+	//ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{matches})
+	//
+	//// Send ORDER_SUCCESS message to order makers
+	//for i, _ := range trades {
+	//	match := matches.NthMatch(i)
+	//	maker := match.MakerOrders[0].UserAddress
+	//	ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{match})
+	//}
+	//
+	//s.broadcastTradeUpdate(trades)
 }
 
 // handleOperatorTradeTxError handles cases where a blockchain transaction is reverted
 func (s *OrderService) handleOperatorTradeTxError(msg *types.OperatorMessage) {
 	matches := msg.Matches
 	trades := matches.Trades
-	orders := matches.MakerOrders
+	//orders := matches.MakerOrders
 
 	errType := msg.ErrorType
 	if errType != "" {
@@ -401,15 +401,15 @@ func (s *OrderService) handleOperatorTradeTxError(msg *types.OperatorMessage) {
 		t.Status = "ERROR"
 	}
 
-	taker := trades[0].Taker
-	ws.SendOrderMessage("ORDER_ERROR", taker, matches)
-
-	for _, o := range orders {
-		maker := o.UserAddress
-		ws.SendOrderMessage("ORDER_ERROR", maker, o)
-	}
-
-	s.broadcastTradeUpdate(trades)
+	//taker := trades[0].Taker
+	//ws.SendOrderMessage("ORDER_ERROR", taker, matches)
+	//
+	//for _, o := range orders {
+	//	maker := o.UserAddress
+	//	ws.SendOrderMessage("ORDER_ERROR", maker, o)
+	//}
+	//
+	//s.broadcastTradeUpdate(trades)
 }
 
 // handleOperatorTradeError handles error messages from the operator (case where the blockchain tx was made
@@ -418,7 +418,7 @@ func (s *OrderService) handleOperatorTradeTxError(msg *types.OperatorMessage) {
 func (s *OrderService) handleOperatorTradeError(msg *types.OperatorMessage) {
 	matches := msg.Matches
 	trades := matches.Trades
-	orders := matches.MakerOrders
+	//orders := matches.MakerOrders
 
 	errType := msg.ErrorType
 	if errType != "" {
@@ -434,15 +434,15 @@ func (s *OrderService) handleOperatorTradeError(msg *types.OperatorMessage) {
 		t.Status = "ERROR"
 	}
 
-	taker := trades[0].Taker
-	ws.SendOrderMessage("ORDER_ERROR", taker, matches)
-
-	for _, o := range orders {
-		maker := o.UserAddress
-		ws.SendOrderMessage("ORDER_ERROR", maker, o)
-	}
-
-	s.broadcastTradeUpdate(trades)
+	//taker := trades[0].Taker
+	//ws.SendOrderMessage("ORDER_ERROR", taker, matches)
+	//
+	//for _, o := range orders {
+	//	maker := o.UserAddress
+	//	ws.SendOrderMessage("ORDER_ERROR", maker, o)
+	//}
+	//
+	//s.broadcastTradeUpdate(trades)
 }
 
 // handleOperatorTradeInvalid handles the case where one of the two orders is invalid
@@ -452,7 +452,7 @@ func (s *OrderService) handleOperatorTradeError(msg *types.OperatorMessage) {
 func (s *OrderService) handleOperatorTradeInvalid(msg *types.OperatorMessage) {
 	matches := msg.Matches
 	trades := matches.Trades
-	orders := matches.MakerOrders
+	//orders := matches.MakerOrders
 
 	errType := msg.ErrorType
 	if errType != "" {
@@ -468,15 +468,15 @@ func (s *OrderService) handleOperatorTradeInvalid(msg *types.OperatorMessage) {
 		t.Status = "ERROR"
 	}
 
-	taker := trades[0].Taker
-	ws.SendOrderMessage("ORDER_ERROR", taker, matches)
-
-	for _, o := range orders {
-		maker := o.UserAddress
-		ws.SendOrderMessage("ORDER_ERROR", maker, o)
-	}
-
-	s.broadcastTradeUpdate(trades)
+	//taker := trades[0].Taker
+	//ws.SendOrderMessage("ORDER_ERROR", taker, matches)
+	//
+	//for _, o := range orders {
+	//	maker := o.UserAddress
+	//	ws.SendOrderMessage("ORDER_ERROR", maker, o)
+	//}
+	//
+	//s.broadcastTradeUpdate(trades)
 }
 
 func (s *OrderService) handleOperatorUnknownMessage(msg *types.OperatorMessage) {
