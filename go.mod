@@ -3,6 +3,7 @@ module github.com/tomochain/dex-server
 go 1.12
 
 require (
+	github.com/0xAX/notificator v0.0.0-20181105090803-d81462e38c21 // indirect
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/Sirupsen/logrus v1.0.6 // indirect
@@ -14,6 +15,8 @@ require (
 	github.com/btcsuite/btcutil v0.0.0-20190207003914-4c204d697803
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd // indirect
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792 // indirect
+	github.com/codegangsta/envy v0.0.0-20141216192214-4b78388c8ce4 // indirect
+	github.com/codegangsta/gin v0.0.0-20171026143024-cafe2ce98974 // indirect
 	github.com/deckarep/golang-set v0.0.0-20171013212420-1d4478f51bed // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
 	github.com/ethereum/go-ethereum v1.8.15
@@ -39,6 +42,7 @@ require (
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
+	github.com/mattn/go-shellwords v1.0.5 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709 // indirect
 	github.com/pkg/errors v0.8.1
@@ -56,7 +60,7 @@ require (
 	github.com/tidwall/gjson v1.2.1
 	github.com/tidwall/match v1.0.1 // indirect
 	github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51 // indirect
-	github.com/tomochain/tomochain v1.2.2-0.20190322023348-ced3447191f3
+	github.com/tomochain/tomochain v1.3.3-0.20190329030229-103b4f51c911
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	github.com/valyala/fasttemplate v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20180912021107-ed65620d4bd7 // indirect
