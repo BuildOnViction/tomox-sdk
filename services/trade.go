@@ -228,7 +228,6 @@ func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
 
 		m.MakerOrders = []*types.Order{mo}
 
-		utils.PrintJSON(m)
 		s.HandleTradePending(m)
 	}
 
@@ -257,9 +256,6 @@ func (s *TradeService) HandleOperationUpdate(ev types.TradeChangeEvent) error {
 	}
 
 	m.MakerOrders = []*types.Order{mo}
-
-	logger.Debug("############")
-	utils.PrintJSON(m)
 
 	if ev.FullDocument.Status == types.TradeStatusSuccess {
 		s.HandleTradeSuccess(m)
