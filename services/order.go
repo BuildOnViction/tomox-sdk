@@ -133,11 +133,11 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
-	err = s.validator.ValidateAvailableBalance(o)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+	//err = s.validator.ValidateAvailableBalance(o)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
 
 	err = s.broker.PublishNewOrderMessage(o)
 	if err != nil {
@@ -221,15 +221,15 @@ func (s *OrderService) handleEngineOrderMatched(res *types.EngineResponse) {
 
 	//res.Matches is an array of (order, trade) pairs where each order is an "maker" order that is being matched
 	for i, _ := range matches.Trades {
-		err := s.validator.ValidateBalance(matches.MakerOrders[i])
-		if err != nil {
-			logger.Error(err)
-			invalidMatches.AppendMatch(matches.MakerOrders[i], matches.Trades[i])
-
-		} else {
-			validMatches.AppendMatch(matches.MakerOrders[i], matches.Trades[i])
-			orders = append(orders, matches.MakerOrders[i])
-		}
+		//err := s.validator.ValidateBalance(matches.MakerOrders[i])
+		//if err != nil {
+		//	logger.Error(err)
+		//	invalidMatches.AppendMatch(matches.MakerOrders[i], matches.Trades[i])
+		//
+		//} else {
+		validMatches.AppendMatch(matches.MakerOrders[i], matches.Trades[i])
+		orders = append(orders, matches.MakerOrders[i])
+		//}
 	}
 
 	// if there are any invalid matches, the maker orders are at cause (since maker orders have been validated in the
