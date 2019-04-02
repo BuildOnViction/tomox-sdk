@@ -112,30 +112,6 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 	return s.tradeDao.GetByOrderHashes(hashes)
 }
 
-func (s *TradeService) UpdateSuccessfulTrade(t *types.Trade) (*types.Trade, error) {
-	t.Status = types.SUCCESS
-
-	updated, err := s.tradeDao.FindAndModify(t.Hash, t)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return updated, nil
-}
-
-func (s *TradeService) UpdateTradeTxHash(tr *types.Trade, txh common.Hash) error {
-	tr.TxHash = txh
-
-	err := s.tradeDao.UpdateByHash(tr.Hash, tr)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
 func (s *TradeService) WatchChanges() {
 	s.tradeDao.WatchChanges(s.handleChangeStream)
 }

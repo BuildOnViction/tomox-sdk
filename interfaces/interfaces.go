@@ -257,8 +257,6 @@ type TradeService interface {
 	GetByOrderHashes(h []common.Hash) ([]*types.Trade, error)
 	GetByMakerOrderHash(h common.Hash) ([]*types.Trade, error)
 	GetByTakerOrderHash(h common.Hash) ([]*types.Trade, error)
-	UpdateTradeTxHash(tr *types.Trade, txh common.Hash) error
-	UpdateSuccessfulTrade(t *types.Trade) (*types.Trade, error)
 	Subscribe(c *ws.Client, bt, qt common.Address)
 	UnsubscribeChannel(c *ws.Client, bt, qt common.Address)
 	Unsubscribe(c *ws.Client)
