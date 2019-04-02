@@ -177,30 +177,27 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 
 		if math.IsEqual(mOrder.side, big.NewInt(0)) {
 			err := txq.AccountService.Transfer(mOrder.quoteToken, mOrder.userAddress, tOrder.userAddress, quoteTokenAmount)
-			logger.Error(err)
+			if err != nil {
+				logger.Error(err)
+			}
 
 			err = txq.AccountService.Transfer(tOrder.baseToken, tOrder.userAddress, mOrder.userAddress, baseTokenAmount)
-			logger.Error(err)
+			if err != nil {
+				logger.Error(err)
+			}
 		} else {
 			err := txq.AccountService.Transfer(mOrder.baseToken, mOrder.userAddress, tOrder.userAddress, baseTokenAmount)
-			logger.Error(err)
+			if err != nil {
+				logger.Error(err)
+			}
 
 			err = txq.AccountService.Transfer(tOrder.quoteToken, tOrder.userAddress, mOrder.userAddress, quoteTokenAmount)
-			logger.Error(err)
+			if err != nil {
+				logger.Error(err)
+			}
 		}
 	}
 
-	updatedTrades := []*types.Trade{}
-	for _, t := range m.Trades {
-		updated, err := txq.TradeService.UpdatePendingTrade(t, common.HexToHash("0xf331B044e6E48F4FD154a1B02f3Fb4C344114180"))
-		if err != nil {
-			logger.Error(err)
-		}
-
-		updatedTrades = append(updatedTrades, updated)
-	}
-
-	m.Trades = updatedTrades
 	//err := txq.Broker.PublishTradeSentMessage(m)
 	//if err != nil {
 	//	logger.Error(err)

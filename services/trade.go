@@ -112,19 +112,6 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 	return s.tradeDao.GetByOrderHashes(hashes)
 }
 
-func (s *TradeService) UpdatePendingTrade(t *types.Trade, txh common.Hash) (*types.Trade, error) {
-	t.Status = types.PENDING
-	t.TxHash = txh
-
-	updated, err := s.tradeDao.FindAndModify(t.Hash, t)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return updated, nil
-}
-
 func (s *TradeService) UpdateSuccessfulTrade(t *types.Trade) (*types.Trade, error) {
 	t.Status = types.SUCCESS
 
@@ -182,7 +169,7 @@ func (s *TradeService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
-				logger.Debug(ev.OperationType)
+				utils.PrintJSON(ev)
 				s.HandleDocumentType(ev)
 			}
 		}

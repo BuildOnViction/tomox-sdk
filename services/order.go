@@ -616,10 +616,12 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 		break
 	}
 
-	err := s.broker.PublishEngineResponse(res)
-	if err != nil {
-		logger.Error(err)
-		return err
+	if res.Status != "" {
+		err := s.broker.PublishEngineResponse(res)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
 	}
 
 	return nil
