@@ -1,8 +1,10 @@
 package crons
 
 import (
-	"fmt"
+	"log"
+
 	"github.com/robfig/cron"
+	"github.com/tomochain/dex-server/utils"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming
@@ -15,6 +17,13 @@ func (s *CronService) startMarketsCron(c *cron.Cron) {
 // and broadcasts the tick to the client subscribed to pair's respective channel
 func (s *CronService) getMarketsData() func() {
 	return func() {
-		fmt.Println("getMarketsData")
+		res, err := s.PairService.GetAllTokenPairData()
+
+		if err != nil {
+			log.Printf("%s", err)
+			return
+		}
+
+		utils.PrintJSON(res)
 	}
 }
