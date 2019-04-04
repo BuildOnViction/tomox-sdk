@@ -159,3 +159,15 @@ func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Addr
 func (s *AccountService) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
 	return s.accountDao.Transfer(token, fromAddress, toAddress, amount)
 }
+
+func (*AccountService) GetFavoriteTokens(account common.Address) ([]string, error) {
+	return []string{}, nil
+}
+
+func (s *AccountService) AddFavoriteToken(token common.Address) error {
+	return nil
+}
+
+func (s *AccountService) DeleteFavoriteToken(token common.Address) error {
+	return nil
+}

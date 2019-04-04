@@ -285,6 +285,9 @@ type AccountService interface {
 	GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error)
 	GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error)
 	Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error
+	GetFavoriteTokens(account common.Address) ([]string, error)
+	AddFavoriteToken(account, token common.Address) error
+	DeleteFavoriteToken(account, token common.Address) error
 }
 
 type DepositService interface {
