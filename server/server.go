@@ -105,7 +105,7 @@ func NewRouter(
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
-	marketsService := services.NewMarketsService()
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService)
