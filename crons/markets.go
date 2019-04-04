@@ -5,6 +5,7 @@ import (
 
 	"github.com/robfig/cron"
 	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming
@@ -24,6 +25,8 @@ func (s *CronService) getMarketsData() func() {
 			return
 		}
 
-		utils.PrintJSON(res)
+		id := utils.GetMarketsChannelID(ws.MarketsChannel)
+
+		ws.GetMarketSocket().BroadcastMessage(id, res)
 	}
 }
