@@ -262,6 +262,12 @@ type PriceBoardService interface {
 	Unsubscribe(c *ws.Client)
 }
 
+type MarketsService interface {
+	Subscribe(c *ws.Client)
+	UnsubscribeChannel(c *ws.Client)
+	Unsubscribe(c *ws.Client)
+}
+
 type TxService interface {
 	GetTxCallOptions() *bind.CallOpts
 	GetTxSendOptions() (*bind.TransactOpts, error)

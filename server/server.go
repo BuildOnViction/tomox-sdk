@@ -105,6 +105,7 @@ func NewRouter(
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService)
@@ -149,6 +150,7 @@ func NewRouter(
 
 	endpoints.ServeDepositResource(r, depositService, walletService, txService)
 	endpoints.ServePriceBoardResource(r, priceBoardService)
+	endpoints.ServeMarketsResource(r, marketsService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

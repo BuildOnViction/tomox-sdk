@@ -230,7 +230,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) ([]*types.Tick, er
 func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	now := time.Now()
 	end := time.Unix(now.Unix(), 0)
-	start := time.Unix(now.AddDate(0, 0, -7).Unix(), 0)
+	start := time.Unix(now.AddDate(0, 0, -1).Unix(), 0)
 	one, _ := bson.ParseDecimal128("1")
 
 	pairs, err := s.pairDao.GetActivePairs()
