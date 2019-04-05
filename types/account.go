@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/tomochain/dex-server/utils"
 	"math/big"
 	"time"
 
@@ -12,12 +13,13 @@ import (
 
 // Account corresponds to a single Ethereum address. It contains a list of token balances for that address
 type Account struct {
-	ID            bson.ObjectId                    `json:"-" bson:"_id"`
-	Address       common.Address                   `json:"address" bson:"address"`
-	TokenBalances map[common.Address]*TokenBalance `json:"tokenBalances" bson:"tokenBalances"`
-	IsBlocked     bool                             `json:"isBlocked" bson:"isBlocked"`
-	CreatedAt     time.Time                        `json:"createdAt" bson:"createdAt"`
-	UpdatedAt     time.Time                        `json:"updatedAt" bson:"updatedAt"`
+	ID             bson.ObjectId                    `json:"-" bson:"_id"`
+	Address        common.Address                   `json:"address" bson:"address"`
+	TokenBalances  map[common.Address]*TokenBalance `json:"tokenBalances" bson:"tokenBalances"`
+	FavoriteTokens map[common.Address]bool          `json:"favoriteTokens" bson:"favoriteTokens"`
+	IsBlocked      bool                             `json:"isBlocked" bson:"isBlocked"`
+	CreatedAt      time.Time                        `json:"createdAt" bson:"createdAt"`
+	UpdatedAt      time.Time                        `json:"updatedAt" bson:"updatedAt"`
 }
 
 // GetBSON implements bson.Getter
@@ -40,6 +42,14 @@ func (a *Account) GetBSON() (interface{}, error) {
 	}
 
 	ar.TokenBalances = tokenBalances
+
+	favoriteTokens := make(map[string]bool)
+
+	for key, value := range a.FavoriteTokens {
+		favoriteTokens[key.Hex()] = value
+	}
+
+	ar.FavoriteTokens = favoriteTokens
 
 	if a.ID.Hex() == "" {
 		ar.ID = bson.NewObjectId()
@@ -78,6 +88,11 @@ func (a *Account) SetBSON(raw bson.Raw) error {
 		}
 	}
 
+	a.FavoriteTokens = make(map[common.Address]bool)
+	for key, value := range decoded.FavoriteTokens {
+		a.FavoriteTokens[common.HexToAddress(key)] = value
+	}
+
 	a.Address = common.HexToAddress(decoded.Address)
 	a.ID = decoded.ID
 	a.IsBlocked = decoded.IsBlocked
@@ -91,6 +106,8 @@ func (a *Account) SetBSON(raw bson.Raw) error {
 
 // MarshalJSON implements the json.Marshal interface
 func (a *Account) MarshalJSON() ([]byte, error) {
+	logger.Debug(a.FavoriteTokens)
+
 	account := map[string]interface{}{
 		"id":        a.ID,
 		"address":   a.Address,
@@ -112,6 +129,17 @@ func (a *Account) MarshalJSON() ([]byte, error) {
 	}
 
 	account["tokenBalances"] = tokenBalance
+
+	favoriteTokens := make(map[string]bool)
+
+	for address, isFavorite := range a.FavoriteTokens {
+		favoriteTokens[address.Hex()] = isFavorite
+	}
+
+	account["favoriteTokens"] = favoriteTokens
+
+	utils.PrintJSON(account)
+
 	return json.Marshal(account)
 }
 
@@ -169,6 +197,17 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 		}
 	}
 
+	if account["favoriteTokens"] != nil {
+		favoriteTokens := account["favoriteTokens"].(map[string]interface{})
+		for address, isFavorite := range favoriteTokens {
+			if !common.IsHexAddress(address) {
+				continue
+			}
+
+			a.FavoriteTokens[common.HexToAddress(address)] = isFavorite.(bool)
+		}
+	}
+
 	return nil
 }
 
@@ -181,12 +220,13 @@ func (a Account) Validate() error {
 
 // AccountRecord corresponds to what is stored in the DB. big.Ints are encoded as strings
 type AccountRecord struct {
-	ID            bson.ObjectId                 `json:"id" bson:"_id"`
-	Address       string                        `json:"address" bson:"address"`
-	TokenBalances map[string]TokenBalanceRecord `json:"tokenBalances" bson:"tokenBalances"`
-	IsBlocked     bool                          `json:"isBlocked" bson:"isBlocked"`
-	CreatedAt     time.Time                     `json:"createdAt" bson:"createdAt"`
-	UpdatedAt     time.Time                     `json:"updatedAt" bson:"updatedAt"`
+	ID             bson.ObjectId                 `json:"id" bson:"_id"`
+	Address        string                        `json:"address" bson:"address"`
+	TokenBalances  map[string]TokenBalanceRecord `json:"tokenBalances" bson:"tokenBalances"`
+	FavoriteTokens map[string]bool               `json:"favoriteTokens" bson:"favoriteTokens"`
+	IsBlocked      bool                          `json:"isBlocked" bson:"isBlocked"`
+	CreatedAt      time.Time                     `json:"createdAt" bson:"createdAt"`
+	UpdatedAt      time.Time                     `json:"updatedAt" bson:"updatedAt"`
 }
 
 type AccountBSONUpdate struct {
