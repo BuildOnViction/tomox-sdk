@@ -1,12 +1,13 @@
 package ws
 
 import (
-	"errors"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
 )
 
 var ohlcvSocket *OHLCVSocket
 
-// OHLCVSocket holds the map of subscribtions subscribed to pair channels
+// OHLCVSocket holds the map of subscribtions subscribed to OHLCV channels
 // corresponding to the key/event they have subscribed to.
 type OHLCVSocket struct {
 	subscriptions     map[string]map[*Client]bool
@@ -20,7 +21,7 @@ func NewOHLCVSocket() *OHLCVSocket {
 	}
 }
 
-// GetOHLCVSocket return singleton instance of PairSockets type struct
+// GetOHLCVSocket return singleton instance of OHLCVSocket type struct
 func GetOHLCVSocket() *OHLCVSocket {
 	if ohlcvSocket == nil {
 		ohlcvSocket = NewOHLCVSocket()
@@ -30,7 +31,7 @@ func GetOHLCVSocket() *OHLCVSocket {
 }
 
 // Subscribe handles the registration of connection to get
-// streaming data over the socker for any pair.
+// streaming data over the socket for any pair.
 func (s *OHLCVSocket) Subscribe(channelID string, c *Client) error {
 	if c == nil {
 		return errors.New("No connection found")
@@ -86,7 +87,7 @@ func (s *OHLCVSocket) Unsubscribe(c *Client) {
 	}
 }
 
-// BroadcastOHLCV Message streams message to all the subscribtions subscribed to the pair
+// BroadcastOHLCV Message streams message to all the subscriptions subscribed to the pair
 func (s *OHLCVSocket) BroadcastOHLCV(channelID string, p interface{}) error {
 	for c, status := range s.subscriptions[channelID] {
 		if status {
@@ -98,21 +99,21 @@ func (s *OHLCVSocket) BroadcastOHLCV(channelID string, p interface{}) error {
 }
 
 // SendMessage sends a websocket message on the trade channel
-func (s *OHLCVSocket) SendMessage(c *Client, msgType string, p interface{}) {
+func (s *OHLCVSocket) SendMessage(c *Client, msgType types.SubscriptionEvent, p interface{}) {
 	c.SendMessage(OHLCVChannel, msgType, p)
+}
+
+// SendInitMessage is responsible for sending message on trade channel at subscription
+func (s *OHLCVSocket) SendInitMessage(c *Client, p interface{}) {
+	c.SendMessage(OHLCVChannel, types.INIT, p)
+}
+
+// SendUpdateMessage is responsible for sending message on trade channel at subscription
+func (s *OHLCVSocket) SendUpdateMessage(c *Client, p interface{}) {
+	c.SendMessage(OHLCVChannel, types.UPDATE, p)
 }
 
 // SendErrorMessage sends an error message on the trade channel
 func (s *OHLCVSocket) SendErrorMessage(c *Client, p interface{}) {
-	c.SendMessage(OHLCVChannel, "ERROR", p)
-}
-
-// SendInitMessage is responsible for sending message on trade ohlcv channel at subscription
-func (s *OHLCVSocket) SendInitMessage(c *Client, p interface{}) {
-	c.SendMessage(OHLCVChannel, "INIT", p)
-}
-
-// SendUpdateMessage is responsible for sending message on trade ohlcv channel at subscription
-func (s *OHLCVSocket) SendUpdateMessage(c *Client, p interface{}) {
-	c.SendMessage(OHLCVChannel, "UPDATE", p)
+	c.SendMessage(OHLCVChannel, types.ERROR, p)
 }

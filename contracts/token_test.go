@@ -1,19 +1,21 @@
-package contracts_test
+package contracts
 
 import (
+	"context"
 	"log"
 	"math/big"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/daos"
-	"github.com/tomochain/backend-matching-engine/ethereum"
-	"github.com/tomochain/backend-matching-engine/services"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/utils/testutils/mocks"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/daos"
+	"github.com/tomochain/dex-server/ethereum"
+	"github.com/tomochain/dex-server/services"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/dex-server/utils/testutils/mocks"
 )
 
 func SetupTokenTest() (*testutils.Deployer, *types.Wallet) {
@@ -44,7 +46,7 @@ func SetupTokenTest() (*testutils.Deployer, *types.Wallet) {
 }
 
 func TestBalanceOf(t *testing.T) {
-	deployer, _ := SetupTokenTest()
+	deployer, wallet := SetupTokenTest()
 
 	receiver := testutils.GetTestAddress1()
 	amount := big.NewInt(1e18)
@@ -54,8 +56,14 @@ func TestBalanceOf(t *testing.T) {
 		t.Errorf("Could not deploy token: %v", err)
 	}
 
-	simulator := deployer.Client.(*ethereum.SimulatedClient)
+	simulator := deployer.GetSimulator()
+
+	etherBalance, _ := simulator.BalanceAt(context.Background(), wallet.Address, nil)
+	t.Logf("Ether balance is: %s", etherBalance.String())
+	// commit sending tokens
 	simulator.Commit()
+	newEtherBalance, _ := simulator.BalanceAt(context.Background(), wallet.Address, nil)
+	t.Logf("Ether balance is: %s, lost: %s", newEtherBalance.String(), math.Sub(etherBalance, newEtherBalance).String())
 
 	balance, err := token.BalanceOf(receiver)
 	if err != nil {

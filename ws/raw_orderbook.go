@@ -1,7 +1,8 @@
 package ws
 
 import (
-	"errors"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
 )
 
 var rawOrderBookSocket *RawOrderBookSocket
@@ -100,14 +101,14 @@ func (s *RawOrderBookSocket) BroadcastMessage(channelID string, p interface{}) e
 
 // SendInitMessage sends INIT message on orderbookchannel on subscription event
 func (s *RawOrderBookSocket) SendInitMessage(c *Client, data interface{}) {
-	c.SendMessage(RawOrderBookChannel, "INIT", data)
+	c.SendMessage(RawOrderBookChannel, types.INIT, data)
 }
 
 // SendUpdateMessage sends UPDATE message on orderbookchannel as new data is created
 func (s *RawOrderBookSocket) SendUpdateMessage(c *Client, data interface{}) {
-	c.SendMessage(RawOrderBookChannel, "UPDATE", data)
+	c.SendMessage(RawOrderBookChannel, types.UPDATE, data)
 }
 
 func (s *RawOrderBookSocket) SendErrorMessage(c *Client, data interface{}) {
-	c.SendMessage(RawOrderBookChannel, "ERROR", data)
+	c.SendMessage(RawOrderBookChannel, types.ERROR, data)
 }

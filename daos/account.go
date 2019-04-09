@@ -4,14 +4,16 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/math"
 )
 
-// BalanceDao contains:
+// AccountDao contains:
 // collectionName: MongoDB collection name
 // dbName: name of mongodb to interact with
 type AccountDao struct {
@@ -19,7 +21,7 @@ type AccountDao struct {
 	dbName         string
 }
 
-// NewBalanceDao returns a new instance of AddressDao
+// NewAccountDao returns a new instance of AddressDao
 func NewAccountDao() *AccountDao {
 	dbName := app.Config.DBName
 	collection := "accounts"
@@ -169,7 +171,11 @@ func (dao *AccountDao) GetTokenBalance(owner common.Address, token common.Addres
 	//bytes, _ := bson.Marshal(res[0])
 	//bson.Unmarshal(bytes, &a)
 
-	return res[0].TokenBalances[token], nil
+	if len(res) > 0 {
+		return res[0].TokenBalances[token], nil
+	}
+
+	return nil, errors.New("Account does not exist")
 }
 
 func (dao *AccountDao) UpdateTokenBalance(owner, token common.Address, tokenBalance *types.TokenBalance) error {
@@ -180,7 +186,6 @@ func (dao *AccountDao) UpdateTokenBalance(owner, token common.Address, tokenBala
 	updateQuery := bson.M{
 		"$set": bson.M{
 			"tokenBalances." + token.Hex() + ".balance":        tokenBalance.Balance.String(),
-			"tokenBalances." + token.Hex() + ".allowance":      tokenBalance.Allowance.String(),
 			"tokenBalances." + token.Hex() + ".lockedBalance":  tokenBalance.LockedBalance.String(),
 			"tokenBalances." + token.Hex() + ".pendingBalance": tokenBalance.PendingBalance.String(),
 		},
@@ -202,16 +207,42 @@ func (dao *AccountDao) UpdateBalance(owner common.Address, token common.Address,
 	return err
 }
 
-func (dao *AccountDao) UpdateAllowance(owner common.Address, token common.Address, allowance *big.Int) error {
-	q := bson.M{
-		"address": owner.Hex(),
+func (dao *AccountDao) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
+
+	currentTokenBalanceFromAddress, err := dao.GetTokenBalances(fromAddress)
+
+	if err != nil {
+		return err
 	}
 
-	updateQuery := bson.M{
-		"$set": bson.M{"tokenBalances." + token.Hex() + ".allowance": allowance.String()},
+	if math.IsStrictlySmallerThan(math.Mul(currentTokenBalanceFromAddress[token].Balance, big.NewInt(1e18)), amount) {
+		return errors.New("Not enough balance")
 	}
 
-	err := db.Update(dao.dbName, dao.collectionName, q, updateQuery)
+	qFrom := bson.M{
+		"address": fromAddress.Hex(),
+	}
+	updateQueryFrom := bson.M{
+		"$set": bson.M{"tokenBalances." + token.Hex() + ".balance": (math.Sub(currentTokenBalanceFromAddress[token].Balance, amount)).String()},
+	}
+
+	err = db.Update(dao.dbName, dao.collectionName, qFrom, updateQueryFrom)
+
+	currentTokenBalanceToAddress, err := dao.GetTokenBalances(toAddress)
+
+	if err != nil {
+		return err
+	}
+
+	qTo := bson.M{
+		"address": toAddress.Hex(),
+	}
+	updateQueryTo := bson.M{
+		"$set": bson.M{"tokenBalances." + token.Hex() + ".balance": (math.Add(currentTokenBalanceToAddress[token].Balance, amount)).String()},
+	}
+
+	err = db.Update(dao.dbName, dao.collectionName, qTo, updateQueryTo)
+
 	return err
 }
 

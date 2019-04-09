@@ -2,30 +2,22 @@ package endpoints
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 
-	"github.com/tomochain/backend-matching-engine/ethereum"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/swarm/storage/feed"
-	"github.com/ethereum/go-ethereum/swarm/storage/feed/lookup"
 	"github.com/gorilla/mux"
-
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/httputils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type orderEndpoint struct {
 	orderService   interfaces.OrderService
 	accountService interfaces.AccountService
-	engine         interfaces.Engine
 }
 
 // ServeOrderResource sets up the routing of order endpoints and the corresponding handlers.
@@ -33,12 +25,10 @@ func ServeOrderResource(
 	r *mux.Router,
 	orderService interfaces.OrderService,
 	accountService interfaces.AccountService,
-	engine interfaces.Engine,
 ) {
-	e := &orderEndpoint{orderService, accountService, engine}
+	e := &orderEndpoint{orderService, accountService}
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
-	r.HandleFunc("/orders/feeds/{address}", e.handleGetOrderFeeds).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
@@ -81,79 +71,6 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, orders)
-}
-
-func (e *orderEndpoint) handleGetOrderFeeds(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	vars := mux.Vars(r)
-	addr := vars["address"]
-	address := v.Get("tokenAddress")
-
-	if addr == "" {
-		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
-		return
-	}
-
-	if !common.IsHexAddress(addr) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid User Address")
-		return
-	}
-
-	if address == "" || !common.IsHexAddress(address) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
-	}
-	tokenAddress := common.HexToAddress(address)
-	// token, err := e.orderService.GetTokenByAddress(tokenAddress)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	httputils.WriteError(w, http.StatusInternalServerError, "")
-	// 	return
-	// }
-
-	// topic, _ := feed.NewTopic("Token", []byte("TOMO"))
-	topic := feed.Topic{}
-
-	copy(topic[:], tokenAddress.Bytes())
-	// topic, _ := feed.NewTopic(token.Symbol, tokenAddress.Bytes())
-	fd := &feed.Feed{
-		Topic: topic,
-		User:  common.HexToAddress(addr),
-	}
-
-	// httputils.WriteJSON(w, http.StatusOK, fmt.Sprintf("%s,%s", tokenAddress.Hex(), topic.Hex()))
-
-	lookupParams := feed.NewQueryLatest(fd, lookup.NoClue)
-	bzzClient := e.engine.Provider().(*ethereum.EthereumProvider).BzzClient
-	reader, err := bzzClient.QueryFeed(lookupParams, "")
-
-	if err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Error retrieving feed updates: %s", err))
-		return
-	}
-	defer reader.Close()
-	databytes, err := ioutil.ReadAll(reader)
-
-	if databytes == nil || err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Error retrieving feed updates: %s", err))
-		return
-	}
-
-	// // try to decode
-	var feeds []types.OrderFeed
-	err = rlp.DecodeBytes(databytes, &feeds)
-	if err != nil {
-		httputils.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Error retrieving feed updates: %s", err))
-		return
-	}
-
-	var messages []*types.OrderRecord
-	for _, feed := range feeds {
-		message, _ := feed.GetBSON()
-		messages = append(messages, message)
-	}
-
-	httputils.WriteJSON(w, http.StatusOK, messages)
-
 }
 
 func (e *orderEndpoint) handleGetPositions(w http.ResponseWriter, r *http.Request) {
@@ -243,7 +160,7 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	bytes, _ := json.Marshal(input)
 	if err := json.Unmarshal(bytes, &msg); err != nil {
 		logger.Error(err)
-		c.SendMessage(ws.OrderChannel, "ERROR", err.Error())
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
 	}
 
 	switch msg.Type {
@@ -263,9 +180,11 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	bytes, err := json.Marshal(ev.Payload)
 	if err != nil {
 		logger.Error(err)
-		c.SendMessage(ws.OrderChannel, "ERROR", err.Error())
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
 		return
 	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
 
 	err = json.Unmarshal(bytes, &o)
 	if err != nil {
@@ -284,7 +203,7 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	}
 
 	if acc.IsBlocked {
-		c.SendMessage(ws.OrderChannel, "ERROR", errors.New("Account is blocked"))
+		c.SendMessage(ws.OrderChannel, types.ERROR, errors.New("Account is blocked"))
 	}
 
 	err = e.orderService.NewOrder(o)
@@ -300,7 +219,7 @@ func (e *orderEndpoint) handleCancelOrder(ev *types.WebsocketEvent, c *ws.Client
 	bytes, err := json.Marshal(ev.Payload)
 	oc := &types.OrderCancel{}
 
-	err = oc.UnmarshalJSON(bytes)
+	err = json.Unmarshal(bytes, &oc)
 	if err != nil {
 		logger.Error(err)
 		c.SendOrderErrorMessage(err, oc.Hash)

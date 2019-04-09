@@ -3,32 +3,42 @@ package app
 import (
 	"fmt"
 
-	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
+	"github.com/tomochain/dex-server/swap/config"
+	"github.com/tomochain/dex-server/utils"
 )
 
 // Config stores the application-wide configurations
 var Config appConfig
+
 var logger = utils.Logger
+
+// var logger = utils.NoopLogger
 
 type appConfig struct {
 	// the path to the error message file. Defaults to "config/errors.yaml"
 	ErrorFile string `mapstructure:"error_file"`
 	// the server port. Defaults to 8080
 	ServerPort int `mapstructure:"server_port"`
-	// the data source name (DSN) for connecting to the database. required.
-	DSN string `mapstructure:"dsn"`
+	// the data source name (MongoURL) for connecting to the database. required.
+	MongoURL        string `mapstructure:"mongo_url"`
+	MongoDBPassword string `mapstructure:"mongo_password"`
+	MongoDBUsername string `mapstructure:"mongo_username"`
+
+	// simulate the environment
+	Simulated bool `mapstructure:"simulated"`
+
 	// the data source name (DSN) for connecting to the database. required.
 	DBName string `mapstructure:"db_name"`
 	// the make fee is the percentage to charged from maker
 	MakeFee float64 `mapstructure:"make_fee"`
 	// the take fee is the percentage to charged from maker
 	TakeFee float64 `mapstructure:"take_fee"`
-	// the Rabbitmq is the URI of rabbitmq to use
-	Rabbitmq string `mapstructure:"rabbitmq"`
-	// the redis is the URI of redis to use
-	Redis string `mapstructure:"redis"`
+
+	// the RabbitMQURL is the URI of rabbitmq to use
+	RabbitMQURL string `mapstructure:"rabbitmq_url"`
+
 	// the signing method for JWT. Defaults to "HS256"
 	JWTSigningMethod string `mapstructure:"jwt_signing_method"`
 	// JWT signing key. required.
@@ -41,11 +51,19 @@ type appConfig struct {
 	Logs map[string]string `mapstructure:"logs"`
 
 	Ethereum map[string]string `mapstructure:"ethereum"`
+
+	Deposit *config.Config `mapstructure:"deposit"`
+
+	CoinmarketcapAPIUrl string `mapstructure:"coinmarketcap_api_url"`
+
+	CoinmarketcapAPIKey string `mapstructure:"coinmarketcap_api_key"`
+
+	SupportedCurrencies string `mapstructure:"supported_currencies"`
 }
 
 func (config appConfig) Validate() error {
 	return validation.ValidateStruct(&config,
-		validation.Field(&config.DSN, validation.Required),
+		validation.Field(&config.MongoURL, validation.Required),
 	)
 }
 
@@ -74,17 +92,16 @@ func LoadConfig(configPath string, env string) error {
 	if err != nil {
 		return err
 	}
+	// // update config, if yaml does not presented this config, we can still apply from env
+	// Config.Simulated = v.GetBool("simulated")
 
 	// log information
-
 	logger.Infof("Server port: %v", Config.ServerPort)
 	logger.Infof("Ethereum node HTTP url: %v", Config.Ethereum["http_url"])
 	logger.Infof("Ethereum node WS url: %v", Config.Ethereum["ws_url"])
-	logger.Infof("MongoDB url: %v", Config.DSN)
-	logger.Infof("Redis url: %v", Config.Redis)
-	logger.Infof("RabbitMQ url: %v", Config.Rabbitmq)
+	logger.Infof("MongoDB url: %v", Config.MongoURL)
+	logger.Infof("RabbitMQ url: %v", Config.RabbitMQURL)
 	logger.Infof("Exchange contract address: %v", Config.Ethereum["exchange_address"])
 	logger.Infof("Fee Account: %v", Config.Ethereum["fee_account"])
-
 	return Config.Validate()
 }

@@ -2,12 +2,13 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/errors"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tomochain/dex-server/utils/math"
 
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/go-ozzo/ozzo-validation"
@@ -43,9 +44,9 @@ func (p NewOrderPayload) MarshalJSON() ([]byte, error) {
 		"makeFee":         p.MakeFee.String(),
 		"nonce":           p.Nonce.String(),
 		"signature": map[string]interface{}{
-			"V": p.Signature.V,
-			"R": p.Signature.R,
-			"S": p.Signature.S,
+			"v": p.Signature.V,
+			"r": p.Signature.R,
+			"s": p.Signature.S,
 		},
 		"hash": p.Hash,
 	}
@@ -100,9 +101,9 @@ func (p *NewOrderPayload) UnmarshalJSON(b []byte) error {
 	if decoded["signature"] != nil {
 		signature := decoded["signature"].(map[string]interface{})
 		p.Signature = &Signature{
-			V: byte(signature["V"].(float64)),
-			R: common.HexToHash(signature["R"].(string)),
-			S: common.HexToHash(signature["S"].(string)),
+			V: byte(signature["v"].(float64)),
+			R: common.HexToHash(signature["r"].(string)),
+			S: common.HexToHash(signature["s"].(string)),
 		}
 	}
 

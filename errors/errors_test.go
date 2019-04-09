@@ -1,7 +1,6 @@
 package errors
 
 import (
-	errs "errors"
 	"net/http"
 	"testing"
 
@@ -10,7 +9,7 @@ import (
 )
 
 func TestInternalServerError(t *testing.T) {
-	assert.Equal(t, http.StatusInternalServerError, InternalServerError(errs.New("")).Status)
+	assert.Equal(t, http.StatusInternalServerError, InternalServerError(New("")).Status)
 }
 
 func TestUnauthorized(t *testing.T) {
@@ -19,8 +18,8 @@ func TestUnauthorized(t *testing.T) {
 
 func TestInvalidData(t *testing.T) {
 	err := InvalidData(validation.Errors{
-		"abc": errs.New("1"),
-		"xyz": errs.New("2"),
+		"abc": New("1"),
+		"xyz": New("2"),
 	})
 	assert.Equal(t, http.StatusBadRequest, err.Status)
 	assert.NotNil(t, err.Details)

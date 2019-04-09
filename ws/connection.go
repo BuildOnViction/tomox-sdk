@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/gorilla/websocket"
+	"github.com/tomochain/dex-server/types"
 )
 
 const (
@@ -71,7 +71,7 @@ func readHandler(c *Client) {
 		msg := types.WebsocketMessage{}
 		if err := json.Unmarshal(payload, &msg); err != nil {
 			logger.Error(err)
-			c.SendMessage(msg.Channel, "ERROR", err.Error())
+			c.SendMessage(msg.Channel, types.ERROR, err.Error())
 			return
 		}
 
@@ -79,7 +79,7 @@ func readHandler(c *Client) {
 		logger.Infof("%v", msg.String())
 
 		if socketChannels[msg.Channel] == nil {
-			c.SendMessage(msg.Channel, "ERROR", "INVALID_CHANNEL")
+			c.SendMessage(msg.Channel, types.ERROR, "INVALID_CHANNEL")
 			return
 		}
 

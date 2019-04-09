@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/websocket"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/types"
 )
 
 type Client struct {
@@ -31,7 +31,7 @@ func NewClient(c *websocket.Conn) *Client {
 }
 
 // SendMessage constructs the message with proper structure to be sent over websocket
-func (c *Client) SendMessage(channel string, msgType string, payload interface{}, h ...common.Hash) {
+func (c *Client) SendMessage(channel string, msgType types.SubscriptionEvent, payload interface{}, h ...common.Hash) {
 	e := types.WebsocketEvent{
 		Type:    msgType,
 		Payload: payload,
@@ -79,3 +79,24 @@ func (c *Client) SendOrderErrorMessage(err error, h common.Hash) {
 	defer c.mu.Unlock()
 	c.send <- m
 }
+
+// func (c *Client) SendDepositErrorMessage(err error, h common.Hash) {
+// 	p := map[string]interface{}{
+// 		"message": err.Error(),
+// 		"hash":    h.Hex(),
+// 	}
+
+// 	e := types.WebsocketEvent{
+// 		Type:    "ERROR",
+// 		Payload: p,
+// 	}
+
+// 	m := types.WebsocketMessage{
+// 		Channel: DepositChannel,
+// 		Event:   e,
+// 	}
+
+// 	c.mu.Lock()
+// 	defer c.mu.Unlock()
+// 	c.send <- m
+// }

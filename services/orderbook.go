@@ -1,14 +1,14 @@
 package services
 
 import (
-	"errors"
+	"github.com/tomochain/dex-server/errors"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/ws"
 )
 
 // PairService struct with daos required, responsible for communicating with daos.
@@ -30,8 +30,8 @@ func NewOrderBookService(
 	return &OrderBookService{pairDao, tokenDao, orderDao, eng}
 }
 
-// GetOrderBook fetches orderbook from engine/redis and returns it as an map[string]interface
-func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (map[string]interface{}, error) {
+// GetOrderBook fetches orderbook from engine and returns it as an map[string]interface
+func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (*types.OrderBook, error) {
 	pair, err := s.pairDao.GetByTokenAddress(bt, qt)
 	if err != nil {
 		logger.Error(err)
@@ -48,10 +48,10 @@ func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (map[string]inter
 		return nil, err
 	}
 
-	ob := map[string]interface{}{
-		"pair": pair.Name(),
-		"asks": asks,
-		"bids": bids,
+	ob := &types.OrderBook{
+		PairName: pair.Name(),
+		Asks:     asks,
+		Bids:     bids,
 	}
 
 	return ob, nil
@@ -76,7 +76,7 @@ func (s *OrderBookService) SubscribeOrderBook(c *ws.Client, bt, qt common.Addres
 		return
 	}
 
-	ws.RegisterConnectionUnsubscribeHandler(c, socket.UnsubscribeHandler(id))
+	ws.RegisterConnectionUnsubscribeHandler(c, socket.UnsubscribeChannelHandler(id))
 	socket.SendInitMessage(c, ob)
 }
 
@@ -92,12 +92,16 @@ func (s *OrderBookService) UnsubscribeOrderBookChannel(c *ws.Client, bt, qt comm
 	socket.UnsubscribeChannel(id, c)
 }
 
-// GetRawOrderBook fetches complete orderbook from engine/redis
+// GetRawOrderBook fetches complete orderbook from engine
 func (s *OrderBookService) GetRawOrderBook(bt, qt common.Address) (*types.RawOrderBook, error) {
 	pair, err := s.pairDao.GetByTokenAddress(bt, qt)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
+	}
+
+	if pair == nil {
+		return nil, errors.New("Pair does not exist")
 	}
 
 	orders, err := s.orderDao.GetRawOrderBook(pair)

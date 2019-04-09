@@ -2,6 +2,7 @@ package ws
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/types"
 )
 
 // OrderConn is websocket order connection struct
@@ -62,7 +63,8 @@ func RegisterOrderConnection(a common.Address, c *Client) {
 	}
 
 	if orderConnections[a.Hex()] != nil {
-		if !isClientConnected(a, c) {
+
+		if !isClientConnected(orderConnections[a.Hex()], c) {
 			logger.Info("Registering a new order connection")
 			orderConnections[a.Hex()] = append(orderConnections[a.Hex()], c)
 			RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
@@ -71,19 +73,7 @@ func RegisterOrderConnection(a common.Address, c *Client) {
 	}
 }
 
-func isClientConnected(a common.Address, client *Client) bool {
-	for _, c := range orderConnections[a.Hex()] {
-		if c == client {
-			logger.Info("Client is connected")
-			return true
-		}
-	}
-
-	logger.Info("Client is not connected")
-	return false
-}
-
-func SendOrderMessage(msgType string, a common.Address, payload interface{}) {
+func SendOrderMessage(msgType types.SubscriptionEvent, a common.Address, payload interface{}) {
 	conn := GetOrderConnections(a)
 	if conn == nil {
 		return

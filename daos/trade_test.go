@@ -5,11 +5,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/testutils"
 )
 
 func init() {
@@ -162,7 +162,7 @@ func TestUpdateTrade(t *testing.T) {
 		Maker:          tr.Maker,
 		BaseToken:      tr.BaseToken,
 		QuoteToken:     tr.QuoteToken,
-		MakerOrderHash: tr.OrderHash,
+		MakerOrderHash: tr.MakerOrderHash,
 		Hash:           tr.Hash,
 		TxHash:         tr.TxHash,
 		PairName:       tr.PairName,

@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/units"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/units"
 )
 
 func TestNewOrderFromFactory(t *testing.T) {

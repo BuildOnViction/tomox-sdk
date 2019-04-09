@@ -3,11 +3,11 @@ package endpoints
 import (
 	"net/http"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/httputils"
 )
 
 type accountEndpoint struct {
@@ -97,7 +97,8 @@ func (e *accountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r 
 	b, err := e.accountService.GetTokenBalance(addr, tokenAddr)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusNotFound, err.Error())
+		return
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, b)

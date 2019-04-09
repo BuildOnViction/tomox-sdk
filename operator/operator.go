@@ -2,17 +2,18 @@ package operator
 
 import (
 	"encoding/json"
-	"errors"
 	"strconv"
 	"sync"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/errors"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 )
 
 var logger = utils.Logger
@@ -26,6 +27,7 @@ type Operator struct {
 	WalletService     interfaces.WalletService
 	TradeService      interfaces.TradeService
 	OrderService      interfaces.OrderService
+	TokenService      interfaces.TokenService
 	EthereumProvider  interfaces.EthereumProvider
 	Exchange          interfaces.Exchange
 	TxQueues          []*TxQueue
@@ -38,10 +40,6 @@ type OperatorInterface interface {
 	SubscribeOperatorMessages(fn func(*types.OperatorMessage) error) error
 	QueueTrade(o *types.Order, t *types.Trade) error
 	GetShortestQueue() (*TxQueue, int, error)
-	SetFeeAccount(account common.Address) (*eth.Transaction, error)
-	SetOperator(account common.Address, isOperator bool) (*eth.Transaction, error)
-	FeeAccount() (common.Address, error)
-	Operator(addr common.Address) (bool, error)
 }
 
 // NewOperator creates a new operator struct. It creates an exchange contract instance from the
@@ -56,6 +54,8 @@ func NewOperator(
 	provider interfaces.EthereumProvider,
 	exchange interfaces.Exchange,
 	conn *rabbitmq.Connection,
+	accountService interfaces.AccountService,
+	tokenService interfaces.TokenService,
 ) (*Operator, error) {
 	txqueues := []*TxQueue{}
 	addressIndex := make(map[common.Address]*TxQueue)
@@ -82,6 +82,8 @@ func NewOperator(
 			w,
 			exchange,
 			conn,
+			accountService,
+			tokenService,
 		)
 
 		if err != nil {
@@ -149,6 +151,13 @@ func (op *Operator) SubscribeOperatorMessages(fn func(*types.OperatorMessage) er
 	return nil
 }
 
+func (op *Operator) HandleError(m *types.Matches) {
+	err := op.Broker.PublishErrorMessage(m, "Server error")
+	if err != nil {
+		logger.Error(err)
+	}
+}
+
 func (op *Operator) HandleTxError(m *types.Matches, id int) {
 	errType := getErrorType(id)
 	err := op.Broker.PublishTxErrorMessage(m, errType)
@@ -214,6 +223,7 @@ func (op *Operator) HandleTrades(msg *types.OperatorMessage) error {
 	err := op.QueueTrade(msg.Matches)
 	if err != nil {
 		logger.Error(err)
+		op.HandleError(msg.Matches)
 		return err
 	}
 
@@ -268,64 +278,6 @@ func (op *Operator) GetShortestQueue() (*TxQueue, int, error) {
 	}
 
 	return shortest, min, nil
-}
-
-// SetFeeAccount sets the fee account of the exchange contract. The fee account receives
-// the trading fees whenever a trade is settled.
-func (op *Operator) SetFeeAccount(account common.Address) (*eth.Transaction, error) {
-	txOpts, err := op.GetTxSendOptions()
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	tx, err := op.Exchange.SetFeeAccount(account, txOpts)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return tx, nil
-}
-
-// SetOperator updates the operator settings of the given address. Only addresses with an
-// operator access can execute Withdraw and Trade transactions to the Exchange smart contract
-func (op *Operator) SetOperator(account common.Address, isOperator bool) (*eth.Transaction, error) {
-	txOpts, err := op.GetTxSendOptions()
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	tx, err := op.Exchange.SetOperator(account, isOperator, txOpts)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return tx, nil
-}
-
-// FeeAccount is the Ethereum towards the exchange trading fees are sent
-func (op *Operator) FeeAccount() (common.Address, error) {
-	account, err := op.Exchange.FeeAccount()
-	if err != nil {
-		logger.Error(err)
-		return common.Address{}, err
-	}
-
-	return account, nil
-}
-
-// Operator returns true if the given address is an operator of the exchange and returns false otherwise
-func (op *Operator) Operator(addr common.Address) (bool, error) {
-	isOperator, err := op.Exchange.Operator(addr)
-	if err != nil {
-		logger.Error(err)
-		return false, err
-	}
-
-	return isOperator, nil
 }
 
 func (op *Operator) PurgeQueues() error {

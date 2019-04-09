@@ -3,10 +3,10 @@ package daos
 import (
 	"reflect"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/utils"
 )
 
 // Database struct contains the pointer to mgo.session
@@ -23,7 +23,7 @@ var logger = utils.Logger
 func InitSession(session *mgo.Session) (*mgo.Session, error) {
 	if db == nil {
 		if session == nil {
-			db1, err := mgo.Dial(app.Config.DSN)
+			db1, err := mgo.Dial(app.Config.MongoURL)
 			if err != nil {
 				logger.Error(err)
 				return nil, err
@@ -74,6 +74,16 @@ func (d *Database) Get(dbName, collection string, query interface{}, offset, lim
 	return
 }
 
+// GetOne return one document
+func (d *Database) GetOne(dbName, collection string, query interface{}, response interface{}) (err error) {
+	sc := d.Session.Copy()
+	defer sc.Close()
+
+	err = sc.DB(dbName).C(collection).Find(query).One(response)
+	// logger.Debug(err, query)
+	return
+}
+
 func (d *Database) Query(dbName, collection string, query interface{}, selector interface{}, offset, limit int, response interface{}) (err error) {
 	sc := d.Session.Copy()
 	defer sc.Close()
@@ -109,24 +119,23 @@ func (d *Database) Update(dbName, collection string, query interface{}, update i
 	return nil
 }
 
+func (d *Database) Upsert(dbName, collection string, query interface{}, update interface{}) (interface{}, error) {
+	sc := d.Session.Copy()
+	defer sc.Close()
+
+	changed, err := sc.DB(dbName).C(collection).Upsert(query, update)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	return changed.UpsertedId, nil
+}
+
 func (d *Database) UpdateAll(dbName, collection string, query interface{}, update interface{}) error {
 	sc := d.Session.Copy()
 	defer sc.Close()
 
 	_, err := sc.DB(dbName).C(collection).UpdateAll(query, update)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (d *Database) Upsert(dbName, collection string, query interface{}, update interface{}) error {
-	sc := d.Session.Copy()
-	defer sc.Close()
-
-	_, err := sc.DB(dbName).C(collection).Upsert(query, update)
 	if err != nil {
 		logger.Error(err)
 		return err

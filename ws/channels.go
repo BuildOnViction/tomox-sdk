@@ -1,8 +1,9 @@
 package ws
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/tomochain/dex-server/errors"
 )
 
 const (
@@ -10,7 +11,11 @@ const (
 	RawOrderBookChannel = "raw_orderbook"
 	OrderChannel        = "orders"
 	OrderBookChannel    = "orderbook"
+	TokenChannel        = "tokens"
 	OHLCVChannel        = "ohlcv"
+	PriceBoardChannel   = "price_board"
+	DepositChannel      = "deposit"
+	MarketsChannel      = "markets"
 )
 
 var socketChannels map[string]func(interface{}, *Client)

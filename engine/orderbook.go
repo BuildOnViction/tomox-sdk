@@ -1,7 +1,7 @@
 package engine
 
 // The orderbook currently uses the four following data structures to store engine
-// state in redis
+// state in mongo
 // 1. Pricepoints set
 // 2. Pricepoints volume set
 // 3. Pricepoints hashes set
@@ -27,11 +27,11 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/math"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/math"
 )
 
 type OrderBook struct {
@@ -75,7 +75,7 @@ func (ob *OrderBook) newOrder(o *types.Order) (err error) {
 	return nil
 }
 
-// addOrder adds an order to redis
+// addOrder adds an order to mongo
 func (ob *OrderBook) addOrder(o *types.Order) error {
 	if o.FilledAmount == nil || math.IsZero(o.FilledAmount) {
 		o.Status = "OPEN"
@@ -262,7 +262,7 @@ func (ob *OrderBook) execute(takerOrder *types.Order, makerOrder *types.Order) (
 		Taker:          takerOrder.UserAddress,
 		PairName:       takerOrder.PairName,
 		Maker:          makerOrder.UserAddress,
-		Status:         "PENDING",
+		Status:         types.PENDING,
 	}
 
 	trade.Hash = trade.ComputeHash()

@@ -1,16 +1,17 @@
 package contracts
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/errors"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
 )
 
 type Token struct {
@@ -80,7 +81,7 @@ func (t *Token) Transfer(receiver common.Address, amount *big.Int) (*eth.Transac
 
 	tx, err := t.Interface.Transfer(opts, receiver, amount)
 	if err != nil {
-		return nil, errors.New("Error making Transfer() transaction")
+		return nil, errors.Errorf("Error making Transfer() transaction: %v", err)
 	}
 
 	return tx, nil
@@ -91,7 +92,7 @@ func (t *Token) TransferFromCustomWallet(w *types.Wallet, receiver common.Addres
 
 	tx, err := t.Interface.Transfer(opts, receiver, amount)
 	if err != nil {
-		return nil, errors.New("Error making Transfer() transaction")
+		return nil, errors.Errorf("Error making Transfer() transaction: %v", err)
 	}
 
 	return tx, nil
@@ -101,7 +102,7 @@ func (t *Token) TransferFrom(sender, receiver common.Address, amount *big.Int) (
 	opts, _ := t.GetTxSendOptions()
 	tx, err := t.Interface.TransferFrom(opts, sender, receiver, amount)
 	if err != nil {
-		return nil, errors.New("Error making TransferFrom() transaction")
+		return nil, errors.Errorf("Error making TransferFrom() transaction: %v", err)
 	}
 
 	fmt.Printf("Transfered %v tokens from %v to %v", amount, sender, receiver)

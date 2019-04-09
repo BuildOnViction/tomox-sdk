@@ -1,6 +1,9 @@
 package ws
 
-import "errors"
+import (
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
+)
 
 var tradeSocket *TradeSocket
 
@@ -91,21 +94,21 @@ func (s *TradeSocket) BroadcastMessage(channelID string, p interface{}) {
 }
 
 // SendMessage sends a websocket message on the trade channel
-func (s *TradeSocket) SendMessage(c *Client, msgType string, p interface{}) {
+func (s *TradeSocket) SendMessage(c *Client, msgType types.SubscriptionEvent, p interface{}) {
 	c.SendMessage(TradeChannel, msgType, p)
-}
-
-// SendErrorMessage sends an error message on the trade channel
-func (s *TradeSocket) SendErrorMessage(c *Client, p interface{}) {
-	c.SendMessage(TradeChannel, "ERROR", p)
 }
 
 // SendInitMessage is responsible for sending message on trade ohlcv channel at subscription
 func (s *TradeSocket) SendInitMessage(c *Client, p interface{}) {
-	c.SendMessage(TradeChannel, "INIT", p)
+	c.SendMessage(TradeChannel, types.INIT, p)
 }
 
 // SendUpdateMessage is responsible for sending message on trade ohlcv channel at subscription
 func (s *TradeSocket) SendUpdateMessage(c *Client, p interface{}) {
-	c.SendMessage(TradeChannel, "UPDATE", p)
+	c.SendMessage(TradeChannel, types.UPDATE, p)
+}
+
+// SendErrorMessage sends an error message on the trade channel
+func (s *TradeSocket) SendErrorMessage(c *Client, p interface{}) {
+	c.SendMessage(TradeChannel, types.ERROR, p)
 }

@@ -1,13 +1,14 @@
 package daos
 
 import (
+	"strings"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/types"
 )
 
 // PairDao contains:
@@ -64,11 +65,46 @@ func (dao *PairDao) Create(pair *types.Pair) error {
 }
 
 // GetAll function fetches all the pairs in the pair collection of mongodb.
+// for GetAll return continous memory
 func (dao *PairDao) GetAll() ([]types.Pair, error) {
 	var res []types.Pair
 	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &res)
 	if err != nil {
 		return nil, err
+	}
+
+	return res, nil
+}
+
+func (dao *PairDao) GetListedPairs() ([]types.Pair, error) {
+	var res []types.Pair
+
+	sort := []string{"-rank"}
+	err := db.GetAndSort(dao.dbName, dao.collectionName, bson.M{"active": true, "listed": true}, sort, 0, 0, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		res = []types.Pair{}
+	}
+
+	return res, nil
+}
+
+func (dao *PairDao) GetUnlistedPairs() ([]types.Pair, error) {
+	var res []types.Pair
+
+	sort := []string{"-rank"}
+	err := db.GetAndSort(dao.dbName, dao.collectionName, bson.M{"active": true, "listed": false}, sort, 0, 0, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		res = []types.Pair{}
 	}
 
 	return res, nil
@@ -101,22 +137,26 @@ func (dao *PairDao) GetByID(id bson.ObjectId) (*types.Pair, error) {
 // GetByName function fetches details of a pair using pair's name.
 // It makes CASE INSENSITIVE search query one pair's name
 func (dao *PairDao) GetByName(name string) (*types.Pair, error) {
-	var res []*types.Pair
-	q := bson.M{"name": bson.RegEx{
-		Pattern: name,
-		Options: "i",
-	}}
 
-	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
-	if err != nil {
-		return nil, err
-	}
+	tokenSymbols := strings.Split(name, "/")
+	return dao.GetByTokenSymbols(tokenSymbols[0], tokenSymbols[1])
 
-	if len(res) == 0 {
-		return nil, nil
-	}
+	// var res []*types.Pair
+	// q := bson.M{"name": bson.RegEx{
+	// 	Pattern: name,
+	// 	Options: "i",
+	// }}
 
-	return res[0], nil
+	// err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// if len(res) == 0 {
+	// 	return nil, nil
+	// }
+
+	// return res[0], nil
 }
 
 func (dao *PairDao) GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol string) (*types.Pair, error) {

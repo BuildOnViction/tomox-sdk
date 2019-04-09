@@ -2,16 +2,17 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
 	"time"
 
+	"github.com/tomochain/dex-server/errors"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/tomochain/backend-matching-engine/utils/math"
+	"github.com/tomochain/dex-server/utils/math"
 
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 // Trade struct holds arguments corresponding to a "Taker Order"
@@ -26,16 +27,13 @@ type Trade struct {
 	MakerOrderHash common.Hash    `json:"makerOrderHash" bson:"makerOrderHash"`
 	TakerOrderHash common.Hash    `json:"takerOrderHash" bson:"takerOrderHash"`
 	Hash           common.Hash    `json:"hash" bson:"hash"`
-	// side and signature will be omit
-	Side       string      `json:"side" bson:"side"`
-	Signature  *Signature  `json:"signature" bson:"signature"`
-	TxHash     common.Hash `json:"txHash" bson:"txHash"`
-	PairName   string      `json:"pairName" bson:"pairName"`
-	CreatedAt  time.Time   `json:"createdAt" bson:"createdAt" redis:"createdAt"`
-	UpdatedAt  time.Time   `json:"updatedAt" bson:"updatedAt" redis:"updatedAt"`
-	PricePoint *big.Int    `json:"pricepoint" bson:"pricepoint"`
-	Status     string      `json:"status" bson:"status"`
-	Amount     *big.Int    `json:"amount" bson:"amount"`
+	TxHash         common.Hash    `json:"txHash" bson:"txHash"`
+	PairName       string         `json:"pairName" bson:"pairName"`
+	CreatedAt      time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt"`
+	PricePoint     *big.Int       `json:"pricepoint" bson:"pricepoint"`
+	Status         string         `json:"status" bson:"status"`
+	Amount         *big.Int       `json:"amount" bson:"amount"`
 }
 
 type TradeRecord struct {
@@ -68,7 +66,7 @@ func NewTrade(mo *Order, to *Order, amount *big.Int, pricepoint *big.Int) *Trade
 		PairName:       mo.PairName,
 		Amount:         amount,
 		PricePoint:     pricepoint,
-		Status:         "PENDING",
+		Status:         PENDING,
 	}
 
 	t.Hash = t.ComputeHash()
@@ -117,7 +115,10 @@ func (t *Trade) Validate() error {
 		return errors.New("Trade 'amount' parameter should be positive")
 	}
 
-	//TODO add validations for hashes and addresses
+	// validations for hash
+	if t.Hash != t.ComputeHash() {
+		return errors.New("Trade 'hash' is incorrect")
+	}
 	return nil
 }
 
@@ -239,6 +240,11 @@ func (t *Trade) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (t *Trade) QuoteAmount(p *Pair) *big.Int {
+	pairMultiplier := p.PairMultiplier()
+	return math.Div(math.Mul(t.Amount, t.PricePoint), pairMultiplier)
+}
+
 func (t *Trade) GetBSON() (interface{}, error) {
 	tr := TradeRecord{
 		ID:             t.ID,
@@ -273,8 +279,8 @@ func (t *Trade) SetBSON(raw bson.Raw) error {
 		TakerOrderHash string        `json:"takerOrderHash" bson:"takerOrderHash"`
 		Hash           string        `json:"hash" bson:"hash"`
 		TxHash         string        `json:"txHash" bson:"txHash"`
-		CreatedAt      time.Time     `json:"createdAt" bson:"createdAt" redis:"createdAt"`
-		UpdatedAt      time.Time     `json:"updatedAt" bson:"updatedAt" redis:"updatedAt"`
+		CreatedAt      time.Time     `json:"createdAt" bson:"createdAt"`
+		UpdatedAt      time.Time     `json:"updatedAt" bson:"updatedAt"`
 		PricePoint     string        `json:"pricepoint" bson:"pricepoint"`
 		Status         string        `json:"status" bson:"status"`
 		Amount         string        `json:"amount" bson:"amount"`

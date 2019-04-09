@@ -8,11 +8,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/utils/testutils/mocks"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/dex-server/utils/testutils/mocks"
 )
 
 func SetupPairEndpointTest() (*mux.Router, *mocks.PairService) {
@@ -32,7 +32,7 @@ func TestHandleCreatePair(t *testing.T) {
 		BaseTokenAddress:  common.HexToAddress("0x1"),
 		QuoteTokenSymbol:  "WETH",
 		QuoteTokenAddress: common.HexToAddress("0x2"),
-		PriceMultiplier:   big.NewInt(1e6),
+		PriceMultiplier:   big.NewInt(1e9),
 		MakeFee:           big.NewInt(1e4),
 		TakeFee:           big.NewInt(1e4),
 	}
@@ -66,7 +66,7 @@ func TestHandleCreateInvalidPair(t *testing.T) {
 		BaseTokenSymbol:   "ZRX",
 		BaseTokenAddress:  common.HexToAddress("0x1"),
 		QuoteTokenAddress: common.HexToAddress("0x2"),
-		PriceMultiplier:   big.NewInt(1e6),
+		PriceMultiplier:   big.NewInt(1e9),
 		MakeFee:           big.NewInt(1e4),
 		TakeFee:           big.NewInt(1e4),
 	}
@@ -90,25 +90,25 @@ func TestHandleCreateInvalidPair(t *testing.T) {
 func TestHandleGetAllPairs(t *testing.T) {
 	router, pairService := SetupPairEndpointTest()
 
-	p1 := types.Pair{
+	p1 := &types.Pair{
 		BaseTokenSymbol:   "ZRX",
 		BaseTokenAddress:  common.HexToAddress("0x1"),
 		QuoteTokenAddress: common.HexToAddress("0x2"),
-		PriceMultiplier:   big.NewInt(1e6),
+		PriceMultiplier:   big.NewInt(1e9),
 		MakeFee:           big.NewInt(1e4),
 		TakeFee:           big.NewInt(1e4),
 	}
 
-	p2 := types.Pair{
+	p2 := &types.Pair{
 		BaseTokenSymbol:   "WETH",
 		BaseTokenAddress:  common.HexToAddress("0x3"),
 		QuoteTokenAddress: common.HexToAddress("0x4"),
-		PriceMultiplier:   big.NewInt(1e6),
+		PriceMultiplier:   big.NewInt(1e9),
 		MakeFee:           big.NewInt(1e4),
 		TakeFee:           big.NewInt(1e4),
 	}
 
-	pairService.On("GetAll").Return([]types.Pair{p1, p2}, nil)
+	pairService.On("GetAll").Return([]*types.Pair{p1, p2}, nil)
 
 	req, err := http.NewRequest("GET", "/pairs", nil)
 	if err != nil {
@@ -122,12 +122,12 @@ func TestHandleGetAllPairs(t *testing.T) {
 		t.Errorf("Handler return wrong status. Got %v want %v", rr.Code, http.StatusOK)
 	}
 
-	result := []types.Pair{}
+	result := []*types.Pair{}
 	json.NewDecoder(rr.Body).Decode(&result)
 
 	pairService.AssertCalled(t, "GetAll")
-	testutils.ComparePair(t, &p1, &result[0])
-	testutils.ComparePair(t, &p2, &result[1])
+	testutils.ComparePair(t, p1, result[0])
+	testutils.ComparePair(t, p2, result[1])
 }
 
 func TestHandleGetPair(t *testing.T) {
@@ -141,7 +141,7 @@ func TestHandleGetPair(t *testing.T) {
 		QuoteTokenSymbol:  "WETH",
 		BaseTokenAddress:  base,
 		QuoteTokenAddress: quote,
-		PriceMultiplier:   big.NewInt(1e6),
+		PriceMultiplier:   big.NewInt(1e9),
 		MakeFee:           big.NewInt(1e4),
 		TakeFee:           big.NewInt(1e4),
 	}

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
-	"github.com/tomochain/backend-matching-engine/ws"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/httputils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type OrderBookEndpoint struct {
@@ -124,7 +124,7 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, c *ws.Clien
 		logger.Error(err)
 	}
 
-	if ev.Type == "UNSUBSCRIBE" {
+	if ev.Type == types.UNSUBSCRIBE {
 		e.orderBookService.UnsubscribeRawOrderBook(c)
 		return
 	}
@@ -141,7 +141,7 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, c *ws.Clien
 		return
 	}
 
-	if ev.Type == "SUBSCRIBE" {
+	if ev.Type == types.SUBSCRIBE {
 		e.orderBookService.SubscribeRawOrderBook(c, p.BaseToken, p.QuoteToken)
 	}
 }
@@ -156,8 +156,16 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, c *ws.Client) 
 
 	socket := ws.GetOrderBookSocket()
 
+	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
+		logger.Info("Event Type", ev.Type)
+		err := map[string]string{"Message": "Invalid payload"}
+		socket.SendErrorMessage(c, err)
+		return
+	}
+
 	b, _ = json.Marshal(ev.Payload)
 	var p *types.SubscriptionPayload
+
 	err = json.Unmarshal(b, &p)
 	if err != nil {
 		logger.Error(err)
@@ -165,25 +173,29 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, c *ws.Client) 
 		socket.SendErrorMessage(c, msg)
 	}
 
-	if ev.Type == "UNSUBSCRIBE" {
-		e.orderBookService.UnsubscribeOrderBook(c)
-		return
-	}
+	if ev.Type == types.SUBSCRIBE {
 
-	if (p.BaseToken == common.Address{}) {
-		msg := map[string]string{"Message": "Invalid base token"}
-		socket.SendErrorMessage(c, msg)
-		return
-	}
+		if (p.BaseToken == common.Address{}) {
+			msg := map[string]string{"Message": "Invalid base token"}
+			socket.SendErrorMessage(c, msg)
+			return
+		}
 
-	if (p.QuoteToken == common.Address{}) {
-		msg := map[string]string{"Message": "Invalid quote token"}
-		socket.SendErrorMessage(c, msg)
-		return
-	}
+		if (p.QuoteToken == common.Address{}) {
+			msg := map[string]string{"Message": "Invalid quote token"}
+			socket.SendErrorMessage(c, msg)
+			return
+		}
 
-	if ev.Type == "SUBSCRIBE" {
 		e.orderBookService.SubscribeOrderBook(c, p.BaseToken, p.QuoteToken)
 	}
 
+	if ev.Type == types.UNSUBSCRIBE {
+		if p == nil {
+			e.orderBookService.UnsubscribeOrderBook(c)
+			return
+		}
+
+		e.orderBookService.UnsubscribeOrderBookChannel(c, p.BaseToken, p.QuoteToken)
+	}
 }

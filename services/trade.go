@@ -1,10 +1,10 @@
 package services
 
 import (
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/dex-server/ws"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -99,7 +99,7 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 }
 
 func (s *TradeService) UpdatePendingTrade(t *types.Trade, txh common.Hash) (*types.Trade, error) {
-	t.Status = "PENDING"
+	t.Status = types.PENDING
 	t.TxHash = txh
 
 	updated, err := s.tradeDao.FindAndModify(t.Hash, t)
@@ -112,7 +112,7 @@ func (s *TradeService) UpdatePendingTrade(t *types.Trade, txh common.Hash) (*typ
 }
 
 func (s *TradeService) UpdateSuccessfulTrade(t *types.Trade) (*types.Trade, error) {
-	t.Status = "SUCCESS"
+	t.Status = types.SUCCESS
 
 	updated, err := s.tradeDao.FindAndModify(t.Hash, t)
 	if err != nil {

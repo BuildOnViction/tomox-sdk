@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/testutils"
-	"github.com/tomochain/backend-matching-engine/utils/testutils/mocks"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/dex-server/utils/testutils/mocks"
 )
 
 func SetupTest() (*mux.Router, *mocks.TokenService) {
@@ -29,7 +29,7 @@ func TestHandleCreateTokens(t *testing.T) {
 	token := types.Token{
 		Name:            "ZRX",
 		Symbol:          "ZRX",
-		Decimal:         18,
+		Decimals:        18,
 		Quote:           false,
 		ContractAddress: common.HexToAddress("0x1"),
 	}
@@ -90,7 +90,7 @@ func TestHandleGetQuoteTokens(t *testing.T) {
 	t1 := types.Token{
 		Name:            "WETH",
 		Symbol:          "WETH",
-		Decimal:         18,
+		Decimals:        18,
 		Quote:           true,
 		ContractAddress: common.HexToAddress("0x1"),
 	}
@@ -98,7 +98,7 @@ func TestHandleGetQuoteTokens(t *testing.T) {
 	t2 := types.Token{
 		Name:            "DAI",
 		Symbol:          "DAI",
-		Decimal:         18,
+		Decimals:        18,
 		Quote:           true,
 		ContractAddress: common.HexToAddress("0x2"),
 	}
@@ -131,7 +131,7 @@ func TestHandleGetBaseTokens(t *testing.T) {
 	t1 := types.Token{
 		Name:            "WETH",
 		Symbol:          "WETH",
-		Decimal:         18,
+		Decimals:        18,
 		Quote:           false,
 		ContractAddress: common.HexToAddress("0x1"),
 	}
@@ -139,7 +139,7 @@ func TestHandleGetBaseTokens(t *testing.T) {
 	t2 := types.Token{
 		Name:            "DAI",
 		Symbol:          "DAI",
-		Decimal:         18,
+		Decimals:        18,
 		Quote:           false,
 		ContractAddress: common.HexToAddress("0x2"),
 	}
@@ -174,7 +174,7 @@ func TestHandleGetToken(t *testing.T) {
 	t1 := types.Token{
 		Name:            "DAI",
 		Symbol:          "DAI",
-		Decimal:         18,
+		Decimals:        18,
 		Quote:           false,
 		ContractAddress: addr,
 	}

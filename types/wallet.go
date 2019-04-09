@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 // Wallet holds both the address and the private key of an ethereum account
@@ -115,20 +115,6 @@ func (w *Wallet) SignHash(h common.Hash) (*Signature, error) {
 	}
 
 	return sig, nil
-}
-
-// SignTrade signs and sets the signature of a trade with a wallet private key
-func (w *Wallet) SignTrade(t *Trade) error {
-	hash := t.ComputeHash()
-
-	sig, err := w.SignHash(hash)
-	if err != nil {
-		return err
-	}
-
-	t.Hash = hash
-	t.Signature = sig
-	return nil
 }
 
 func (w *Wallet) SignOrder(o *Order) error {

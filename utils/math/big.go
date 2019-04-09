@@ -24,15 +24,29 @@ func Neg(x *big.Int) *big.Int {
 	return big.NewInt(0).Neg(x)
 }
 
+func Avg(x *big.Int, y *big.Int) *big.Int {
+	return Div(Add(x, y), big.NewInt(2))
+}
+
 func ToBigInt(s string) *big.Int {
 	res := big.NewInt(0)
 	res.SetString(s, 10)
 	return res
 }
 
+func Exp(x, y *big.Int) *big.Int {
+	return big.NewInt(0).Exp(x, y, nil)
+}
+
 func BigIntToBigFloat(a *big.Int) *big.Float {
 	b := new(big.Float).SetInt(a)
 	return b
+}
+
+func DivideToFloat(a, b *big.Int) float64 {
+	res, _ := big.NewRat(1, 1).SetFrac(a, b).Float64()
+
+	return res
 }
 
 func ToDecimal(value *big.Int) float64 {
@@ -65,6 +79,14 @@ func IsZero(x *big.Int) bool {
 
 func IsEqual(x, y *big.Int) bool {
 	if x.Cmp(y) == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsNotEqual(x, y *big.Int) bool {
+	if x.Cmp(y) != 0 {
 		return true
 	} else {
 		return false

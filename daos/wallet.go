@@ -1,10 +1,10 @@
 package daos
 
 import (
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/types"
 )
 
 // TokenDao contains:
@@ -82,20 +82,15 @@ func (dao *WalletDao) GetByAddress(a common.Address) (*types.Wallet, error) {
 
 func (dao *WalletDao) GetDefaultAdminWallet() (*types.Wallet, error) {
 	q := bson.M{"admin": true}
-	var resp []types.Wallet
+	var resp types.Wallet
 
-	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &resp)
+	err := db.GetOne(dao.dbName, dao.collectionName, q, &resp)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
 
-	if len(resp) == 0 {
-		logger.Info("No default admin wallet")
-		return nil, nil
-	}
-
-	return &resp[0], nil
+	return &resp, nil
 }
 
 func (dao *WalletDao) GetOperatorWallets() ([]*types.Wallet, error) {

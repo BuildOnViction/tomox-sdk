@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/tomochain/backend-matching-engine/daos"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/dbtest"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/dbtest"
+	"github.com/tomochain/dex-server/daos"
 	"io/ioutil"
 )
 

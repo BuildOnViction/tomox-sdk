@@ -2,11 +2,12 @@ package rabbitmq
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/errors"
+
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 )
 
 func (c *Connection) SubscribeOrders(fn func(*Message) error) error {
@@ -36,87 +37,6 @@ func (c *Connection) SubscribeOrders(fn func(*Message) error) error {
 
 		<-forever
 	}()
-	return nil
-}
-
-func (c *Connection) SubscribeTrades(fn func(*types.OperatorMessage) error) error {
-	ch := c.GetChannel("tradeSubscribe")
-	q := c.GetQueue(ch, "trades")
-
-	go func() {
-		msgs, err := c.Consume(ch, q)
-		if err != nil {
-			logger.Error(err)
-		}
-
-		forever := make(chan bool)
-
-		go func() {
-			for d := range msgs {
-				msg := &types.OperatorMessage{}
-				err := json.Unmarshal(d.Body, msg)
-				if err != nil {
-					logger.Error(err)
-					continue
-				}
-
-				go fn(msg)
-			}
-		}()
-
-		<-forever
-	}()
-	return nil
-}
-
-// func (c *Connection) PublishTrade(o *types.Order, t *types.Trade) error {
-// 	ch := c.GetChannel("tradePublish")
-// 	q := c.GetQueue(ch, "trades")
-
-// 	msg := &types.OperatorMessage{
-// 		MessageType: "NEW_ORDER",
-// 		Order:       o,
-// 		Trade:       t,
-// 	}
-
-// 	bytes, err := json.Marshal(msg)
-// 	if err != nil {
-// 		logger.Error(err)
-// 		return err
-// 	}
-
-// 	err = c.Publish(ch, q, bytes)
-// 	if err != nil {
-// 		logger.Error(err)
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-func (c *Connection) PublishTrades(matches *types.Matches) error {
-	ch := c.GetChannel("tradePublish")
-	q := c.GetQueue(ch, "trades")
-
-	msg := &types.OperatorMessage{
-		MessageType: "NEW_ORDER",
-		Matches:     matches,
-	}
-
-	logger.Info("operator/", msg.String())
-
-	b, err := json.Marshal(msg)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = c.Publish(ch, q, b)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
 	return nil
 }
 

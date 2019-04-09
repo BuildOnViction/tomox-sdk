@@ -4,15 +4,17 @@ import (
 	"context"
 	"math/big"
 
-	ethereum "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/ws"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	swapBitcoin "github.com/tomochain/dex-server/swap/bitcoin"
+	swapEthereum "github.com/tomochain/dex-server/swap/ethereum"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type OrderDao interface {
@@ -35,13 +37,15 @@ type OrderDao interface {
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
 	UpdateOrderFilledAmounts(h []common.Hash, values []*big.Int) ([]*types.Order, error)
 	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.Order, error)
-	GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address, p *types.Pair) (*big.Int, error)
 	UpdateOrderStatus(h common.Hash, status string) error
 	GetRawOrderBook(*types.Pair) ([]*types.Order, error)
 	GetOrderBook(*types.Pair) ([]map[string]string, []map[string]string, error)
+	GetSideOrderBook(p *types.Pair, side string, sort int, limit ...int) ([]map[string]string, error)
 	GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side string) (*big.Int, error)
 	FindAndModify(h common.Hash, o *types.Order) (*types.Order, error)
 	Drop() error
+	Aggregate(q []bson.M) ([]*types.OrderData, error)
 }
 
 type AccountDao interface {
@@ -54,8 +58,28 @@ type AccountDao interface {
 	UpdateTokenBalance(owner common.Address, token common.Address, tokenBalance *types.TokenBalance) (err error)
 	UpdateBalance(owner common.Address, token common.Address, balance *big.Int) (err error)
 	FindOrCreate(addr common.Address) (*types.Account, error)
-	UpdateAllowance(owner common.Address, token common.Address, allowance *big.Int) (err error)
+	Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error
 	Drop()
+}
+
+type ConfigDao interface {
+	GetSchemaVersion() uint64
+	GetAddressIndex(chain types.Chain) (uint64, error)
+	IncrementAddressIndex(chain types.Chain) error
+	ResetBlockCounters() error
+	GetBlockToProcess(chain types.Chain) (uint64, error)
+	SaveLastProcessedBlock(chain types.Chain, block uint64) error
+	Drop()
+}
+
+type AssociationDao interface {
+	GetAssociationByChainAddress(chain types.Chain, address common.Address) (*types.AddressAssociationRecord, error)
+	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
+
+	// save mean if there is no item then insert, otherwise update
+	SaveAssociation(record *types.AddressAssociationRecord) error
+	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
+	SaveAssociationStatus(chain types.Chain, sourceAccount common.Address, status string) error
 }
 
 type WalletDao interface {
@@ -75,6 +99,8 @@ type PairDao interface {
 	GetByName(name string) (*types.Pair, error)
 	GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol string) (*types.Pair, error)
 	GetByTokenAddress(baseToken, quoteToken common.Address) (*types.Pair, error)
+	GetListedPairs() ([]types.Pair, error)
+	GetUnlistedPairs() ([]types.Pair, error)
 }
 
 type TradeDao interface {
@@ -95,6 +121,7 @@ type TradeDao interface {
 	GetAllTradesByPairAddress(bt, qt common.Address) ([]*types.Trade, error)
 	FindAndModify(h common.Hash, t *types.Trade) (*types.Trade, error)
 	GetByUserAddress(a common.Address) ([]*types.Trade, error)
+	GetLatestTrade(bt, qt common.Address) (*types.Trade, error)
 	UpdateTradeStatus(h common.Hash, status string) error
 	UpdateTradeStatuses(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	UpdateTradeStatusesByOrderHashes(status string, hashes ...common.Hash) ([]*types.Trade, error)
@@ -105,10 +132,15 @@ type TokenDao interface {
 	Create(token *types.Token) error
 	GetAll() ([]types.Token, error)
 	GetByID(id bson.ObjectId) (*types.Token, error)
-	GetByAddress(owner common.Address) (*types.Token, error)
+	GetByAddress(addr common.Address) (*types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
 	GetBaseTokens() ([]types.Token, error)
+	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
+}
+
+type PriceBoardDao interface {
+	GetLatestQuotes() (map[string]float64, error)
 }
 
 type Exchange interface {
@@ -175,7 +207,7 @@ type OrderService interface {
 }
 
 type OrderBookService interface {
-	GetOrderBook(bt, qt common.Address) (map[string]interface{}, error)
+	GetOrderBook(bt, qt common.Address) (*types.OrderBook, error)
 	GetRawOrderBook(bt, qt common.Address) (*types.RawOrderBook, error)
 	SubscribeOrderBook(c *ws.Client, bt, qt common.Address)
 	UnsubscribeOrderBook(c *ws.Client)
@@ -187,11 +219,14 @@ type OrderBookService interface {
 
 type PairService interface {
 	Create(pair *types.Pair) error
+	CreatePairs(token common.Address) ([]*types.Pair, error)
 	GetByID(id bson.ObjectId) (*types.Pair, error)
 	GetByTokenAddress(bt, qt common.Address) (*types.Pair, error)
 	GetTokenPairData(bt, qt common.Address) ([]*types.Tick, error)
-	GetAllTokenPairData() ([]*types.Tick, error)
+	GetAllTokenPairData() ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
+	GetListedPairs() ([]types.Pair, error)
+	GetUnlistedPairs() ([]types.Pair, error)
 }
 
 type TokenService interface {
@@ -221,6 +256,18 @@ type TradeService interface {
 	Unsubscribe(c *ws.Client)
 }
 
+type PriceBoardService interface {
+	Subscribe(c *ws.Client, bt, qt common.Address)
+	UnsubscribeChannel(c *ws.Client, bt, qt common.Address)
+	Unsubscribe(c *ws.Client)
+}
+
+type MarketsService interface {
+	Subscribe(c *ws.Client)
+	UnsubscribeChannel(c *ws.Client)
+	Unsubscribe(c *ws.Client)
+}
+
 type TxService interface {
 	GetTxCallOptions() *bind.CallOpts
 	GetTxSendOptions() (*bind.TransactOpts, error)
@@ -237,16 +284,55 @@ type AccountService interface {
 	FindOrCreate(a common.Address) (*types.Account, error)
 	GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error)
 	GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error)
+	Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error
+}
+
+type DepositService interface {
+	SignerPublicKey() common.Address
+	GenerateAddress(chain types.Chain) (common.Address, uint64, error)
+	GetSchemaVersion() uint64
+	RecoveryTransaction(chain types.Chain, address common.Address) error
+
+	// one for wallet, one for relayer
+	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
+	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
+
+	SaveAssociationByChainAddress(chain types.Chain, address common.Address, index uint64, associatedAddress common.Address, pairAddreses *types.PairAddresses) error
+	SaveAssociationStatusByChainAddress(addressAssociation *types.AddressAssociationRecord, status string) error
+	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
+	// SetDelegate to endpoint
+	MinimumValueWei() *big.Int
+	MinimumValueSat() int64
+
+	SetDelegate(handler SwapEngineHandler)
+
+	// Queue implementation
+	QueueAdd(queueTx *types.DepositTransaction) error
+	QueuePool() (<-chan *types.DepositTransaction, error)
+
+	// help creating token
+	EthereumClient() EthereumClient
+}
+
+type SwapEngineHandler interface {
+	OnNewEthereumTransaction(transaction swapEthereum.Transaction) error
+	OnNewBitcoinTransaction(transaction swapBitcoin.Transaction) error
+	OnSubmitTransaction(chain types.Chain, destination string, transaction *types.AssociationTransaction) error
+	OnTomochainAccountCreated(chain types.Chain, destination string)
+	OnExchanged(chain types.Chain, destination string)
+	OnExchangedTimelocked(chain types.Chain, destination string, transaction *types.AssociationTransaction)
+
+	LoadAccountHandler(chain types.Chain, publicKey string) (*types.AddressAssociation, error)
 }
 
 type ValidatorService interface {
 	ValidateBalance(o *types.Order) error
+	ValidateAvailableBalance(o *types.Order) error
 }
 
 type EthereumConfig interface {
 	GetURL() string
 	ExchangeAddress() common.Address
-	WethAddress() common.Address
 }
 
 type EthereumClient interface {
@@ -269,6 +355,6 @@ type EthereumProvider interface {
 	GetBalanceAt(a common.Address) (*big.Int, error)
 	GetPendingNonceAt(a common.Address) (uint64, error)
 	BalanceOf(owner common.Address, token common.Address) (*big.Int, error)
-	Allowance(owner, spender, token common.Address) (*big.Int, error)
-	ExchangeAllowance(owner, token common.Address) (*big.Int, error)
+	Decimals(token common.Address) (uint8, error)
+	Symbol(token common.Address) (string, error)
 }

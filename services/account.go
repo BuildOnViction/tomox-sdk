@@ -3,29 +3,30 @@ package services
 import (
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/math"
 )
 
 type AccountService struct {
-	AccountDao interfaces.AccountDao
-	TokenDao   interfaces.TokenDao
+	accountDao interfaces.AccountDao
+	tokenDao   interfaces.TokenDao
 }
 
 // NewAddressService returns a new instance of accountService
 func NewAccountService(
-	AccountDao interfaces.AccountDao,
-	TokenDao interfaces.TokenDao,
+	accountDao interfaces.AccountDao,
+	tokenDao interfaces.TokenDao,
 ) *AccountService {
-	return &AccountService{AccountDao, TokenDao}
+	return &AccountService{accountDao, tokenDao}
 }
 
 func (s *AccountService) Create(a *types.Account) error {
 	addr := a.Address
 
-	acc, err := s.AccountDao.GetByAddress(addr)
+	acc, err := s.accountDao.GetByAddress(addr)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -35,7 +36,7 @@ func (s *AccountService) Create(a *types.Account) error {
 		return ErrAccountExists
 	}
 
-	tokens, err := s.TokenDao.GetAll()
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -44,20 +45,32 @@ func (s *AccountService) Create(a *types.Account) error {
 	a.IsBlocked = false
 	a.TokenBalances = make(map[common.Address]*types.TokenBalance)
 
+	ten := big.NewInt(10)
+
 	// currently by default, the tokens balances are set to 0
 	for _, token := range tokens {
+		decimals := big.NewInt(int64(token.Decimals))
 		a.TokenBalances[token.ContractAddress] = &types.TokenBalance{
 			Address:        token.ContractAddress,
 			Symbol:         token.Symbol,
-			Balance:        big.NewInt(0),
-			Allowance:      big.NewInt(0),
-			LockedBalance:  big.NewInt(0),
-			PendingBalance: big.NewInt(0),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
+			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
 	}
 
+	nativeCurrency := types.GetNativeCurrency()
+
+	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
+		Address:        nativeCurrency.Address,
+		Symbol:         nativeCurrency.Symbol,
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
+		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
+	}
+
 	if a != nil {
-		err = s.AccountDao.Create(a)
+		err = s.accountDao.Create(a)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -68,7 +81,7 @@ func (s *AccountService) Create(a *types.Account) error {
 }
 
 func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, error) {
-	a, err := s.AccountDao.GetByAddress(addr)
+	a, err := s.accountDao.GetByAddress(addr)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -78,7 +91,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		return a, nil
 	}
 
-	tokens, err := s.TokenDao.GetAll()
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -90,19 +103,31 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		TokenBalances: make(map[common.Address]*types.TokenBalance),
 	}
 
+	ten := big.NewInt(10)
+
 	// currently by default, the tokens balances are set to 0
 	for _, t := range tokens {
+		decimals := big.NewInt(int64(t.Decimals))
 		a.TokenBalances[t.ContractAddress] = &types.TokenBalance{
 			Address:        t.ContractAddress,
 			Symbol:         t.Symbol,
-			Balance:        big.NewInt(0),
-			Allowance:      big.NewInt(0),
-			LockedBalance:  big.NewInt(0),
-			PendingBalance: big.NewInt(0),
+			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
+			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 		}
 	}
 
-	err = s.AccountDao.Create(a)
+	nativeCurrency := types.GetNativeCurrency()
+
+	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
+		Address:        nativeCurrency.Address,
+		Symbol:         nativeCurrency.Symbol,
+		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
+		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
+		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
+	}
+
+	err = s.accountDao.Create(a)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -112,21 +137,25 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 }
 
 func (s *AccountService) GetByID(id bson.ObjectId) (*types.Account, error) {
-	return s.AccountDao.GetByID(id)
+	return s.accountDao.GetByID(id)
 }
 
 func (s *AccountService) GetAll() ([]types.Account, error) {
-	return s.AccountDao.GetAll()
+	return s.accountDao.GetAll()
 }
 
 func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) {
-	return s.AccountDao.GetByAddress(a)
+	return s.accountDao.GetByAddress(a)
 }
 
 func (s *AccountService) GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error) {
-	return s.AccountDao.GetTokenBalance(owner, token)
+	return s.accountDao.GetTokenBalance(owner, token)
 }
 
 func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
-	return s.AccountDao.GetTokenBalances(owner)
+	return s.accountDao.GetTokenBalances(owner)
+}
+
+func (s *AccountService) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
+	return s.accountDao.Transfer(token, fromAddress, toAddress, amount)
 }

@@ -2,17 +2,19 @@ package testutils
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/contracts"
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/tomochain/dex-server/contracts"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/ethereum"
+	"github.com/tomochain/dex-server/interfaces"
 )
 
 type Deployer struct {
@@ -48,8 +50,19 @@ func NewDefaultDeployer(w interfaces.WalletService, tx interfaces.TxService) (*D
 	}, nil
 }
 
-func NewWebSocketDeployer(w interfaces.WalletService, tx interfaces.TxService) (*Deployer, error) {
-	conn, err := rpc.DialWebsocket(context.Background(), "ws://127.0.0.1:8546", "")
+func NewWebSocketDeployer(w interfaces.WalletService, tx interfaces.TxService, params ...string) (*Deployer, error) {
+	var endpoint, origin string
+	if len(params) > 1 {
+		origin = params[1]
+	} else {
+		origin = ""
+	}
+	if len(params) > 0 {
+		endpoint = params[0]
+	} else {
+		endpoint = "127.0.0.1:8546"
+	}
+	conn, err := rpc.DialWebsocket(context.Background(), fmt.Sprintf("ws://%s", endpoint), origin)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +74,11 @@ func NewWebSocketDeployer(w interfaces.WalletService, tx interfaces.TxService) (
 		TxService:     tx,
 		Client:        client,
 	}, nil
+}
+
+// GetSimulator return simulated client in testing mode
+func (d *Deployer) GetSimulator() *ethereum.SimulatedClient {
+	return d.Client.(*ethereum.SimulatedClient)
 }
 
 // DeployToken

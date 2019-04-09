@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"gopkg.in/mgo.v2/dbtest"
+	"github.com/globalsign/mgo/dbtest"
+	"github.com/tomochain/dex-server/types"
 )
 
 var server dbtest.DBServer

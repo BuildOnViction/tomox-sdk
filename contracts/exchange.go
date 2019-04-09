@@ -3,19 +3,20 @@ package contracts
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
 
-	"github.com/tomochain/backend-matching-engine/contracts/contractsinterfaces"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/tomochain/dex-server/errors"
+
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
+	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
 )
 
 type ethereumClientInterface interface {
@@ -77,7 +78,7 @@ func (e *Exchange) DefaultTxOptions() (*bind.TransactOpts, error) {
 		logger.Error(err)
 		return nil, err
 	}
-
+	// logger.Infof("Public key: %s", crypto.PubkeyToAddress(wallet.PrivateKey.PublicKey).Hex())
 	opts := bind.NewKeyedTransactor(wallet.PrivateKey)
 	return opts, nil
 }
@@ -114,7 +115,7 @@ func (e *Exchange) SetOperator(a common.Address, isOperator bool, txOpts *bind.T
 func (e *Exchange) FeeAccount() (common.Address, error) {
 	callOptions := e.GetTxCallOptions()
 
-	account, err := e.Interface.FeeAccount(callOptions)
+	account, err := e.Interface.RewardAccount(callOptions)
 	if err != nil {
 		logger.Error(err)
 		return common.Address{}, err
@@ -242,6 +243,9 @@ func (e *Exchange) CallBatchTrades(matches *types.Matches, call *ethereum.CallMs
 	call.Data = data
 	gasLimit, err := e.Client.(bind.ContractBackend).EstimateGas(context.Background(), *call)
 	if err != nil {
+		// TODO: Fix this line later
+		return 2000000, nil
+		// *******
 		logger.Error(err)
 		return 0, err
 	}

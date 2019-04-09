@@ -1,12 +1,13 @@
 package ws
 
 import (
-	"errors"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/types"
 )
 
-var orderbook *OrderBookSocket
+var orderbookSocket *OrderBookSocket
 
-// OrderBookSocket holds the map of subscribtions subscribed to pair channels
+// OrderBookSocket holds the map of subscriptions subscribed to orderbook channels
 // corresponding to the key/event they have subscribed to.
 type OrderBookSocket struct {
 	subscriptions     map[string]map[*Client]bool
@@ -20,13 +21,13 @@ func NewOrderBookSocket() *OrderBookSocket {
 	}
 }
 
-// GetOrderBookSocket return singleton instance of PairSockets type struct
+// GetOrderBookSocket return singleton instance of OrderBookSocket type struct
 func GetOrderBookSocket() *OrderBookSocket {
-	if orderbook == nil {
-		orderbook = NewOrderBookSocket()
+	if orderbookSocket == nil {
+		orderbookSocket = NewOrderBookSocket()
 	}
 
-	return orderbook
+	return orderbookSocket
 }
 
 // Subscribe handles the subscription of connection to get
@@ -48,20 +49,24 @@ func (s *OrderBookSocket) Subscribe(channelID string, c *Client) error {
 	}
 
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
+
 	return nil
 }
 
-// UnsubscribeHandler returns function of type unsubscribe handler,
-// it handles the unsubscription of pair in case of connection closing.
-func (s *OrderBookSocket) UnsubscribeHandler(channelID string) func(c *Client) {
+// UnsubscribeHandler unsubscribes a connection from a certain orderbook channel id
+func (s *OrderBookSocket) UnsubscribeChannelHandler(channelID string) func(c *Client) {
 	return func(c *Client) {
 		s.UnsubscribeChannel(channelID, c)
 	}
 }
 
-// Unsubscribe is used to unsubscribe the connection from listening to the key
-// subscribed to. It can be called on unsubscription message from user or due to some other reason by
-// system
+func (s *OrderBookSocket) UnsubscribeHandler() func(c *Client) {
+	return func(c *Client) {
+		s.Unsubscribe(c)
+	}
+}
+
+// Unsubscribe removes a websocket connection from the orderbook channel updates
 func (s *OrderBookSocket) UnsubscribeChannel(channelID string, c *Client) {
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
@@ -92,17 +97,22 @@ func (s *OrderBookSocket) BroadcastMessage(channelID string, p interface{}) erro
 	return nil
 }
 
-// SendErrorMessage sends error message on orderbookchannel
-func (s *OrderBookSocket) SendErrorMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, "ERROR", data)
+// SendMessage sends a websocket message on the orderbook channel
+func (s *OrderBookSocket) SendMessage(c *Client, msgType types.SubscriptionEvent, p interface{}) {
+	c.SendMessage(OrderBookChannel, msgType, p)
 }
 
-// SendInitMessage sends INIT message on orderbookchannel on subscription event
+// SendInitMessage sends INIT message on orderbook channel on subscription event
 func (s *OrderBookSocket) SendInitMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, "INIT", data)
+	c.SendMessage(OrderBookChannel, types.INIT, data)
 }
 
-// SendUpdateMessage sends UPDATE message on orderbookchannel as new data is created
+// SendUpdateMessage sends UPDATE message on orderbook channel as new data is created
 func (s *OrderBookSocket) SendUpdateMessage(c *Client, data interface{}) {
-	c.SendMessage(OrderBookChannel, "UPDATE", data)
+	c.SendMessage(OrderBookChannel, types.UPDATE, data)
+}
+
+// SendErrorMessage sends error message on orderbook channel
+func (s *OrderBookSocket) SendErrorMessage(c *Client, data interface{}) {
+	c.SendMessage(OrderBookChannel, types.ERROR, data)
 }

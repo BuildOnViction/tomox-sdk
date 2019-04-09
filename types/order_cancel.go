@@ -2,12 +2,13 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+
+	"github.com/tomochain/dex-server/errors"
 )
 
 // OrderCancel is a group of params used for canceling an order previously
@@ -71,9 +72,11 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{
-		V: byte(sig["V"].(float64)),
-		R: common.HexToHash(sig["R"].(string)),
-		S: common.HexToHash(sig["S"].(string)),
+		// TODO: Refactor this part to uppercase later
+		// At the moment, client send lowercase of v, r, s
+		V: byte(sig["v"].(float64)),
+		R: common.HexToHash(sig["r"].(string)),
+		S: common.HexToHash(sig["s"].(string)),
 	}
 
 	return nil
@@ -82,6 +85,11 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 // VerifySignature returns a true value if the OrderCancel object signature
 // corresponds to the Maker of the given order
 func (oc *OrderCancel) VerifySignature(o *Order) (bool, error) {
+
+	if o == nil {
+		return false, errors.New("Recovered address is incorrect")
+	}
+
 	message := crypto.Keccak256(
 		[]byte("\x19Ethereum Signed Message:\n32"),
 		oc.Hash.Bytes(),

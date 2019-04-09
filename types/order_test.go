@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo/bson"
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func TestBaseTokenSymbol(t *testing.T) {
@@ -114,9 +114,9 @@ func TestOrderMarshal(t *testing.T) {
 		"takeFee":         "50",
 		"nonce":           "1000",
 		"signature": map[string]interface{}{
-			"V": 28,
-			"R": "0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85",
-			"S": "0x6d9ad89548c9e3ce4c97825d027291477f2c44a8caef792095f2cabc978493ff",
+			"v": 28,
+			"r": "0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85",
+			"s": "0x6d9ad89548c9e3ce4c97825d027291477f2c44a8caef792095f2cabc978493ff",
 		},
 		"hash":      "0xb9070a2d333403c255ce71ddf6e795053599b2e885321de40353832b96d8880a",
 		"createdAt": "2014-07-17 05:55:46 +0900 KST",
@@ -179,9 +179,9 @@ func TestOrderUnmarshal(t *testing.T) {
 			"makeFee": "50",
 			"takeFee": "50",
 			"signature": {
-				"V": 28,
-				"R": "0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85",
-				"S": "0x6d9ad89548c9e3ce4c97825d027291477f2c44a8caef792095f2cabc978493ff"
+				"v": 28,
+				"r": "0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85",
+				"s": "0x6d9ad89548c9e3ce4c97825d027291477f2c44a8caef792095f2cabc978493ff"
 			},
 			"pairName": "ZRX/WETH",
 			"hash":"0xb9070a2d333403c255ce71ddf6e795053599b2e885321de40353832b96d8880a"

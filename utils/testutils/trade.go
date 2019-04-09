@@ -3,9 +3,9 @@ package testutils
 import (
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/types"
 )
 
 func GetTestTrade1() types.Trade {

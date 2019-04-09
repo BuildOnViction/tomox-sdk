@@ -1,9 +1,9 @@
 package services
 
 import (
-	"errors"
+	"github.com/tomochain/dex-server/errors"
 
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/utils"
 )
 
 var logger = utils.Logger
@@ -17,3 +17,4 @@ var ErrQuoteTokenInvalid = errors.New("Quote Token Invalid (not a quote)")
 var ErrTokenExists = errors.New("Token already exists")
 var ErrAccountNotFound = errors.New("Account not found")
 var ErrAccountExists = errors.New("Account already Exists")
+var ErrNoContractCode = errors.New("Contract not found at given address")

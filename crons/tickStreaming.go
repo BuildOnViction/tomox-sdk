@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/ws"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/dex-server/ws"
 
 	"github.com/robfig/cron"
-	"github.com/tomochain/backend-matching-engine/app"
+	"github.com/tomochain/dex-server/app"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming
@@ -28,7 +28,7 @@ func (s *CronService) tickStreamingCron(c *cron.Cron) {
 func (s *CronService) tickStream(unit string, duration int64) func() {
 	return func() {
 		p := make([]types.PairAddresses, 0)
-		ticks, err := s.ohlcvService.GetOHLCV(p, duration, unit)
+		ticks, err := s.OHLCVService.GetOHLCV(p, duration, unit)
 		if err != nil {
 			log.Printf("%s", err)
 			return

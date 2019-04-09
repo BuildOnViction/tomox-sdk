@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/tomochain/backend-matching-engine/types"
+	"github.com/globalsign/mgo/dbtest"
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2/dbtest"
+	"github.com/tomochain/dex-server/types"
 )
 
 func CompareEngineResponse(t *testing.T, a, b *types.EngineResponse) {
@@ -91,7 +91,7 @@ func CompareToken(t *testing.T, a, b *types.Token) {
 	assert.Equal(t, a.Name, b.Name)
 	assert.Equal(t, a.Symbol, b.Symbol)
 	assert.Equal(t, a.ContractAddress, b.ContractAddress)
-	assert.Equal(t, a.Decimal, b.Decimal)
+	assert.Equal(t, a.Decimals, b.Decimals)
 	assert.Equal(t, a.Active, b.Active)
 	assert.Equal(t, a.Quote, b.Quote)
 	assert.Equal(t, a.ID, b.ID)

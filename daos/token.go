@@ -1,13 +1,14 @@
 package daos
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/types"
 	"github.com/ethereum/go-ethereum/common"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/types"
 )
 
 // TokenDao contains:
@@ -118,6 +119,19 @@ func (dao *TokenDao) GetByAddress(addr common.Address) (*types.Token, error) {
 	}
 
 	return &resp[0], nil
+}
+
+func (dao *TokenDao) UpdateFiatPriceBySymbol(symbol string, price float64) error {
+	q := bson.M{"symbol": symbol}
+	update := bson.M{"$set": bson.M{"usd": fmt.Sprintf("%f", price)}}
+
+	err := db.Update(dao.dbName, dao.collectionName, q, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
 }
 
 // Drop drops all the order documents in the current database

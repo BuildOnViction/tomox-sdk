@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils/httputils"
-	"github.com/tomochain/backend-matching-engine/ws"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils/httputils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type tradeEndpoint struct {
@@ -124,7 +124,8 @@ func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {
 	}
 
 	socket := ws.GetTradeSocket()
-	if ev.Type != "SUBSCRIBE" && ev.Type != "UNSUBSCRIBE" {
+
+	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
 		err := map[string]string{"Message": "Invalid payload"}
 		socket.SendErrorMessage(c, err)
@@ -139,7 +140,7 @@ func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {
 		return
 	}
 
-	if ev.Type == "SUBSCRIBE" {
+	if ev.Type == types.SUBSCRIBE {
 		if (p.BaseToken == common.Address{}) {
 			err := map[string]string{"Message": "Invalid base token"}
 			socket.SendErrorMessage(c, err)
@@ -155,7 +156,7 @@ func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {
 		e.tradeService.Subscribe(c, p.BaseToken, p.QuoteToken)
 	}
 
-	if ev.Type == "UNSUBSCRIBE" {
+	if ev.Type == types.UNSUBSCRIBE {
 		if p == nil {
 			e.tradeService.Unsubscribe(c)
 			return

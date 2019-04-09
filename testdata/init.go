@@ -1,8 +1,8 @@
 package testdata
 
 import (
-	"github.com/tomochain/backend-matching-engine/app"
-	"github.com/tomochain/backend-matching-engine/daos"
+	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/dex-server/daos"
 )
 
 func init() {

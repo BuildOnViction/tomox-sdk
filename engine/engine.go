@@ -2,17 +2,17 @@ package engine
 
 import (
 	"encoding/json"
-	"errors"
 	"sync"
 
-	"github.com/tomochain/backend-matching-engine/ethereum"
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/ethereum"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
 )
 
-// Engine contains daos and redis connection required for engine to work
+// Engine contains daos required for engine to work
 type Engine struct {
 	orderbooks   map[string]*OrderBook
 	rabbitMQConn *rabbitmq.Connection

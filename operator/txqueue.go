@@ -2,16 +2,17 @@ package operator
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/dex-server/utils/math"
 	"math/big"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/rabbitmq"
-	"github.com/tomochain/backend-matching-engine/types"
-	ethereum "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/streadway/amqp"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/rabbitmq"
+	"github.com/tomochain/dex-server/types"
 )
 
 type TxQueue struct {
@@ -22,6 +23,20 @@ type TxQueue struct {
 	EthereumProvider interfaces.EthereumProvider
 	Exchange         interfaces.Exchange
 	Broker           *rabbitmq.Connection
+	AccountService   interfaces.AccountService
+	TokenService     interfaces.TokenService
+}
+
+type TxQueueOrder struct {
+	userAddress common.Address
+	baseToken   common.Address
+	quoteToken  common.Address
+	amount      *big.Int
+	pricepoint  *big.Int
+	side        *big.Int
+	salt        *big.Int
+	feeMake     *big.Int
+	feeTake     *big.Int
 }
 
 // NewTxQueue
@@ -33,6 +48,8 @@ func NewTxQueue(
 	w *types.Wallet,
 	ex interfaces.Exchange,
 	rabbitConn *rabbitmq.Connection,
+	accountService interfaces.AccountService,
+	tokenService interfaces.TokenService,
 ) (*TxQueue, error) {
 	txq := &TxQueue{
 		Name:             n,
@@ -42,6 +59,8 @@ func NewTxQueue(
 		Wallet:           w,
 		Exchange:         ex,
 		Broker:           rabbitConn,
+		AccountService:   accountService,
+		TokenService:     tokenService,
 	}
 
 	err := txq.PurgePendingTrades()
@@ -97,43 +116,83 @@ func (txq *TxQueue) Length() int {
 // trade message, the trade is updated on the database and is published to the operator subscribers
 // (order service)
 func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
-	logger.Infof("Executing trades")
+	logger.Infof("Executing trades: %+v", m)
 
-	callOpts := txq.GetTxCallOptions()
-	gasLimit, err := txq.Exchange.CallBatchTrades(m, callOpts)
-	if err != nil {
-		logger.Error(err)
-		return err
+	makerOrders := m.MakerOrders
+	trades := m.Trades
+	takerOrder := m.TakerOrder
+
+	orderValues := [][10]*big.Int{}
+	orderAddresses := [][4]common.Address{}
+	vValues := [][2]uint8{}
+	rsValues := [][4][32]byte{}
+	amounts := []*big.Int{}
+
+	for i := range makerOrders {
+		mo := makerOrders[i]
+		to := takerOrder
+		t := trades[i]
+
+		orderValues = append(orderValues, [10]*big.Int{mo.Amount, mo.PricePoint, mo.EncodedSide(), mo.Nonce, to.Amount, to.PricePoint, to.EncodedSide(), to.Nonce, mo.MakeFee, mo.TakeFee})
+		orderAddresses = append(orderAddresses, [4]common.Address{mo.UserAddress, to.UserAddress, mo.BaseToken, to.QuoteToken})
+		vValues = append(vValues, [2]uint8{mo.Signature.V, to.Signature.V})
+		rsValues = append(rsValues, [4][32]byte{mo.Signature.R, mo.Signature.S, to.Signature.R, to.Signature.S})
+		amounts = append(amounts, t.Amount)
 	}
 
-	if gasLimit < 120000 {
-		logger.Warning("GAS LIMIT: ", gasLimit)
-		err = txq.Broker.PublishTradeInvalidMessage(m)
-		if err != nil {
-			logger.Error(err)
-			return err
+	for i := range orderAddresses {
+		mOrder := TxQueueOrder{
+			userAddress: orderAddresses[i][0],
+			baseToken:   orderAddresses[i][2],
+			quoteToken:  orderAddresses[i][3],
+			amount:      orderValues[i][0],
+			pricepoint:  orderValues[i][1],
+			side:        orderValues[i][2],
+			salt:        orderValues[i][3],
+			feeMake:     orderValues[i][8],
+			feeTake:     orderValues[i][9],
 		}
 
-		return errors.New("Invalid Trade")
-	}
+		tOrder := TxQueueOrder{
+			userAddress: orderAddresses[i][1],
+			baseToken:   orderAddresses[i][2],
+			quoteToken:  orderAddresses[i][3],
+			amount:      orderValues[i][4],
+			pricepoint:  orderValues[i][5],
+			side:        orderValues[i][6],
+			salt:        orderValues[i][7],
+			feeMake:     orderValues[i][8],
+			feeTake:     orderValues[i][9],
+		}
 
-	nonce, err := txq.EthereumProvider.GetPendingNonceAt(txq.Wallet.Address)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+		baseToken, err := txq.TokenService.GetByAddress(orderAddresses[i][2])
 
-	txOpts := txq.GetTxSendOptions()
-	txOpts.Nonce = big.NewInt(int64(nonce))
-	tx, err := txq.Exchange.ExecuteBatchTrades(m, txOpts)
-	if err != nil {
-		logger.Error(err)
-		return err
+		if err != nil {
+			logger.Errorf("Base token address %s not found", orderAddresses[i][2])
+			continue
+		}
+
+		baseTokenAmount := amounts[i]
+		quoteTokenAmount := math.Div(math.Div(math.Mul(amounts[i], mOrder.pricepoint), math.Exp(big.NewInt(10), big.NewInt(int64(baseToken.Decimals)))), big.NewInt(1e18))
+
+		if math.IsEqual(mOrder.side, big.NewInt(0)) {
+			err := txq.AccountService.Transfer(mOrder.quoteToken, mOrder.userAddress, tOrder.userAddress, quoteTokenAmount)
+			logger.Error(err)
+
+			err = txq.AccountService.Transfer(tOrder.baseToken, tOrder.userAddress, mOrder.userAddress, baseTokenAmount)
+			logger.Error(err)
+		} else {
+			err := txq.AccountService.Transfer(mOrder.baseToken, mOrder.userAddress, tOrder.userAddress, baseTokenAmount)
+			logger.Error(err)
+
+			err = txq.AccountService.Transfer(tOrder.quoteToken, tOrder.userAddress, mOrder.userAddress, quoteTokenAmount)
+			logger.Error(err)
+		}
 	}
 
 	updatedTrades := []*types.Trade{}
 	for _, t := range m.Trades {
-		updated, err := txq.TradeService.UpdatePendingTrade(t, tx.Hash())
+		updated, err := txq.TradeService.UpdatePendingTrade(t, common.HexToHash("0xf331B044e6E48F4FD154a1B02f3Fb4C344114180"))
 		if err != nil {
 			logger.Error(err)
 		}
@@ -142,30 +201,13 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	}
 
 	m.Trades = updatedTrades
-	err = txq.Broker.PublishTradeSentMessage(m)
+	err := txq.Broker.PublishTradeSentMessage(m)
 	if err != nil {
 		logger.Error(err)
 		return errors.New("Could not update")
 	}
 
-	receipt, err := txq.EthereumProvider.WaitMined(tx.Hash())
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	if receipt.Status == 0 {
-		logger.Errorf("Reverted transaction: %v", receipt)
-		err := txq.HandleTxError(m)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
-
-		return errors.New("Reverted Transaction")
-	}
-
-	err = txq.HandleTxSuccess(m, receipt)
+	err = txq.HandleTxSuccess(m)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -174,10 +216,21 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	return nil
 }
 
-func (txq *TxQueue) HandleTxError(m *types.Matches) error {
-	logger.Infof("Transaction failed: %v", m)
+func (txq *TxQueue) HandleTradeInvalid(m *types.Matches) error {
+	logger.Errorf("Trade invalid: %v", m)
 
-	errType := "Transaction failed"
+	err := txq.Broker.PublishTradeInvalidMessage(m)
+	if err != nil {
+		logger.Error(err)
+	}
+
+	return nil
+}
+
+func (txq *TxQueue) HandleTxError(m *types.Matches) error {
+	logger.Errorf("Transaction Error: %v", m)
+
+	errType := "Transaction error"
 	err := txq.Broker.PublishTxErrorMessage(m, errType)
 	if err != nil {
 		logger.Error(err)
@@ -186,13 +239,25 @@ func (txq *TxQueue) HandleTxError(m *types.Matches) error {
 	return nil
 }
 
-func (txq *TxQueue) HandleTxSuccess(m *types.Matches, receipt *eth.Receipt) error {
+func (txq *TxQueue) HandleTxSuccess(m *types.Matches) error {
 	logger.Infof("Transaction success: %v", m)
 
 	err := txq.Broker.PublishTradeSuccessMessage(m)
 	if err != nil {
 		logger.Error(err)
 		return err
+	}
+
+	return nil
+}
+
+func (txq *TxQueue) HandleError(m *types.Matches) error {
+	logger.Errorf("Operator Error: %v", m)
+
+	errType := "Server error"
+	err := txq.Broker.PublishErrorMessage(m, errType)
+	if err != nil {
+		logger.Error(err)
 	}
 
 	return nil

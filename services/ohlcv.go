@@ -4,11 +4,11 @@ import (
 	"math"
 	"time"
 
-	"github.com/tomochain/backend-matching-engine/interfaces"
-	"github.com/tomochain/backend-matching-engine/types"
-	"github.com/tomochain/backend-matching-engine/utils"
-	"github.com/tomochain/backend-matching-engine/ws"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/dex-server/interfaces"
+	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/dex-server/ws"
 )
 
 type OHLCVService struct {
@@ -36,7 +36,7 @@ func (s *OHLCVService) Subscribe(conn *ws.Client, p *types.SubscriptionPayload) 
 	socket := ws.GetOHLCVSocket()
 
 	ohlcv, err := s.GetOHLCV(
-		[]types.PairAddresses{types.PairAddresses{BaseToken: p.BaseToken, QuoteToken: p.QuoteToken}},
+		[]types.PairAddresses{{BaseToken: p.BaseToken, QuoteToken: p.QuoteToken}},
 		p.Duration,
 		p.Units,
 		p.From,
@@ -67,33 +67,31 @@ func (s *OHLCVService) Subscribe(conn *ws.Client, p *types.SubscriptionPayload) 
 // unit: sec,min,hour,day,week,month,yr
 // timeInterval: 0-2 entries (0 argument: latest data,1st argument: from timestamp, 2nd argument: to timestamp)
 func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {
-	match := make(bson.M)
-	addFields := make(bson.M)
 	res := make([]*types.Tick, 0)
 
 	currentTimestamp := time.Now().Unix()
 
-	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
-	toDecimal := bson.M{"$addFields": bson.M{
-		"priceDecimal":  bson.M{"$toDecimal": "$pricepoint"},
-		"amountDecimal": bson.M{"$toDecimal": "$amount"},
-	}}
-
 	modTime, intervalInSeconds := getModTime(currentTimestamp, duration, unit)
-	group, addFields := getGroupAddFieldBson("$createdAt", unit, duration)
 
-	end := time.Unix(currentTimestamp, 0)
 	start := time.Unix(modTime-intervalInSeconds, 0)
+	end := time.Unix(currentTimestamp, 0)
 
 	if len(timeInterval) >= 1 {
 		end = time.Unix(timeInterval[1], 0)
 		start = time.Unix(timeInterval[0], 0)
 	}
 
+	match := make(bson.M)
 	match = getMatchQuery(start, end, pairs...)
 	match = bson.M{"$match": match}
+
+	addFields := make(bson.M)
+	group, addFields := getGroupAddFieldBson("$createdAt", unit, duration)
 	group = bson.M{"$group": group}
-	query := []bson.M{match, toDecimal, group, addFields, sort}
+
+	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
+
+	query := []bson.M{match, group, addFields, sort}
 
 	res, err := s.tradeDao.Aggregate(query)
 	if err != nil {
@@ -113,7 +111,7 @@ func getMatchQuery(start, end time.Time, pairs ...types.PairAddresses) bson.M {
 			"$gte": start,
 			"$lt":  end,
 		},
-		"status": bson.M{"$in": []string{"SUCCESS"}},
+		"status": bson.M{"$in": []string{types.SUCCESS}},
 	}
 
 	if len(pairs) >= 1 {
@@ -144,6 +142,10 @@ func getModTime(ts, interval int64, unit string) (int64, int64) {
 		intervalInSeconds = interval
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
 
+	case "min":
+		intervalInSeconds = interval * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
 	case "hour":
 		intervalInSeconds = interval * 60 * 60
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
@@ -166,10 +168,6 @@ func getModTime(ts, interval int64, unit string) (int64, int64) {
 		d := time.Date(time.Now().Year()+1, 1, 1, 0, 0, 0, 0, time.UTC).Sub(time.Date(time.Now().Year(), 0, 0, 0, 0, 0, 0, time.UTC)).Hours() / 24
 		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
 		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
-
-	case "min":
-		intervalInSeconds = interval * 60
-		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
 	}
 
 	return modTime, intervalInSeconds
@@ -190,11 +188,11 @@ func getGroupAddFieldBson(key, units string, duration int64) (bson.M, bson.M) {
 	one, _ := bson.ParseDecimal128("1")
 	group = bson.M{
 		"count":  bson.M{"$sum": one},
-		"high":   bson.M{"$max": "$priceDecimal"},
-		"low":    bson.M{"$min": "$priceDecimal"},
-		"open":   bson.M{"$first": "$priceDecimal"},
-		"close":  bson.M{"$last": "$priceDecimal"},
-		"volume": bson.M{"$sum": "$amountDecimal"},
+		"high":   bson.M{"$max": "$pricepoint"},
+		"low":    bson.M{"$min": "$pricepoint"},
+		"open":   bson.M{"$first": "$pricepoint"},
+		"close":  bson.M{"$last": "$pricepoint"},
+		"volume": bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
 	}
 
 	groupID := make(bson.M)
