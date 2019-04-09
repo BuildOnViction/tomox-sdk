@@ -2,13 +2,14 @@
 
 **Websocket Endpoint**: `/socket`
 
-There are 5 channels on the matching engine websocket API:
+There are 6 channels on the matching engine websocket API:
 
 - orders
 - ohlcv
 - orderbook
 - raw_orderbook
 - trades
+- price_board
 
 To send a message to a specific channel, the channel the general format of a message is the following:
 
@@ -914,6 +915,116 @@ The general format of the update message is the following:
       <order>,
       <order>
     ]
+  }
+}
+```
+
+# Price Board Channel
+
+## Message:
+
+- SUBSCRIBE (client --> server)
+- UNSUBSCRIBE (client --> server)
+- INIT (server --> client)
+- UPDATE (server --> client)
+
+## SUBSCRIBE_PRICE_BOARD MESSAGE (client --> server)
+
+```json
+{
+  "channel": "price_board",
+  "event": {
+    "type": "SUBSCRIBE",
+    "payload": {
+      "baseToken": <address>,
+      "quoteToken": <address>,
+      "name": <baseTokenSymbol>/<quoteTokenSymbol>
+    }
+  }
+}
+```
+
+### Example:
+
+```json
+{
+  "channel": "price_board",
+  "event": {
+    "type": "SUBSCRIBE",
+    "payload": {
+      "baseToken": "0x546d3B3d69E30859f4F3bA15F81809a2efCE6e67",
+      "quoteToken": "0x17b4E8B709ca82ABF89E172366b151c72DF9C62E",
+      "name": "ETH/TOMO"
+    }
+  }
+}
+```
+
+## UNSUBSRIBE MESSAGE (client --> server)
+
+```json
+{
+  "channel": "price_board",
+  "event": {
+    "type": "UNSUBSCRIBE"
+  }
+}
+```
+
+## INIT MESSAGE (server --> client)
+
+The general format of the INIT message is the following:
+
+```json
+{
+  "channel": "price_board",
+  "event": {
+    "type": "INIT",
+    "payload": {
+      "ticks": [
+        {
+          "open": "",
+          "close": "",
+          "high": "",
+          "low": "",
+          "volume": "",
+          "pair": "",
+          "count": "",
+          "timestamp": ""
+        }
+      ],
+      "usd": "",
+      "last_trade_price": ""
+    }
+  }
+}
+```
+
+## UPDATE MESSAGE (server --> client)
+
+The general format of the update message is the following:
+
+```json
+{
+  "channel": "price_board",
+  "event": {
+    "type": "UPDATE",
+    "payload": {
+      "ticks": [
+        {
+          "open": "",
+          "close": "",
+          "high": "",
+          "low": "",
+          "volume": "",
+          "pair": "",
+          "count": "",
+          "timestamp": ""
+        }
+      ],
+      "usd": "",
+      "last_trade_price": ""
+    }
   }
 }
 ```
