@@ -40,11 +40,34 @@ func (s *PriceBoardService) Subscribe(c *ws.Client, bt, qt common.Address) {
 	duration := int64(1)
 	unit := "day"
 
-	data, err := s.GetPriceBoardData(
+	ticks, err := s.GetPriceBoardData(
 		[]types.PairAddresses{{BaseToken: bt, QuoteToken: qt}},
 		duration,
 		unit,
 	)
+
+	if err != nil {
+		logger.Error(err)
+		socket.SendErrorMessage(c, err.Error())
+		return
+	}
+
+	quoteToken, err := s.TokenDao.GetByAddress(qt)
+
+	if err != nil {
+		logger.Error(err)
+		socket.SendErrorMessage(c, err.Error())
+		return
+	}
+
+	var lastTradePrice string
+	lastTrade, err := s.TradeDao.GetLatestTrade(bt, qt)
+	if lastTrade == nil {
+		lastTradePrice = "?"
+	} else {
+		lastTradePrice = lastTrade.PricePoint.String()
+	}
+
 	if err != nil {
 		logger.Error(err)
 		socket.SendErrorMessage(c, err.Error())
@@ -53,6 +76,7 @@ func (s *PriceBoardService) Subscribe(c *ws.Client, bt, qt common.Address) {
 
 	id := utils.GetPriceBoardChannelID(bt, qt)
 	err = socket.Subscribe(id, c)
+
 	if err != nil {
 		logger.Error(err)
 		socket.SendErrorMessage(c, err.Error())
@@ -60,7 +84,14 @@ func (s *PriceBoardService) Subscribe(c *ws.Client, bt, qt common.Address) {
 	}
 
 	ws.RegisterConnectionUnsubscribeHandler(c, socket.UnsubscribeChannelHandler(id))
-	socket.SendInitMessage(c, data)
+
+	result := types.PriceBoardData{
+		Ticks:          ticks,
+		PriceUSD:       quoteToken.USD,
+		LastTradePrice: lastTradePrice,
+	}
+
+	socket.SendInitMessage(c, result)
 }
 
 // Unsubscribe
