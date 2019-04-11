@@ -2,8 +2,10 @@ package crons
 
 import (
 	"log"
+	"time"
 
 	"github.com/robfig/cron"
+	"github.com/tomochain/dex-server/types"
 	"github.com/tomochain/dex-server/utils"
 	"github.com/tomochain/dex-server/ws"
 )
@@ -18,11 +20,33 @@ func (s *CronService) startMarketsCron(c *cron.Cron) {
 // and broadcasts the tick to the client subscribed to pair's respective channel
 func (s *CronService) getMarketsData() func() {
 	return func() {
-		res, err := s.PairService.GetAllTokenPairData()
+		pairData, err := s.PairService.GetAllTokenPairData()
 
 		if err != nil {
 			log.Printf("%s", err)
 			return
+		}
+
+		p := make([]types.PairAddresses, 0)
+		duration := int64(1)
+		unit := "hour"
+		end := int64(time.Now().Unix())
+		start := end - 24*60*60 // -1 day
+		ticks, err := s.OHLCVService.GetOHLCV(p, duration, unit, start, end)
+
+		tickResult := make(map[string][]*types.Tick)
+
+		for _, tick := range ticks {
+			tickResult[tick.Pair.PairName] = append(tickResult[tick.Pair.PairName], &types.Tick{
+				Close:     tick.Close,
+				Timestamp: tick.Timestamp,
+				Pair:      tick.Pair,
+			})
+		}
+
+		res := &types.MarketData{
+			PairData:        pairData,
+			SmallChartsData: tickResult,
 		}
 
 		id := utils.GetMarketsChannelID(ws.MarketsChannel)
