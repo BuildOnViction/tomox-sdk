@@ -161,13 +161,14 @@ func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
 	var o *types.Order
 	decoder := json.NewDecoder(r.Body)
 
+	defer r.Body.Close()
+
 	err := decoder.Decode(&o)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
 	}
-
-	defer r.Body.Close()
 
 	o.Hash = o.ComputeHash()
 
@@ -175,10 +176,12 @@ func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	if acc.IsBlocked {
 		httputils.WriteError(w, http.StatusForbidden, "Account is blocked")
+		return
 	}
 
 	err = e.orderService.NewOrder(o)
@@ -192,7 +195,34 @@ func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *orderEndpoint) HandleCancelOrder(w http.ResponseWriter, r *http.Request) {
+	oc := &types.OrderCancel{}
 
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&oc)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	_, err = oc.GetSenderAddress()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = e.orderService.CancelOrder(oc)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
 }
 
 // ws function handles incoming websocket messages on the order channel

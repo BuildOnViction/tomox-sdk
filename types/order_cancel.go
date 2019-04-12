@@ -74,9 +74,9 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 	oc.Signature = &Signature{
 		// TODO: Refactor this part to uppercase later
 		// At the moment, client send lowercase of v, r, s
-		V: byte(sig["v"].(float64)),
-		R: common.HexToHash(sig["r"].(string)),
-		S: common.HexToHash(sig["s"].(string)),
+		V: byte(sig["V"].(float64)),
+		R: common.HexToHash(sig["R"].(string)),
+		S: common.HexToHash(sig["S"].(string)),
 	}
 
 	return nil
