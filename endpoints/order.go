@@ -27,9 +27,13 @@ func ServeOrderResource(
 	accountService interfaces.AccountService,
 ) {
 	e := &orderEndpoint{orderService, accountService}
+
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
+	r.HandleFunc("/orders", e.HandleNewOrder).Methods("POST")
+	r.HandleFunc("/orders/cancel", e.HandleCancelOrder).Methods("POST")
+
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
 
@@ -153,6 +157,44 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, orders)
 }
 
+func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
+	var o *types.Order
+	decoder := json.NewDecoder(r.Body)
+
+	err := decoder.Decode(&o)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+	}
+
+	defer r.Body.Close()
+
+	o.Hash = o.ComputeHash()
+
+	acc, err := e.accountService.FindOrCreate(o.UserAddress)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	if acc.IsBlocked {
+		httputils.WriteError(w, http.StatusForbidden, "Account is blocked")
+	}
+
+	err = e.orderService.NewOrder(o)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusCreated, o)
+}
+
+func (e *orderEndpoint) HandleCancelOrder(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // ws function handles incoming websocket messages on the order channel
 func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	msg := &types.WebsocketEvent{}
@@ -165,16 +207,16 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 
 	switch msg.Type {
 	case "NEW_ORDER":
-		e.handleNewOrder(msg, c)
+		e.handleWSNewOrder(msg, c)
 	case "CANCEL_ORDER":
-		e.handleCancelOrder(msg, c)
+		e.handleWSCancelOrder(msg, c)
 	default:
 		log.Print("Response with error")
 	}
 }
 
 // handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
-func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
+func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	o := &types.Order{}
 
 	bytes, err := json.Marshal(ev.Payload)
@@ -215,7 +257,7 @@ func (e *orderEndpoint) handleNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 }
 
 // handleCancelOrder handles CancelOrder message.
-func (e *orderEndpoint) handleCancelOrder(ev *types.WebsocketEvent, c *ws.Client) {
+func (e *orderEndpoint) handleWSCancelOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	bytes, err := json.Marshal(ev.Payload)
 	oc := &types.OrderCancel{}
 
