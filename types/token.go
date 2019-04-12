@@ -72,7 +72,7 @@ func GetNativeCurrency() NativeCurrency {
 // DefaultTestBalance returns the default balance
 // Only for testing/mock purpose
 func DefaultTestBalance() int64 {
-	return 1000
+	return 50000
 }
 
 // DefaultTestBalance returns the default locked balance
