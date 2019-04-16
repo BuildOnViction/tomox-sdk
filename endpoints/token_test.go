@@ -9,9 +9,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/testutils"
-	"github.com/tomochain/dex-server/utils/testutils/mocks"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/testutils"
+	"github.com/tomochain/tomodex/utils/testutils/mocks"
 )
 
 func SetupTest() (*mux.Router, *mocks.TokenService) {

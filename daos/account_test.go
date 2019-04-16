@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/testutils"
 )
 
 // var db *Database

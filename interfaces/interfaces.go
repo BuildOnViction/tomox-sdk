@@ -9,12 +9,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
-	"github.com/tomochain/dex-server/rabbitmq"
-	swapBitcoin "github.com/tomochain/dex-server/swap/bitcoin"
-	swapEthereum "github.com/tomochain/dex-server/swap/ethereum"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
+	"github.com/tomochain/tomodex/rabbitmq"
+	swapBitcoin "github.com/tomochain/tomodex/swap/bitcoin"
+	swapEthereum "github.com/tomochain/tomodex/swap/ethereum"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/ws"
 )
 
 type OrderDao interface {

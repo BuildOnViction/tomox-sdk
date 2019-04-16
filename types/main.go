@@ -1,6 +1,6 @@
 package types
 
-import "github.com/tomochain/dex-server/utils"
+import "github.com/tomochain/tomodex/utils"
 
 const (
 	PENDING = "PENDING"

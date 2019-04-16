@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/testutils"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/testutils"
 )
 
 func init() {

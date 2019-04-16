@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/math"
 )
 
 // PairService struct with daos required, responsible for communicating with daos.

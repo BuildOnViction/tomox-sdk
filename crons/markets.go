@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/robfig/cron"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomodex/ws"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming

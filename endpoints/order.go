@@ -8,11 +8,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/httputils"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/httputils"
+	"github.com/tomochain/tomodex/ws"
 )
 
 type orderEndpoint struct {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/math"
 )
 
 type ValidatorService struct {

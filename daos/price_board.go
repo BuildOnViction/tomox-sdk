@@ -2,13 +2,13 @@ package daos
 
 import (
 	"fmt"
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/tidwall/gjson"
-	"github.com/tomochain/dex-server/app"
+	"github.com/tomochain/tomodex/app"
 )
 
 type PriceBoardDao struct {

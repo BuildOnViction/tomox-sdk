@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 
-	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/tomodex/utils"
 )
 
 var logger = utils.Logger

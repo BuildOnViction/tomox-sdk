@@ -5,9 +5,9 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/swap/storage"
-	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/swap/storage"
+	"github.com/tomochain/tomodex/utils"
 )
 
 var logger = utils.EthereumListenerLogger

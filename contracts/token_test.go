@@ -7,15 +7,15 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
-	"github.com/tomochain/dex-server/daos"
-	"github.com/tomochain/dex-server/ethereum"
-	"github.com/tomochain/dex-server/services"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/math"
-	"github.com/tomochain/dex-server/utils/testutils"
-	"github.com/tomochain/dex-server/utils/testutils/mocks"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
+	"github.com/tomochain/tomodex/daos"
+	"github.com/tomochain/tomodex/ethereum"
+	"github.com/tomochain/tomodex/services"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomodex/utils/testutils"
+	"github.com/tomochain/tomodex/utils/testutils/mocks"
 )
 
 func SetupTokenTest() (*testutils.Deployer, *types.Wallet) {

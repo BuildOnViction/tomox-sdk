@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 
 	"github.com/gorilla/mux"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/ws"
 )
 
 type MarketsEndpoint struct {

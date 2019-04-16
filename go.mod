@@ -1,4 +1,4 @@
-module github.com/tomochain/dex-server
+module github.com/tomochain/tomodex
 
 go 1.12
 

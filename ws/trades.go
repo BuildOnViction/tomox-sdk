@@ -1,8 +1,8 @@
 package ws
 
 import (
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/types"
 )
 
 var tradeSocket *TradeSocket
