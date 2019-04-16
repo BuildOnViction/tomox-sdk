@@ -6,9 +6,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/globalsign/mgo"
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
 )
 
 func TestDepositHistory(t *testing.T) {

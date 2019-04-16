@@ -7,8 +7,8 @@ import (
 
 	ethereumTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/types"
 )
 
 const (

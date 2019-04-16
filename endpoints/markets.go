@@ -2,28 +2,28 @@ package endpoints
 
 import (
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomodex/interfaces"
 	"github.com/tomochain/tomodex/types"
 	"github.com/tomochain/tomodex/ws"
 )
 
-type PriceBoardEndpoint struct {
-	priceBoardService interfaces.PriceBoardService
+type MarketsEndpoint struct {
+	MarketsService interfaces.MarketsService
 }
 
 // ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
-func ServePriceBoardResource(
+func ServeMarketsResource(
 	r *mux.Router,
-	priceBoardService interfaces.PriceBoardService,
+	marketsService interfaces.MarketsService,
 ) {
-	e := &PriceBoardEndpoint{priceBoardService}
+	e := &MarketsEndpoint{marketsService}
 
-	ws.RegisterChannel(ws.PriceBoardChannel, e.handlePriceBoardWebSocket)
+	ws.RegisterChannel(ws.MarketsChannel, e.handleMarketsWebSocket)
 }
 
-func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.Client) {
+func (e *MarketsEndpoint) handleMarketsWebSocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
 
@@ -32,7 +32,7 @@ func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.
 		logger.Error(err)
 	}
 
-	socket := ws.GetPriceBoardSocket()
+	socket := ws.GetMarketSocket()
 
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
@@ -52,28 +52,15 @@ func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.
 	}
 
 	if ev.Type == types.SUBSCRIBE {
-
-		if (p.BaseToken == common.Address{}) {
-			msg := map[string]string{"Message": "Invalid base token"}
-			socket.SendErrorMessage(c, msg)
-			return
-		}
-
-		if (p.QuoteToken == common.Address{}) {
-			msg := map[string]string{"Message": "Invalid quote token"}
-			socket.SendErrorMessage(c, msg)
-			return
-		}
-
-		e.priceBoardService.Subscribe(c, p.BaseToken, p.QuoteToken)
+		e.MarketsService.Subscribe(c)
 	}
 
 	if ev.Type == types.UNSUBSCRIBE {
 		if p == nil {
-			e.priceBoardService.Unsubscribe(c)
+			e.MarketsService.Unsubscribe(c)
 			return
 		}
 
-		e.priceBoardService.UnsubscribeChannel(c, p.BaseToken, p.QuoteToken)
+		e.MarketsService.UnsubscribeChannel(c)
 	}
 }

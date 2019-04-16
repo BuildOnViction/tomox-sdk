@@ -1,8 +1,8 @@
 package testdata
 
 import (
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/daos"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/daos"
 )
 
 func init() {

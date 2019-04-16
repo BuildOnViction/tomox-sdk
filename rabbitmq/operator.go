@@ -5,8 +5,58 @@ import (
 	"log"
 
 	"github.com/streadway/amqp"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
+
+func (c *Connection) ConsumeQueuedTrades(ch *amqp.Channel, q *amqp.Queue, fn func(*types.Matches, uint64) error) error {
+	go func() {
+		msgs, err := ch.Consume(
+			q.Name, // queue
+			"",     // consumer
+			false,  // auto-ack
+			false,  // exclusive
+			false,  // no-local
+			false,  // no-wait
+			nil,    // args
+		)
+
+		if err != nil {
+			logger.Fatal("Failed to register a consumer:", err)
+		}
+
+		forever := make(chan bool)
+
+		go func() {
+			for d := range msgs {
+				m := &types.Matches{}
+				err := json.Unmarshal(d.Body, &m)
+				if err != nil {
+					logger.Error(err)
+					continue
+				}
+
+				logger.Info("Receiving pending trade")
+
+				err = m.Validate()
+				if err != nil {
+					logger.Error(err)
+					d.Nack(false, false)
+				} else {
+					err = fn(m, d.DeliveryTag)
+					if err != nil {
+						logger.Error(err)
+						d.Nack(false, false)
+					} else {
+						d.Ack(false)
+					}
+				}
+			}
+		}()
+
+		<-forever
+	}()
+	return nil
+}
 
 func (c *Connection) SubscribeOperator(fn func(*types.OperatorMessage) error) error {
 	ch := c.GetChannel("OPERATOR_SUB")
@@ -87,6 +137,30 @@ func (c *Connection) PurgeOperatorQueue() error {
 	return nil
 }
 
+func (c *Connection) PublishTradeSentMessage(matches *types.Matches) error {
+	ch := c.GetChannel("OPERATOR_PUB")
+	q := c.GetQueue(ch, "TX_MESSAGES")
+	msg := &types.OperatorMessage{
+		MessageType: types.TRADE_TX_PENDING,
+		Matches:     matches,
+	}
+
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = c.Publish(ch, q, bytes)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	logger.Info("PUBLISHED TRADE SENT MESSAGE")
+	return nil
+}
+
 // PublishTradeCancelMessage publishes a message when a trade is cancelled
 func (c *Connection) PublishTradeCancelMessage(matches *types.Matches) error {
 	ch := c.GetChannel("OPERATOR_PUB")
@@ -163,7 +237,7 @@ func (c *Connection) PublishTxErrorMessage(matches *types.Matches, errType strin
 	ch := c.GetChannel("OPERATOR_PUB")
 	q := c.GetQueue(ch, "TX_MESSAGES")
 	msg := &types.OperatorMessage{
-		MessageType: types.TRADE_ERROR,
+		MessageType: types.TRADE_TX_ERROR,
 		Matches:     matches,
 		ErrorType:   errType,
 	}
@@ -203,79 +277,5 @@ func (c *Connection) PublishTradeInvalidMessage(matches *types.Matches) error {
 	}
 
 	logger.Info("PUBLISHED TRADE INVALID MESSAGE")
-	return nil
-}
-
-func (c *Connection) PublishTradeSentMessage(matches *types.Matches) error {
-	ch := c.GetChannel("OPERATOR_PUB")
-	q := c.GetQueue(ch, "TX_MESSAGES")
-	msg := &types.OperatorMessage{
-		MessageType: types.TRADE_TX_PENDING,
-		Matches:     matches,
-	}
-
-	bytes, err := json.Marshal(msg)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = c.Publish(ch, q, bytes)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	logger.Info("PUBLISHED TRADE SENT MESSAGE")
-	return nil
-}
-
-func (c *Connection) ConsumeQueuedTrades(ch *amqp.Channel, q *amqp.Queue, fn func(*types.Matches, uint64) error) error {
-	go func() {
-		msgs, err := ch.Consume(
-			q.Name, // queue
-			"",     // consumer
-			false,  // auto-ack
-			false,  // exclusive
-			false,  // no-local
-			false,  // no-wait
-			nil,    // args
-		)
-
-		if err != nil {
-			logger.Fatal("Failed to register a consumer:", err)
-		}
-
-		forever := make(chan bool)
-
-		go func() {
-			for d := range msgs {
-				m := &types.Matches{}
-				err := json.Unmarshal(d.Body, &m)
-				if err != nil {
-					logger.Error(err)
-					continue
-				}
-
-				logger.Info("Receiving pending trade")
-
-				err = m.Validate()
-				if err != nil {
-					logger.Error(err)
-					d.Nack(false, false)
-				} else {
-					err = fn(m, d.DeliveryTag)
-					if err != nil {
-						logger.Error(err)
-						d.Nack(false, false)
-					} else {
-						d.Ack(false)
-					}
-				}
-			}
-		}()
-
-		<-forever
-	}()
 	return nil
 }

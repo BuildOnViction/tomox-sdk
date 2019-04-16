@@ -5,15 +5,15 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/rabbitmq"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/rabbitmq"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
 )
 
 var logger = utils.Logger
@@ -151,6 +151,13 @@ func (op *Operator) SubscribeOperatorMessages(fn func(*types.OperatorMessage) er
 	return nil
 }
 
+func (op *Operator) HandleError(m *types.Matches) {
+	err := op.Broker.PublishErrorMessage(m, "Server error")
+	if err != nil {
+		logger.Error(err)
+	}
+}
+
 func (op *Operator) HandleTxError(m *types.Matches, id int) {
 	errType := getErrorType(id)
 	err := op.Broker.PublishTxErrorMessage(m, errType)
@@ -216,6 +223,7 @@ func (op *Operator) HandleTrades(msg *types.OperatorMessage) error {
 	err := op.QueueTrade(msg.Matches)
 	if err != nil {
 		logger.Error(err)
+		op.HandleError(msg.Matches)
 		return err
 	}
 

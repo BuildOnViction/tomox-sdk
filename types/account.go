@@ -1,10 +1,9 @@
 package types
 
 import (
+	"encoding/json"
 	"math/big"
 	"time"
-
-	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
@@ -19,35 +18,6 @@ type Account struct {
 	IsBlocked     bool                             `json:"isBlocked" bson:"isBlocked"`
 	CreatedAt     time.Time                        `json:"createdAt" bson:"createdAt"`
 	UpdatedAt     time.Time                        `json:"updatedAt" bson:"updatedAt"`
-}
-
-// TokenBalance holds the Balance and the Locked balance values for a single Ethereum token
-// Balance and Locked Balance are stored as big.Int as they represent uint256 values
-type TokenBalance struct {
-	Address        common.Address `json:"address" bson:"address"`
-	Symbol         string         `json:"symbol" bson:"symbol"`
-	Balance        *big.Int       `json:"balance" bson:"balance"`
-	PendingBalance *big.Int       `json:"pendingBalance" bson:"pendingBalance"`
-	LockedBalance  *big.Int       `json:"lockedBalance" bson:"lockedBalance"`
-}
-
-// AccountRecord corresponds to what is stored in the DB. big.Ints are encoded as strings
-type AccountRecord struct {
-	ID            bson.ObjectId                 `json:"id" bson:"_id"`
-	Address       string                        `json:"address" bson:"address"`
-	TokenBalances map[string]TokenBalanceRecord `json:"tokenBalances" bson:"tokenBalances"`
-	IsBlocked     bool                          `json:"isBlocked" bson:"isBlocked"`
-	CreatedAt     time.Time                     `json:"createdAt" bson:"createdAt"`
-	UpdatedAt     time.Time                     `json:"updatedAt" bson:"updatedAt"`
-}
-
-// TokenBalanceRecord corresponds to a TokenBalance struct that is stored in the DB. big.Ints are encoded as strings
-type TokenBalanceRecord struct {
-	Address        string `json:"address" bson:"address"`
-	Symbol         string `json:"symbol" bson:"symbol"`
-	Balance        string `json:"balance" bson:"balance"`
-	PendingBalance string `json:"pendingBalance" base:"pendingBalance"`
-	LockedBalance  string `json:"lockedBalance" bson:"lockedBalance"`
 }
 
 // GetBSON implements bson.Getter
@@ -209,6 +179,16 @@ func (a Account) Validate() error {
 	)
 }
 
+// AccountRecord corresponds to what is stored in the DB. big.Ints are encoded as strings
+type AccountRecord struct {
+	ID            bson.ObjectId                 `json:"id" bson:"_id"`
+	Address       string                        `json:"address" bson:"address"`
+	TokenBalances map[string]TokenBalanceRecord `json:"tokenBalances" bson:"tokenBalances"`
+	IsBlocked     bool                          `json:"isBlocked" bson:"isBlocked"`
+	CreatedAt     time.Time                     `json:"createdAt" bson:"createdAt"`
+	UpdatedAt     time.Time                     `json:"updatedAt" bson:"updatedAt"`
+}
+
 type AccountBSONUpdate struct {
 	*Account
 }
@@ -244,4 +224,70 @@ func (a *AccountBSONUpdate) GetBSON() (interface{}, error) {
 	}
 
 	return update, nil
+}
+
+// TokenBalance holds the Balance and the Locked balance values for a single Ethereum token
+// Balance and Locked Balance are stored as big.Int as they represent uint256 values
+type TokenBalance struct {
+	Address        common.Address `json:"address" bson:"address"`
+	Symbol         string         `json:"symbol" bson:"symbol"`
+	Balance        *big.Int       `json:"balance" bson:"balance"`
+	PendingBalance *big.Int       `json:"pendingBalance" bson:"pendingBalance"`
+	LockedBalance  *big.Int       `json:"lockedBalance" bson:"lockedBalance"`
+}
+
+// MarshalJSON implements the json.Marshal interface
+func (t *TokenBalance) MarshalJSON() ([]byte, error) {
+	tb := map[string]interface{}{
+		"address":        t.Address.Hex(),
+		"symbol":         t.Symbol,
+		"balance":        t.Balance.String(),
+		"lockedBalance":  t.LockedBalance.String(),
+		"pendingBalance": t.PendingBalance.String(),
+	}
+
+	return json.Marshal(tb)
+}
+
+func (t *TokenBalance) UnmarshalJSON(b []byte) error {
+	tb := map[string]interface{}{}
+	err := json.Unmarshal(b, &tb)
+	if err != nil {
+		return err
+	}
+
+	if tb["address"] != nil {
+		t.Address = common.HexToAddress(tb["address"].(string))
+	}
+
+	if tb["symbol"] != nil {
+		t.Symbol = tb["symbol"].(string)
+	}
+
+	t.Balance = new(big.Int)
+	t.LockedBalance = new(big.Int)
+	t.PendingBalance = new(big.Int)
+
+	if tb["balance"] != nil {
+		t.Balance.UnmarshalJSON([]byte(tb["balance"].(string)))
+	}
+
+	if tb["lockedBalance"] != nil {
+		t.LockedBalance.UnmarshalJSON([]byte(tb["lockedBalance"].(string)))
+	}
+
+	if tb["pendingBalance"] != nil {
+		t.PendingBalance.UnmarshalJSON([]byte(tb["pendingBalance"].(string)))
+	}
+
+	return nil
+}
+
+// TokenBalanceRecord corresponds to a TokenBalance struct that is stored in the DB. big.Ints are encoded as strings
+type TokenBalanceRecord struct {
+	Address        string `json:"address" bson:"address"`
+	Symbol         string `json:"symbol" bson:"symbol"`
+	Balance        string `json:"balance" bson:"balance"`
+	PendingBalance string `json:"pendingBalance" base:"pendingBalance"`
+	LockedBalance  string `json:"lockedBalance" bson:"lockedBalance"`
 }

@@ -9,20 +9,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/contracts"
-	"github.com/tomochain/dex-server/crons"
-	"github.com/tomochain/dex-server/daos"
-	"github.com/tomochain/dex-server/endpoints"
-	"github.com/tomochain/dex-server/engine"
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/ethereum"
-	"github.com/tomochain/dex-server/operator"
-	"github.com/tomochain/dex-server/rabbitmq"
-	"github.com/tomochain/dex-server/services"
-	"github.com/tomochain/dex-server/swap"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/contracts"
+	"github.com/tomochain/tomodex/crons"
+	"github.com/tomochain/tomodex/daos"
+	"github.com/tomochain/tomodex/endpoints"
+	"github.com/tomochain/tomodex/engine"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/ethereum"
+	"github.com/tomochain/tomodex/operator"
+	"github.com/tomochain/tomodex/rabbitmq"
+	"github.com/tomochain/tomodex/services"
+	"github.com/tomochain/tomodex/swap"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/ws"
 )
 
 func Start() {
@@ -105,6 +105,7 @@ func NewRouter(
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService)
@@ -149,6 +150,7 @@ func NewRouter(
 
 	endpoints.ServeDepositResource(r, depositService, walletService, txService)
 	endpoints.ServePriceBoardResource(r, priceBoardService)
+	endpoints.ServeMarketsResource(r, marketsService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

@@ -7,16 +7,16 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
 )
 
 type ethereumClientInterface interface {

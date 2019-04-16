@@ -7,7 +7,7 @@ import (
 	"github.com/globalsign/mgo/dbtest"
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
 
 func CompareEngineResponse(t *testing.T, a, b *types.EngineResponse) {
