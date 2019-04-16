@@ -9,7 +9,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/tomochain/tomodex/interfaces"
 	"github.com/tomochain/tomodex/rabbitmq"
 	"github.com/tomochain/tomodex/types"

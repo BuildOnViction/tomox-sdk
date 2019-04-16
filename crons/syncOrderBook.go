@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/robfig/cron"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
 
 // syncOrderBookCron will fetch new orders from TomoX RPC API periodically
