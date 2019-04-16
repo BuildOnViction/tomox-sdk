@@ -5,14 +5,14 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/ethereum"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/rabbitmq"
-	"github.com/tomochain/dex-server/swap"
-	swapConfig "github.com/tomochain/dex-server/swap/config"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/ethereum"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/rabbitmq"
+	"github.com/tomochain/tomodex/swap"
+	swapConfig "github.com/tomochain/tomodex/swap/config"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/ws"
 )
 
 // need to refractor using interface.SwappEngine and only expose neccessary methods

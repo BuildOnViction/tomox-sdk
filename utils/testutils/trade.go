@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
 
 func GetTestTrade1() types.Trade {

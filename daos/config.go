@@ -5,9 +5,9 @@ import (
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/types"
 )
 
 const (

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tomochain/dex-server/server"
+import "github.com/tomochain/tomodex/server"
 
 func main() {
 	server.Start()

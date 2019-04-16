@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/ethereum"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/rabbitmq"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/ethereum"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/rabbitmq"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
 )
 
 // Engine contains daos required for engine to work

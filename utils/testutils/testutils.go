@@ -3,8 +3,8 @@ package testutils
 import (
 	"time"
 
-	"github.com/tomochain/dex-server/ethereum"
-	"github.com/tomochain/dex-server/utils/testutils/mocks"
+	"github.com/tomochain/tomodex/ethereum"
+	"github.com/tomochain/tomodex/utils/testutils/mocks"
 )
 
 func Mine(client *ethereum.SimulatedClient) {

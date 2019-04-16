@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
 
 func GetZRXWETHTestPair() *types.Pair {

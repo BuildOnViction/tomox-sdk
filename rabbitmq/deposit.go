@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
 
 // by default the exchange type is fanout, which means it broadcast all the queues

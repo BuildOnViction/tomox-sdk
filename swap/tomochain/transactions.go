@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"strconv"
 
-	"github.com/tomochain/dex-server/errors"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomodex/types"
 )
 
 func (ac *AccountConfigurator) createAccountTransaction(chain types.Chain, destination string) error {

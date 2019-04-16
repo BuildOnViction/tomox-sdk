@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/streadway/amqp"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/types"
 )
 
 func (c *Connection) ConsumeQueuedTrades(ch *amqp.Channel, q *amqp.Queue, fn func(*types.Matches, uint64) error) error {

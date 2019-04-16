@@ -10,12 +10,12 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/contracts/contractsinterfaces"
-	"github.com/tomochain/dex-server/rabbitmq"
-	swapBitcoin "github.com/tomochain/dex-server/swap/bitcoin"
-	swapEthereum "github.com/tomochain/dex-server/swap/ethereum"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/ws"
+	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
+	"github.com/tomochain/tomodex/rabbitmq"
+	swapBitcoin "github.com/tomochain/tomodex/swap/bitcoin"
+	swapEthereum "github.com/tomochain/tomodex/swap/ethereum"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/ws"
 )
 
 type OrderDao interface {
@@ -265,6 +265,12 @@ type TradeService interface {
 type PriceBoardService interface {
 	Subscribe(c *ws.Client, bt, qt common.Address)
 	UnsubscribeChannel(c *ws.Client, bt, qt common.Address)
+	Unsubscribe(c *ws.Client)
+}
+
+type MarketsService interface {
+	Subscribe(c *ws.Client)
+	UnsubscribeChannel(c *ws.Client)
 	Unsubscribe(c *ws.Client)
 }
 

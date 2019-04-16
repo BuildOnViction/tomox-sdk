@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/dex-server/swap/config"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils"
+	"github.com/tomochain/tomodex/swap/config"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
 )
 
 // Status describes status of account processing

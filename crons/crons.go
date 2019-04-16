@@ -2,8 +2,8 @@ package crons
 
 import (
 	"github.com/robfig/cron"
-	"github.com/tomochain/dex-server/engine"
-	"github.com/tomochain/dex-server/services"
+	"github.com/tomochain/tomodex/engine"
+	"github.com/tomochain/tomodex/services"
 )
 
 // CronService contains the services required to initialize crons
@@ -36,5 +36,6 @@ func (s *CronService) InitCrons() {
 	s.getFiatPriceCron(c)    // Cron to query USD price from coinmarketcap.com and update "tokens" collection
 	s.startPriceBoardCron(c) // Cron to fetch data for top price board
 	s.syncOrderBookCron(c)   // Cron to sync order book from nodes
+	s.startMarketsCron(c)    // Cron to fetch markets data
 	c.Start()
 }

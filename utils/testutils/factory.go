@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/math"
 )
 
 // Orderfactory simplifies creating orders, trades and cancelOrders objects

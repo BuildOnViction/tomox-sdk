@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-ozzo/ozzo-validation"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomodex/utils/math"
 )
 
 // Token struct is used to model the token data in the system and DB
@@ -72,7 +72,7 @@ func GetNativeCurrency() NativeCurrency {
 // DefaultTestBalance returns the default balance
 // Only for testing/mock purpose
 func DefaultTestBalance() int64 {
-	return 1000
+	return 50000
 }
 
 // DefaultTestBalance returns the default locked balance

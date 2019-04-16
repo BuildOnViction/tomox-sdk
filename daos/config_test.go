@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/globalsign/mgo"
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/types"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/types"
 )
 
 func TestConfigIncrementIndex(t *testing.T) {

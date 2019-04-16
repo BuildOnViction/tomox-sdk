@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/dex-server/interfaces"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/math"
 )
 
 // PairService struct with daos required, responsible for communicating with daos.
@@ -230,7 +230,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) ([]*types.Tick, er
 func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	now := time.Now()
 	end := time.Unix(now.Unix(), 0)
-	start := time.Unix(now.AddDate(0, 0, -7).Unix(), 0)
+	start := time.Unix(now.AddDate(0, 0, -1).Unix(), 0)
 	one, _ := bson.ParseDecimal128("1")
 
 	pairs, err := s.pairDao.GetActivePairs()

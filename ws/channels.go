@@ -3,7 +3,7 @@ package ws
 import (
 	"fmt"
 
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 )
 
 const (
@@ -15,6 +15,7 @@ const (
 	OHLCVChannel        = "ohlcv"
 	PriceBoardChannel   = "price_board"
 	DepositChannel      = "deposit"
+	MarketsChannel      = "markets"
 )
 
 var socketChannels map[string]func(interface{}, *Client)

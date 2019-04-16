@@ -47,6 +47,10 @@ func GetPriceBoardChannelID(bt, qt common.Address) string {
 	return strings.ToLower(fmt.Sprintf("%s::%s", bt.Hex(), qt.Hex()))
 }
 
+func GetMarketsChannelID(channel string) string {
+	return strings.ToLower(channel)
+}
+
 func Retry(retries int, fn func() error) error {
 	if err := fn(); err != nil {
 		retries--

@@ -1,6 +1,6 @@
 package storage
 
-import "github.com/tomochain/dex-server/types"
+import "github.com/tomochain/tomodex/types"
 
 // Storage is an interface that must be implemented by an object using
 // persistent storage.

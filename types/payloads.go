@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/tomochain/dex-server/errors"
+	"github.com/tomochain/tomodex/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tomochain/dex-server/utils/math"
+	"github.com/tomochain/tomodex/utils/math"
 
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/go-ozzo/ozzo-validation"

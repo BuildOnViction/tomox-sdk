@@ -3,8 +3,8 @@ package bitcoin
 import (
 	"math/big"
 
-	"github.com/tomochain/dex-server/swap/config"
-	"github.com/tomochain/dex-server/utils/binance"
+	"github.com/tomochain/tomodex/swap/config"
+	"github.com/tomochain/tomodex/utils/binance"
 )
 
 // ValueToTomo need to convert BTC to ETH, because Tomo using ETH as unit

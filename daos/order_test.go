@@ -9,12 +9,12 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/dex-server/app"
-	"github.com/tomochain/dex-server/types"
-	"github.com/tomochain/dex-server/utils"
-	"github.com/tomochain/dex-server/utils/math"
-	"github.com/tomochain/dex-server/utils/testutils"
-	"github.com/tomochain/dex-server/utils/units"
+	"github.com/tomochain/tomodex/app"
+	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomodex/utils/testutils"
+	"github.com/tomochain/tomodex/utils/units"
 )
 
 func init() {
