@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/tomochain/dex-server/utils"
 	"math/big"
 	"time"
 
@@ -137,8 +136,6 @@ func (a *Account) MarshalJSON() ([]byte, error) {
 	}
 
 	account["favoriteTokens"] = favoriteTokens
-
-	utils.PrintJSON(account)
 
 	return json.Marshal(account)
 }
