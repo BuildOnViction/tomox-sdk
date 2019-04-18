@@ -50,11 +50,11 @@ func NewOrderBook(
 	p types.Pair,
 ) *OrderBook {
 
-	t, err := orderDao.AddTopic([]string{p.EncodedTopic()})
+	//t, err := orderDao.AddTopic([]string{p.EncodedTopic()})
 
-	if err != nil {
-		logger.Error(err)
-	}
+	//if err != nil {
+	//	logger.Error(err)
+	//}
 
 	return &OrderBook{
 		rabbitMQConn: rabbitMQConn,
@@ -62,7 +62,7 @@ func NewOrderBook(
 		tradeDao:     tradeDao,
 		pair:         &p,
 		mutex:        &sync.Mutex{},
-		topic:        t,
+		topic:        "",
 	}
 }
 

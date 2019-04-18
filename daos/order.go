@@ -816,10 +816,33 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		return err
 	}
 
+	oi := &tomox.OrderItem{}
+	oi.Hash = o.Hash
+	oi.PairName = o.PairName
+	oi.Price = o.PricePoint
+	oi.Quantity = o.Amount
+	oi.BaseToken = o.BaseToken
+	oi.QuoteToken = o.QuoteToken
+	oi.ExchangeAddress = o.ExchangeAddress
+	oi.MakeFee = o.MakeFee
+	oi.TakeFee = o.TakeFee
+	oi.Side = o.Side
+	oi.Type = o.Type
+	oi.Nonce = o.Nonce
+	oi.Status = o.Status
+	oi.CreatedAt = uint64(o.CreatedAt.Unix())
+	oi.UpdatedAt = uint64(o.UpdatedAt.Unix())
+	oi.Signature = &tomox.Signature{
+		V: o.Signature.V,
+		R: o.Signature.R,
+		S: o.Signature.S,
+	}
+	oi.FilledAmount = o.FilledAmount
+
 	var result interface{}
 	params := make(map[string]interface{})
 	params["topic"] = topic
-	params["payload"], err = json.Marshal(o)
+	params["payload"], err = json.Marshal(oi)
 
 	if err != nil {
 		logger.Error(err)
