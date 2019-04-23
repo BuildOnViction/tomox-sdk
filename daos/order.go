@@ -912,48 +912,6 @@ func (dao *OrderDao) CancelOrder(o *types.Order) error {
 	return nil
 }
 
-func (dao *OrderDao) GetNewOrders(topic string) ([]*types.Order, error) {
-	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
-
-	defer rpcClient.Close()
-
-	if err != nil {
-		return []*types.Order{}, err
-	}
-
-	var messages []*tomox.Message
-	params := topic
-	err = rpcClient.Call(&messages, "tomoX_getOrders", params)
-
-	if err != nil {
-		return []*types.Order{}, err
-	}
-
-	result := make([]*types.Order, 0)
-
-	for _, message := range messages {
-		var o *types.Order
-		err := json.Unmarshal(message.Payload, &o)
-
-		if err != nil {
-			logger.Error(err)
-			return []*types.Order{}, err
-		}
-
-		result = append(result, o)
-	}
-
-	return result, nil
-}
-
-func (dao *OrderDao) SyncNewOrders(orders []*types.Order) error {
-	for _, o := range orders {
-		dao.FindAndModify(o.Hash, o)
-	}
-
-	return nil
-}
-
 func (dao *OrderDao) AddTopic(t []string) (string, error) {
 	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
 

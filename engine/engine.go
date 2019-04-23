@@ -2,7 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/tomochain/tomodex/errors"
 	"github.com/tomochain/tomodex/ethereum"
@@ -194,54 +193,6 @@ func (e *Engine) handleInvalidateTakerOrders(bytes []byte) error {
 	if err != nil {
 		logger.Error(err)
 		return err
-	}
-
-	return nil
-}
-
-func (e *Engine) SyncOrderBook(p types.Pair) error {
-	//logger.Debugf("*#####%s", p.Code())
-	ob := e.orderbooks[p.Code()]
-
-	if ob.topic == "" {
-		return errors.New(fmt.Sprintf("Orderbook topic is missing: %s", p.Name()))
-	}
-
-	orders, err := ob.orderDao.GetNewOrders(ob.topic)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	for _, o := range orders {
-		res := &types.EngineResponse{}
-		if o.Side == types.SELL {
-			res, err = ob.sellOrder(o)
-			if err != nil {
-				logger.Error(err)
-				return err
-			}
-
-		} else if o.Side == types.BUY {
-			res, err = ob.buyOrder(o)
-			if err != nil {
-				logger.Error(err)
-				return err
-			}
-		}
-
-		// TODO: Remove these lines later
-		if res.Status == types.ORDER_ADDED || res.Status == types.ORDER_CANCELLED {
-			return nil
-		}
-
-		// Note: Plug the option for orders like FOC, Limit here (if needed)
-		err = ob.rabbitMQConn.PublishEngineResponse(res)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
 	}
 
 	return nil

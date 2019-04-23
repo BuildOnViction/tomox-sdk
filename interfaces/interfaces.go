@@ -49,8 +49,6 @@ type OrderDao interface {
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 	AddNewOrder(o *types.Order, topic string) error
 	CancelOrder(o *types.Order) error
-	GetNewOrders(topic string) ([]*types.Order, error)
-	SyncNewOrders(orders []*types.Order) error
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
 	WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream))
