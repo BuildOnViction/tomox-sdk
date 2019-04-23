@@ -1,44 +1,45 @@
 package middlewares
 
 import (
+	"bytes"
+	"fmt"
 	"net/http"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tomochain/tomodex/utils"
 )
 
 func VerifySignature(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// TODO: Logic to verify the signature of user here
-		//if r.Header["Signature"] != nil && r.Header["Hash"] != nil && r.Header["Pubkey"] != nil {
-		//
-		//	signature := []byte(r.Header["Signature"][0])
-		//	addressHash := []byte(r.Header["Hash"][0])
-		//	publicKey := crypto.PublicKey(r.Header["Pubkey"][0])
-		//	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-		//
-		//	utils.Logger.Debug(signature)
-		//	utils.Logger.Debug(addressHash)
-		//	utils.Logger.Debug(publicKeyECDSA)
-		//
-		//	if !ok {
-		//		w.WriteHeader(http.StatusInternalServerError)
-		//		return
-		//	}
-		//
-		//	publicKeyBytes := ecrypto.FromECDSAPub(publicKeyECDSA)
-		//
-		//	sigPublicKey, err := ecrypto.Ecrecover(addressHash, signature)
-		//
-		//	if err != nil {
-		//		w.WriteHeader(http.StatusInternalServerError)
-		//		return
-		//	}
-		//
-		//	matches := bytes.Equal(sigPublicKey, publicKeyBytes)
-		//	fmt.Println(matches) // true
-		//} else {
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
+		if r.Header["Signature"] != nil && r.Header["Hash"] != nil && r.Header["Pubkey"] != nil {
+
+			signature := common.Hex2Bytes(r.Header["Signature"][0])
+			hash := common.Hex2Bytes(r.Header["Hash"][0])
+			publicKeyBytes := common.Hex2Bytes(r.Header["Pubkey"][0])
+
+			utils.Logger.Debug(signature)
+			utils.Logger.Debug(hash)
+			utils.Logger.Debug(publicKeyBytes)
+
+			sigPublicKey, err := crypto.Ecrecover(hash, signature)
+			if err != nil {
+				utils.Logger.Error(err)
+			}
+
+			matches := bytes.Equal(sigPublicKey, publicKeyBytes)
+			fmt.Println(matches) // true
+
+			if !matches {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})
