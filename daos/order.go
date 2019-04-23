@@ -817,27 +817,31 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	}
 
 	oi := &tomox.OrderItem{}
-	oi.Hash = o.Hash
-	oi.PairName = o.PairName
-	oi.Price = o.PricePoint
 	oi.Quantity = o.Amount
+	oi.Price = o.PricePoint
+	oi.ExchangeAddress = o.ExchangeAddress
+	oi.UserAddress = o.UserAddress
 	oi.BaseToken = o.BaseToken
 	oi.QuoteToken = o.QuoteToken
-	oi.ExchangeAddress = o.ExchangeAddress
-	oi.MakeFee = o.MakeFee
-	oi.TakeFee = o.TakeFee
+	if o.Status == "" {
+		o.Status = "OPEN"
+	}
+	oi.Status = o.Status
 	oi.Side = o.Side
 	oi.Type = o.Type
-	oi.Nonce = o.Nonce
-	oi.Status = o.Status
-	oi.CreatedAt = uint64(o.CreatedAt.Unix())
-	oi.UpdatedAt = uint64(o.UpdatedAt.Unix())
+	oi.Hash = o.Hash
 	oi.Signature = &tomox.Signature{
 		V: o.Signature.V,
 		R: o.Signature.R,
 		S: o.Signature.S,
 	}
 	oi.FilledAmount = o.FilledAmount
+	oi.Nonce = o.Nonce
+	oi.MakeFee = o.MakeFee
+	oi.TakeFee = o.TakeFee
+	oi.PairName = o.PairName
+	oi.CreatedAt = uint64(o.CreatedAt.Unix())
+	oi.UpdatedAt = uint64(o.UpdatedAt.Unix())
 
 	var result interface{}
 	params := make(map[string]interface{})
@@ -869,8 +873,36 @@ func (dao *OrderDao) CancelOrder(o *types.Order) error {
 		return err
 	}
 
+	oi := &tomox.OrderItem{}
+	oi.Quantity = o.Amount
+	oi.Price = o.PricePoint
+	oi.ExchangeAddress = o.ExchangeAddress
+	oi.UserAddress = o.UserAddress
+	oi.BaseToken = o.BaseToken
+	oi.QuoteToken = o.QuoteToken
+	if o.Status == "" {
+		o.Status = "OPEN"
+	}
+	oi.Status = o.Status
+	oi.Side = o.Side
+	oi.Type = o.Type
+	oi.Hash = o.Hash
+	oi.Signature = &tomox.Signature{
+		V: o.Signature.V,
+		R: o.Signature.R,
+		S: o.Signature.S,
+	}
+	oi.FilledAmount = o.FilledAmount
+	oi.Nonce = o.Nonce
+	oi.MakeFee = o.MakeFee
+	oi.TakeFee = o.TakeFee
+	oi.PairName = o.PairName
+	oi.CreatedAt = uint64(o.CreatedAt.Unix())
+	oi.UpdatedAt = uint64(o.UpdatedAt.Unix())
+	oi.OrderID = 0
+
 	var result interface{}
-	err = rpcClient.Call(&result, "tomoX_cancelOrder", o)
+	err = rpcClient.Call(&result, "tomoX_cancelOrder", oi)
 
 	if err != nil {
 		logger.Error(err)

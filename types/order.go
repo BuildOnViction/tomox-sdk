@@ -42,8 +42,8 @@ type Order struct {
 	Type            string         `json:"type" bson:"type"`
 	Hash            common.Hash    `json:"hash" bson:"hash"`
 	Signature       *Signature     `json:"signature,omitempty" bson:"signature"`
-	PricePoint      *big.Int       `json:"pricepoint" bson:"pricepoint"`
-	Amount          *big.Int       `json:"amount" bson:"amount"`
+	PricePoint      *big.Int       `json:"pricepoint" bson:"price"`
+	Amount          *big.Int       `json:"amount" bson:"quantity"`
 	FilledAmount    *big.Int       `json:"filledAmount" bson:"filledAmount"`
 	Nonce           *big.Int       `json:"nonce" bson:"nonce"`
 	MakeFee         *big.Int       `json:"makeFee" bson:"makeFee"`
@@ -513,8 +513,8 @@ type OrderRecord struct {
 	Side            string           `json:"side" bson:"side"`
 	Type            string           `json:"type" bson:"type"`
 	Hash            string           `json:"hash" bson:"hash"`
-	PricePoint      string           `json:"pricepoint" bson:"pricepoint"`
-	Amount          string           `json:"amount" bson:"amount"`
+	Price           string           `json:"price" bson:"price"`
+	Quantity        string           `json:"quantity" bson:"quantity"`
 	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 	Nonce           string           `json:"nonce" bson:"nonce"`
 	MakeFee         string           `json:"makeFee" bson:"makeFee"`
@@ -537,8 +537,8 @@ func (o *Order) GetBSON() (interface{}, error) {
 		Side:            o.Side,
 		Type:            o.Type,
 		Hash:            o.Hash.Hex(),
-		Amount:          o.Amount.String(),
-		PricePoint:      o.PricePoint.String(),
+		Quantity:        o.Amount.String(),
+		Price:           o.PricePoint.String(),
 		Nonce:           o.Nonce.String(),
 		MakeFee:         o.MakeFee.String(),
 		TakeFee:         o.TakeFee.String(),
@@ -579,8 +579,8 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		Side            string           `json:"side" bson:"side"`
 		Type            string           `json:"type" bson:"type"`
 		Hash            string           `json:"hash" bson:"hash"`
-		PricePoint      string           `json:"pricepoint" bson:"pricepoint"`
-		Amount          string           `json:"amount" bson:"amount"`
+		Price           string           `json:"price" bson:"price"`
+		Quantity        string           `json:"quantity" bson:"quantity"`
 		FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 		Nonce           string           `json:"nonce" bson:"nonce"`
 		MakeFee         string           `json:"makeFee" bson:"makeFee"`
@@ -611,16 +611,16 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 	o.Type = decoded.Type
 	o.Hash = common.HexToHash(decoded.Hash)
 
-	if decoded.Amount != "" {
-		o.Amount = math.ToBigInt(decoded.Amount)
+	if decoded.Quantity != "" {
+		o.Amount = math.ToBigInt(decoded.Quantity)
 	}
 
 	if decoded.FilledAmount != "" {
 		o.FilledAmount = math.ToBigInt(decoded.FilledAmount)
 	}
 
-	if decoded.PricePoint != "" {
-		o.PricePoint = math.ToBigInt(decoded.PricePoint)
+	if decoded.Price != "" {
+		o.PricePoint = math.ToBigInt(decoded.Price)
 	}
 
 	if decoded.Signature != nil {
