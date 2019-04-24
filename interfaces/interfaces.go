@@ -48,7 +48,7 @@ type OrderDao interface {
 	Drop() error
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 	AddNewOrder(o *types.Order, topic string) error
-	CancelOrder(o *types.Order) error
+	CancelOrder(o *types.Order, topic string) error
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
 	WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream))

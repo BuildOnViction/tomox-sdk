@@ -284,7 +284,9 @@ func (ob *OrderBook) cancelOrder(o *types.Order) error {
 	ob.mutex.Lock()
 	defer ob.mutex.Unlock()
 
-	err := ob.orderDao.CancelOrder(o)
+	topic := ob.pair.EncodedTopic()
+
+	err := ob.orderDao.CancelOrder(o, topic)
 
 	if err != nil {
 		logger.Error(err)

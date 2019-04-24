@@ -816,32 +816,34 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	oi := &tomox.OrderItem{}
-	oi.Quantity = o.Amount
-	oi.Price = o.PricePoint
-	oi.ExchangeAddress = o.ExchangeAddress
-	oi.UserAddress = o.UserAddress
-	oi.BaseToken = o.BaseToken
-	oi.QuoteToken = o.QuoteToken
 	if o.Status == "" {
 		o.Status = "OPEN"
 	}
-	oi.Status = o.Status
-	oi.Side = o.Side
-	oi.Type = o.Type
-	oi.Hash = o.Hash
-	oi.Signature = &tomox.Signature{
-		V: o.Signature.V,
-		R: o.Signature.R,
-		S: o.Signature.S,
+
+	oi := &tomox.OrderItem{
+		Quantity:        o.Amount,
+		Price:           o.PricePoint,
+		ExchangeAddress: o.ExchangeAddress,
+		UserAddress:     o.UserAddress,
+		BaseToken:       o.BaseToken,
+		QuoteToken:      o.QuoteToken,
+		Status:          o.Status,
+		Side:            o.Side,
+		Type:            o.Type,
+		Hash:            o.Hash,
+		Signature: &tomox.Signature{
+			V: o.Signature.V,
+			R: o.Signature.R,
+			S: o.Signature.S,
+		},
+		FilledAmount: o.FilledAmount,
+		Nonce:        o.Nonce,
+		MakeFee:      o.MakeFee,
+		TakeFee:      o.TakeFee,
+		PairName:     o.PairName,
+		CreatedAt:    uint64(o.CreatedAt.Unix()),
+		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
 	}
-	oi.FilledAmount = o.FilledAmount
-	oi.Nonce = o.Nonce
-	oi.MakeFee = o.MakeFee
-	oi.TakeFee = o.TakeFee
-	oi.PairName = o.PairName
-	oi.CreatedAt = uint64(o.CreatedAt.Unix())
-	oi.UpdatedAt = uint64(o.UpdatedAt.Unix())
 
 	var result interface{}
 	params := make(map[string]interface{})
@@ -863,7 +865,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	return nil
 }
 
-func (dao *OrderDao) CancelOrder(o *types.Order) error {
+func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
 
 	defer rpcClient.Close()
@@ -873,36 +875,47 @@ func (dao *OrderDao) CancelOrder(o *types.Order) error {
 		return err
 	}
 
-	oi := &tomox.OrderItem{}
-	oi.Quantity = o.Amount
-	oi.Price = o.PricePoint
-	oi.ExchangeAddress = o.ExchangeAddress
-	oi.UserAddress = o.UserAddress
-	oi.BaseToken = o.BaseToken
-	oi.QuoteToken = o.QuoteToken
 	if o.Status == "" {
 		o.Status = "OPEN"
 	}
-	oi.Status = o.Status
-	oi.Side = o.Side
-	oi.Type = o.Type
-	oi.Hash = o.Hash
-	oi.Signature = &tomox.Signature{
-		V: o.Signature.V,
-		R: o.Signature.R,
-		S: o.Signature.S,
+
+	oi := &tomox.OrderItem{
+		Quantity:        o.Amount,
+		Price:           o.PricePoint,
+		ExchangeAddress: o.ExchangeAddress,
+		UserAddress:     o.UserAddress,
+		BaseToken:       o.BaseToken,
+		QuoteToken:      o.QuoteToken,
+		Status:          o.Status,
+		Side:            o.Side,
+		Type:            o.Type,
+		Hash:            o.Hash,
+		Signature: &tomox.Signature{
+			V: o.Signature.V,
+			R: o.Signature.R,
+			S: o.Signature.S,
+		},
+		FilledAmount: o.FilledAmount,
+		Nonce:        o.Nonce,
+		MakeFee:      o.MakeFee,
+		TakeFee:      o.TakeFee,
+		PairName:     o.PairName,
+		CreatedAt:    uint64(o.CreatedAt.Unix()),
+		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
+		OrderID:      0,
 	}
-	oi.FilledAmount = o.FilledAmount
-	oi.Nonce = o.Nonce
-	oi.MakeFee = o.MakeFee
-	oi.TakeFee = o.TakeFee
-	oi.PairName = o.PairName
-	oi.CreatedAt = uint64(o.CreatedAt.Unix())
-	oi.UpdatedAt = uint64(o.UpdatedAt.Unix())
-	oi.OrderID = 0
 
 	var result interface{}
-	err = rpcClient.Call(&result, "tomoX_cancelOrder", oi)
+	params := make(map[string]interface{})
+	params["topic"] = topic
+	params["payload"], err = json.Marshal(oi)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = rpcClient.Call(&result, "tomoX_cancelOrder", params)
 
 	if err != nil {
 		logger.Error(err)
