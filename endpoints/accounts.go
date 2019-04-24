@@ -5,7 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/middlewares"
 	"github.com/tomochain/tomodex/types"
 	"github.com/tomochain/tomodex/utils/httputils"
 )
@@ -20,9 +22,36 @@ func ServeAccountResource(
 ) {
 
 	e := &accountEndpoint{accountService}
-	r.HandleFunc("/account/create", e.handleCreateAccount).Methods("POST")
-	r.HandleFunc("/account/{address}", e.handleGetAccount).Methods("GET")
-	r.HandleFunc("/account/{address}/{token}", e.handleGetAccountTokenBalance).Methods("GET")
+
+	r.Handle(
+		"/account/create",
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleCreateAccount)),
+	).Methods("POST")
+
+	r.Handle(
+		"/account/favorite",
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.HandleGetFavoriteTokens)),
+	).Methods("GET")
+
+	r.Handle(
+		"/account/favorite/add",
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.HandleAddFavoriteToken)),
+	).Methods("POST")
+
+	r.Handle(
+		"/account/favorite/remove",
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.HandleRemoveFavoriteToken)),
+	).Methods("POST")
+
+	r.Handle(
+		"/account/{address}",
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetAccount)),
+	).Methods("GET")
+
+	r.Handle(
+		"/account/{address}/{token}",
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetAccountTokenBalance)),
+	).Methods("GET")
 }
 
 func (e *accountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -102,4 +131,16 @@ func (e *accountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r 
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, b)
+}
+
+func (e *accountEndpoint) HandleGetFavoriteTokens(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (e *accountEndpoint) HandleAddFavoriteToken(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (e *accountEndpoint) HandleRemoveFavoriteToken(w http.ResponseWriter, r *http.Request) {
+
 }
