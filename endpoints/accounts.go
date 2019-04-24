@@ -12,8 +12,8 @@ import (
 	"github.com/tomochain/tomodex/utils/httputils"
 )
 
-type accountEndpoint struct {
-	accountService interfaces.AccountService
+type AccountEndpoint struct {
+	AccountService interfaces.AccountService
 }
 
 func ServeAccountResource(
@@ -21,7 +21,7 @@ func ServeAccountResource(
 	accountService interfaces.AccountService,
 ) {
 
-	e := &accountEndpoint{accountService}
+	e := &AccountEndpoint{AccountService: accountService}
 
 	r.Handle(
 		"/account/create",
@@ -30,17 +30,17 @@ func ServeAccountResource(
 
 	r.Handle(
 		"/account/favorite",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.HandleGetFavoriteTokens)),
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetFavoriteTokens)),
 	).Methods("GET")
 
 	r.Handle(
 		"/account/favorite/add",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.HandleAddFavoriteToken)),
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleAddFavoriteToken)),
 	).Methods("POST")
 
 	r.Handle(
 		"/account/favorite/remove",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.HandleRemoveFavoriteToken)),
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleDeleteFavoriteToken)),
 	).Methods("POST")
 
 	r.Handle(
@@ -54,7 +54,7 @@ func ServeAccountResource(
 	).Methods("GET")
 }
 
-func (e *accountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
+func (e *AccountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	addr := v.Get("address")
 
@@ -64,7 +64,7 @@ func (e *accountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Req
 	}
 
 	a := common.HexToAddress(addr)
-	existingAccount, err := e.accountService.GetByAddress(a)
+	existingAccount, err := e.AccountService.GetByAddress(a)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -77,7 +77,7 @@ func (e *accountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Req
 	}
 
 	acc := &types.Account{Address: a}
-	err = e.accountService.Create(acc)
+	err = e.AccountService.Create(acc)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -87,7 +87,7 @@ func (e *accountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusCreated, acc)
 }
 
-func (e *accountEndpoint) handleGetAccount(w http.ResponseWriter, r *http.Request) {
+func (e *AccountEndpoint) handleGetAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	addr := vars["address"]
@@ -97,7 +97,7 @@ func (e *accountEndpoint) handleGetAccount(w http.ResponseWriter, r *http.Reques
 	}
 
 	address := common.HexToAddress(addr)
-	a, err := e.accountService.GetByAddress(address)
+	a, err := e.AccountService.GetByAddress(address)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -107,7 +107,7 @@ func (e *accountEndpoint) handleGetAccount(w http.ResponseWriter, r *http.Reques
 	httputils.WriteJSON(w, http.StatusOK, a)
 }
 
-func (e *accountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r *http.Request) {
+func (e *AccountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	a := vars["address"]
@@ -123,7 +123,7 @@ func (e *accountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r 
 	addr := common.HexToAddress(a)
 	tokenAddr := common.HexToAddress(t)
 
-	b, err := e.accountService.GetTokenBalance(addr, tokenAddr)
+	b, err := e.AccountService.GetTokenBalance(addr, tokenAddr)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusNotFound, err.Error())
@@ -133,14 +133,80 @@ func (e *accountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r 
 	httputils.WriteJSON(w, http.StatusOK, b)
 }
 
-func (e *accountEndpoint) HandleGetFavoriteTokens(w http.ResponseWriter, r *http.Request) {
+func (e *AccountEndpoint) handleGetFavoriteTokens(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 
+	addr := vars["address"]
+	if !common.IsHexAddress(addr) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	address := common.HexToAddress(addr)
+	a, err := e.AccountService.GetFavoriteTokens(address)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "")
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, a)
 }
 
-func (e *accountEndpoint) HandleAddFavoriteToken(w http.ResponseWriter, r *http.Request) {
+func (e *AccountEndpoint) handleAddFavoriteToken(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	a := v.Get("address")
+	t := v.Get("token")
 
+	if !common.IsHexAddress(a) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	if !common.IsHexAddress(t) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
+		return
+	}
+
+	address := common.HexToAddress(a)
+	tokenAddr := common.HexToAddress(t)
+
+	err := e.AccountService.AddFavoriteToken(address, tokenAddr)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, tokenAddr)
 }
 
-func (e *accountEndpoint) HandleRemoveFavoriteToken(w http.ResponseWriter, r *http.Request) {
+func (e *AccountEndpoint) handleDeleteFavoriteToken(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	a := vars["address"]
+	t := vars["token"]
 
+	if !common.IsHexAddress(a) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	if !common.IsHexAddress(t) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
+		return
+	}
+
+	address := common.HexToAddress(a)
+	tokenAddr := common.HexToAddress(t)
+
+	err := e.AccountService.DeleteFavoriteToken(address, tokenAddr)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, tokenAddr)
 }
