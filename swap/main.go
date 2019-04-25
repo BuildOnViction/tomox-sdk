@@ -25,7 +25,7 @@ import (
 )
 
 // swap is engine
-var logger = utils.EngineLogger
+var logger = utils.Logger
 
 // JS SDK use to communicate.
 const ProtocolVersion int = 2

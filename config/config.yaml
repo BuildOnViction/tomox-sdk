@@ -16,6 +16,7 @@ deposit:
     signer_private_key: 0x7f4c1bacba63f05827f6d8fc0e22cf68c42005775a7f73abff7d819986bae77c
     starting_balance: 100
     token_asset_code: WETH
+env: local
 error_file: config/errors.yaml
 ethereum:
   decimal: 8

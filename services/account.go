@@ -11,8 +11,8 @@ import (
 )
 
 type AccountService struct {
-	accountDao interfaces.AccountDao
-	tokenDao   interfaces.TokenDao
+	AccountDao interfaces.AccountDao
+	TokenDao   interfaces.TokenDao
 }
 
 // NewAddressService returns a new instance of accountService
@@ -20,13 +20,16 @@ func NewAccountService(
 	accountDao interfaces.AccountDao,
 	tokenDao interfaces.TokenDao,
 ) *AccountService {
-	return &AccountService{accountDao, tokenDao}
+	return &AccountService{
+		AccountDao: accountDao,
+		TokenDao:   tokenDao,
+	}
 }
 
 func (s *AccountService) Create(a *types.Account) error {
 	addr := a.Address
 
-	acc, err := s.accountDao.GetByAddress(addr)
+	acc, err := s.AccountDao.GetByAddress(addr)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -36,7 +39,7 @@ func (s *AccountService) Create(a *types.Account) error {
 		return ErrAccountExists
 	}
 
-	tokens, err := s.tokenDao.GetAll()
+	tokens, err := s.TokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -70,7 +73,7 @@ func (s *AccountService) Create(a *types.Account) error {
 	}
 
 	if a != nil {
-		err = s.accountDao.Create(a)
+		err = s.AccountDao.Create(a)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -81,7 +84,7 @@ func (s *AccountService) Create(a *types.Account) error {
 }
 
 func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, error) {
-	a, err := s.accountDao.GetByAddress(addr)
+	a, err := s.AccountDao.GetByAddress(addr)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -91,7 +94,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		return a, nil
 	}
 
-	tokens, err := s.tokenDao.GetAll()
+	tokens, err := s.TokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -127,7 +130,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
 	}
 
-	err = s.accountDao.Create(a)
+	err = s.AccountDao.Create(a)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -137,25 +140,37 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 }
 
 func (s *AccountService) GetByID(id bson.ObjectId) (*types.Account, error) {
-	return s.accountDao.GetByID(id)
+	return s.AccountDao.GetByID(id)
 }
 
 func (s *AccountService) GetAll() ([]types.Account, error) {
-	return s.accountDao.GetAll()
+	return s.AccountDao.GetAll()
 }
 
 func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) {
-	return s.accountDao.GetByAddress(a)
+	return s.AccountDao.GetByAddress(a)
 }
 
 func (s *AccountService) GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error) {
-	return s.accountDao.GetTokenBalance(owner, token)
+	return s.AccountDao.GetTokenBalance(owner, token)
 }
 
 func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
-	return s.accountDao.GetTokenBalances(owner)
+	return s.AccountDao.GetTokenBalances(owner)
 }
 
 func (s *AccountService) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
-	return s.accountDao.Transfer(token, fromAddress, toAddress, amount)
+	return s.AccountDao.Transfer(token, fromAddress, toAddress, amount)
+}
+
+func (s *AccountService) GetFavoriteTokens(owner common.Address) (map[common.Address]bool, error) {
+	return s.AccountDao.GetFavoriteTokens(owner)
+}
+
+func (s *AccountService) AddFavoriteToken(owner, token common.Address) error {
+	return s.AccountDao.AddFavoriteToken(owner, token)
+}
+
+func (s *AccountService) DeleteFavoriteToken(owner, token common.Address) error {
+	return s.AccountDao.DeleteFavoriteToken(owner, token)
 }

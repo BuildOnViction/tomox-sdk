@@ -7,7 +7,6 @@ import (
 )
 
 var logger = utils.Logger
-var engineLogger = utils.EngineLogger
 
 var ErrPairExists = errors.New("Pairs already exists")
 var ErrPairNotFound = errors.New("Pair not found")

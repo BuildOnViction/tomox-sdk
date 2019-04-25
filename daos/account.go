@@ -59,7 +59,7 @@ func (dao *AccountDao) FindOrCreate(addr common.Address) (*types.Account, error)
 	updated := &types.Account{}
 
 	change := mgo.Change{
-		Update:    types.AccountBSONUpdate{a},
+		Update:    types.AccountBSONUpdate{Account: a},
 		Upsert:    true,
 		Remove:    false,
 		ReturnNew: true,
@@ -249,4 +249,49 @@ func (dao *AccountDao) Transfer(token common.Address, fromAddress common.Address
 // Drop drops all the order documents in the current database
 func (dao *AccountDao) Drop() {
 	db.DropCollection(dao.dbName, dao.collectionName)
+}
+
+func (dao *AccountDao) GetFavoriteTokens(owner common.Address) (map[common.Address]bool, error) {
+	res := []types.Account{}
+	q := bson.M{"address": owner.Hex()}
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if len(res) == 0 {
+		logger.Error("No account with address", owner.Hex())
+		return nil, nil
+	}
+
+	return res[0].FavoriteTokens, nil
+}
+
+func (dao *AccountDao) AddFavoriteToken(owner, token common.Address) error {
+	q := bson.M{
+		"address": owner.Hex(),
+	}
+
+	updateQuery := bson.M{
+		"$set": bson.M{"favoriteTokens." + token.Hex(): true},
+	}
+
+	err := db.Update(dao.dbName, dao.collectionName, q, updateQuery)
+
+	return err
+}
+
+func (dao *AccountDao) DeleteFavoriteToken(owner, token common.Address) error {
+	q := bson.M{
+		"address": owner.Hex(),
+	}
+
+	updateQuery := bson.M{
+		"$set": bson.M{"favoriteTokens." + token.Hex(): false},
+	}
+
+	err := db.Update(dao.dbName, dao.collectionName, q, updateQuery)
+
+	return err
 }
