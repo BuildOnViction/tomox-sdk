@@ -184,10 +184,10 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 		return nil, err
 	}
 
-	pairsData := []*types.PairData{}
+	pairsData := make([]*types.PairData, 0)
 	for _, p := range pairs {
 		pairData := &types.PairData{
-			Pair:        types.PairID{p.Name(), p.BaseTokenAddress, p.QuoteTokenAddress},
+			Pair:        types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
 			Open:        big.NewInt(0),
 			High:        big.NewInt(0),
 			Low:         big.NewInt(0),

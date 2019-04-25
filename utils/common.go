@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 // MockServices is a that tolds different mock services to be passed
@@ -92,4 +94,17 @@ func PrintError(msg string, err error) {
 // Util function to handle unused variables while testing
 func Use(...interface{}) {
 
+}
+
+// GetAddressFromPublicKey get derived address from public key
+func GetAddressFromPublicKey(pk []byte) common.Address {
+	var buf []byte
+	hash := sha3.NewKeccak256()
+	hash.Write(pk[1:]) // remove EC prefix 04
+	buf = hash.Sum(nil)
+	publicAddr := hexutil.Encode(buf[12:])
+
+	publicAddress := common.HexToAddress(publicAddr)
+
+	return publicAddress
 }
