@@ -7,7 +7,7 @@ import (
 	"path"
 	"runtime"
 
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 )
 
 // TODO: add log prefix to params
@@ -27,7 +27,6 @@ var NoopLogger = NewNoopLogger()
 var TerminalLogger = NewColoredLogger()
 
 var StdoutLogger = NewStandardOutputLogger()
-var MainLogger = NewMainLogger()
 var ErrorLogger = NewErrorLogger()
 var WebsocketMessagesLogger = NewFileLogger("websocket", "./logs/websocket.log")
 var OperatorMessagesLogger = NewFileLogger("operator", "./logs/operator.log")
@@ -148,10 +147,6 @@ func NewFileLogger(module string, logFile string) *logging.Logger {
 
 	logger.SetBackend(leveledBackend)
 	return logger
-}
-
-func NewMainLogger() *logging.Logger {
-	return NewFileLogger("main", "./logs/main.log")
 }
 
 func NewErrorLogger() *logging.Logger {
