@@ -10,6 +10,7 @@ import (
 	"github.com/tomochain/tomodex/interfaces"
 	"github.com/tomochain/tomodex/middlewares"
 	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils"
 	"github.com/tomochain/tomodex/utils/httputils"
 )
 
@@ -141,6 +142,15 @@ func (e *AccountEndpoint) handleGetFavoriteTokens(w http.ResponseWriter, r *http
 	}
 
 	address := common.HexToAddress(addr)
+
+	publicKeyBytes := common.Hex2Bytes(r.Header["Pubkey"][0])
+	publicAddress := utils.GetAddressFromPublicKey(publicKeyBytes)
+
+	if address != publicAddress {
+		httputils.WriteError(w, http.StatusUnauthorized, "Request is not sent from address's owner")
+		return
+	}
+
 	a, err := e.AccountService.GetFavoriteTokens(address)
 	if err != nil {
 		logger.Error(err)
@@ -176,6 +186,14 @@ func (e *AccountEndpoint) handleAddFavoriteToken(w http.ResponseWriter, r *http.
 
 	address := common.HexToAddress(tr.Address)
 	tokenAddr := common.HexToAddress(tr.Token)
+
+	publicKeyBytes := common.Hex2Bytes(r.Header["Pubkey"][0])
+	publicAddress := utils.GetAddressFromPublicKey(publicKeyBytes)
+
+	if address != publicAddress {
+		httputils.WriteError(w, http.StatusUnauthorized, "Request is not sent from address's owner")
+		return
+	}
 
 	err = e.AccountService.AddFavoriteToken(address, tokenAddr)
 
@@ -213,6 +231,14 @@ func (e *AccountEndpoint) handleRemoveFavoriteToken(w http.ResponseWriter, r *ht
 
 	address := common.HexToAddress(tr.Address)
 	tokenAddr := common.HexToAddress(tr.Token)
+
+	publicKeyBytes := common.Hex2Bytes(r.Header["Pubkey"][0])
+	publicAddress := utils.GetAddressFromPublicKey(publicKeyBytes)
+
+	if address != publicAddress {
+		httputils.WriteError(w, http.StatusUnauthorized, "Request is not sent from address's owner")
+		return
+	}
 
 	err = e.AccountService.DeleteFavoriteToken(address, tokenAddr)
 
