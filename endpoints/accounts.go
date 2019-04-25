@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -28,7 +29,7 @@ func ServeAccountResource(
 	).Methods("POST")
 
 	r.Handle(
-		"/account/favorite",
+		"/account/favorite/{address}",
 		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetFavoriteTokens)),
 	).Methods("GET")
 
@@ -39,7 +40,7 @@ func ServeAccountResource(
 
 	r.Handle(
 		"/account/favorite/remove",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleDeleteFavoriteToken)),
+		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleRemoveFavoriteToken)),
 	).Methods("POST")
 
 	r.Handle(
@@ -151,24 +152,32 @@ func (e *AccountEndpoint) handleGetFavoriteTokens(w http.ResponseWriter, r *http
 }
 
 func (e *AccountEndpoint) handleAddFavoriteToken(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	a := v.Get("address")
-	t := v.Get("token")
+	var tr *types.FavoriteTokenRequest
+	decoder := json.NewDecoder(r.Body)
 
-	if !common.IsHexAddress(a) {
+	defer r.Body.Close()
+
+	err := decoder.Decode(&tr)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	if !common.IsHexAddress(tr.Address) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
 		return
 	}
 
-	if !common.IsHexAddress(t) {
+	if !common.IsHexAddress(tr.Token) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
 		return
 	}
 
-	address := common.HexToAddress(a)
-	tokenAddr := common.HexToAddress(t)
+	address := common.HexToAddress(tr.Address)
+	tokenAddr := common.HexToAddress(tr.Token)
 
-	err := e.AccountService.AddFavoriteToken(address, tokenAddr)
+	err = e.AccountService.AddFavoriteToken(address, tokenAddr)
 
 	if err != nil {
 		logger.Error(err)
@@ -179,25 +188,33 @@ func (e *AccountEndpoint) handleAddFavoriteToken(w http.ResponseWriter, r *http.
 	httputils.WriteJSON(w, http.StatusOK, tokenAddr)
 }
 
-func (e *AccountEndpoint) handleDeleteFavoriteToken(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	a := vars["address"]
-	t := vars["token"]
+func (e *AccountEndpoint) handleRemoveFavoriteToken(w http.ResponseWriter, r *http.Request) {
+	var tr *types.FavoriteTokenRequest
+	decoder := json.NewDecoder(r.Body)
 
-	if !common.IsHexAddress(a) {
+	defer r.Body.Close()
+
+	err := decoder.Decode(&tr)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	if !common.IsHexAddress(tr.Address) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
 		return
 	}
 
-	if !common.IsHexAddress(t) {
+	if !common.IsHexAddress(tr.Token) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Token Address")
 		return
 	}
 
-	address := common.HexToAddress(a)
-	tokenAddr := common.HexToAddress(t)
+	address := common.HexToAddress(tr.Address)
+	tokenAddr := common.HexToAddress(tr.Token)
 
-	err := e.AccountService.DeleteFavoriteToken(address, tokenAddr)
+	err = e.AccountService.DeleteFavoriteToken(address, tokenAddr)
 
 	if err != nil {
 		logger.Error(err)

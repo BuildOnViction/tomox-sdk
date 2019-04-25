@@ -328,3 +328,8 @@ type TokenBalanceRecord struct {
 	PendingBalance string `json:"pendingBalance" base:"pendingBalance"`
 	LockedBalance  string `json:"lockedBalance" bson:"lockedBalance"`
 }
+
+type FavoriteTokenRequest struct {
+	Address string `json:"address" bson:"address"`
+	Token   string `json:"token" bson:"token"`
+}
