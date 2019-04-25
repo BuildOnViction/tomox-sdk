@@ -19,7 +19,7 @@ type Engine struct {
 	provider     *ethereum.EthereumProvider
 }
 
-var logger = utils.EngineLogger
+var logger = utils.Logger
 
 // NewEngine initializes the engine singleton instance
 func NewEngine(

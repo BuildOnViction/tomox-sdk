@@ -16,13 +16,6 @@ const (
 )
 
 var Logger = NewLogger("main", "./logs/main.log")
-var EngineLogger = NewLogger("engine", "./logs/engine.log")
-var EthereumListenerLogger = NewLogger("ethereum", "./logs/ethereum.log")
-var BitcoinListenerLogger = NewLogger("bitcoin", "./logs/bitcoin.log")
-var APILogger = NewLogger("api", "./logs/api.log")
-var RabbitLogger = NewLogger("rabbitmq", "./logs/rabbit.log")
-var WebsocketMessagesLogger = NewFileLogger("websocket", "./logs/websocket.log")
-var OperatorMessagesLogger = NewFileLogger("operator", "./logs/operator.log")
 
 var StdoutLogger = NewStandardOutputLogger()
 var TerminalLogger = NewColoredLogger()

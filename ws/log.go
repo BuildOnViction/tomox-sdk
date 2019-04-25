@@ -14,7 +14,7 @@ type WebsocketLogger struct {
 func NewWebsocketLogger() *WebsocketLogger {
 	return &WebsocketLogger{
 		utils.StdoutLogger,
-		utils.WebsocketMessagesLogger,
+		utils.Logger,
 	}
 }
 

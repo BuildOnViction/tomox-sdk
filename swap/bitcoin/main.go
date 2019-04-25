@@ -12,7 +12,7 @@ import (
 	"github.com/tyler-smith/go-bip32"
 )
 
-var logger = utils.BitcoinListenerLogger
+var logger = utils.Logger
 
 var (
 	eight = big.NewInt(8)

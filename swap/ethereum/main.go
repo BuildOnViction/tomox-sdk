@@ -10,7 +10,7 @@ import (
 	"github.com/tomochain/tomodex/utils"
 )
 
-var logger = utils.EthereumListenerLogger
+var logger = utils.Logger
 
 var (
 	ten      = big.NewInt(10)
