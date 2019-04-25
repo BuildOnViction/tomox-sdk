@@ -24,8 +24,7 @@ func ServeAccountResource(
 	e := &AccountEndpoint{AccountService: accountService}
 
 	r.Handle(
-		"/account/create",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleCreateAccount)),
+		"/account/create", http.HandlerFunc(e.handleCreateAccount),
 	).Methods("POST")
 
 	r.Handle(
@@ -44,13 +43,11 @@ func ServeAccountResource(
 	).Methods("POST")
 
 	r.Handle(
-		"/account/{address}",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetAccount)),
+		"/account/{address}", http.HandlerFunc(e.handleGetAccount),
 	).Methods("GET")
 
 	r.Handle(
-		"/account/{address}/{token}",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetAccountTokenBalance)),
+		"/account/{address}/{token}", http.HandlerFunc(e.handleGetAccountTokenBalance),
 	).Methods("GET")
 }
 
