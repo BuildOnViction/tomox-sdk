@@ -13,7 +13,7 @@ import (
 // Status describes status of account processing
 type Status string
 
-var logger = utils.EngineLogger
+var logger = utils.Logger
 
 const (
 	StatusCreatingAccount    Status = "creating_account"
