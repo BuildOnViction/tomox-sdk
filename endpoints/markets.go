@@ -41,26 +41,11 @@ func (e *MarketsEndpoint) handleMarketsWebSocket(input interface{}, c *ws.Client
 		return
 	}
 
-	b, _ = json.Marshal(ev.Payload)
-	var p *types.SubscriptionPayload
-
-	err = json.Unmarshal(b, &p)
-	if err != nil {
-		logger.Error(err)
-		msg := map[string]string{"Message": "Internal server error"}
-		socket.SendErrorMessage(c, msg)
-	}
-
 	if ev.Type == types.SUBSCRIBE {
 		e.MarketsService.Subscribe(c)
 	}
 
 	if ev.Type == types.UNSUBSCRIBE {
-		if p == nil {
-			e.MarketsService.Unsubscribe(c)
-			return
-		}
-
-		e.MarketsService.UnsubscribeChannel(c)
+		e.MarketsService.Unsubscribe(c)
 	}
 }
