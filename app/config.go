@@ -59,6 +59,8 @@ type appConfig struct {
 	CoinmarketcapAPIKey string `mapstructure:"coinmarketcap_api_key"`
 
 	SupportedCurrencies string `mapstructure:"supported_currencies"`
+
+	Env string `mapstructure:"env"`
 }
 
 func (config appConfig) Validate() error {
@@ -103,5 +105,6 @@ func LoadConfig(configPath string, env string) error {
 	logger.Infof("RabbitMQ url: %v", Config.RabbitMQURL)
 	logger.Infof("Exchange contract address: %v", Config.Ethereum["exchange_address"])
 	logger.Infof("Fee Account: %v", Config.Ethereum["fee_account"])
+	logger.Infof("Env: %v", Config.Env)
 	return Config.Validate()
 }

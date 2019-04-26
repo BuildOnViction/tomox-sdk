@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/tomochain/tomodex/app"
 	"github.com/tomochain/tomodex/types"
 )
 
@@ -75,7 +76,11 @@ func readHandler(c *Client) {
 			return
 		}
 
-		logger.LogMessageIn(&msg)
+		// Only log WS messages in local environment
+		if app.Config.Env == "local" {
+			logger.LogMessageIn(&msg)
+		}
+
 		logger.Infof("%v", msg.String())
 
 		if socketChannels[msg.Channel] == nil {
@@ -111,7 +116,10 @@ func writeHandler(c *Client) {
 				c.WriteMessage(websocket.CloseMessage, []byte{})
 			}
 
-			logger.LogMessageOut(&m)
+			if app.Config.Env == "local" {
+				logger.LogMessageOut(&m)
+			}
+
 			logger.Infof("%v", m.String())
 
 			err := c.WriteJSON(m)

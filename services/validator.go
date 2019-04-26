@@ -6,7 +6,6 @@ import (
 
 	"github.com/tomochain/tomodex/interfaces"
 	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/math"
 )
 
 type ValidatorService struct {
@@ -49,24 +48,24 @@ func (s *ValidatorService) ValidateAvailableBalance(o *types.Order) error {
 	var sellTokenBalance *big.Int
 	sellTokenBalance = balanceRecord.Balance
 
-	sellTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), pair)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+	//sellTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), pair)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
 
-	availableSellTokenBalance := math.Sub(sellTokenBalance, sellTokenLockedBalance)
+	//availableSellTokenBalance := math.Sub(sellTokenBalance, sellTokenLockedBalance)
 
 	if sellTokenBalance.Cmp(totalRequiredAmount) == -1 {
 		return fmt.Errorf("Insufficient %v Balance", o.SellTokenSymbol())
 	}
 
-	if availableSellTokenBalance.Cmp(totalRequiredAmount) == -1 {
-		return fmt.Errorf("Insufficient % available", o.SellTokenSymbol())
-	}
+	//if availableSellTokenBalance.Cmp(totalRequiredAmount) == -1 {
+	//	return fmt.Errorf("Insufficient % available", o.SellTokenSymbol())
+	//}
 
 	balanceRecord.Balance.Set(sellTokenBalance)
-	balanceRecord.LockedBalance.Set(totalRequiredAmount)
+	//balanceRecord.LockedBalance.Set(totalRequiredAmount)
 	err = s.accountDao.UpdateTokenBalance(o.UserAddress, o.SellToken(), balanceRecord)
 	if err != nil {
 		logger.Error(err)

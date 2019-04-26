@@ -12,7 +12,7 @@ var conn *Connection
 var channels = make(map[string]*amqp.Channel)
 var queues = make(map[string]*amqp.Queue)
 
-var logger = utils.RabbitLogger
+var logger = utils.Logger
 
 type Connection struct {
 	Conn *amqp.Connection
