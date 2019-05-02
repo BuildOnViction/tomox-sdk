@@ -19,6 +19,7 @@ import (
 )
 
 type OrderDao interface {
+	GetCollection() *mgo.Collection
 	Create(o *types.Order) error
 	Update(id bson.ObjectId, o *types.Order) error
 	Upsert(id bson.ObjectId, o *types.Order) error
@@ -51,7 +52,6 @@ type OrderDao interface {
 	CancelOrder(o *types.Order, topic string) error
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
-	WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream))
 }
 
 type AccountDao interface {

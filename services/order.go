@@ -551,10 +551,20 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 }
 
 func (s *OrderService) WatchChanges() {
-	s.orderDao.WatchChanges(s.handleChangeStream)
-}
+	pipeline := []bson.M{}
 
-func (s *OrderService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
+	ct, err := s.orderDao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+
+	//defer changeStream.Close()
+
+	if err != nil {
+		logger.Error("Failed to open change stream")
+		return //exiting func
+	}
+
+	ctx := context.Background()
+
+	//Handling change stream in a cycle
 	for {
 		select {
 		case <-ctx.Done(): // if parent context was cancelled

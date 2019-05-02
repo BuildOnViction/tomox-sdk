@@ -1,7 +1,6 @@
 package daos
 
 import (
-	"context"
 	"encoding/json"
 	"math/big"
 	"time"
@@ -902,7 +901,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		PairName:     o.PairName,
 		CreatedAt:    uint64(o.CreatedAt.Unix()),
 		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
-		OrderID:      0,
+		OrderID:      3,
 	}
 
 	var result interface{}
@@ -980,21 +979,4 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 	}
 
 	return nil
-}
-
-func (dao *OrderDao) WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream)) {
-	pipeline := []bson.M{}
-
-	changeStream, err := dao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
-
-	//defer changeStream.Close()
-
-	if err != nil {
-		logger.Error("Failed to open change stream")
-		return //exiting func
-	}
-
-	ctx := context.Background()
-	//Handling change stream in a cycle
-	go fn(ctx, changeStream)
 }
