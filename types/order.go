@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,6 +52,11 @@ type Order struct {
 	PairName        string         `json:"pairName" bson:"pairName"`
 	CreatedAt       time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt" bson:"updatedAt"`
+	OrderID         uint64         `json:"orderID,omitempty" bson:"orderID"`
+	NextOrder       []byte         `json:"-"`
+	PrevOrder       []byte         `json:"-"`
+	OrderList       []byte         `json:"-"`
+	Key             string         `json:"key" bson:"key"`
 }
 
 func (o *Order) String() string {
@@ -382,6 +388,8 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		// later. An alternative would be to create additional simplified type
 		"createdAt": o.CreatedAt.Format(time.RFC3339Nano),
 		// "updatedAt": o.UpdatedAt.Format(time.RFC3339Nano),
+		"orderID": strconv.FormatUint(o.OrderID, 10),
+		"key":     o.Key,
 	}
 
 	if o.FilledAmount != nil {
@@ -499,31 +507,20 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 		o.UpdatedAt = t
 	}
 
+	if order["orderID"] != nil {
+		o.Status = order["status"].(string)
+		orderID, err := strconv.ParseInt(order["orderID"].(string), 10, 64)
+		if err != nil {
+			logger.Error(err)
+		}
+		o.OrderID = uint64(orderID)
+	}
+
+	if order["key"] != nil {
+		o.Key = order["key"].(string)
+	}
+
 	return nil
-}
-
-// OrderRecord is the object that will be saved in the database
-type OrderRecord struct {
-	ID              bson.ObjectId    `json:"id" bson:"_id"`
-	UserAddress     string           `json:"userAddress" bson:"userAddress"`
-	ExchangeAddress string           `json:"exchangeAddress" bson:"exchangeAddress"`
-	BaseToken       string           `json:"baseToken" bson:"baseToken"`
-	QuoteToken      string           `json:"quoteToken" bson:"quoteToken"`
-	Status          string           `json:"status" bson:"status"`
-	Side            string           `json:"side" bson:"side"`
-	Type            string           `json:"type" bson:"type"`
-	Hash            string           `json:"hash" bson:"hash"`
-	Price           string           `json:"price" bson:"price"`
-	Quantity        string           `json:"quantity" bson:"quantity"`
-	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
-	Nonce           string           `json:"nonce" bson:"nonce"`
-	MakeFee         string           `json:"makeFee" bson:"makeFee"`
-	TakeFee         string           `json:"takeFee" bson:"takeFee"`
-	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
-
-	PairName  string    `json:"pairName" bson:"pairName"`
-	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 func (o *Order) GetBSON() (interface{}, error) {
@@ -544,6 +541,11 @@ func (o *Order) GetBSON() (interface{}, error) {
 		TakeFee:         o.TakeFee.String(),
 		CreatedAt:       o.CreatedAt,
 		UpdatedAt:       o.UpdatedAt,
+		OrderID:         strconv.FormatUint(o.OrderID, 10),
+		NextOrder:       common.Bytes2Hex(o.NextOrder),
+		PrevOrder:       common.Bytes2Hex(o.PrevOrder),
+		OrderList:       common.Bytes2Hex(o.OrderList),
+		Key:             o.Key,
 	}
 
 	if o.ID.Hex() == "" {
@@ -588,6 +590,11 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		Signature       *SignatureRecord `json:"signature" bson:"signature"`
 		CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
 		UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
+		OrderID         string           `json:"orderID" bson:"orderID"`
+		NextOrder       string           `json:"-"`
+		PrevOrder       string           `json:"-"`
+		OrderList       string           `json:"-"`
+		Key             string           `json:"key" bson:"key"`
 	})
 
 	err := raw.Unmarshal(decoded)
@@ -633,8 +640,45 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 
 	o.CreatedAt = decoded.CreatedAt
 	o.UpdatedAt = decoded.UpdatedAt
+	orderID, err := strconv.ParseInt(decoded.OrderID, 10, 64)
+	if err != nil {
+		logger.Error(err)
+	}
+	o.OrderID = uint64(orderID)
+	o.NextOrder = common.Hex2Bytes(decoded.NextOrder)
+	o.PrevOrder = common.Hex2Bytes(decoded.PrevOrder)
+	o.OrderList = common.Hex2Bytes(decoded.OrderList)
+	o.Key = decoded.Key
 
 	return nil
+}
+
+// OrderRecord is the object that will be saved in the database
+type OrderRecord struct {
+	ID              bson.ObjectId    `json:"id" bson:"_id"`
+	UserAddress     string           `json:"userAddress" bson:"userAddress"`
+	ExchangeAddress string           `json:"exchangeAddress" bson:"exchangeAddress"`
+	BaseToken       string           `json:"baseToken" bson:"baseToken"`
+	QuoteToken      string           `json:"quoteToken" bson:"quoteToken"`
+	Status          string           `json:"status" bson:"status"`
+	Side            string           `json:"side" bson:"side"`
+	Type            string           `json:"type" bson:"type"`
+	Hash            string           `json:"hash" bson:"hash"`
+	Price           string           `json:"price" bson:"price"`
+	Quantity        string           `json:"quantity" bson:"quantity"`
+	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
+	Nonce           string           `json:"nonce" bson:"nonce"`
+	MakeFee         string           `json:"makeFee" bson:"makeFee"`
+	TakeFee         string           `json:"takeFee" bson:"takeFee"`
+	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
+	PairName        string           `json:"pairName" bson:"pairName"`
+	CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
+	UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
+	OrderID         string           `json:"orderID,omitempty" bson:"orderID"`
+	NextOrder       string           `json:"nextOrder,omitempty" bson:"nextOrder"`
+	PrevOrder       string           `json:"prevOrder,omitempty" bson:"prevOrder"`
+	OrderList       string           `json:"orderList,omitempty" bson:"orderList"`
+	Key             string           `json:"key" bson:"key"`
 }
 
 type OrderBSONUpdate struct {
@@ -837,19 +881,6 @@ func (o *OrderData) SetBSON(raw bson.Raw) error {
 	o.BestPrice = math.ToBigInt(bestPrice)
 
 	return nil
-}
-
-const TopicLength = 86 // in bytes
-type TopicType [TopicLength]byte
-
-// Message is the RPC representation of a TomoX message.
-type Message struct {
-	TTL       uint32    `json:"ttl"`
-	Timestamp uint32    `json:"timestamp"`
-	Topic     TopicType `json:"topic"`
-	Payload   []byte    `json:"payload"`
-	Padding   []byte    `json:"padding"`
-	Hash      []byte    `json:"hash"`
 }
 
 type updateDesc struct {

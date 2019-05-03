@@ -901,7 +901,8 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		PairName:     o.PairName,
 		CreatedAt:    uint64(o.CreatedAt.Unix()),
 		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
-		OrderID:      3,
+		OrderID:      o.OrderID,
+		Key:          o.Key,
 	}
 
 	var result interface{}
