@@ -146,6 +146,9 @@ type PriceBoardDao interface {
 	GetLatestQuotes() (map[string]float64, error)
 }
 
+type NotificationDao interface {
+}
+
 type Exchange interface {
 	GetAddress() common.Address
 	GetTxCallOptions() *bind.CallOpts
@@ -269,6 +272,9 @@ type MarketsService interface {
 	Subscribe(c *ws.Client)
 	UnsubscribeChannel(c *ws.Client)
 	Unsubscribe(c *ws.Client)
+}
+
+type NotificationService interface {
 }
 
 type TxService interface {
