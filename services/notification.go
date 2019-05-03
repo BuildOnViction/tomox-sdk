@@ -1,7 +1,9 @@
 package services
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomodex/types"
 )
 
 // NotificationService struct with daos required, responsible for communicating with dao
@@ -17,4 +19,9 @@ func NewNotificationService(
 	return &NotificationService{
 		NotificationDao: notificationDao,
 	}
+}
+
+// GetByUserAddress fetches all the orders placed by passed user address
+func (s *NotificationService) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error) {
+	return s.NotificationDao.GetByUserAddress(addr, limit...)
 }

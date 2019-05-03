@@ -83,3 +83,8 @@ func SendNotificationMessage(msgType types.SubscriptionEvent, a common.Address, 
 		c.SendMessage(NotificationChannel, msgType, payload)
 	}
 }
+
+// SendNotificationErrorMessage sends error message on markets channel
+func SendNotificationErrorMessage(c *Client, data interface{}) {
+	c.SendMessage(NotificationChannel, types.ERROR, data)
+}

@@ -1,11 +1,13 @@
 package daos
 
 import (
+	"time"
+
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomodex/app"
 	"github.com/tomochain/tomodex/types"
-	"time"
 )
 
 type NotificationDao struct {
@@ -43,6 +45,29 @@ func (dao *NotificationDao) Create(notifications ...*types.Notification) error {
 	}
 
 	return nil
+}
+
+// GetByUserAddress function fetches list of orders from order collection based on user address.
+// Returns array of Order type struct
+func (dao *NotificationDao) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error) {
+	if limit == nil {
+		limit = []int{0}
+	}
+
+	var res []*types.Notification
+	q := bson.M{"recipient": addr.Hex()}
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		return []*types.Notification{}, nil
+	}
+
+	return res, nil
 }
 
 func (dao *NotificationDao) FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error) {

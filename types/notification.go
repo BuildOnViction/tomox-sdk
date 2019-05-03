@@ -7,6 +7,10 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+const (
+	INIT_NOTIFICATION = "INIT_NOTIFICATION"
+)
+
 type Notification struct {
 	ID        bson.ObjectId  `json:"-" bson:"_id"`
 	Recipient common.Address `json:"recipient" bson:"recipient"`

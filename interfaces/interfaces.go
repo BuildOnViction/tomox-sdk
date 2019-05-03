@@ -147,6 +147,7 @@ type PriceBoardDao interface {
 }
 
 type NotificationDao interface {
+	GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error)
 }
 
 type Exchange interface {
@@ -275,6 +276,7 @@ type MarketsService interface {
 }
 
 type NotificationService interface {
+	GetByUserAddress(a common.Address, limit ...int) ([]*types.Notification, error)
 }
 
 type TxService interface {
