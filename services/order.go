@@ -555,12 +555,12 @@ func (s *OrderService) WatchChanges() {
 
 	ct, err := s.orderDao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
 
-	//defer changeStream.Close()
-
 	if err != nil {
 		logger.Error("Failed to open change stream")
 		return //exiting func
 	}
+
+	defer ct.Close()
 
 	ctx := context.Background()
 
@@ -593,7 +593,7 @@ func (s *OrderService) WatchChanges() {
 
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
-				logger.Debug(ev.OperationType)
+				logger.Debugf("Operation Type: %s", ev.OperationType)
 				s.HandleDocumentType(ev)
 			}
 		}

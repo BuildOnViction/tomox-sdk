@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomodex/errors"
 	"github.com/tomochain/tomodex/interfaces"
 	"github.com/tomochain/tomodex/rabbitmq"
@@ -114,10 +115,20 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 }
 
 func (s *TradeService) WatchChanges() {
-	s.tradeDao.WatchChanges(s.handleChangeStream)
-}
+	pipeline := []bson.M{}
 
-func (s *TradeService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStream) {
+	ct, err := s.tradeDao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+
+	if err != nil {
+		logger.Error("Failed to open change stream")
+		return //exiting func
+	}
+
+	defer ct.Close()
+
+	ctx := context.Background()
+
+	//Handling change stream in a cycle
 	for {
 		select {
 		case <-ctx.Done(): // if parent context was cancelled
@@ -146,7 +157,7 @@ func (s *TradeService) handleChangeStream(ctx context.Context, ct *mgo.ChangeStr
 
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
-				utils.PrintJSON(ev)
+				logger.Debugf("Operation Type: %s", ev.OperationType)
 				s.HandleDocumentType(ev)
 			}
 		}
@@ -163,6 +174,7 @@ func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) {
 		s.HandleOperationUpdate(ev)
 		break
 	case types.OPERATION_TYPE_REPLACE:
+		s.HandleOperationUpdate(ev)
 		break
 	default:
 		break

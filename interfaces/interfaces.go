@@ -113,6 +113,7 @@ type PairDao interface {
 }
 
 type TradeDao interface {
+	GetCollection() *mgo.Collection
 	Create(o ...*types.Trade) error
 	Update(t *types.Trade) error
 	UpdateByHash(h common.Hash, t *types.Trade) error
@@ -135,7 +136,6 @@ type TradeDao interface {
 	UpdateTradeStatuses(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	UpdateTradeStatusesByOrderHashes(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	Drop()
-	WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream))
 }
 
 type TokenDao interface {

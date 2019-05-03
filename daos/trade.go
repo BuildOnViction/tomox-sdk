@@ -1,7 +1,6 @@
 package daos
 
 import (
-	"context"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -534,21 +533,4 @@ func (dao *TradeDao) UpdateTradeStatusesByHashes(status string, hashes ...common
 // Drop drops all the order documents in the current database
 func (dao *TradeDao) Drop() {
 	db.DropCollection(dao.dbName, dao.collectionName)
-}
-
-func (dao *TradeDao) WatchChanges(fn func(ctx context.Context, ct *mgo.ChangeStream)) {
-	pipeline := []bson.M{}
-
-	changeStream, err := dao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
-
-	//defer changeStream.Close()
-
-	if err != nil {
-		logger.Error("Failed to open change stream")
-		return //exiting func
-	}
-
-	ctx := context.Background()
-	//Handling change stream in a cycle
-	go fn(ctx, changeStream)
 }
