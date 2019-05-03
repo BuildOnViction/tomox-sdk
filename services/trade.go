@@ -126,6 +126,9 @@ func (s *TradeService) WatchChanges() {
 
 	defer ct.Close()
 
+	// Watch the event again in case there is error and function returned
+	defer s.WatchChanges()
+
 	ctx := context.Background()
 
 	//Handling change stream in a cycle
