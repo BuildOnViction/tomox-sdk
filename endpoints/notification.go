@@ -68,6 +68,6 @@ func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c 
 			return
 		}
 
-		ws.SendNotificationMessage(types.INIT_NOTIFICATION, a, notifications)
+		ws.SendNotificationMessage(types.INIT, a, notifications)
 	}
 }
