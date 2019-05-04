@@ -41,8 +41,26 @@ func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c 
 	}
 
 	if ev.Type == types.SUBSCRIBE {
-		ws.RegisterNotificationConnection(common.Address{}, c)
-		notifications, err := e.NotificationService.GetByUserAddress(common.Address{})
+		b, _ = json.Marshal(ev.Payload)
+		var addr string
+
+		err = json.Unmarshal(b, &addr)
+		if err != nil {
+			logger.Error(err)
+			ws.SendNotificationErrorMessage(c, err)
+			return
+		}
+
+		if !common.IsHexAddress(addr) {
+			err := map[string]string{"Message": "Invalid address"}
+			ws.SendNotificationErrorMessage(c, err)
+			return
+		}
+
+		a := common.HexToAddress(addr)
+
+		ws.RegisterNotificationConnection(a, c)
+		notifications, err := e.NotificationService.GetByUserAddress(a)
 
 		if err != nil {
 			logger.Error(err)
@@ -50,6 +68,6 @@ func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c 
 			return
 		}
 
-		ws.SendNotificationMessage(types.INIT_NOTIFICATION, common.Address{}, notifications)
+		ws.SendNotificationMessage(types.INIT_NOTIFICATION, a, notifications)
 	}
 }

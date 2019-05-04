@@ -47,11 +47,25 @@ func (dao *NotificationDao) Create(notifications ...*types.Notification) error {
 	return nil
 }
 
+// GetAll function fetches all the notifications in the notification collection of mongodb.
+func (dao *NotificationDao) GetAll() ([]types.Notification, error) {
+	var response []types.Notification
+
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &response)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return response, nil
+}
+
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
 func (dao *NotificationDao) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error) {
 	if limit == nil {
-		limit = []int{0}
+		limit = []int{15} // Get last 15 records
 	}
 
 	var res []*types.Notification
@@ -68,6 +82,20 @@ func (dao *NotificationDao) GetByUserAddress(addr common.Address, limit ...int) 
 	}
 
 	return res, nil
+}
+
+// GetByID function fetches details of a notification based on its mongo id
+func (dao *NotificationDao) GetByID(id bson.ObjectId) (*types.Notification, error) {
+	var response *types.Notification
+
+	err := db.GetByID(dao.dbName, dao.collectionName, id, &response)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return response, nil
 }
 
 func (dao *NotificationDao) FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error) {

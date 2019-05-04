@@ -147,7 +147,17 @@ type PriceBoardDao interface {
 }
 
 type NotificationDao interface {
+	Create(notifications ...*types.Notification) error
+	GetAll() ([]types.Notification, error)
 	GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error)
+	GetByID(id bson.ObjectId) (*types.Notification, error)
+	FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error)
+	Update(n *types.Notification) error
+	Upsert(id bson.ObjectId, n *types.Notification) error
+	Delete(notifications ...*types.Notification) error
+	DeleteByIds(ids ...bson.ObjectId) error
+	Aggregate(q []bson.M) ([]*types.Notification, error)
+	Drop()
 }
 
 type Exchange interface {
@@ -276,7 +286,10 @@ type MarketsService interface {
 }
 
 type NotificationService interface {
+	Create(n *types.Notification) error
+	GetAll() ([]types.Notification, error)
 	GetByUserAddress(a common.Address, limit ...int) ([]*types.Notification, error)
+	GetByID(id bson.ObjectId) (*types.Notification, error)
 }
 
 type TxService interface {
