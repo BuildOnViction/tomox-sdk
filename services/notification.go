@@ -22,7 +22,7 @@ func NewNotificationService(
 	}
 }
 
-// Create inserts a new token into the database
+// Create inserts a new notification into the database
 func (s *NotificationService) Create(n *types.Notification) error {
 	err := s.NotificationDao.Create(n)
 
@@ -47,4 +47,16 @@ func (s *NotificationService) GetByUserAddress(addr common.Address, limit int, o
 // GetByID fetches the detailed document of a notification using its mongo ID
 func (s *NotificationService) GetByID(id bson.ObjectId) (*types.Notification, error) {
 	return s.NotificationDao.GetByID(id)
+}
+
+// Update updates the detailed document of a notification using its mongo ID
+func (s *NotificationService) Update(n *types.Notification) (*types.Notification, error) {
+	updated, err := s.NotificationDao.FindAndModify(n.ID, n)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return updated, nil
 }

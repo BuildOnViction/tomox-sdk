@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	statusUnread = 0
-	statusRead   = 1
+	StatusUnread = "UNREAD"
+	StatusRead   = "READ"
 
 	typeSystem       = 0
 	typeNotification = 1

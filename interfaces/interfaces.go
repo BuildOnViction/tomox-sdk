@@ -290,6 +290,7 @@ type NotificationService interface {
 	GetAll() ([]types.Notification, error)
 	GetByUserAddress(a common.Address, limit int, offset int) ([]*types.Notification, error)
 	GetByID(id bson.ObjectId) (*types.Notification, error)
+	Update(n *types.Notification) (*types.Notification, error)
 }
 
 type TxService interface {

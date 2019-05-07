@@ -85,7 +85,29 @@ func (e *NotificationEndpoint) HandleGetNotifications(w http.ResponseWriter, r *
 }
 
 func (e *NotificationEndpoint) HandleUpdateNotification(w http.ResponseWriter, r *http.Request) {
+	var n types.Notification
+	decoder := json.NewDecoder(r.Body)
 
+	err := decoder.Decode(&n)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	defer r.Body.Close()
+
+	n.Status = types.StatusRead
+	updated, err := e.NotificationService.Update(&n)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, updated)
 }
 
 func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c *ws.Client) {
