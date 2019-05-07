@@ -7,7 +7,6 @@ import (
 	"github.com/tomochain/tomodex/utils/math"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/streadway/amqp"
 	"github.com/tomochain/tomodex/interfaces"
@@ -21,7 +20,6 @@ type TxQueue struct {
 	TradeService     interfaces.TradeService
 	OrderService     interfaces.OrderService
 	EthereumProvider interfaces.EthereumProvider
-	Exchange         interfaces.Exchange
 	Broker           *rabbitmq.Connection
 	AccountService   interfaces.AccountService
 	TokenService     interfaces.TokenService
@@ -46,7 +44,6 @@ func NewTxQueue(
 	p interfaces.EthereumProvider,
 	o interfaces.OrderService,
 	w *types.Wallet,
-	ex interfaces.Exchange,
 	rabbitConn *rabbitmq.Connection,
 	accountService interfaces.AccountService,
 	tokenService interfaces.TokenService,
@@ -57,7 +54,6 @@ func NewTxQueue(
 		OrderService:     o,
 		EthereumProvider: p,
 		Wallet:           w,
-		Exchange:         ex,
 		Broker:           rabbitConn,
 		AccountService:   accountService,
 		TokenService:     tokenService,
@@ -92,12 +88,6 @@ func (txq *TxQueue) GetChannel() *amqp.Channel {
 
 func (txq *TxQueue) GetTxSendOptions() *bind.TransactOpts {
 	return bind.NewKeyedTransactor(txq.Wallet.PrivateKey)
-}
-
-func (txq *TxQueue) GetTxCallOptions() *ethereum.CallMsg {
-	address := txq.Exchange.GetAddress()
-
-	return &ethereum.CallMsg{From: txq.Wallet.Address, To: &address}
 }
 
 // Length

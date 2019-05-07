@@ -6,11 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/contracts"
 	"github.com/tomochain/tomodex/crons"
 	"github.com/tomochain/tomodex/daos"
 	"github.com/tomochain/tomodex/endpoints"
@@ -112,25 +110,12 @@ func NewRouter(
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, eng)
 
-	// get exchange contract instance
-	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
-	exchange, err := contracts.NewExchange(
-		walletService,
-		exchangeAddress,
-		provider.Client,
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
 	// deploy operator
 	op, err := operator.NewOperator(
 		walletService,
 		tradeService,
 		orderService,
 		provider,
-		exchange,
 		rabbitConn,
 		accountService,
 		tokenService,

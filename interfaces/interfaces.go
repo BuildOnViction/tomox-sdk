@@ -10,7 +10,6 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
 	"github.com/tomochain/tomodex/rabbitmq"
 	swapBitcoin "github.com/tomochain/tomodex/swap/bitcoin"
 	swapEthereum "github.com/tomochain/tomodex/swap/ethereum"
@@ -165,26 +164,6 @@ type NotificationDao interface {
 	DeleteByIds(ids ...bson.ObjectId) error
 	Aggregate(q []bson.M) ([]*types.Notification, error)
 	Drop()
-}
-
-type Exchange interface {
-	GetAddress() common.Address
-	GetTxCallOptions() *bind.CallOpts
-	SetFeeAccount(a common.Address, txOpts *bind.TransactOpts) (*eth.Transaction, error)
-	SetOperator(a common.Address, isOperator bool, txOpts *bind.TransactOpts) (*eth.Transaction, error)
-	CallTrade(m *types.Matches, call *ethereum.CallMsg) (uint64, error)
-	CallBatchTrades(m *types.Matches, txOpts *ethereum.CallMsg) (uint64, error)
-	FeeAccount() (common.Address, error)
-	Operator(a common.Address) (bool, error)
-	Trade(m *types.Matches, txOpts *bind.TransactOpts) (*eth.Transaction, error)
-	ExecuteBatchTrades(m *types.Matches, txOpts *bind.TransactOpts) (*eth.Transaction, error)
-	ListenToErrors() (chan *contractsinterfaces.ExchangeLogError, error)
-	ListenToTrades() (chan *contractsinterfaces.ExchangeLogTrade, error)
-	ListenToBatchTrades() (chan *contractsinterfaces.ExchangeLogBatchTrades, error)
-	GetErrorEvents(logs chan *contractsinterfaces.ExchangeLogError) error
-	GetTrades(logs chan *contractsinterfaces.ExchangeLogTrade) error
-	PrintTrades() error
-	PrintErrors() error
 }
 
 type Engine interface {

@@ -28,7 +28,6 @@ type Operator struct {
 	OrderService      interfaces.OrderService
 	TokenService      interfaces.TokenService
 	EthereumProvider  interfaces.EthereumProvider
-	Exchange          interfaces.Exchange
 	TxQueues          []*TxQueue
 	QueueAddressIndex map[common.Address]*TxQueue
 	Broker            *rabbitmq.Connection
@@ -51,7 +50,6 @@ func NewOperator(
 	tradeService interfaces.TradeService,
 	orderService interfaces.OrderService,
 	provider interfaces.EthereumProvider,
-	exchange interfaces.Exchange,
 	conn *rabbitmq.Connection,
 	accountService interfaces.AccountService,
 	tokenService interfaces.TokenService,
@@ -79,7 +77,6 @@ func NewOperator(
 			provider,
 			orderService,
 			w,
-			exchange,
 			conn,
 			accountService,
 			tokenService,
@@ -97,13 +94,11 @@ func NewOperator(
 		TradeService:      tradeService,
 		OrderService:      orderService,
 		EthereumProvider:  provider,
-		Exchange:          exchange,
 		TxQueues:          txqueues,
 		QueueAddressIndex: addressIndex,
 		mutex:             &sync.Mutex{},
 	}
 
-	go op.HandleEvents()
 	return op, nil
 }
 
@@ -154,60 +149,6 @@ func (op *Operator) HandleError(m *types.Matches) {
 	err := op.Broker.PublishErrorMessage(m, "Server error")
 	if err != nil {
 		logger.Error(err)
-	}
-}
-
-func (op *Operator) HandleTxError(m *types.Matches, id int) {
-	errType := getErrorType(id)
-	err := op.Broker.PublishTxErrorMessage(m, errType)
-	if err != nil {
-		logger.Error(err)
-	}
-}
-
-// Bug: In certain cases, the trade channel seems to be receiving additional unexpected trades.
-// In the case TestSocketExecuteOrder (in file socket_test.go) is run on its own, everything is working correctly.
-// However, in the case TestSocketExecuteOrder is run among other tests, some tradeLogs do not correspond to an
-// order hash in the ordertrade mapping. I suspect this is because the event listener catches events from previous
-// tests. It might be helpful to see how to listen to events from up to a certain block.
-func (op *Operator) HandleEvents() error {
-	errorEvents, err := op.Exchange.ListenToErrors()
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	for {
-		select {
-		case event := <-errorEvents:
-			logger.Error("Receiving error event", utils.JSON(event))
-			makerOrderHash := event.MakerOrderHash
-			takerOrderHash := event.TakerOrderHash
-			errID := int(event.ErrorId)
-
-			trades, err := op.TradeService.GetByTakerOrderHash(takerOrderHash)
-			if err != nil {
-				logger.Error(err)
-			}
-
-			to, err := op.OrderService.GetByHash(takerOrderHash)
-			if err != nil {
-				logger.Error(err)
-			}
-
-			makerOrders, err := op.OrderService.GetByHash(makerOrderHash)
-			if err != nil {
-				logger.Error(err)
-			}
-
-			matches := &types.Matches{
-				MakerOrders: []*types.Order{makerOrders},
-				TakerOrder:  to,
-				Trades:      trades,
-			}
-
-			go op.HandleTxError(matches, errID)
-		}
 	}
 }
 
