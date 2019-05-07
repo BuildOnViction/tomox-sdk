@@ -18,7 +18,7 @@ const (
 )
 
 type Notification struct {
-	ID        bson.ObjectId  `json:"-" bson:"_id"`
+	ID        bson.ObjectId  `json:"_id" bson:"_id"`
 	Recipient common.Address `json:"recipient" bson:"recipient"`
 	Message   string         `json:"message" bson:"message"`
 	Type      string         `json:"type" bson:"type"`
@@ -28,7 +28,7 @@ type Notification struct {
 }
 
 type NotificationRecord struct {
-	ID        bson.ObjectId `json:"-" bson:"_id"`
+	ID        bson.ObjectId `json:"_id" bson:"_id"`
 	Recipient string        `json:"recipient" bson:"recipient"`
 	Message   string        `json:"message" bson:"message"`
 	Type      string        `json:"type" bson:"type"`
@@ -65,8 +65,8 @@ func (n *Notification) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	if notification["id"] != nil && bson.IsObjectIdHex(notification["id"].(string)) {
-		n.ID = bson.ObjectIdHex(notification["id"].(string))
+	if notification["_id"] != nil && bson.IsObjectIdHex(notification["_id"].(string)) {
+		n.ID = bson.ObjectIdHex(notification["_id"].(string))
 	}
 
 	if notification["recipient"] == nil {
@@ -116,7 +116,7 @@ func (n *Notification) GetBSON() (interface{}, error) {
 
 func (n *Notification) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
-		ID        bson.ObjectId `json:"-" bson:"_id"`
+		ID        bson.ObjectId `json:"_id" bson:"_id"`
 		Recipient string        `json:"recipient" bson:"recipient"`
 		Message   string        `json:"message" bson:"message"`
 		Type      string        `json:"type" bson:"type"`
