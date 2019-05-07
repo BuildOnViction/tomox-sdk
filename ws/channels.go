@@ -16,6 +16,7 @@ const (
 	PriceBoardChannel   = "price_board"
 	DepositChannel      = "deposit"
 	MarketsChannel      = "markets"
+	NotificationChannel = "notification"
 )
 
 var socketChannels map[string]func(interface{}, *Client)

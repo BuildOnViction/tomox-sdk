@@ -146,6 +146,20 @@ type PriceBoardDao interface {
 	GetLatestQuotes() (map[string]float64, error)
 }
 
+type NotificationDao interface {
+	Create(notifications ...*types.Notification) ([]*types.Notification, error)
+	GetAll() ([]types.Notification, error)
+	GetByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error)
+	GetByID(id bson.ObjectId) (*types.Notification, error)
+	FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error)
+	Update(n *types.Notification) error
+	Upsert(id bson.ObjectId, n *types.Notification) error
+	Delete(notifications ...*types.Notification) error
+	DeleteByIds(ids ...bson.ObjectId) error
+	Aggregate(q []bson.M) ([]*types.Notification, error)
+	Drop()
+}
+
 type Exchange interface {
 	GetAddress() common.Address
 	GetTxCallOptions() *bind.CallOpts
@@ -269,6 +283,14 @@ type MarketsService interface {
 	Subscribe(c *ws.Client)
 	UnsubscribeChannel(c *ws.Client)
 	Unsubscribe(c *ws.Client)
+}
+
+type NotificationService interface {
+	Create(n *types.Notification) ([]*types.Notification, error)
+	GetAll() ([]types.Notification, error)
+	GetByUserAddress(a common.Address, limit int, offset int) ([]*types.Notification, error)
+	GetByID(id bson.ObjectId) (*types.Notification, error)
+	Update(n *types.Notification) (*types.Notification, error)
 }
 
 type TxService interface {

@@ -67,12 +67,6 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 			logger.Error(err)
 			return err
 		}
-	case "ADD_ORDER":
-		err := e.handleAddOrder(msg.Data)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
 	case "CANCEL_ORDER":
 		err := e.handleCancelOrder(msg.Data)
 		if err != nil {
@@ -93,34 +87,6 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 		}
 	default:
 		logger.Error("Unknown message", msg)
-	}
-
-	return nil
-}
-
-func (e *Engine) handleAddOrder(bytes []byte) error {
-	o := &types.Order{}
-	err := json.Unmarshal(bytes, o)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	code, err := o.PairCode()
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	ob := e.orderbooks[code]
-	if ob == nil {
-		return errors.New("Orderbook error")
-	}
-
-	err = ob.addOrder(o)
-	if err != nil {
-		logger.Error(err)
-		return err
 	}
 
 	return nil

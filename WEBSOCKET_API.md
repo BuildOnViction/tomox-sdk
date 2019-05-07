@@ -2,7 +2,7 @@
 
 **Websocket Endpoint**: `/socket`
 
-There are 7 channels on the matching engine websocket API:
+There are 8 channels on the matching engine websocket API:
 
 - orders
 - ohlcv
@@ -11,6 +11,7 @@ There are 7 channels on the matching engine websocket API:
 - trades
 - price_board
 - markets
+- notification
 
 To send a message to a specific channel, the channel the general format of a message is the following:
 
@@ -1140,7 +1141,7 @@ The general format of the update message is the following:
 {
   "channel": "markets",
   "event": {
-    "type": "INIT",
+    "type": "UPDATE",
     "payload": {
       "pairData": [
         {
@@ -1199,6 +1200,92 @@ The general format of the update message is the following:
         ]
       }
     }
+  }
+}
+```
+
+# Notification Channel
+
+## Message:
+
+- SUBSCRIBE (client --> server)
+- INIT (server --> client)
+- UPDATE (server --> client)
+
+## SUBSCRIBE MESSAGE (client --> server)
+
+```json
+{
+  "channel": "notification",
+  "event": {
+    "type": "SUBSCRIBE",
+    "payload": "0x..." // User address
+  }
+}
+```
+
+## INIT MESSAGE (server --> client)
+
+The general format of the INIT message is the following:
+
+```json
+{
+  "channel": "notification",
+  "event": {
+    "type": "INIT",
+    "payload": [
+      {
+          "_id" : "5cd145019eef1c0f04b280d8",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_ADDED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:42:41.961Z",
+          "updatedAt" : "2019-05-07T08:42:41.961Z"
+      },
+      {
+          "_id" : "5cd146769eef1c0f04b280d9",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_CANCELLED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:48:54.630Z",
+          "updatedAt" : "2019-05-07T08:48:54.630Z"
+      }
+    ]
+  }
+}
+```
+
+## UPDATE MESSAGE (server --> client)
+
+The general format of the update message is the following:
+
+```json
+{
+  "channel": "notification",
+  "event": {
+    "type": "UPDATE",
+    "payload": [
+      {
+          "_id" : "5cd145019eef1c0f04b280d8",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_ADDED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:42:41.961Z",
+          "updatedAt" : "2019-05-07T08:42:41.961Z"
+      },
+      {
+          "_id" : "5cd146769eef1c0f04b280d9",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_CANCELLED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:48:54.630Z",
+          "updatedAt" : "2019-05-07T08:48:54.630Z"
+      }
+    ]
   }
 }
 ```
