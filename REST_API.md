@@ -1,6 +1,6 @@
 # REST API
 
-There are 7 different resources on the matching engine REST API:
+There are 8 different resources on the matching engine REST API:
 
 - accounts
 - pairs
@@ -9,6 +9,7 @@ There are 7 different resources on the matching engine REST API:
 - orderbook
 - orders
 - ohlcv
+- notification
 
 Moreover, there is one resource for getting general information:
 
@@ -173,6 +174,36 @@ Retrieve OHLCV data corresponding to a baseToken and a quoteToken.
 - {unit} is the unit used to represent the above duration: "min", "hour", "day", "week", "month", "year"
 - {from} is the beginning timestamp (number of seconds from 1970/01/01) from which ohlcv data has to be queried
 - {to} is the ending timestamp ((number of seconds from 1970/01/01)) until which ohlcv data has to be queried
+
+# Notification resource
+
+### GET /notifications?userAddress={userAddress}&page={page}&perPage={perPage}
+
+Retrieve notifications from database with pagination
+
+- {userAddress} is the Ethereum address of user
+- {page} is the page number
+- {perPage} is the number of records returned per page. Valid values are 10, 20, 30, 40, 50
+
+### PUT /notifications/{id}
+
+Update status of a notification from UNREAD to READ
+
+- {id} is the MongoDB ID of a record
+
+Sample request body
+
+```json
+{
+    "_id" : "5cd1381f9eef1c6d764d6795",
+    "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+    "message" : "ORDER_ADDED - Order Hash: 0x097066e1949b074ea77c29564c6431a7240a779ecdca2faba91ca36cba31b3b6",
+    "type" : "LOG",
+    "status" : "UNREAD",
+    "createdAt" : "2019-05-07T07:47:43.258Z",
+    "updatedAt" : "2019-05-07T07:47:43.258Z"
+}
+```
 
 # Info resource
 

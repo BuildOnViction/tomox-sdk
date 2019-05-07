@@ -2,7 +2,7 @@
 
 **Websocket Endpoint**: `/socket`
 
-There are 6 channels on the matching engine websocket API:
+There are 8 channels on the matching engine websocket API:
 
 - orders
 - ohlcv
@@ -10,6 +10,8 @@ There are 6 channels on the matching engine websocket API:
 - raw_orderbook
 - trades
 - price_board
+- markets
+- notification
 
 To send a message to a specific channel, the channel the general format of a message is the following:
 
@@ -872,7 +874,7 @@ The client should usually not receive this message and it can be interpreted as 
 }
 ```
 
-## UNSUBSRIBE MESSAGE (client --> server)
+## UNSUBSCRIBE MESSAGE (client --> server)
 
 ```json
 {
@@ -960,7 +962,7 @@ The general format of the update message is the following:
 }
 ```
 
-## UNSUBSRIBE MESSAGE (client --> server)
+## UNSUBSCRIBE MESSAGE (client --> server)
 
 ```json
 {
@@ -1025,6 +1027,265 @@ The general format of the update message is the following:
       "usd": "",
       "last_trade_price": ""
     }
+  }
+}
+```
+
+# Markets Channel
+
+## Message:
+
+- SUBSCRIBE (client --> server)
+- UNSUBSCRIBE (client --> server)
+- INIT (server --> client)
+- UPDATE (server --> client)
+
+## SUBSCRIBE MESSAGE (client --> server)
+
+```json
+{
+  "channel": "markets",
+  "event": {
+    "type": "SUBSCRIBE"
+  }
+}
+```
+
+## UNSUBSCRIBE MESSAGE (client --> server)
+
+```json
+{
+  "channel": "markets",
+  "event": {
+    "type": "UNSUBSCRIBE"
+  }
+}
+```
+
+## INIT MESSAGE (server --> client)
+
+The general format of the INIT message is the following:
+
+```json
+{
+  "channel": "markets",
+  "event": {
+    "type": "INIT",
+    "payload": {
+      "pairData": [
+        {
+          "askPrice": "251540000000000000000000000000000000000",
+          "bidPrice": "251530000000000000000000000000000000000",
+          "close": "251530000000000000000000000000000000000",
+          "count": "4",
+          "high": "251530000000000000000000000000000000000",
+          "low": "251530000000000000000000000000000000000",
+          "open": "251530000000000000000000000000000000000",
+          "orderCount": "51",
+          "orderVolume": "275000000000000000000",
+          "pair": {
+            "baseToken": "0x260800BAb2E7a6C3BCB8501BeE79F8CFFE770d17",
+            "pairName": "ETH/TOMO",
+            "quoteToken": "0x0000000000000000000000000000000000000001"
+          },
+          "price": "251535000000000000000000000000000000000",
+          "rank": 0,
+          "timestamp": 0,
+          "volume": "11000000000000000000"
+        },
+        {
+          "askPrice": "0",
+          "bidPrice": "0",
+          "close": "0",
+          "count": "0",
+          "high": "0",
+          "low": "0",
+          "open": "0",
+          "orderCount": "0",
+          "orderVolume": "0",
+          "pair": {
+            "baseToken": "0x260800BAb2E7a6C3BCB8501BeE79F8CFFE770d17",
+            "pairName": "ETH/BTC",
+            "quoteToken": "0x4Ce98e51bB710a9af0d0f417e4505bEb4e3b4632"
+          },
+          "price": "0",
+          "rank": 0,
+          "timestamp": 0,
+          "volume": "0"
+        },
+        ...
+      ],
+      "smallChartsData": {
+        "ETH/TOMO": [
+          {
+            "close": "251530000000000000000000000000000000000",
+            "pair": {
+              "baseToken": "0x260800BAb2E7a6C3BCB8501BeE79F8CFFE770d17",
+              "pairName": "ETH/TOMO",
+              "quoteToken": "0x0000000000000000000000000000000000000001"
+            },
+            "timestamp": 1556262000000
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+## UPDATE MESSAGE (server --> client)
+
+The general format of the update message is the following:
+
+```json
+{
+  "channel": "markets",
+  "event": {
+    "type": "UPDATE",
+    "payload": {
+      "pairData": [
+        {
+          "askPrice": "251540000000000000000000000000000000000",
+          "bidPrice": "251530000000000000000000000000000000000",
+          "close": "251530000000000000000000000000000000000",
+          "count": "4",
+          "high": "251530000000000000000000000000000000000",
+          "low": "251530000000000000000000000000000000000",
+          "open": "251530000000000000000000000000000000000",
+          "orderCount": "51",
+          "orderVolume": "275000000000000000000",
+          "pair": {
+            "baseToken": "0x260800BAb2E7a6C3BCB8501BeE79F8CFFE770d17",
+            "pairName": "ETH/TOMO",
+            "quoteToken": "0x0000000000000000000000000000000000000001"
+          },
+          "price": "251535000000000000000000000000000000000",
+          "rank": 0,
+          "timestamp": 0,
+          "volume": "11000000000000000000"
+        },
+        {
+          "askPrice": "0",
+          "bidPrice": "0",
+          "close": "0",
+          "count": "0",
+          "high": "0",
+          "low": "0",
+          "open": "0",
+          "orderCount": "0",
+          "orderVolume": "0",
+          "pair": {
+            "baseToken": "0x260800BAb2E7a6C3BCB8501BeE79F8CFFE770d17",
+            "pairName": "ETH/BTC",
+            "quoteToken": "0x4Ce98e51bB710a9af0d0f417e4505bEb4e3b4632"
+          },
+          "price": "0",
+          "rank": 0,
+          "timestamp": 0,
+          "volume": "0"
+        },
+        ...
+      ],
+      "smallChartsData": {
+        "ETH/TOMO": [
+          {
+            "close": "251530000000000000000000000000000000000",
+            "pair": {
+              "baseToken": "0x260800BAb2E7a6C3BCB8501BeE79F8CFFE770d17",
+              "pairName": "ETH/TOMO",
+              "quoteToken": "0x0000000000000000000000000000000000000001"
+            },
+            "timestamp": 1556262000000
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+# Notification Channel
+
+## Message:
+
+- SUBSCRIBE (client --> server)
+- INIT (server --> client)
+- UPDATE (server --> client)
+
+## SUBSCRIBE MESSAGE (client --> server)
+
+```json
+{
+  "channel": "notification",
+  "event": {
+    "type": "SUBSCRIBE",
+    "payload": "0x..." // User address
+  }
+}
+```
+
+## INIT MESSAGE (server --> client)
+
+The general format of the INIT message is the following:
+
+```json
+{
+  "channel": "notification",
+  "event": {
+    "type": "INIT",
+    "payload": [
+      {
+          "_id" : "5cd145019eef1c0f04b280d8",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_ADDED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:42:41.961Z",
+          "updatedAt" : "2019-05-07T08:42:41.961Z"
+      },
+      {
+          "_id" : "5cd146769eef1c0f04b280d9",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_CANCELLED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:48:54.630Z",
+          "updatedAt" : "2019-05-07T08:48:54.630Z"
+      }
+    ]
+  }
+}
+```
+
+## UPDATE MESSAGE (server --> client)
+
+The general format of the update message is the following:
+
+```json
+{
+  "channel": "notification",
+  "event": {
+    "type": "UPDATE",
+    "payload": [
+      {
+          "_id" : "5cd145019eef1c0f04b280d8",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_ADDED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:42:41.961Z",
+          "updatedAt" : "2019-05-07T08:42:41.961Z"
+      },
+      {
+          "_id" : "5cd146769eef1c0f04b280d9",
+          "recipient" : "0xF069080F7acB9a6705b4a51F84d9aDc67b921bDF",
+          "message" : "ORDER_CANCELLED - Order Hash: 0xc5fef1df4ee7a1a0aaf29aefbc022b0e4a32ada674f6bce18f47e59aa72e31f8",
+          "type" : "LOG",
+          "status" : "UNREAD",
+          "createdAt" : "2019-05-07T08:48:54.630Z",
+          "updatedAt" : "2019-05-07T08:48:54.630Z"
+      }
+    ]
   }
 }
 ```

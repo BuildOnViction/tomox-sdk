@@ -78,6 +78,7 @@ func NewRouter(
 	configDao := daos.NewConfigDao()
 	associationDao := daos.NewAssociationDao()
 	priceBoardDao := daos.NewPriceBoardDao()
+	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
@@ -89,7 +90,7 @@ func NewRouter(
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, eng, provider)
-	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, eng, validatorService, rabbitConn)
+	orderService := services.NewOrderService(orderDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	tradeService := services.NewTradeService(orderDao, tradeDao, rabbitConn)
 
@@ -106,6 +107,7 @@ func NewRouter(
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao)
+	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, eng)
@@ -151,6 +153,7 @@ func NewRouter(
 	endpoints.ServeDepositResource(r, depositService, walletService, txService)
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService)
+	endpoints.ServeNotificationResource(r, notificationService)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)
