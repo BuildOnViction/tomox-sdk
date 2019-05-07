@@ -13,8 +13,9 @@ const (
 	StatusUnread = "UNREAD"
 	StatusRead   = "READ"
 
-	typeSystem       = 0
-	typeNotification = 1
+	TypeAnnounce = "ANNOUNCE"
+	TypeAlert    = "ALERT"
+	TypeLog      = "LOG"
 )
 
 type Notification struct {
