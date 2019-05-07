@@ -149,7 +149,7 @@ type PriceBoardDao interface {
 type NotificationDao interface {
 	Create(notifications ...*types.Notification) error
 	GetAll() ([]types.Notification, error)
-	GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error)
+	GetByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error)
 	GetByID(id bson.ObjectId) (*types.Notification, error)
 	FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error)
 	Update(n *types.Notification) error
@@ -288,7 +288,7 @@ type MarketsService interface {
 type NotificationService interface {
 	Create(n *types.Notification) error
 	GetAll() ([]types.Notification, error)
-	GetByUserAddress(a common.Address, limit ...int) ([]*types.Notification, error)
+	GetByUserAddress(a common.Address, limit int, offset int) ([]*types.Notification, error)
 	GetByID(id bson.ObjectId) (*types.Notification, error)
 }
 

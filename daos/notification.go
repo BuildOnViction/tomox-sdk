@@ -63,15 +63,15 @@ func (dao *NotificationDao) GetAll() ([]types.Notification, error) {
 
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
-func (dao *NotificationDao) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error) {
-	if limit == nil {
-		limit = []int{15} // Get last 15 records
+func (dao *NotificationDao) GetByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error) {
+	if limit == 0 {
+		limit = 10 // Get last 10 records
 	}
 
 	var res []*types.Notification
 	q := bson.M{"recipient": addr.Hex()}
 
-	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
+	err := db.Get(dao.dbName, dao.collectionName, q, offset, limit, &res)
 	if err != nil {
 		logger.Error(err)
 		return nil, err

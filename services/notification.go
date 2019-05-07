@@ -40,8 +40,8 @@ func (s *NotificationService) GetAll() ([]types.Notification, error) {
 }
 
 // GetByUserAddress fetches all the notifications related to user address
-func (s *NotificationService) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Notification, error) {
-	return s.NotificationDao.GetByUserAddress(addr, limit...)
+func (s *NotificationService) GetByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error) {
+	return s.NotificationDao.GetByUserAddress(addr, limit, offset)
 }
 
 // GetByID fetches the detailed document of a notification using its mongo ID

@@ -9,6 +9,14 @@ import (
 	"github.com/tomochain/tomodex/errors"
 )
 
+const (
+	statusUnread = 0
+	statusRead   = 1
+
+	typeSystem       = 0
+	typeNotification = 1
+)
+
 type Notification struct {
 	ID        bson.ObjectId  `json:"-" bson:"_id"`
 	Recipient common.Address `json:"recipient" bson:"recipient"`

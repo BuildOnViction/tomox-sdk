@@ -2,11 +2,16 @@ package endpoints
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/tomodex/errors"
 	"github.com/tomochain/tomodex/interfaces"
 	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomodex/utils/httputils"
 	"github.com/tomochain/tomodex/ws"
 )
 
@@ -21,7 +26,66 @@ func ServeNotificationResource(
 ) {
 	e := &NotificationEndpoint{notificationService}
 
+	r.HandleFunc("/notifications", e.HandleGetNotifications).Methods("GET")
+	r.HandleFunc("/notifications/{id}", e.HandleUpdateNotification).Methods("PUT")
+
 	ws.RegisterChannel(ws.NotificationChannel, e.handleNotificationWebSocket)
+}
+
+func (e *NotificationEndpoint) HandleGetNotifications(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	page := v.Get("page")
+	perPage := v.Get("perPage")
+	userAddress := v.Get("userAddress")
+
+	p, err := strconv.Atoi(page)
+
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s is not an integer.", page))
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if p <= 0 {
+		p = 1
+	}
+
+	pp, err := strconv.Atoi(perPage)
+
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s is not an integer.", perPage))
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if pp <= 0 || pp%10 != 0 {
+		pp = 10
+	}
+
+	if !common.IsHexAddress(userAddress) {
+		err = errors.New("Invalid user address")
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	a := common.HexToAddress(userAddress)
+
+	notifications, err := e.NotificationService.GetByUserAddress(a, pp, (p-1)*pp) // limit = perPage, offset = (page-1)*perPage
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, notifications)
+}
+
+func (e *NotificationEndpoint) HandleUpdateNotification(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c *ws.Client) {
@@ -60,7 +124,7 @@ func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c 
 		a := common.HexToAddress(addr)
 
 		ws.RegisterNotificationConnection(a, c)
-		notifications, err := e.NotificationService.GetByUserAddress(a)
+		notifications, err := e.NotificationService.GetByUserAddress(a, 0, 0)
 
 		if err != nil {
 			logger.Error(err)
