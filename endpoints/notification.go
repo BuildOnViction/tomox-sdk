@@ -60,7 +60,7 @@ func (e *NotificationEndpoint) HandleGetNotifications(w http.ResponseWriter, r *
 		return
 	}
 
-	if pp <= 0 || pp%10 != 0 {
+	if pp <= 0 || pp%10 != 0 || pp > 50 {
 		pp = 10
 	}
 
