@@ -28,23 +28,25 @@ func NewNotificationDao() *NotificationDao {
 // Create function performs the DB insertion task for notification collection
 // It accepts 1 or more notifications as input.
 // All the notifications are inserted in one query itself.
-func (dao *NotificationDao) Create(notifications ...*types.Notification) error {
+func (dao *NotificationDao) Create(notifications ...*types.Notification) ([]*types.Notification, error) {
 	y := make([]interface{}, len(notifications))
+	result := make([]*types.Notification, len(notifications))
 
 	for _, notification := range notifications {
 		notification.ID = bson.NewObjectId()
 		notification.CreatedAt = time.Now()
 		notification.UpdatedAt = time.Now()
 		y = append(y, notification)
+		result = append(result, notification)
 	}
 
 	err := db.Create(dao.dbName, dao.collectionName, y...)
 	if err != nil {
 		logger.Error(err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return result, nil
 }
 
 // GetAll function fetches all the notifications in the notification collection of mongodb.

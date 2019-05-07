@@ -201,7 +201,7 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 	o := res.Order
 
 	// Save notification
-	err := s.notificationDao.Create(&types.Notification{
+	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
 		Message:   fmt.Sprintf("ORDER_ADDED - Order Hash: %s", o.Hash.Hex()),
 		Type:      types.TypeLog,
@@ -213,7 +213,7 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 	}
 
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
-	ws.SendNotificationMessage("ORDER_ADDED", o.UserAddress, o)
+	ws.SendNotificationMessage("ORDER_ADDED", o.UserAddress, notifications)
 
 	s.broadcastOrderBookUpdate([]*types.Order{o})
 	s.broadcastRawOrderBookUpdate([]*types.Order{o})
@@ -283,7 +283,7 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 	o := res.Order
 
 	// Save notification
-	err := s.notificationDao.Create(&types.Notification{
+	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
 		Message:   fmt.Sprintf("ORDER_CANCELLED - Order Hash: %s", o.Hash.Hex()),
 		Type:      types.TypeLog,
@@ -295,7 +295,7 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 	}
 
 	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
-	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
 
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})

@@ -23,15 +23,15 @@ func NewNotificationService(
 }
 
 // Create inserts a new notification into the database
-func (s *NotificationService) Create(n *types.Notification) error {
-	err := s.NotificationDao.Create(n)
+func (s *NotificationService) Create(n *types.Notification) ([]*types.Notification, error) {
+	notifications, err := s.NotificationDao.Create(n)
 
 	if err != nil {
 		logger.Error(err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return notifications, nil
 }
 
 // GetAll fetches all the notifications from db

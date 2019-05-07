@@ -1,6 +1,6 @@
 # REST API
 
-There are 7 different resources on the matching engine REST API:
+There are 8 different resources on the matching engine REST API:
 
 - accounts
 - pairs
