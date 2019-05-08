@@ -384,12 +384,10 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		"pricepoint":      o.PricePoint.String(),
 		"makeFee":         o.MakeFee.String(),
 		"takeFee":         o.TakeFee.String(),
-		// NOTE: Currently removing this to simplify public API, might reinclude
-		// later. An alternative would be to create additional simplified type
-		"createdAt": o.CreatedAt.Format(time.RFC3339Nano),
-		// "updatedAt": o.UpdatedAt.Format(time.RFC3339Nano),
-		"orderID": strconv.FormatUint(o.OrderID, 10),
-		"key":     o.Key,
+		"createdAt":       o.CreatedAt.Format(time.RFC3339Nano),
+		"updatedAt":       o.UpdatedAt.Format(time.RFC3339Nano),
+		"orderID":         strconv.FormatUint(o.OrderID, 10),
+		"key":             o.Key,
 	}
 
 	if o.FilledAmount != nil {
@@ -640,12 +638,14 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 
 	createdAt, err := strconv.ParseInt(decoded.CreatedAt, 10, 64)
 	if err != nil {
+		logger.Error(err)
 		panic(err)
 	}
 	o.CreatedAt = time.Unix(createdAt, 0)
 
 	updatedAt, err := strconv.ParseInt(decoded.UpdatedAt, 10, 64)
 	if err != nil {
+		logger.Error(err)
 		panic(err)
 	}
 	o.UpdatedAt = time.Unix(updatedAt, 0)
