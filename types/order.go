@@ -539,8 +539,8 @@ func (o *Order) GetBSON() (interface{}, error) {
 		Nonce:           o.Nonce.String(),
 		MakeFee:         o.MakeFee.String(),
 		TakeFee:         o.TakeFee.String(),
-		CreatedAt:       o.CreatedAt,
-		UpdatedAt:       o.UpdatedAt,
+		CreatedAt:       strconv.FormatInt(o.CreatedAt.Unix(), 10),
+		UpdatedAt:       strconv.FormatInt(o.UpdatedAt.Unix(), 10),
 		OrderID:         strconv.FormatUint(o.OrderID, 10),
 		NextOrder:       common.Bytes2Hex(o.NextOrder),
 		PrevOrder:       common.Bytes2Hex(o.PrevOrder),
@@ -588,8 +588,8 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		MakeFee         string           `json:"makeFee" bson:"makeFee"`
 		TakeFee         string           `json:"takeFee" bson:"takeFee"`
 		Signature       *SignatureRecord `json:"signature" bson:"signature"`
-		CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
-		UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
+		CreatedAt       string           `json:"createdAt" bson:"createdAt"`
+		UpdatedAt       string           `json:"updatedAt" bson:"updatedAt"`
 		OrderID         string           `json:"orderID" bson:"orderID"`
 		NextOrder       string           `json:"-"`
 		PrevOrder       string           `json:"-"`
@@ -638,8 +638,18 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		}
 	}
 
-	o.CreatedAt = decoded.CreatedAt
-	o.UpdatedAt = decoded.UpdatedAt
+	createdAt, err := strconv.ParseInt(decoded.CreatedAt, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	o.CreatedAt = time.Unix(createdAt, 0)
+
+	updatedAt, err := strconv.ParseInt(decoded.UpdatedAt, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	o.UpdatedAt = time.Unix(updatedAt, 0)
+
 	orderID, err := strconv.ParseInt(decoded.OrderID, 10, 64)
 	if err != nil {
 		logger.Error(err)
@@ -672,8 +682,8 @@ type OrderRecord struct {
 	TakeFee         string           `json:"takeFee" bson:"takeFee"`
 	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
 	PairName        string           `json:"pairName" bson:"pairName"`
-	CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
-	UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
+	CreatedAt       string           `json:"createdAt" bson:"createdAt"`
+	UpdatedAt       string           `json:"updatedAt" bson:"updatedAt"`
 	OrderID         string           `json:"orderID,omitempty" bson:"orderID"`
 	NextOrder       string           `json:"nextOrder,omitempty" bson:"nextOrder"`
 	PrevOrder       string           `json:"prevOrder,omitempty" bson:"prevOrder"`
