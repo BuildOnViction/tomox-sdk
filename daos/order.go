@@ -399,6 +399,21 @@ func (dao *OrderDao) UpdateOrderFilledAmounts(hashes []common.Hash, amount []*bi
 	return updatedOrders, nil
 }
 
+// GetOrderCountByUserAddress get the total number of orders created by a user
+// Return an integer and error
+func (dao *OrderDao) GetOrderCountByUserAddress(addr common.Address) (int, error) {
+	q := bson.M{"userAddress": addr.Hex()}
+
+	total, err := db.Count(dao.dbName, dao.collectionName, q)
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	return total, nil
+}
+
 // GetByID function fetches a single document from order collection based on mongoDB ID.
 // Returns Order type struct
 func (dao *OrderDao) GetByID(id bson.ObjectId) (*types.Order, error) {

@@ -53,6 +53,11 @@ func NewOrderService(
 	}
 }
 
+// GetOrderCountByUserAddress get the total number of orders created by a user
+func (s *OrderService) GetOrderCountByUserAddress(addr common.Address) (int, error) {
+	return s.orderDao.GetOrderCountByUserAddress(addr)
+}
+
 // GetByID fetches the details of an order using order's mongo ID
 func (s *OrderService) GetByID(id bson.ObjectId) (*types.Order, error) {
 	return s.orderDao.GetByID(id)

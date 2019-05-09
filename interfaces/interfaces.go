@@ -26,6 +26,7 @@ type OrderDao interface {
 	UpdateAllByHash(h common.Hash, o *types.Order) error
 	UpdateByHash(h common.Hash, o *types.Order) error
 	UpsertByHash(h common.Hash, o *types.Order) error
+	GetOrderCountByUserAddress(addr common.Address) (int, error)
 	GetByID(id bson.ObjectId) (*types.Order, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
@@ -211,6 +212,7 @@ type EthereumService interface {
 }
 
 type OrderService interface {
+	GetOrderCountByUserAddress(addr common.Address) (int, error)
 	GetByID(id bson.ObjectId) (*types.Order, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
