@@ -28,6 +28,7 @@ func ServeOrderResource(
 ) {
 	e := &orderEndpoint{orderService, accountService}
 
+	r.HandleFunc("/orders/count", e.handleGetCountOrder).Methods("GET")
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
@@ -35,6 +36,33 @@ func ServeOrderResource(
 	r.HandleFunc("/orders/cancel", e.HandleCancelOrder).Methods("POST")
 
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
+}
+
+func (e *orderEndpoint) handleGetCountOrder(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	addr := v.Get("address")
+
+	if addr == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	a := common.HexToAddress(addr)
+
+	total, err := e.orderService.GetOrderCountByUserAddress(a)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, total)
 }
 
 func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) {

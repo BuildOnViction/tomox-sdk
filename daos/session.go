@@ -58,6 +58,13 @@ func (d *Database) Create(dbName, collection string, data ...interface{}) (err e
 	return
 }
 
+func (d *Database) Count(dbName, collection string, query interface{}) (int, error) {
+	sc := d.Session.Copy()
+	defer sc.Close()
+
+	return sc.DB(dbName).C(collection).Find(query).Count()
+}
+
 // GetByID is a wrapper for mgo.FindId function.
 // It creates a copy of session initialized, sends query over this session
 // and returns the session to connection pool
