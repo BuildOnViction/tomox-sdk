@@ -76,7 +76,7 @@ func (e *pairEndpoint) HandleGetPairs(w http.ResponseWriter, r *http.Request) {
 	res, err := e.pairService.GetAll()
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -118,7 +118,7 @@ func (e *pairEndpoint) HandleGetPair(w http.ResponseWriter, r *http.Request) {
 	res, err := e.pairService.GetByTokenAddress(baseTokenAddress, quoteTokenAddress)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -178,7 +178,7 @@ func (e *pairEndpoint) HandleGetPairData(w http.ResponseWriter, r *http.Request)
 	res, err := e.pairService.GetTokenPairData(baseTokenAddress, quoteTokenAddress)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

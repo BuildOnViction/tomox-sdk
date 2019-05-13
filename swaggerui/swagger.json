@@ -171,123 +171,75 @@
         ]
       }
     },
-    "/pet": {
+    "/account/create?address={newAddress}": {
       "post": {
         "tags": [
-          "pet"
+          "accounts"
         ],
-        "summary": "Add a new pet to the store",
-        "description": "",
-        "operationId": "addPet",
+        "summary": "Add a new account by user address",
+        "description": "Returns newly created account",
+        "operationId": "handleCreateAccount",
         "consumes": [
-          "application/json",
-          "application/xml"
+          "application/json"
         ],
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
           {
-            "in": "body",
-            "name": "body",
-            "description": "Pet object that needs to be added to the store",
+            "name": "newAddress",
+            "in": "path",
+            "description": "Address of user",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/Account"
-            }
+            "type": "string"
           }
         ],
         "responses": {
-          "405": {
-            "description": "Invalid input"
-          }
-        },
-        "security": [
-          {
-            "petstore_auth": [
-              "write:pets",
-              "read:pets"
-            ]
-          }
-        ]
-      },
-      "put": {
-        "tags": [
-          "pet"
-        ],
-        "summary": "Update an existing pet",
-        "description": "",
-        "operationId": "updatePet",
-        "consumes": [
-          "application/json",
-          "application/xml"
-        ],
-        "produces": [
-          "application/xml",
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "description": "Pet object that needs to be added to the store",
-            "required": true,
+          "200": {
+            "description": "Account already exists"
+          },
+          "201": {
+            "description": "Account created",
             "schema": {
               "$ref": "#/definitions/Account"
             }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid ID supplied"
           },
           "404": {
-            "description": "Pet not found"
+            "description": "Invalid Address"
           },
-          "405": {
-            "description": "Validation exception"
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
-          {
-            "petstore_auth": [
-              "write:pets",
-              "read:pets"
-            ]
-          }
         ]
       }
     },
-    "/pet/findByStatus": {
+    "/pairs": {
       "get": {
         "tags": [
-          "pet"
+          "pairs"
         ],
-        "summary": "Finds Pets by status",
+        "summary": "Finds all pairs",
         "description": "Multiple status values can be provided with comma separated strings",
-        "operationId": "findPetsByStatus",
+        "operationId": "HandleGetPairs",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
           {
-            "name": "status",
+            "name": "baseToken",
             "in": "query",
-            "description": "Status values that need to be considered for filter",
+            "description": "Base token address",
             "required": true,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "available",
-                "pending",
-                "sold"
-              ],
-              "default": "available"
-            },
-            "collectionFormat": "multi"
+            "type": "string"
+          },
+          {
+            "name": "quoteToken",
+            "in": "query",
+            "description": "Quote token address",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -300,17 +252,103 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid status value"
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
+        ]
+      }
+    },
+    "/pair?baseToken={baseToken}&quoteToken={quoteToken}": {
+      "get": {
+        "tags": [
+          "pairs"
+        ],
+        "summary": "Retrieve the pair information corresponding to a baseToken and a quoteToken",
+        "description": "Multiple status values can be provided with comma separated strings",
+        "operationId": "HandleGetPair",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
           {
-            "petstore_auth": [
-              "write:pets",
-              "read:pets"
-            ]
+            "name": "baseToken",
+            "in": "query",
+            "description": "Base token address",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quoteToken",
+            "in": "query",
+            "description": "Quote token address",
+            "required": true,
+            "type": "string"
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Account"
+            }
+          },
+          "400": {
+            "description": "baseToken Parameter missing"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+        ]
+      }
+    },
+    "/pairs/data?baseToken={baseToken}&quoteToken={quoteToken}": {
+      "get": {
+        "tags": [
+          "pairs"
+        ],
+        "summary": "Retrieve pair data corresponding to a baseToken and quoteToken",
+        "description": "Multiple status values can be provided with comma separated strings",
+        "operationId": "HandleGetPairData",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "baseToken",
+            "in": "query",
+            "description": "Base token address",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quoteToken",
+            "in": "query",
+            "description": "Quote token address",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Account"
+            }
+          },
+          "400": {
+            "description": "baseToken Parameter missing"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
         ]
       }
     },
@@ -323,7 +361,6 @@
         "description": "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
         "operationId": "findPetsByTags",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -373,7 +410,6 @@
         "description": "Returns a single pet",
         "operationId": "getPetById",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -417,7 +453,6 @@
           "application/x-www-form-urlencoded"
         ],
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -466,7 +501,6 @@
         "description": "",
         "operationId": "deletePet",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -599,7 +633,6 @@
         "description": "",
         "operationId": "placeOrder",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -635,7 +668,6 @@
         "description": "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
         "operationId": "getOrderById",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -673,7 +705,6 @@
         "description": "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
         "operationId": "deleteOrder",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -706,7 +737,6 @@
         "description": "This can only be done by the logged in user.",
         "operationId": "createUser",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -736,7 +766,6 @@
         "description": "",
         "operationId": "createUsersWithArrayInput",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -769,7 +798,6 @@
         "description": "",
         "operationId": "createUsersWithListInput",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -802,7 +830,6 @@
         "description": "",
         "operationId": "loginUser",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -855,7 +882,6 @@
         "description": "",
         "operationId": "logoutUser",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [],
@@ -875,7 +901,6 @@
         "description": "",
         "operationId": "getUserByName",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -910,7 +935,6 @@
         "description": "This can only be done by the logged in user.",
         "operationId": "updateUser",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
@@ -948,7 +972,6 @@
         "description": "This can only be done by the logged in user.",
         "operationId": "deleteUser",
         "produces": [
-          "application/xml",
           "application/json"
         ],
         "parameters": [
