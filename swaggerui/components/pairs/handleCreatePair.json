@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "pairs"
+  ],
+  "summary": "Create new pair",
+  "description": "Returns newly created pair",
+  "operationId": "HandleCreatePair",
+  "produces": [
+    "application/json"
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "object",
+        "$ref": "../../swagger.json#/definitions/Account"
+      }
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

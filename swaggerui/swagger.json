@@ -63,7 +63,7 @@
       "$ref": "./components/accounts/handleCreateAccount.json"
     },
     "/pairs": {
-      "$ref": "./components/pairs/handleGetPairs.json"
+      "$ref": "./paths/pairs.json"
     },
     "/pair?baseToken={baseToken}&quoteToken={quoteToken}": {
       "$ref": "./components/pairs/handleGetPair.json"
