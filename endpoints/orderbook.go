@@ -59,7 +59,7 @@ func (e *OrderBookEndpoint) handleGetOrderBook(w http.ResponseWriter, r *http.Re
 	ob, err := e.orderBookService.GetOrderBook(baseTokenAddress, quoteTokenAddress)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "Internal Server Error")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -82,6 +82,12 @@
     },
     "/tokens/{address}": {
       "$ref": "./components/tokens/handleGetToken.json"
+    },
+    "/orderbook?baseToken={baseToken}&quoteToken={quoteToken}": {
+      "$ref": "./components/orderbook/handleGetOrderBook.json"
+    },
+    "/orderbook/raw?baseToken={baseToken}&quoteToken={quoteToken}": {
+      "$ref": "./components/orderbook/handleGetRawOrderBook.json"
     }
   },
   "securityDefinitions": {
