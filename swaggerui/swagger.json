@@ -93,7 +93,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "address": {
           "type": "string"
@@ -115,11 +116,13 @@
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         }
       }
     },
@@ -147,7 +150,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "name": {
           "type": "string"
@@ -184,15 +188,18 @@
           "type": "string"
         },
         "usd": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         }
       }
     },
@@ -200,7 +207,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "baseTokenSymbol": {
           "type": "string"
@@ -210,7 +218,8 @@
         },
         "baseTokenDecimals": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "readOnly": true
         },
         "quoteTokenSymbol": {
           "type": "string"
@@ -220,31 +229,107 @@
         },
         "quoteTokenDecimals": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "readOnly": true
         },
         "listed": {
-          "type": "boolean"
+          "type": "boolean",
+          "readOnly": true
         },
         "active": {
           "type": "boolean"
         },
         "rank": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "readOnly": true
         },
         "makeFee": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "takeFee": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "PairID": {
+      "type": "object",
+      "properties": {
+        "pairName": {
+          "type": "string"
+        },
+        "baseToken": {
+          "type": "string"
+        },
+        "quoteToken": {
+          "type": "string"
+        }
+      }
+    },
+    "PairData": {
+      "type": "object",
+      "properties": {
+        "pair": {
+          "$ref": "#/definitions/PairID"
+        },
+        "open": {
+          "type": "string"
+        },
+        "high": {
+          "type": "string"
+        },
+        "low": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "close": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        },
+        "count": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "orderVolume": {
+          "type": "string"
+        },
+        "orderCount": {
+          "type": "string"
+        },
+        "averageOrderAmount": {
+          "type": "string"
+        },
+        "averageTradeAmount": {
+          "type": "string"
+        },
+        "askPrice": {
+          "type": "string"
+        },
+        "bidPrice": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -264,7 +349,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "userAddress": {
           "type": "string"
@@ -316,11 +402,13 @@
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         }
       }
     },
@@ -342,7 +430,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "readOnly": true
         },
         "taker": {
           "type": "string"
@@ -382,11 +471,13 @@
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "readOnly": true
         }
       }
     },

@@ -268,12 +268,12 @@ func (p *Pair) GetKVPrefix() string {
 
 type PairData struct {
 	Pair               PairID   `json:"pair,omitempty" bson:"_id"`
-	Close              *big.Int `json:"close,omitempty" bson:"close"`
-	Count              *big.Int `json:"count,omitempty" bson:"count"`
+	Open               *big.Int `json:"open,omitempty" bson:"open"`
 	High               *big.Int `json:"high,omitempty" bson:"high"`
 	Low                *big.Int `json:"low,omitempty" bson:"low"`
-	Open               *big.Int `json:"open,omitempty" bson:"open"`
+	Close              *big.Int `json:"close,omitempty" bson:"close"`
 	Volume             *big.Int `json:"volume,omitempty" bson:"volume"`
+	Count              *big.Int `json:"count,omitempty" bson:"count"`
 	Timestamp          int64    `json:"timestamp,omitempty" bson:"timestamp"`
 	OrderVolume        *big.Int `json:"orderVolume,omitempty" bson:"orderVolume"`
 	OrderCount         *big.Int `json:"orderCount,omitempty" bson:"orderCount"`
@@ -282,7 +282,7 @@ type PairData struct {
 	AskPrice           *big.Int `json:"askPrice,omitempty" bson:"askPrice"`
 	BidPrice           *big.Int `json:"bidPrice,omitempty" bson:"bidPrice"`
 	Price              *big.Int `json:"price,omitempty" bson:"price"`
-	Rank               int      `json"rank,omitempty" bson:"rank"`
+	Rank               int      `json:"rank,omitempty" bson:"rank"`
 }
 
 func (p *PairData) MarshalJSON() ([]byte, error) {

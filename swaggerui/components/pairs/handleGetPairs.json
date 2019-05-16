@@ -30,7 +30,7 @@
       "schema": {
         "type": "array",
         "items": {
-          "$ref": "../../swagger.json#/definitions/Account"
+          "$ref": "../../swagger.json#/definitions/Pair"
         }
       }
     },

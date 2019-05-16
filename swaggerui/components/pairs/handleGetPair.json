@@ -30,7 +30,7 @@
         "description": "successful operation",
         "schema": {
           "type": "object",
-          "$ref": "../../swagger.json#/definitions/Account"
+          "$ref": "../../swagger.json#/definitions/Pair"
         }
       },
       "400": {
