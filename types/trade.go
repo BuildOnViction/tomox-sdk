@@ -29,11 +29,11 @@ type Trade struct {
 	Hash           common.Hash    `json:"hash" bson:"hash"`
 	TxHash         common.Hash    `json:"txHash" bson:"txHash"`
 	PairName       string         `json:"pairName" bson:"pairName"`
+	PricePoint     *big.Int       `json:"pricepoint" bson:"pricepoint"`
+	Amount         *big.Int       `json:"amount" bson:"amount"`
+	Status         string         `json:"status" bson:"status"`
 	CreatedAt      time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt"`
-	PricePoint     *big.Int       `json:"pricepoint" bson:"pricepoint"`
-	Status         string         `json:"status" bson:"status"`
-	Amount         *big.Int       `json:"amount" bson:"amount"`
 }
 
 type TradeRecord struct {
@@ -47,11 +47,11 @@ type TradeRecord struct {
 	Hash           string        `json:"hash" bson:"hash"`
 	TxHash         string        `json:"txHash" bson:"txHash"`
 	PairName       string        `json:"pairName" bson:"pairName"`
+	Amount         string        `json:"amount" bson:"amount"`
+	PricePoint     string        `json:"pricepoint" bson:"pricepoint"`
+	Status         string        `json:"status" bson:"status"`
 	CreatedAt      time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt" bson:"updatedAt"`
-	PricePoint     string        `json:"pricepoint" bson:"pricepoint"`
-	Amount         string        `json:"amount" bson:"amount"`
-	Status         string        `json:"status" bson:"status"`
 }
 
 // NewTrade returns a new unsigned trade corresponding to an Order, amount and taker address
