@@ -1,0 +1,39 @@
+{
+  "get": {
+    "tags": [
+      "tokens"
+    ],
+    "summary": "Retrieve the token information corresponding to an address",
+    "description": "Return token object",
+    "operationId": "HandleGetToken",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "address",
+        "in": "path",
+        "description": "Token address",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "object",
+          "$ref": "../../swagger.json#/definitions/Token"
+        }
+      },
+      "400": {
+        "description": "Invalid Address"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}

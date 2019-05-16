@@ -28,12 +28,12 @@ func ServeTokenResource(
 	r.HandleFunc("/tokens/quote", e.HandleGetQuoteTokens).Methods("GET")
 	r.HandleFunc("/tokens/{address}", e.HandleGetToken).Methods("GET")
 	r.HandleFunc("/tokens", e.HandleGetTokens).Methods("GET")
-	r.HandleFunc("/tokens", e.HandleCreateTokens).Methods("POST")
+	r.HandleFunc("/tokens", e.HandleCreateToken).Methods("POST")
 
 	ws.RegisterChannel(ws.TokenChannel, e.ws)
 }
 
-func (e *tokenEndpoint) HandleCreateTokens(w http.ResponseWriter, r *http.Request) {
+func (e *tokenEndpoint) HandleCreateToken(w http.ResponseWriter, r *http.Request) {
 	var t types.Token
 	decoder := json.NewDecoder(r.Body)
 
@@ -48,11 +48,11 @@ func (e *tokenEndpoint) HandleCreateTokens(w http.ResponseWriter, r *http.Reques
 	err = e.tokenService.Create(&t)
 	if err != nil {
 		if err == services.ErrTokenExists {
-			httputils.WriteError(w, http.StatusBadRequest, "")
+			httputils.WriteError(w, http.StatusBadRequest, err.Error())
 			return
 		} else {
 			logger.Error(err)
-			httputils.WriteError(w, http.StatusInternalServerError, "")
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
@@ -62,9 +62,10 @@ func (e *tokenEndpoint) HandleCreateTokens(w http.ResponseWriter, r *http.Reques
 
 func (e *tokenEndpoint) HandleGetTokens(w http.ResponseWriter, r *http.Request) {
 	res, err := e.tokenService.GetAll()
+
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -73,9 +74,11 @@ func (e *tokenEndpoint) HandleGetTokens(w http.ResponseWriter, r *http.Request) 
 
 func (e *tokenEndpoint) HandleGetQuoteTokens(w http.ResponseWriter, r *http.Request) {
 	res, err := e.tokenService.GetQuoteTokens()
+
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
@@ -83,9 +86,10 @@ func (e *tokenEndpoint) HandleGetQuoteTokens(w http.ResponseWriter, r *http.Requ
 
 func (e *tokenEndpoint) HandleGetBaseTokens(w http.ResponseWriter, r *http.Request) {
 	res, err := e.tokenService.GetBaseTokens()
+
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -96,15 +100,18 @@ func (e *tokenEndpoint) HandleGetToken(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	a := vars["address"]
+
 	if !common.IsHexAddress(a) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
 	}
 
 	tokenAddress := common.HexToAddress(a)
 	res, err := e.tokenService.GetByAddress(tokenAddress)
+
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

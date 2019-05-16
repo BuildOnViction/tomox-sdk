@@ -1,10 +1,10 @@
 {
   "tags": [
-    "pairs"
+    "tokens"
   ],
-  "summary": "Create new pair",
-  "description": "Returns newly created pair",
-  "operationId": "HandleCreatePair",
+  "summary": "Create new token",
+  "description": "Returns newly created token",
+  "operationId": "HandleCreateToken",
   "produces": [
     "application/json"
   ],
@@ -12,10 +12,10 @@
     {
       "in": "body",
       "name": "body",
-      "description": "Pair object that needs to be added",
+      "description": "Token object that needs to be added",
       "required": true,
       "schema": {
-        "$ref": "../../swagger.json#/definitions/Pair"
+        "$ref": "../../swagger.json#/definitions/Token"
       }
     }
   ],
@@ -24,11 +24,11 @@
       "description": "successful operation",
       "schema": {
         "type": "object",
-        "$ref": "../../swagger.json#/definitions/Pair"
+        "$ref": "../../swagger.json#/definitions/Token"
       }
     },
     "400": {
-      "description": "*** Parameter missing"
+      "description": "Invalid payload"
     },
     "500": {
       "description": "Internal Server Error"

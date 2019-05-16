@@ -70,6 +70,18 @@
     },
     "/pairs/data?baseToken={baseToken}&quoteToken={quoteToken}": {
       "$ref": "./components/pairs/handleGetPairData.json"
+    },
+    "/tokens": {
+      "$ref": "./paths/tokens.json"
+    },
+    "/tokens/base": {
+      "$ref": "./components/tokens/handleGetBaseTokens.json"
+    },
+    "/tokens/quote": {
+      "$ref": "./components/tokens/handleGetQuoteTokens.json"
+    },
+    "/tokens/{address}": {
+      "$ref": "./components/tokens/handleGetToken.json"
     }
   },
   "securityDefinitions": {
@@ -163,20 +175,23 @@
           "type": "string"
         },
         "image": {
-          "$ref": "#/definitions/Image"
+          "$ref": "#/definitions/Image",
+          "readOnly": true
         },
         "contractAddress": {
           "type": "string"
         },
         "decimals": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "readOnly": true
         },
         "active": {
           "type": "boolean"
         },
         "listed": {
-          "type": "boolean"
+          "type": "boolean",
+          "readOnly": true
         },
         "quote": {
           "type": "boolean"

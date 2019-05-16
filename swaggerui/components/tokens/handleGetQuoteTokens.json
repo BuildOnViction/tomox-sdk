@@ -1,0 +1,29 @@
+{
+  "get": {
+    "tags": [
+      "tokens"
+    ],
+    "summary": "Finds all quote tokens",
+    "description": "Return all quote tokens in an array",
+    "operationId": "HandleGetQuoteTokens",
+    "produces": [
+      "application/json"
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "../../swagger.json#/definitions/Token"
+          }
+        }
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}
