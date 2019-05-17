@@ -4,29 +4,32 @@ Official decentralized exchange backend, forked from the Proof project.
 Support deposit scenarios: coin-coin, token-coin, token-token.  
 The matching-engine will be soon moved to blockchain services.
 
-# Getting Started
+## Getting Started
 
-## Requirements
+### Requirements
 
 - **mongoDB** version 3.6 or newer
 - **rabbitmq** version 3.7.7 or newer
 - **dep** latest
 
-## Deployment guide step by step
-
+### Deployment guide step by step
+```
 https://github.com/tomochain/dex-smart-contract/blob/develop/Deployment_step_by_step.md
+```
 
-# REST API
+## REST API
+```
+https://dex.devnet.tomochain.com/api/swaggerui/#
+```
 
-See [REST_API.md](REST_API.md)
-
-# Websocket API
+## Websocket API
 
 See [WEBSOCKET_API.md](WEBSOCKET_API.md)
 
-# Types
 
-## Orders
+## Types
+
+### Orders
 
 Orders contain the information that is required to register an order in the orderbook as a "Maker".
 
@@ -69,7 +72,7 @@ The order hash is a sha-256 hash of the following elements:
 - Nonce
 - Maker Address
 
-## Trades
+### Trades
 
 When an order matches another order in the orderbook, the "taker" is required
 to sign a trade object that matches an order.
@@ -93,7 +96,7 @@ The trade hash is a sha-256 hash of the following elements:
 
 The (Order, Trade) tuple can then be used to perform an on-chain transaction for this trade.
 
-## Quote Tokens and Token Pairs
+### Quote Tokens and Token Pairs
 
 In the same way as traditional exchanges function with the idea of base
 currencies and quote currencies, the decentralized exchange works with
