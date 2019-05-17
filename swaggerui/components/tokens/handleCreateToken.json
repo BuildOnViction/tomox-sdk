@@ -1,0 +1,39 @@
+{
+  "tags": [
+    "tokens"
+  ],
+  "summary": "Create new token",
+  "description": "Returns newly created token",
+  "operationId": "HandleCreateToken",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "in": "body",
+      "name": "body",
+      "description": "Token object that needs to be added",
+      "required": true,
+      "schema": {
+        "$ref": "../../swagger.json#/definitions/Token"
+      }
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "object",
+        "$ref": "../../swagger.json#/definitions/Token"
+      }
+    },
+    "400": {
+      "description": "Invalid payload"
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

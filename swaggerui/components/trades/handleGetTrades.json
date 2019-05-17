@@ -1,0 +1,46 @@
+{
+  "tags": [
+    "trades"
+  ],
+  "summary": "Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker",
+  "description": "Return all trades in an array",
+  "operationId": "HandleGetTrades",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "name": "address",
+      "in": "query",
+      "description": "User address",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "limit",
+      "in": "query",
+      "description": "Number of trades returned in query",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "../../swagger.json#/definitions/Trade"
+        }
+      }
+    },
+    "400": {
+      "description": "address Parameter missing"
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

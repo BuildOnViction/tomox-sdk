@@ -1,0 +1,39 @@
+{
+  "tags": [
+    "pairs"
+  ],
+  "summary": "Create new pair",
+  "description": "Returns newly created pair",
+  "operationId": "HandleCreatePair",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "in": "body",
+      "name": "body",
+      "description": "Pair object that needs to be added",
+      "required": true,
+      "schema": {
+        "$ref": "../../swagger.json#/definitions/Pair"
+      }
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "object",
+        "$ref": "../../swagger.json#/definitions/Pair"
+      }
+    },
+    "400": {
+      "description": "*** Parameter missing"
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

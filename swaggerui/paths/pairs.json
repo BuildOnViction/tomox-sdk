@@ -1,0 +1,8 @@
+{
+  "get": {
+    "$ref": "../components/pairs/handleGetPairs.json"
+  },
+  "post": {
+    "$ref": "../components/pairs/handleCreatePair.json"
+  }
+}

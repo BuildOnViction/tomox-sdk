@@ -1,0 +1,43 @@
+{
+  "tags": [
+    "pairs"
+  ],
+  "summary": "Finds all pairs",
+  "description": "Return all pairs in an array",
+  "operationId": "HandleGetPairs",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "name": "baseToken",
+      "in": "query",
+      "description": "Base token address",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "quoteToken",
+      "in": "query",
+      "description": "Quote token address",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "../../swagger.json#/definitions/Pair"
+        }
+      }
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

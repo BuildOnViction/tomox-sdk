@@ -1,0 +1,46 @@
+{
+  "get": {
+    "tags": [
+      "orderbook"
+    ],
+    "summary": "Retrieve the orderbook (full raw orders, including fields such as hashes, maker, taker addresses, signatures, etc.)\ncorresponding to a baseToken and a quoteToken",
+    "description": "Multiple status values can be provided with comma separated strings",
+    "operationId": "HandleGetRawOrderBook",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "baseToken",
+        "in": "query",
+        "description": "Base token address",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "quoteToken",
+        "in": "query",
+        "description": "Quote token address",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "object",
+          "$ref": "../../swagger.json#/definitions/RawOrderBook"
+        }
+      },
+      "400": {
+        "description": "*** Parameter missing"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}

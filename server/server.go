@@ -25,6 +25,10 @@ import (
 	"github.com/tomochain/tomodex/ws"
 )
 
+const (
+	swaggerUIDir = "/swaggerui/"
+)
+
 func Start() {
 	env := os.Getenv("GO_ENV")
 
@@ -154,6 +158,10 @@ func NewRouter(
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService)
 	endpoints.ServeNotificationResource(r, notificationService)
+
+	// Swagger UI
+	sh := http.StripPrefix(swaggerUIDir, http.FileServer(http.Dir("."+swaggerUIDir)))
+	r.PathPrefix(swaggerUIDir).Handler(sh)
 
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)

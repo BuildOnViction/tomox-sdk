@@ -1,0 +1,53 @@
+{
+  "tags": [
+    "notifications"
+  ],
+  "summary": "Retrieve the list of notifications for an address with pagination",
+  "description": "Return notifications in an array",
+  "operationId": "HandleGetNotifications",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "name": "userAddress",
+      "in": "query",
+      "description": "User address",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "page",
+      "in": "query",
+      "description": "Page number",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "perPage",
+      "in": "query",
+      "description": "the number of records returned per page. Valid values are 10, 20, 30, 40, 50",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "../../swagger.json#/definitions/Notification"
+        }
+      }
+    },
+    "400": {
+      "description": "Invalid user address"
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

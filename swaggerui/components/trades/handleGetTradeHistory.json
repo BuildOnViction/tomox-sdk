@@ -1,0 +1,55 @@
+{
+  "get": {
+    "tags": [
+      "trades"
+    ],
+    "summary": "Retrieve all trades corresponding to a baseToken and a quoteToken",
+    "description": "Return all trades in an array",
+    "operationId": "HandleGetTradeHistory",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "baseToken",
+        "in": "query",
+        "description": "Base token address",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "quoteToken",
+        "in": "query",
+        "description": "Quote token address",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "description": "Number of trades returned in query",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "../../swagger.json#/definitions/Trade"
+          }
+        }
+      },
+      "400": {
+        "description": "*** Parameter missing"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}

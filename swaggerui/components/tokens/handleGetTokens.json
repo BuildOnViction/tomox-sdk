@@ -1,0 +1,27 @@
+{
+  "tags": [
+    "tokens"
+  ],
+  "summary": "Finds all tokens",
+  "description": "Return all tokens in an array",
+  "operationId": "HandleGetTokens",
+  "produces": [
+    "application/json"
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "../../swagger.json#/definitions/Token"
+        }
+      }
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

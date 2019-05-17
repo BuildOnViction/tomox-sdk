@@ -41,7 +41,7 @@ func (c *Connection) PublishTrades(matches *types.Matches) error {
 	q := c.GetQueue(ch, "trades")
 
 	msg := &types.OperatorMessage{
-		MessageType: "NEW_ORDER",
+		MessageType: "NEW_TRADE",
 		Matches:     matches,
 	}
 

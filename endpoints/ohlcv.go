@@ -97,7 +97,7 @@ func (e *OHLCVEndpoint) handleGetOHLCV(w http.ResponseWriter, r *http.Request) {
 	res, err := e.ohlcvService.GetOHLCV(p.Pair, p.Duration, p.Units, p.From, p.To)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

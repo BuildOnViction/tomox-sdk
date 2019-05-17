@@ -66,7 +66,7 @@ func (e *AccountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Req
 	existingAccount, err := e.AccountService.GetByAddress(a)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -79,7 +79,7 @@ func (e *AccountEndpoint) handleCreateAccount(w http.ResponseWriter, r *http.Req
 	err = e.AccountService.Create(acc)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

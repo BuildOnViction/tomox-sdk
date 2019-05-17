@@ -1,0 +1,46 @@
+{
+  "get": {
+    "tags": [
+      "pairs"
+    ],
+    "summary": "Retrieve pair data corresponding to a baseToken and quoteToken",
+    "description": "Multiple status values can be provided with comma separated strings",
+    "operationId": "HandleGetPairData",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "baseToken",
+        "in": "query",
+        "description": "Base token address",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "quoteToken",
+        "in": "query",
+        "description": "Quote token address",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "object",
+          "$ref": "../../swagger.json#/definitions/PairData"
+        }
+      },
+      "400": {
+        "description": "baseToken Parameter missing"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}
