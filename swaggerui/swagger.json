@@ -109,6 +109,9 @@
     },
     "/trades/pair": {
       "$ref": "./components/trades/handleGetTradeHistory.json"
+    },
+    "/ohlcv": {
+      "$ref": "./paths/ohlcv.json"
     }
   },
   "securityDefinitions": {
@@ -584,6 +587,36 @@
           "type": "string",
           "format": "date-time",
           "readOnly": true
+        }
+      }
+    },
+    "Tick": {
+      "type": "object",
+      "properties": {
+        "pair": {
+          "$ref": "#/definitions/PairID"
+        },
+        "open": {
+          "type": "string"
+        },
+        "high": {
+          "type": "string"
+        },
+        "low": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "close": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        },
+        "count": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
         }
       }
     },
