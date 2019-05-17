@@ -3,7 +3,7 @@
   "info": {
     "description": "TomoDEX API Document",
     "version": "1.0.0",
-    "title": "Swagger TomoDEX",
+    "title": "Swagger Document for TomoDEX",
     "termsOfService": "http://swagger.io/terms/",
     "contact": {
       "email": "dex@tomochain.com"
@@ -13,7 +13,7 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     }
   },
-  "host": "localhost:8080",
+  "host": "dex.devnet.tomochain.com/api",
   "basePath": "/",
   "tags": [
     {
@@ -54,7 +54,8 @@
     }
   ],
   "schemes": [
-    "http"
+    "http",
+    "https"
   ],
   "paths": {
     "/account/{userAddress}": {
