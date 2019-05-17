@@ -21,24 +21,24 @@
       "description": "Account endpoints"
     },
     {
-      "name": "pairs",
-      "description": "Pair endpoints"
-    },
-    {
       "name": "tokens",
       "description": "Token endpoints"
     },
     {
-      "name": "trades",
-      "description": "Trade endpoints"
+      "name": "pairs",
+      "description": "Pair endpoints"
+    },
+    {
+      "name": "orders",
+      "description": "Order endpoints"
     },
     {
       "name": "orderbook",
       "description": "Order book endpoints"
     },
     {
-      "name": "orders",
-      "description": "Order endpoints"
+      "name": "trades",
+      "description": "Trade endpoints"
     },
     {
       "name": "ohlcv",
@@ -62,15 +62,6 @@
     "/account/create?address={newAddress}": {
       "$ref": "./components/accounts/handleCreateAccount.json"
     },
-    "/pairs": {
-      "$ref": "./paths/pairs.json"
-    },
-    "/pair?baseToken={baseToken}&quoteToken={quoteToken}": {
-      "$ref": "./components/pairs/handleGetPair.json"
-    },
-    "/pairs/data?baseToken={baseToken}&quoteToken={quoteToken}": {
-      "$ref": "./components/pairs/handleGetPairData.json"
-    },
     "/tokens": {
       "$ref": "./paths/tokens.json"
     },
@@ -82,6 +73,30 @@
     },
     "/tokens/{address}": {
       "$ref": "./components/tokens/handleGetToken.json"
+    },
+    "/pairs": {
+      "$ref": "./paths/pairs.json"
+    },
+    "/pair?baseToken={baseToken}&quoteToken={quoteToken}": {
+      "$ref": "./components/pairs/handleGetPair.json"
+    },
+    "/pairs/data?baseToken={baseToken}&quoteToken={quoteToken}": {
+      "$ref": "./components/pairs/handleGetPairData.json"
+    },
+    "/orders": {
+      "$ref": "./paths/orders.json"
+    },
+    "/orders/positions": {
+      "$ref": "./components/orders/handleGetPositions.json"
+    },
+    "/orders/history": {
+      "$ref": "./components/orders/handleGetOrderHistory.json"
+    },
+    "/orders/count": {
+      "$ref": "./components/orders/handleGetCountOrder.json"
+    },
+    "/orders/cancel": {
+      "$ref": "./components/orders/handleCancelOrder.json"
     },
     "/orderbook?baseToken={baseToken}&quoteToken={quoteToken}": {
       "$ref": "./components/orderbook/handleGetOrderBook.json"
@@ -436,6 +451,20 @@
           "type": "string",
           "format": "date-time",
           "readOnly": true
+        }
+      }
+    },
+    "OrderCancel": {
+      "type": "object",
+      "properties": {
+        "orderHash": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "signature": {
+          "$ref": "#/definitions/Signature"
         }
       }
     },

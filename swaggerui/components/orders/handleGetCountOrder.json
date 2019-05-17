@@ -1,0 +1,39 @@
+{
+  "get": {
+    "tags": [
+      "orders"
+    ],
+    "summary": "Retrieve the total number of orders for an Ethereum address",
+    "description": "Return a positive integer",
+    "operationId": "handleGetCountOrder",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "address",
+        "in": "query",
+        "description": "User address",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "400": {
+        "description": "address Parameter missing"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "post": {
+    "tags": [
+      "orders"
+    ],
+    "summary": "Cancel order",
+    "description": "Returns the hash of cancelled order",
+    "operationId": "HandleCancelOrder",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "in": "body",
+        "name": "body",
+        "description": "Cancel order object",
+        "required": true,
+        "schema": {
+          "$ref": "../../swagger.json#/definitions/OrderCancel"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "400": {
+        "description": "Invalid payload"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}
