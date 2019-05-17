@@ -59,7 +59,7 @@
     "/account/{userAddress}/{tokenAddress}": {
       "$ref": "./components/accounts/handleGetAccountTokenBalance.json"
     },
-    "/account/create?address={newAddress}": {
+    "/account/create": {
       "$ref": "./components/accounts/handleCreateAccount.json"
     },
     "/tokens": {
@@ -77,10 +77,10 @@
     "/pairs": {
       "$ref": "./paths/pairs.json"
     },
-    "/pair?baseToken={baseToken}&quoteToken={quoteToken}": {
+    "/pair": {
       "$ref": "./components/pairs/handleGetPair.json"
     },
-    "/pairs/data?baseToken={baseToken}&quoteToken={quoteToken}": {
+    "/pairs/data": {
       "$ref": "./components/pairs/handleGetPairData.json"
     },
     "/orders": {
@@ -98,16 +98,16 @@
     "/orders/cancel": {
       "$ref": "./components/orders/handleCancelOrder.json"
     },
-    "/orderbook?baseToken={baseToken}&quoteToken={quoteToken}": {
+    "/orderbook": {
       "$ref": "./components/orderbook/handleGetOrderBook.json"
     },
-    "/orderbook/raw?baseToken={baseToken}&quoteToken={quoteToken}": {
+    "/orderbook/raw": {
       "$ref": "./components/orderbook/handleGetRawOrderBook.json"
     },
-    "/trades?address={address}&limit={limit}": {
+    "/trades": {
       "$ref": "./paths/trades.json"
     },
-    "/trades/pair?baseToken={baseToken}&quoteToken={quoteToken}&limit={limit}": {
+    "/trades/pair": {
       "$ref": "./components/trades/handleGetTradeHistory.json"
     }
   },
