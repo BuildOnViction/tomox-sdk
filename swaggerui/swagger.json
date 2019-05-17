@@ -47,6 +47,10 @@
     {
       "name": "notifications",
       "description": "Notification endpoints"
+    },
+    {
+      "name": "info",
+      "description": "Info endpoints"
     }
   ],
   "schemes": [
@@ -118,6 +122,127 @@
     },
     "/notifications/{id}": {
       "$ref": "./components/notifications/handleUpdateNotification.json"
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exchangeAddress": {
+                  "type": "string"
+                },
+                "operators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fees": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "makeFee": {
+                        "type": "string"
+                      },
+                      "takeFee": {
+                        "type": "string"
+                      },
+                      "quote": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/info/exchange": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exchangeAddress": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info/operators": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "operators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/info/fees": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "makeFee": {
+                    "type": "string"
+                  },
+                  "takeFee": {
+                    "type": "string"
+                  },
+                  "quote": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "securityDefinitions": {
