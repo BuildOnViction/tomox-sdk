@@ -447,6 +447,56 @@
         }
       }
     },
+    "OrderBook": {
+      "type": "object",
+      "properties": {
+        "pairName": {
+          "type": "string"
+        },
+        "asks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "pricepoint": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "bids": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "pricepoint": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RawOrderBook": {
+      "type": "object",
+      "properties": {
+        "pairName": {
+          "type": "string"
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Order"
+          }
+        }
+      }
+    },
     "Trade": {
       "type": "object",
       "properties": {

@@ -3,9 +3,9 @@
     "tags": [
       "orderbook"
     ],
-    "summary": "Retrieve the orderbook information corresponding to a baseToken and a quoteToken",
+    "summary": "Retrieve the orderbook (full raw orders, including fields such as hashes, maker, taker addresses, signatures, etc.)\ncorresponding to a baseToken and a quoteToken",
     "description": "Multiple status values can be provided with comma separated strings",
-    "operationId": "HandleGetPair",
+    "operationId": "HandleGetRawOrderBook",
     "produces": [
       "application/json"
     ],
@@ -30,7 +30,7 @@
         "description": "successful operation",
         "schema": {
           "type": "object",
-          "$ref": "../../swagger.json#/definitions/Pair"
+          "$ref": "../../swagger.json#/definitions/RawOrderBook"
         }
       },
       "400": {
