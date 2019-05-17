@@ -88,6 +88,12 @@
     },
     "/orderbook/raw?baseToken={baseToken}&quoteToken={quoteToken}": {
       "$ref": "./components/orderbook/handleGetRawOrderBook.json"
+    },
+    "/trades?address={address}&limit={limit}": {
+      "$ref": "./paths/trades.json"
+    },
+    "/trades/pair?baseToken={baseToken}&quoteToken={quoteToken}&limit={limit}": {
+      "$ref": "./components/trades/handleGetTradeHistory.json"
     }
   },
   "securityDefinitions": {

@@ -1,0 +1,5 @@
+{
+  "get": {
+    "$ref": "../components/trades/handleGetTrades.json"
+  }
+}
