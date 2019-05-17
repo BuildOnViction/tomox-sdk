@@ -45,7 +45,7 @@
       "description": "OHLCV endpoints"
     },
     {
-      "name": "notification",
+      "name": "notifications",
       "description": "Notification endpoints"
     }
   ],
@@ -112,6 +112,12 @@
     },
     "/ohlcv": {
       "$ref": "./paths/ohlcv.json"
+    },
+    "/notifications": {
+      "$ref": "./paths/notifications.json"
+    },
+    "/notifications/{id}": {
+      "$ref": "./components/notifications/handleUpdateNotification.json"
     }
   },
   "securityDefinitions": {
@@ -617,6 +623,37 @@
         },
         "timestamp": {
           "type": "string"
+        }
+      }
+    },
+    "Notification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
         }
       }
     },

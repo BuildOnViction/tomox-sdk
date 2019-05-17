@@ -1,0 +1,41 @@
+{
+  "put": {
+    "tags": [
+      "notifications"
+    ],
+    "summary": "Update status of a notification from UNREAD to READ",
+    "description": "Returns newly updated notification",
+    "operationId": "HandleNewOrder",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "in": "body",
+        "name": "body",
+        "description": "Notification object that needs to be updated",
+        "required": true,
+        "schema": {
+          "$ref": "../../swagger.json#/definitions/Notification"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "object",
+          "$ref": "../../swagger.json#/definitions/Notification"
+        }
+      },
+      "400": {
+        "description": "Invalid payload"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}
