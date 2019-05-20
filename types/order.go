@@ -17,11 +17,15 @@ import (
 )
 
 const (
-	BUY         = "BUY"
-	SELL        = "SELL"
-	MarketOrder = "MO"
-	LimitOrder  = "LO"
-	StopOrder   = "SO"
+	BUY             = "BUY"
+	SELL            = "SELL"
+	TypeMarketOrder = "MO"
+	TypeLimitOrder  = "LO"
+
+	OrderStatusOpen          = "OPEN"
+	OrderStatusPartialFilled = "PARTIAL_FILLED"
+	OrderStatusFilled        = "FILLED"
+	OrderStatusCancelled     = "CANCELLED"
 )
 
 // Order contains the data related to an order sent by the user
@@ -178,8 +182,8 @@ func (o *Order) Process(p *Pair) error {
 	}
 
 	// TODO: Handle this in Validate function
-	if o.Type != MarketOrder && o.Type != LimitOrder && o.Type != StopOrder {
-		o.Type = LimitOrder
+	if o.Type != TypeMarketOrder && o.Type != TypeLimitOrder {
+		o.Type = TypeLimitOrder
 	}
 
 	if !math.IsEqual(o.MakeFee, p.MakeFee) {
