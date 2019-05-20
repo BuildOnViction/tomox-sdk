@@ -67,6 +67,12 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 			logger.Error(err)
 			return err
 		}
+	case "NEW_STOP_ORDER":
+		err := e.handleNewStopOrder(msg.Data)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
 	case "CANCEL_ORDER":
 		err := e.handleCancelOrder(msg.Data)
 		if err != nil {
@@ -112,6 +118,17 @@ func (e *Engine) handleNewOrder(bytes []byte) error {
 	}
 
 	err = ob.newOrder(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (e *Engine) handleNewStopOrder(bytes []byte) error {
+	o := &types.StopOrder{}
+	err := json.Unmarshal(bytes, o)
 	if err != nil {
 		logger.Error(err)
 		return err

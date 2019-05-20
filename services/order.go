@@ -150,6 +150,61 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 	return nil
 }
 
+// NewOrder validates if the passed order is valid or not based on user's available
+// funds and order data.
+// If valid: Order is inserted in DB with order status as new and order is publiched
+// on rabbitmq queue for matching engine to process the order
+func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
+	if err := so.Validate(); err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	ok, err := so.VerifySignature()
+	if err != nil {
+		logger.Error(err)
+	}
+
+	if !ok {
+		return errors.New("Invalid Signature")
+	}
+
+	p, err := s.pairDao.GetByTokenAddress(so.BaseToken, so.QuoteToken)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if p == nil {
+		return errors.New("Pair not found")
+	}
+
+	if math.IsStrictlySmallerThan(so.QuoteAmount(p), p.MinQuoteAmount()) {
+		return errors.New("Order amount too low")
+	}
+
+	// Fill token and pair data
+	err = so.Process(p)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = s.validator.ValidateAvailableBalance(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = s.broker.PublishNewStopOrderMessage(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // CancelOrder handles the cancellation order requests.
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled

@@ -227,6 +227,7 @@ type OrderService interface {
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
+	NewStopOrder(so *types.StopOrder) error
 	CancelOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
 }

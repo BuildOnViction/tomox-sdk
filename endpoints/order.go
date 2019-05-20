@@ -266,6 +266,8 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	switch msg.Type {
 	case "NEW_ORDER":
 		e.handleWSNewOrder(msg, c)
+	case "NEW_STOP_ORDER":
+		e.handleWSNewStopOrder(msg, c)
 	case "CANCEL_ORDER":
 		e.handleWSCancelOrder(msg, c)
 	default:
@@ -310,6 +312,47 @@ func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client)
 	if err != nil {
 		logger.Error(err)
 		c.SendOrderErrorMessage(err, o.Hash)
+		return
+	}
+}
+
+// handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
+func (e *orderEndpoint) handleWSNewStopOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	so := &types.StopOrder{}
+
+	bytes, err := json.Marshal(ev.Payload)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
+
+	err = json.Unmarshal(bytes, &so)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, so.Hash)
+		return
+	}
+
+	so.Hash = so.ComputeHash()
+	ws.RegisterOrderConnection(so.UserAddress, c)
+
+	acc, err := e.accountService.FindOrCreate(so.UserAddress)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, so.Hash)
+	}
+
+	if acc.IsBlocked {
+		c.SendMessage(ws.OrderChannel, types.ERROR, errors.New("Account is blocked"))
+	}
+
+	err = e.orderService.NewStopOrder(so)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, so.Hash)
 		return
 	}
 }
