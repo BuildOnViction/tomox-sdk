@@ -239,3 +239,15 @@ func (so *StopOrder) EncodedSide() *big.Int {
 		return big.NewInt(1)
 	}
 }
+
+func (so *StopOrder) PairCode() (string, error) {
+	if so.PairName == "" {
+		return "", errors.New("Pair name is required")
+	}
+
+	return so.PairName + "::" + so.BaseToken.Hex() + "::" + so.QuoteToken.Hex(), nil
+}
+
+type StopOrderBSONUpdate struct {
+	*StopOrder
+}

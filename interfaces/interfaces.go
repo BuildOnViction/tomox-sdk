@@ -49,6 +49,19 @@ type OrderDao interface {
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 }
 
+type StopOrderDao interface {
+	Create(so *types.StopOrder) error
+	Update(id bson.ObjectId, so *types.StopOrder) error
+	UpdateByHash(h common.Hash, so *types.StopOrder) error
+	Upsert(id bson.ObjectId, so *types.StopOrder) error
+	UpsertByHash(h common.Hash, so *types.StopOrder) error
+	UpdateAllByHash(h common.Hash, so *types.StopOrder) error
+	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.StopOrder, error)
+	UpdateOrderStatus(h common.Hash, status string) error
+	FindAndModify(h common.Hash, so *types.StopOrder) (*types.StopOrder, error)
+	Drop() error
+}
+
 type AccountDao interface {
 	Create(account *types.Account) (err error)
 	GetAll() (res []types.Account, err error)

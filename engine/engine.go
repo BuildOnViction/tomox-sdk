@@ -127,8 +127,25 @@ func (e *Engine) handleNewOrder(bytes []byte) error {
 }
 
 func (e *Engine) handleNewStopOrder(bytes []byte) error {
-	o := &types.StopOrder{}
-	err := json.Unmarshal(bytes, o)
+	so := &types.StopOrder{}
+	err := json.Unmarshal(bytes, so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	code, err := so.PairCode()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	ob := e.orderbooks[code]
+	if ob == nil {
+		return errors.New("Orderbook error")
+	}
+
+	err = ob.newStopOrder(so)
 	if err != nil {
 		logger.Error(err)
 		return err

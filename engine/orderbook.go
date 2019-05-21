@@ -37,6 +37,7 @@ import (
 type OrderBook struct {
 	rabbitMQConn *rabbitmq.Connection
 	orderDao     interfaces.OrderDao
+	stopOrderDao interfaces.StopOrderDao
 	tradeDao     interfaces.TradeDao
 	pair         *types.Pair
 	mutex        *sync.Mutex
@@ -67,6 +68,23 @@ func (ob *OrderBook) newOrder(o *types.Order) (err error) {
 
 	// Note: Plug the option for orders like FOC, Limit here (if needed)
 	err = ob.rabbitMQConn.PublishEngineResponse(res)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// newStopOrder adds a new stop order into "stop_orders" collection
+// It checks for duplicate
+func (ob *OrderBook) newStopOrder(so *types.StopOrder) error {
+	// Attain lock on engineResource, so that recovery or cancel order function doesn't interfere
+	ob.mutex.Lock()
+	defer ob.mutex.Unlock()
+
+	_, err := ob.stopOrderDao.FindAndModify(so.Hash, so)
+
 	if err != nil {
 		logger.Error(err)
 		return err

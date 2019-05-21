@@ -18,8 +18,8 @@ import (
 
 // OrderService
 type OrderService struct {
-	// tokenDao      interfaces.TokenDao
 	orderDao        interfaces.OrderDao
+	stopOrderDao    interfaces.StopOrderDao
 	pairDao         interfaces.PairDao
 	accountDao      interfaces.AccountDao
 	tradeDao        interfaces.TradeDao
@@ -32,6 +32,7 @@ type OrderService struct {
 // NewOrderService returns a new instance of orderservice
 func NewOrderService(
 	orderDao interfaces.OrderDao,
+	stopOrderDao interfaces.StopOrderDao,
 	pairDao interfaces.PairDao,
 	accountDao interfaces.AccountDao,
 	tradeDao interfaces.TradeDao,
@@ -43,6 +44,7 @@ func NewOrderService(
 
 	return &OrderService{
 		orderDao,
+		stopOrderDao,
 		pairDao,
 		accountDao,
 		tradeDao,
@@ -190,11 +192,11 @@ func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
 		return err
 	}
 
-	err = s.validator.ValidateAvailableBalance(so)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
+	//err = s.validator.ValidateAvailableBalance(so)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
 
 	err = s.broker.PublishNewStopOrderMessage(so)
 	if err != nil {
