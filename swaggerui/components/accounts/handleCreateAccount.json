@@ -1,0 +1,44 @@
+{
+  "post": {
+    "tags": [
+      "accounts"
+    ],
+    "summary": "Add a new account by user address",
+    "description": "Returns newly created account",
+    "operationId": "handleCreateAccount",
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "newAddress",
+        "in": "path",
+        "description": "Address of user",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Account already exists"
+      },
+      "201": {
+        "description": "Account created",
+        "schema": {
+          "$ref": "../../swagger.json#/definitions/Account"
+        }
+      },
+      "404": {
+        "description": "Invalid Address"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}

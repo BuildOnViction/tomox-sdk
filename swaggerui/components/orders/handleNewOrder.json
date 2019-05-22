@@ -1,0 +1,42 @@
+{
+  "tags": [
+    "orders"
+  ],
+  "summary": "Create new order",
+  "description": "Returns newly created order",
+  "operationId": "HandleNewOrder",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "in": "body",
+      "name": "body",
+      "description": "Order object that needs to be added",
+      "required": true,
+      "schema": {
+        "$ref": "../../swagger.json#/definitions/Order"
+      }
+    }
+  ],
+  "responses": {
+    "201": {
+      "description": "successful operation",
+      "schema": {
+        "type": "object",
+        "$ref": "../../swagger.json#/definitions/Order"
+      }
+    },
+    "400": {
+      "description": "Invalid payload"
+    },
+    "403": {
+      "description": "Account is blocked"
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

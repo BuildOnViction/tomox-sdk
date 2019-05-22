@@ -1,0 +1,81 @@
+{
+  "tags": [
+    "ohlcv"
+  ],
+  "summary": "Retrieve OHLCV data corresponding to a baseToken and a quoteToken",
+  "description": "Return all ticks in an array",
+  "operationId": "HandleGetOHLCV",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "name": "baseToken",
+      "in": "query",
+      "description": "Base token address",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "quoteToken",
+      "in": "query",
+      "description": "Quote token address",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "pairName",
+      "in": "query",
+      "description": "the pair name under the format {baseTokenSymbol}/{quoteTokenSymbol}(eg. \"ZRX/WETH\"). I believe this parameter is currently required but it's planned to be optional. The idea is for this parameter to be used for verifications purposes and the API to send back an eror if it does not correspond to a baseToken/quoteToken parameters",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "unit",
+      "in": "query",
+      "description": "unit used to represent the above duration: \"min\", \"hour\", \"day\", \"week\", \"month\", \"year\"",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "duration",
+      "in": "query",
+      "description": "duration (in units, see param below) of each candlestick",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "from",
+      "in": "query",
+      "description": "the beginning timestamp (number of seconds from 1970/01/01) from which ohlcv data has to be queried",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "to",
+      "in": "query",
+      "description": "the ending timestamp ((number of seconds from 1970/01/01)) until which ohlcv data has to be queried",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "successful operation",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "../../swagger.json#/definitions/Tick"
+        }
+      }
+    },
+    "400": {
+      "description": "*** Parameter missing"
+    },
+    "500": {
+      "description": "Internal Server Error"
+    }
+  },
+  "security": [
+  ]
+}

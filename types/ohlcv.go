@@ -12,12 +12,12 @@ import (
 // Tick is the format in which mongo aggregate pipeline returns data when queried for OHLCV data
 type Tick struct {
 	Pair      PairID   `json:"id,omitempty" bson:"_id"`
+	Open      *big.Int `json:"open,omitempty" bson:"open"`
 	Close     *big.Int `json:"close,omitempty" bson:"close"`
-	Count     *big.Int `json:"count,omitempty" bson:"count"`
 	High      *big.Int `json:"high,omitempty" bson:"high"`
 	Low       *big.Int `json:"low,omitempty" bson:"low"`
-	Open      *big.Int `json:"open,omitempty" bson:"open"`
 	Volume    *big.Int `json:"volume,omitempty" bson:"volume"`
+	Count     *big.Int `json:"count,omitempty" bson:"count"`
 	Timestamp int64    `json:"timestamp,omitempty" bson:"timestamp"`
 }
 

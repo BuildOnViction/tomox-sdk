@@ -1,0 +1,805 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "TomoDEX API Document",
+    "version": "1.0.0",
+    "title": "Swagger Document for TomoDEX",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "dex@tomochain.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "dex.devnet.tomochain.com/api",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "accounts",
+      "description": "Account endpoints"
+    },
+    {
+      "name": "tokens",
+      "description": "Token endpoints"
+    },
+    {
+      "name": "pairs",
+      "description": "Pair endpoints"
+    },
+    {
+      "name": "orders",
+      "description": "Order endpoints"
+    },
+    {
+      "name": "orderbook",
+      "description": "Order book endpoints"
+    },
+    {
+      "name": "trades",
+      "description": "Trade endpoints"
+    },
+    {
+      "name": "ohlcv",
+      "description": "OHLCV endpoints"
+    },
+    {
+      "name": "notifications",
+      "description": "Notification endpoints"
+    },
+    {
+      "name": "info",
+      "description": "Info endpoints"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/account/{userAddress}": {
+      "$ref": "./components/accounts/handleGetAccount.json"
+    },
+    "/account/{userAddress}/{tokenAddress}": {
+      "$ref": "./components/accounts/handleGetAccountTokenBalance.json"
+    },
+    "/account/create": {
+      "$ref": "./components/accounts/handleCreateAccount.json"
+    },
+    "/tokens": {
+      "$ref": "./paths/tokens.json"
+    },
+    "/tokens/base": {
+      "$ref": "./components/tokens/handleGetBaseTokens.json"
+    },
+    "/tokens/quote": {
+      "$ref": "./components/tokens/handleGetQuoteTokens.json"
+    },
+    "/tokens/{address}": {
+      "$ref": "./components/tokens/handleGetToken.json"
+    },
+    "/pairs": {
+      "$ref": "./paths/pairs.json"
+    },
+    "/pair": {
+      "$ref": "./components/pairs/handleGetPair.json"
+    },
+    "/pairs/data": {
+      "$ref": "./components/pairs/handleGetPairData.json"
+    },
+    "/orders": {
+      "$ref": "./paths/orders.json"
+    },
+    "/orders/positions": {
+      "$ref": "./components/orders/handleGetPositions.json"
+    },
+    "/orders/history": {
+      "$ref": "./components/orders/handleGetOrderHistory.json"
+    },
+    "/orders/count": {
+      "$ref": "./components/orders/handleGetCountOrder.json"
+    },
+    "/orders/cancel": {
+      "$ref": "./components/orders/handleCancelOrder.json"
+    },
+    "/orderbook": {
+      "$ref": "./components/orderbook/handleGetOrderBook.json"
+    },
+    "/orderbook/raw": {
+      "$ref": "./components/orderbook/handleGetRawOrderBook.json"
+    },
+    "/trades": {
+      "$ref": "./paths/trades.json"
+    },
+    "/trades/pair": {
+      "$ref": "./components/trades/handleGetTradeHistory.json"
+    },
+    "/ohlcv": {
+      "$ref": "./paths/ohlcv.json"
+    },
+    "/notifications": {
+      "$ref": "./paths/notifications.json"
+    },
+    "/notifications/{id}": {
+      "$ref": "./components/notifications/handleUpdateNotification.json"
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exchangeAddress": {
+                  "type": "string"
+                },
+                "operators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fees": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "makeFee": {
+                        "type": "string"
+                      },
+                      "takeFee": {
+                        "type": "string"
+                      },
+                      "quote": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/info/exchange": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exchangeAddress": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info/operators": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "operators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/info/fees": {
+      "get": {
+        "tags": [
+          "info"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "makeFee": {
+                    "type": "string"
+                  },
+                  "takeFee": {
+                    "type": "string"
+                  },
+                  "quote": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "petstore_auth": {
+      "type": "oauth2",
+      "authorizationUrl": "https://petstore.swagger.io/oauth/authorize",
+      "flow": "implicit",
+      "scopes": {
+        "write:pets": "modify pets in your account",
+        "read:pets": "read your pets"
+      }
+    },
+    "api_key": {
+      "type": "apiKey",
+      "name": "api_key",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "Account": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "address": {
+          "type": "string"
+        },
+        "tokenBalances": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/TokenBalance"
+          }
+        },
+        "favoriteTokens": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "isBlocked": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "TokenBalance": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string"
+        },
+        "pendingBalance": {
+          "type": "string"
+        },
+        "lockedBalance": {
+          "type": "string"
+        }
+      }
+    },
+    "Token": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/definitions/Image",
+          "readOnly": true
+        },
+        "contractAddress": {
+          "type": "string"
+        },
+        "decimals": {
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "listed": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "quote": {
+          "type": "boolean"
+        },
+        "makeFee": {
+          "type": "string"
+        },
+        "takeFee": {
+          "type": "string"
+        },
+        "usd": {
+          "type": "string",
+          "readOnly": true
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "Pair": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "baseTokenSymbol": {
+          "type": "string"
+        },
+        "baseTokenAddress": {
+          "type": "string"
+        },
+        "baseTokenDecimals": {
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "quoteTokenSymbol": {
+          "type": "string"
+        },
+        "quoteTokenAddress": {
+          "type": "string"
+        },
+        "quoteTokenDecimals": {
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "listed": {
+          "type": "boolean",
+          "readOnly": true
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "makeFee": {
+          "type": "string",
+          "readOnly": true
+        },
+        "takeFee": {
+          "type": "string",
+          "readOnly": true
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "PairID": {
+      "type": "object",
+      "properties": {
+        "pairName": {
+          "type": "string"
+        },
+        "baseToken": {
+          "type": "string"
+        },
+        "quoteToken": {
+          "type": "string"
+        }
+      }
+    },
+    "PairData": {
+      "type": "object",
+      "properties": {
+        "pair": {
+          "$ref": "#/definitions/PairID"
+        },
+        "open": {
+          "type": "string"
+        },
+        "high": {
+          "type": "string"
+        },
+        "low": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "close": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        },
+        "count": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "orderVolume": {
+          "type": "string"
+        },
+        "orderCount": {
+          "type": "string"
+        },
+        "averageOrderAmount": {
+          "type": "string"
+        },
+        "averageTradeAmount": {
+          "type": "string"
+        },
+        "askPrice": {
+          "type": "string"
+        },
+        "bidPrice": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "Image": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Order": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "userAddress": {
+          "type": "string"
+        },
+        "exchangeAddress": {
+          "type": "string"
+        },
+        "baseToken": {
+          "type": "string"
+        },
+        "quoteToken": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "side": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "signature": {
+          "$ref": "#/definitions/Signature"
+        },
+        "pricepoint": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "filledAmount": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "makeFee": {
+          "type": "string"
+        },
+        "takeFee": {
+          "type": "string"
+        },
+        "pairName": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "OrderCancel": {
+      "type": "object",
+      "properties": {
+        "orderHash": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "signature": {
+          "$ref": "#/definitions/Signature"
+        }
+      }
+    },
+    "Signature": {
+      "type": "object",
+      "properties": {
+        "V": {
+          "type": "string"
+        },
+        "R": {
+          "type": "string"
+        },
+        "S": {
+          "type": "string"
+        }
+      }
+    },
+    "OrderBook": {
+      "type": "object",
+      "properties": {
+        "pairName": {
+          "type": "string"
+        },
+        "asks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "pricepoint": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "bids": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "pricepoint": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RawOrderBook": {
+      "type": "object",
+      "properties": {
+        "pairName": {
+          "type": "string"
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Order"
+          }
+        }
+      }
+    },
+    "Trade": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "taker": {
+          "type": "string"
+        },
+        "maker": {
+          "type": "string"
+        },
+        "baseToken": {
+          "type": "string"
+        },
+        "quoteToken": {
+          "type": "string"
+        },
+        "makerOrderHash": {
+          "type": "string"
+        },
+        "takerOrderHash": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "txHash": {
+          "type": "string"
+        },
+        "pairName": {
+          "type": "string"
+        },
+        "pricepoint": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "Tick": {
+      "type": "object",
+      "properties": {
+        "pair": {
+          "$ref": "#/definitions/PairID"
+        },
+        "open": {
+          "type": "string"
+        },
+        "high": {
+          "type": "string"
+        },
+        "low": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "close": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        },
+        "count": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      }
+    },
+    "Notification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "ApiResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}

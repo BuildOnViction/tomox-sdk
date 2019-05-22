@@ -1,0 +1,41 @@
+{
+  "get": {
+    "tags": [
+      "accounts"
+    ],
+    "summary": "Find account by user address",
+    "description": "Returns a single account",
+    "operationId": "handleGetAccount",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "userAddress",
+        "in": "path",
+        "description": "Address of user to return",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "$ref": "../../swagger.json#/definitions/Account"
+        }
+      },
+      "400": {
+        "description": "Invalid Address"
+      },
+      "404": {
+        "description": "Account not found"
+      }
+    },
+    "security": [
+      {
+        "api_key": []
+      }
+    ]
+  }
+}

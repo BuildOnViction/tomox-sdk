@@ -3,10 +3,9 @@ package types
 import (
 	"crypto/ecdsa"
 
-	"github.com/tomochain/tomodex/errors"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tomochain/tomodex/errors"
 )
 
 // Signature struct
