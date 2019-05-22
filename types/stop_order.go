@@ -536,3 +536,50 @@ type StopOrderRecord struct {
 type StopOrderBSONUpdate struct {
 	*StopOrder
 }
+
+func (o StopOrderBSONUpdate) GetBSON() (interface{}, error) {
+	now := time.Now()
+
+	set := bson.M{
+		"pairName":        o.PairName,
+		"exchangeAddress": o.ExchangeAddress.Hex(),
+		"userAddress":     o.UserAddress.Hex(),
+		"baseToken":       o.BaseToken.Hex(),
+		"quoteToken":      o.QuoteToken.Hex(),
+		"status":          o.Status,
+		"side":            o.Side,
+		"type":            o.Type,
+		"stopPrice":       o.StopPrice.String(),
+		"limitPrice":      o.LimitPrice.String(),
+		"amount":          o.Amount.String(),
+		"nonce":           o.Nonce.String(),
+		"makeFee":         o.MakeFee.String(),
+		"takeFee":         o.TakeFee.String(),
+		"updatedAt":       now,
+	}
+
+	if o.FilledAmount != nil {
+		set["filledAmount"] = o.FilledAmount.String()
+	}
+
+	if o.Signature != nil {
+		set["signature"] = bson.M{
+			"V": o.Signature.V,
+			"R": o.Signature.R.Hex(),
+			"S": o.Signature.S.Hex(),
+		}
+	}
+
+	setOnInsert := bson.M{
+		"_id":       bson.NewObjectId(),
+		"hash":      o.Hash.Hex(),
+		"createdAt": now,
+	}
+
+	update := bson.M{
+		"$set":         set,
+		"$setOnInsert": setOnInsert,
+	}
+
+	return update, nil
+}
