@@ -2,7 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/ethereum"
@@ -25,6 +24,7 @@ var logger = utils.Logger
 func NewEngine(
 	rabbitMQConn *rabbitmq.Connection,
 	orderDao interfaces.OrderDao,
+	stopOrderDao interfaces.StopOrderDao,
 	tradeDao interfaces.TradeDao,
 	pairDao interfaces.PairDao,
 	provider *ethereum.EthereumProvider,
@@ -37,13 +37,7 @@ func NewEngine(
 
 	obs := map[string]*OrderBook{}
 	for _, p := range pairs {
-		ob := &OrderBook{
-			rabbitMQConn: rabbitMQConn,
-			orderDao:     orderDao,
-			tradeDao:     tradeDao,
-			pair:         &p,
-			mutex:        &sync.Mutex{},
-		}
+		ob := NewOrderBook(rabbitMQConn, orderDao, stopOrderDao, tradeDao, p)
 
 		obs[p.Code()] = ob
 	}

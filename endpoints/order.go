@@ -32,8 +32,9 @@ func ServeOrderResource(
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
-	r.HandleFunc("/orders", e.HandleNewOrder).Methods("POST")
-	r.HandleFunc("/orders/cancel", e.HandleCancelOrder).Methods("POST")
+	r.HandleFunc("/orders", e.handleNewOrder).Methods("POST")
+	r.HandleFunc("/orders/stop", e.handleNewStopOrder).Methods("POST")
+	r.HandleFunc("/orders/cancel", e.handleCancelOrder).Methods("POST")
 
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
@@ -185,7 +186,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, orders)
 }
 
-func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
+func (e *orderEndpoint) handleNewOrder(w http.ResponseWriter, r *http.Request) {
 	var o *types.Order
 	decoder := json.NewDecoder(r.Body)
 
@@ -222,7 +223,44 @@ func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
 	httputils.WriteJSON(w, http.StatusCreated, o)
 }
 
-func (e *orderEndpoint) HandleCancelOrder(w http.ResponseWriter, r *http.Request) {
+func (e *orderEndpoint) handleNewStopOrder(w http.ResponseWriter, r *http.Request) {
+	var so *types.StopOrder
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&so)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	so.Hash = so.ComputeHash()
+
+	acc, err := e.accountService.FindOrCreate(so.UserAddress)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if acc.IsBlocked {
+		httputils.WriteError(w, http.StatusForbidden, "Account is blocked")
+		return
+	}
+
+	err = e.orderService.NewStopOrder(so)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusCreated, so)
+}
+
+func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 	oc := &types.OrderCancel{}
 
 	decoder := json.NewDecoder(r.Body)

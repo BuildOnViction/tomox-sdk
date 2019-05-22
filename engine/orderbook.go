@@ -43,6 +43,24 @@ type OrderBook struct {
 	mutex        *sync.Mutex
 }
 
+func NewOrderBook(
+	rabbitMQConn *rabbitmq.Connection,
+	orderDao interfaces.OrderDao,
+	stopOrderDao interfaces.StopOrderDao,
+	tradeDao interfaces.TradeDao,
+	p types.Pair,
+) *OrderBook {
+
+	return &OrderBook{
+		rabbitMQConn: rabbitMQConn,
+		orderDao:     orderDao,
+		stopOrderDao: stopOrderDao,
+		tradeDao:     tradeDao,
+		pair:         &p,
+		mutex:        &sync.Mutex{},
+	}
+}
+
 // newOrder calls buyOrder/sellOrder based on type of order recieved and
 // publishes the response back to rabbitmq
 func (ob *OrderBook) newOrder(o *types.Order) (err error) {

@@ -86,7 +86,7 @@ func NewRouter(
 	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
-	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
+	eng := engine.NewEngine(rabbitConn, orderDao, stopOrderDao, tradeDao, pairDao, provider)
 	swapEngine := swap.NewEngine(app.Config.Deposit)
 
 	// get services for injection
