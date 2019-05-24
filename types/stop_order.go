@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -32,6 +33,7 @@ type StopOrder struct {
 	Signature       *Signature     `json:"signature,omitempty" bson:"signature"`
 	StopPrice       *big.Int       `json:"stopPrice" bson:"stopPrice"`
 	LimitPrice      *big.Int       `json:"limitPrice" bson:"limitPrice"`
+	Direction       int            `json:"direction" bson:"direction"`
 	Amount          *big.Int       `json:"amount" bson:"amount"`
 	FilledAmount    *big.Int       `json:"filledAmount" bson:"filledAmount"`
 	Nonce           *big.Int       `json:"nonce" bson:"nonce"`
@@ -43,42 +45,43 @@ type StopOrder struct {
 }
 
 // MarshalJSON implements the json.Marshal interface
-func (o *StopOrder) MarshalJSON() ([]byte, error) {
+func (so *StopOrder) MarshalJSON() ([]byte, error) {
 	order := map[string]interface{}{
-		"exchangeAddress": o.ExchangeAddress,
-		"userAddress":     o.UserAddress,
-		"baseToken":       o.BaseToken,
-		"quoteToken":      o.QuoteToken,
-		"side":            o.Side,
-		"type":            o.Type,
-		"status":          o.Status,
-		"pairName":        o.PairName,
-		"amount":          o.Amount.String(),
-		"stopPrice":       o.StopPrice.String(),
-		"limitPrice":      o.LimitPrice.String(),
-		"makeFee":         o.MakeFee.String(),
-		"takeFee":         o.TakeFee.String(),
-		"createdAt":       o.CreatedAt.Format(time.RFC3339Nano),
-		"updatedAt":       o.UpdatedAt.Format(time.RFC3339Nano),
+		"exchangeAddress": so.ExchangeAddress,
+		"userAddress":     so.UserAddress,
+		"baseToken":       so.BaseToken,
+		"quoteToken":      so.QuoteToken,
+		"side":            so.Side,
+		"type":            so.Type,
+		"status":          so.Status,
+		"pairName":        so.PairName,
+		"amount":          so.Amount.String(),
+		"stopPrice":       so.StopPrice.String(),
+		"limitPrice":      so.LimitPrice.String(),
+		"direction":       strconv.Itoa(so.Direction),
+		"makeFee":         so.MakeFee.String(),
+		"takeFee":         so.TakeFee.String(),
+		"createdAt":       so.CreatedAt.Format(time.RFC3339Nano),
+		"updatedAt":       so.UpdatedAt.Format(time.RFC3339Nano),
 	}
 
-	if o.FilledAmount != nil {
-		order["filledAmount"] = o.FilledAmount.String()
+	if so.FilledAmount != nil {
+		order["filledAmount"] = so.FilledAmount.String()
 	}
 
-	if o.Hash.Hex() != "" {
-		order["hash"] = o.Hash.Hex()
+	if so.Hash.Hex() != "" {
+		order["hash"] = so.Hash.Hex()
 	}
 
-	if o.Nonce != nil {
-		order["nonce"] = o.Nonce.String()
+	if so.Nonce != nil {
+		order["nonce"] = so.Nonce.String()
 	}
 
-	if o.Signature != nil {
+	if so.Signature != nil {
 		order["signature"] = map[string]interface{}{
-			"V": o.Signature.V,
-			"R": o.Signature.R,
-			"S": o.Signature.S,
+			"V": so.Signature.V,
+			"R": so.Signature.R,
+			"S": so.Signature.S,
 		}
 	}
 
@@ -86,7 +89,7 @@ func (o *StopOrder) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON : write custom logic to unmarshal bytes to StopOrder
-func (o *StopOrder) UnmarshalJSON(b []byte) error {
+func (so *StopOrder) UnmarshalJSON(b []byte) error {
 	order := map[string]interface{}{}
 
 	err := json.Unmarshal(b, &order)
@@ -95,76 +98,86 @@ func (o *StopOrder) UnmarshalJSON(b []byte) error {
 	}
 
 	if order["id"] != nil && bson.IsObjectIdHex(order["id"].(string)) {
-		o.ID = bson.ObjectIdHex(order["id"].(string))
+		so.ID = bson.ObjectIdHex(order["id"].(string))
 	}
 
 	if order["pairName"] != nil {
-		o.PairName = order["pairName"].(string)
+		so.PairName = order["pairName"].(string)
 	}
 
 	if order["exchangeAddress"] != nil {
-		o.ExchangeAddress = common.HexToAddress(order["exchangeAddress"].(string))
+		so.ExchangeAddress = common.HexToAddress(order["exchangeAddress"].(string))
 	}
 
 	if order["userAddress"] != nil {
-		o.UserAddress = common.HexToAddress(order["userAddress"].(string))
+		so.UserAddress = common.HexToAddress(order["userAddress"].(string))
 	}
 
 	if order["baseToken"] != nil {
-		o.BaseToken = common.HexToAddress(order["baseToken"].(string))
+		so.BaseToken = common.HexToAddress(order["baseToken"].(string))
 	}
 
 	if order["quoteToken"] != nil {
-		o.QuoteToken = common.HexToAddress(order["quoteToken"].(string))
+		so.QuoteToken = common.HexToAddress(order["quoteToken"].(string))
 	}
 
 	if order["stopPrice"] != nil {
-		o.StopPrice = math.ToBigInt(order["stopPrice"].(string))
+		so.StopPrice = math.ToBigInt(order["stopPrice"].(string))
 	}
 
 	if order["limitPrice"] != nil {
-		o.LimitPrice = math.ToBigInt(order["limitPrice"].(string))
+		so.LimitPrice = math.ToBigInt(order["limitPrice"].(string))
+	}
+
+	if order["direction"] != nil {
+
+		if direction, err := strconv.Atoi(order["direction"].(string)); err == nil {
+			so.Direction = direction
+		} else {
+			return errors.New("Direction parameter is not an integer.")
+		}
+
 	}
 
 	if order["amount"] != nil {
-		o.Amount = math.ToBigInt(order["amount"].(string))
+		so.Amount = math.ToBigInt(order["amount"].(string))
 	}
 
 	if order["filledAmount"] != nil {
-		o.FilledAmount = math.ToBigInt(order["filledAmount"].(string))
+		so.FilledAmount = math.ToBigInt(order["filledAmount"].(string))
 	}
 
 	if order["nonce"] != nil {
-		o.Nonce = math.ToBigInt(order["nonce"].(string))
+		so.Nonce = math.ToBigInt(order["nonce"].(string))
 	}
 
 	if order["makeFee"] != nil {
-		o.MakeFee = math.ToBigInt(order["makeFee"].(string))
+		so.MakeFee = math.ToBigInt(order["makeFee"].(string))
 	}
 
 	if order["takeFee"] != nil {
-		o.TakeFee = math.ToBigInt(order["takeFee"].(string))
+		so.TakeFee = math.ToBigInt(order["takeFee"].(string))
 	}
 
 	if order["hash"] != nil {
-		o.Hash = common.HexToHash(order["hash"].(string))
+		so.Hash = common.HexToHash(order["hash"].(string))
 	}
 
 	if order["side"] != nil {
-		o.Side = order["side"].(string)
+		so.Side = order["side"].(string)
 	}
 
 	if order["type"] != nil {
-		o.Type = order["type"].(string)
+		so.Type = order["type"].(string)
 	}
 
 	if order["status"] != nil {
-		o.Status = order["status"].(string)
+		so.Status = order["status"].(string)
 	}
 
 	if order["signature"] != nil {
 		signature := order["signature"].(map[string]interface{})
-		o.Signature = &Signature{
+		so.Signature = &Signature{
 			V: byte(signature["V"].(float64)),
 			R: common.HexToHash(signature["R"].(string)),
 			S: common.HexToHash(signature["S"].(string)),
@@ -173,60 +186,61 @@ func (o *StopOrder) UnmarshalJSON(b []byte) error {
 
 	if order["createdAt"] != nil {
 		t, _ := time.Parse(time.RFC3339Nano, order["createdAt"].(string))
-		o.CreatedAt = t
+		so.CreatedAt = t
 	}
 
 	if order["updatedAt"] != nil {
 		t, _ := time.Parse(time.RFC3339Nano, order["updatedAt"].(string))
-		o.UpdatedAt = t
+		so.UpdatedAt = t
 	}
 
 	return nil
 }
 
-func (o *StopOrder) GetBSON() (interface{}, error) {
+func (so *StopOrder) GetBSON() (interface{}, error) {
 	or := StopOrderRecord{
-		PairName:        o.PairName,
-		ExchangeAddress: o.ExchangeAddress.Hex(),
-		UserAddress:     o.UserAddress.Hex(),
-		BaseToken:       o.BaseToken.Hex(),
-		QuoteToken:      o.QuoteToken.Hex(),
-		Status:          o.Status,
-		Side:            o.Side,
-		Type:            o.Type,
-		Hash:            o.Hash.Hex(),
-		Amount:          o.Amount.String(),
-		StopPrice:       o.StopPrice.String(),
-		LimitPrice:      o.LimitPrice.String(),
-		Nonce:           o.Nonce.String(),
-		MakeFee:         o.MakeFee.String(),
-		TakeFee:         o.TakeFee.String(),
-		CreatedAt:       o.CreatedAt,
-		UpdatedAt:       o.UpdatedAt,
+		PairName:        so.PairName,
+		ExchangeAddress: so.ExchangeAddress.Hex(),
+		UserAddress:     so.UserAddress.Hex(),
+		BaseToken:       so.BaseToken.Hex(),
+		QuoteToken:      so.QuoteToken.Hex(),
+		Status:          so.Status,
+		Side:            so.Side,
+		Type:            so.Type,
+		Hash:            so.Hash.Hex(),
+		Amount:          so.Amount.String(),
+		StopPrice:       so.StopPrice.String(),
+		LimitPrice:      so.LimitPrice.String(),
+		Direction:       so.Direction,
+		Nonce:           so.Nonce.String(),
+		MakeFee:         so.MakeFee.String(),
+		TakeFee:         so.TakeFee.String(),
+		CreatedAt:       so.CreatedAt,
+		UpdatedAt:       so.UpdatedAt,
 	}
 
-	if o.ID.Hex() == "" {
+	if so.ID.Hex() == "" {
 		or.ID = bson.NewObjectId()
 	} else {
-		or.ID = o.ID
+		or.ID = so.ID
 	}
 
-	if o.FilledAmount != nil {
-		or.FilledAmount = o.FilledAmount.String()
+	if so.FilledAmount != nil {
+		or.FilledAmount = so.FilledAmount.String()
 	}
 
-	if o.Signature != nil {
+	if so.Signature != nil {
 		or.Signature = &SignatureRecord{
-			V: o.Signature.V,
-			R: o.Signature.R.Hex(),
-			S: o.Signature.S.Hex(),
+			V: so.Signature.V,
+			R: so.Signature.R.Hex(),
+			S: so.Signature.S.Hex(),
 		}
 	}
 
 	return or, nil
 }
 
-func (o *StopOrder) SetBSON(raw bson.Raw) error {
+func (so *StopOrder) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID              bson.ObjectId    `json:"id,omitempty" bson:"_id"`
 		PairName        string           `json:"pairName" bson:"pairName"`
@@ -240,6 +254,7 @@ func (o *StopOrder) SetBSON(raw bson.Raw) error {
 		Hash            string           `json:"hash" bson:"hash"`
 		StopPrice       string           `json:"stopPrice" bson:"stopPrice"`
 		LimitPrice      string           `json:"limitPrice" bson:"limitPrice"`
+		Direction       int              `json:"direction" bson:"direction"`
 		Amount          string           `json:"amount" bson:"amount"`
 		FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 		Nonce           string           `json:"nonce" bson:"nonce"`
@@ -256,47 +271,49 @@ func (o *StopOrder) SetBSON(raw bson.Raw) error {
 		return err
 	}
 
-	o.ID = decoded.ID
-	o.PairName = decoded.PairName
-	o.ExchangeAddress = common.HexToAddress(decoded.ExchangeAddress)
-	o.UserAddress = common.HexToAddress(decoded.UserAddress)
-	o.BaseToken = common.HexToAddress(decoded.BaseToken)
-	o.QuoteToken = common.HexToAddress(decoded.QuoteToken)
-	o.FilledAmount = math.ToBigInt(decoded.FilledAmount)
-	o.Nonce = math.ToBigInt(decoded.Nonce)
-	o.MakeFee = math.ToBigInt(decoded.MakeFee)
-	o.TakeFee = math.ToBigInt(decoded.TakeFee)
-	o.Status = decoded.Status
-	o.Side = decoded.Side
-	o.Type = decoded.Type
-	o.Hash = common.HexToHash(decoded.Hash)
+	so.ID = decoded.ID
+	so.PairName = decoded.PairName
+	so.ExchangeAddress = common.HexToAddress(decoded.ExchangeAddress)
+	so.UserAddress = common.HexToAddress(decoded.UserAddress)
+	so.BaseToken = common.HexToAddress(decoded.BaseToken)
+	so.QuoteToken = common.HexToAddress(decoded.QuoteToken)
+	so.FilledAmount = math.ToBigInt(decoded.FilledAmount)
+	so.Nonce = math.ToBigInt(decoded.Nonce)
+	so.MakeFee = math.ToBigInt(decoded.MakeFee)
+	so.TakeFee = math.ToBigInt(decoded.TakeFee)
+	so.Status = decoded.Status
+	so.Side = decoded.Side
+	so.Type = decoded.Type
+	so.Hash = common.HexToHash(decoded.Hash)
 
 	if decoded.Amount != "" {
-		o.Amount = math.ToBigInt(decoded.Amount)
+		so.Amount = math.ToBigInt(decoded.Amount)
 	}
 
 	if decoded.FilledAmount != "" {
-		o.FilledAmount = math.ToBigInt(decoded.FilledAmount)
+		so.FilledAmount = math.ToBigInt(decoded.FilledAmount)
 	}
 
 	if decoded.StopPrice != "" {
-		o.StopPrice = math.ToBigInt(decoded.StopPrice)
+		so.StopPrice = math.ToBigInt(decoded.StopPrice)
 	}
 
 	if decoded.LimitPrice != "" {
-		o.LimitPrice = math.ToBigInt(decoded.LimitPrice)
+		so.LimitPrice = math.ToBigInt(decoded.LimitPrice)
 	}
 
+	so.Direction = decoded.Direction
+
 	if decoded.Signature != nil {
-		o.Signature = &Signature{
+		so.Signature = &Signature{
 			V: byte(decoded.Signature.V),
 			R: common.HexToHash(decoded.Signature.R),
 			S: common.HexToHash(decoded.Signature.S),
 		}
 	}
 
-	o.CreatedAt = decoded.CreatedAt
-	o.UpdatedAt = decoded.UpdatedAt
+	so.CreatedAt = decoded.CreatedAt
+	so.UpdatedAt = decoded.UpdatedAt
 
 	return nil
 }
@@ -521,6 +538,7 @@ type StopOrderRecord struct {
 	Hash            string           `json:"hash" bson:"hash"`
 	StopPrice       string           `json:"stopPrice" bson:"stopPrice"`
 	LimitPrice      string           `json:"limitPrice" bson:"limitPrice"`
+	Direction       int              `json:"direction" bson:"direction"`
 	Amount          string           `json:"amount" bson:"amount"`
 	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 	Nonce           string           `json:"nonce" bson:"nonce"`
@@ -551,6 +569,7 @@ func (o StopOrderBSONUpdate) GetBSON() (interface{}, error) {
 		"type":            o.Type,
 		"stopPrice":       o.StopPrice.String(),
 		"limitPrice":      o.LimitPrice.String(),
+		"direction":       o.Direction,
 		"amount":          o.Amount.String(),
 		"nonce":           o.Nonce.String(),
 		"makeFee":         o.MakeFee.String(),
