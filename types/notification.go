@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomoxsdk/errors"
 )
 
 const (

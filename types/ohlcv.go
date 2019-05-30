@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/utils/math"
 )
 
 // Tick is the format in which mongo aggregate pipeline returns data when queried for OHLCV data

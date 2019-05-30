@@ -1,5 +1,5 @@
 package endpoints
 
-import "github.com/tomochain/tomodex/utils"
+import "github.com/tomochain/tomoxsdk/utils"
 
 var logger = utils.Logger

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/tomochain/tomodex/interfaces"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/interfaces"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 type ValidatorService struct {

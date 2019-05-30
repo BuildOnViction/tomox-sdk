@@ -7,8 +7,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/testutils"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/testutils"
 )
 
 func init() {

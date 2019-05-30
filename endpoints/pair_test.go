@@ -10,9 +10,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/testutils"
-	"github.com/tomochain/tomodex/utils/testutils/mocks"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/testutils"
+	"github.com/tomochain/tomoxsdk/utils/testutils/mocks"
 )
 
 func SetupPairEndpointTest() (*mux.Router, *mocks.PairService) {

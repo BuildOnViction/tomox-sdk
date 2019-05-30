@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
-	"github.com/tomochain/tomodex/swap/config"
-	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomoxsdk/swap/config"
+	"github.com/tomochain/tomoxsdk/utils"
 )
 
 // Config stores the application-wide configurations

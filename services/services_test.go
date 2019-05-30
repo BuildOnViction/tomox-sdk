@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/dbtest"
-	"github.com/tomochain/tomodex/daos"
+	"github.com/tomochain/tomoxsdk/daos"
 	"io/ioutil"
 )
 

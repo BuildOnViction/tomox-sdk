@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/rabbitmq"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/rabbitmq"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 func SetupTest() *rabbitmq.Connection {

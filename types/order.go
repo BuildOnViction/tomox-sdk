@@ -11,9 +11,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/utils/math"
 )
 
 const (

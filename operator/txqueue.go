@@ -3,16 +3,16 @@ package operator
 import (
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/utils/math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/streadway/amqp"
-	"github.com/tomochain/tomodex/interfaces"
-	"github.com/tomochain/tomodex/rabbitmq"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/interfaces"
+	"github.com/tomochain/tomoxsdk/rabbitmq"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 type TxQueue struct {

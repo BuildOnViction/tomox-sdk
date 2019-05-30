@@ -3,7 +3,7 @@ package bitcoin
 import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tyler-smith/go-bip32"
 )
 

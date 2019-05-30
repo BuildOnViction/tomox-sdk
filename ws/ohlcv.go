@@ -1,8 +1,8 @@
 package ws
 
 import (
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 var ohlcvSocket *OHLCVSocket

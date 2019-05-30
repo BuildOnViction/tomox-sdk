@@ -5,9 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/interfaces"
-	"github.com/tomochain/tomodex/utils/httputils"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/interfaces"
+	"github.com/tomochain/tomoxsdk/utils/httputils"
 )
 
 type infoEndpoint struct {

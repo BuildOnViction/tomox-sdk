@@ -10,10 +10,10 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
-	"github.com/tomochain/tomodex/interfaces"
-	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
+	"github.com/tomochain/tomoxsdk/interfaces"
+	"github.com/tomochain/tomoxsdk/utils"
 )
 
 type EthereumProvider struct {

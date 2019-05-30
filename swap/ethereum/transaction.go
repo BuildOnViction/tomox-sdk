@@ -3,7 +3,7 @@ package ethereum
 import (
 	"math/big"
 
-	"github.com/tomochain/tomodex/swap/config"
+	"github.com/tomochain/tomoxsdk/swap/config"
 )
 
 // convert string value from txEnvelope to Native Token

@@ -7,10 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/math"
 )
 
 // AccountDao contains:
