@@ -103,6 +103,38 @@ func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days s
 	return data, nil
 }
 
+func (dao *FiatPriceDao) GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/coins/%s/market_chart/range?vs_currency=%s&from=%d&to=%d", app.Config.CoingeckoAPIUrl, id, vsCurrency, from, to)
+
+	req, err := http.NewRequest("GET", url, nil)
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Fatalln(err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Fatalln(err)
+		return nil, err
+	}
+
+	var data *types.CoinsIDMarketChart
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
 // Create function performs the DB insertion task for fiat_price collection
 // It accepts 1 or more fiat price items as input.
 // All the fiat price items are inserted in one query itself.

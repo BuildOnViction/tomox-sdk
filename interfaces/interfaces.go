@@ -146,6 +146,7 @@ type TokenDao interface {
 type FiatPriceDao interface {
 	GetLatestQuotes() (map[string]float64, error)
 	GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error)
+	GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error)
 	Create(items ...*types.FiatPriceItem) error
 	FindAndModify(timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
 }

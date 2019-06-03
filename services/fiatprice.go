@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tomochain/tomoxsdk/interfaces"
 	"github.com/tomochain/tomoxsdk/types"
@@ -34,6 +35,44 @@ func (s *FiatPriceService) InitFiatPrice() {
 
 	for _, id := range ids {
 		data, err := s.FiatPriceDao.GetCoinMarketChart(id, vsCurrency, "1")
+
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+
+		items := data.Prices
+
+		for _, item := range items {
+			fiatPriceItem := &types.FiatPriceItem{
+				Symbol:       id,
+				Timestamp:    fmt.Sprintf("%f", item[0]),
+				Price:        fmt.Sprintf("%f", item[1]),
+				FiatCurrency: vsCurrency,
+			}
+
+			_, err := s.FiatPriceDao.FindAndModify(fiatPriceItem.Timestamp, fiatPriceItem)
+
+			if err != nil {
+				logger.Error(err)
+				continue
+			}
+		}
+	}
+}
+
+// UpdateFiatPrice will query Coingecko API and stores fiat price data in the last 30 minutes
+func (s *FiatPriceService) UpdateFiatPrice() {
+	// Fix ids with 4 coins
+	ids := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+	// Fix fiat currency with USD
+	vsCurrency := "usd"
+
+	now := time.Now()
+	then := now.Add(time.Duration(-30) * time.Minute)
+
+	for _, id := range ids {
+		data, err := s.FiatPriceDao.GetCoinMarketChartRange(id, vsCurrency, then.Unix(), now.Unix())
 
 		if err != nil {
 			logger.Error(err)
