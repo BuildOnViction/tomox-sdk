@@ -143,7 +143,7 @@ type TokenDao interface {
 	Drop() error
 }
 
-type PriceBoardDao interface {
+type FiatPriceDao interface {
 	GetLatestQuotes() (map[string]float64, error)
 }
 
