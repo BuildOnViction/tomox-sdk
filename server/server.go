@@ -170,6 +170,9 @@ func NewRouter(
 	rabbitConn.SubscribeTrades(op.HandleTrades)
 	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
 
+	// Initialize fiat price
+	fiatPriceService.InitFiatPrice()
+
 	cronService.InitCrons()
 	return r
 }

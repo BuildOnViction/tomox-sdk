@@ -1,11 +1,11 @@
 package daos
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -43,6 +43,8 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 		log.Fatalln(err)
 	}
 
+	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -69,50 +71,62 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	return result, nil
 }
 
-// Create function performs the DB insertion task for notification collection
-// It accepts 1 or more notifications as input.
-// All the notifications are inserted in one query itself.
-func (dao *FiatPriceDao) Create(notifications ...*types.Notification) ([]*types.Notification, error) {
-	y := make([]interface{}, len(notifications))
-	result := make([]*types.Notification, len(notifications))
+func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/coins/%s/market_chart?vs_currency=%s&days=%s", app.Config.CoingeckoAPIUrl, id, vsCurrency, days)
 
-	for _, notification := range notifications {
-		notification.ID = bson.NewObjectId()
-		notification.CreatedAt = time.Now()
-		notification.UpdatedAt = time.Now()
-		y = append(y, notification)
-		result = append(result, notification)
+	req, err := http.NewRequest("GET", url, nil)
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Fatalln(err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Fatalln(err)
+		return nil, err
+	}
+
+	var data *types.CoinsIDMarketChart
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// Create function performs the DB insertion task for fiat_price collection
+// It accepts 1 or more fiat price items as input.
+// All the fiat price items are inserted in one query itself.
+func (dao *FiatPriceDao) Create(items ...*types.FiatPriceItem) error {
+	y := make([]interface{}, len(items))
+
+	for _, item := range items {
+		y = append(y, item)
 	}
 
 	err := db.Create(dao.dbName, dao.collectionName, y...)
 	if err != nil {
 		logger.Error(err)
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
 }
 
-// GetAll function fetches all the notifications in the notification collection of mongodb.
-func (dao *FiatPriceDao) GetAll() ([]types.Notification, error) {
-	var response []types.Notification
-
-	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &response)
-
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return response, nil
-}
-
-func (dao *FiatPriceDao) FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error) {
-	n.UpdatedAt = time.Now()
-	query := bson.M{"_id": id}
-	updated := &types.Notification{}
+func (dao *FiatPriceDao) FindAndModify(timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error) {
+	query := bson.M{"timestamp": timestamp}
+	updated := &types.FiatPriceItem{}
 	change := mgo.Change{
-		Update:    types.NotificationBSONUpdate{Notification: n},
+		Update:    types.FiatPriceItemBSONUpdate{FiatPriceItem: i},
 		Upsert:    true,
 		Remove:    false,
 		ReturnNew: true,
@@ -128,22 +142,8 @@ func (dao *FiatPriceDao) FindAndModify(id bson.ObjectId, n *types.Notification) 
 	return updated, nil
 }
 
-func (dao *FiatPriceDao) Update(n *types.Notification) error {
-	n.UpdatedAt = time.Now()
-	err := db.Update(dao.dbName, dao.collectionName, bson.M{"_id": n.ID}, n)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (dao *FiatPriceDao) Upsert(id bson.ObjectId, n *types.Notification) error {
-	n.UpdatedAt = time.Now()
-
-	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"_id": id}, n)
+func (dao *FiatPriceDao) Upsert(timestamp string, i *types.FiatPriceItem) error {
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"timestamp": timestamp}, i)
 
 	if err != nil {
 		logger.Error(err)
@@ -154,8 +154,8 @@ func (dao *FiatPriceDao) Upsert(id bson.ObjectId, n *types.Notification) error {
 }
 
 // Aggregate function calls the aggregate pipeline of mongodb
-func (dao *FiatPriceDao) Aggregate(q []bson.M) ([]*types.Notification, error) {
-	var res []*types.Notification
+func (dao *FiatPriceDao) Aggregate(q []bson.M) ([]*types.FiatPriceItem, error) {
+	var res []*types.FiatPriceItem
 
 	err := db.Aggregate(dao.dbName, dao.collectionName, q, &res)
 	if err != nil {
