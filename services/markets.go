@@ -59,9 +59,7 @@ func (s *MarketsService) Subscribe(c *ws.Client) {
 		return
 	}
 
-	_, err = s.FiatPriceService.GetFiatPriceChart()
-
-	smallChartsDataResult := make(map[string][]string)
+	smallChartsDataResult, err := s.FiatPriceService.GetFiatPriceChart()
 
 	data := &types.MarketData{
 		PairData:        pairData,

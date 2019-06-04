@@ -34,7 +34,7 @@ func (s *FiatPriceService) InitFiatPrice() {
 	vsCurrency := "usd"
 
 	for _, id := range ids {
-		data, err := s.FiatPriceDao.GetCoinMarketChart(id, vsCurrency, "1")
+		data, err := s.FiatPriceDao.GetCoinMarketChart(id, vsCurrency, "2")
 
 		if err != nil {
 			logger.Error(err)
