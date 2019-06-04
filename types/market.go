@@ -5,8 +5,8 @@ import (
 )
 
 type MarketData struct {
-	PairData        []*PairData        `json:"pairData" bson:"pairData"`
-	SmallChartsData map[string][]*Tick `json:"smallChartsData" bson:"smallChartsData"`
+	PairData        []*PairData         `json:"pairData" bson:"pairData"`
+	SmallChartsData map[string][]string `json:"smallChartsData" bson:"smallChartsData"`
 }
 
 type ChartItem [2]float32

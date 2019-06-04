@@ -292,6 +292,13 @@ type MarketsService interface {
 	Unsubscribe(c *ws.Client)
 }
 
+type FiatPriceService interface {
+	InitFiatPrice()
+	UpdateFiatPrice()
+	SyncFiatPrice() error
+	GetFiatPriceChart() ([]string, error)
+}
+
 type NotificationService interface {
 	Create(n *types.Notification) ([]*types.Notification, error)
 	GetAll() ([]types.Notification, error)

@@ -118,3 +118,7 @@ func (s *FiatPriceService) SyncFiatPrice() error {
 
 	return nil
 }
+
+func (s *FiatPriceService) GetFiatPriceChart() ([]string, error) {
+	return []string{}, nil
+}
