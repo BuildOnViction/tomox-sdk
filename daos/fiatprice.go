@@ -154,8 +154,12 @@ func (dao *FiatPriceDao) Create(items ...*types.FiatPriceItem) error {
 	return nil
 }
 
-func (dao *FiatPriceDao) FindAndModify(timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error) {
-	query := bson.M{"timestamp": timestamp}
+func (dao *FiatPriceDao) FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error) {
+	query := bson.M{
+		"symbol":       symbol,
+		"fiatCurrency": fiatCurrency,
+		"timestamp":    timestamp,
+	}
 	updated := &types.FiatPriceItem{}
 	change := mgo.Change{
 		Update:    types.FiatPriceItemBSONUpdate{FiatPriceItem: i},
@@ -174,8 +178,12 @@ func (dao *FiatPriceDao) FindAndModify(timestamp string, i *types.FiatPriceItem)
 	return updated, nil
 }
 
-func (dao *FiatPriceDao) Upsert(timestamp string, i *types.FiatPriceItem) error {
-	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{"timestamp": timestamp}, i)
+func (dao *FiatPriceDao) Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error {
+	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{
+		"symbol":       symbol,
+		"fiatCurrency": fiatCurrency,
+		"timestamp":    timestamp,
+	}, i)
 
 	if err != nil {
 		logger.Error(err)

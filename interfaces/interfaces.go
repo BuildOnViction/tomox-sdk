@@ -148,8 +148,8 @@ type FiatPriceDao interface {
 	GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error)
 	GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error)
 	Create(items ...*types.FiatPriceItem) error
-	FindAndModify(timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
-	Upsert(timestamp string, i *types.FiatPriceItem) error
+	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
+	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
 }
 
 type NotificationDao interface {
@@ -296,7 +296,7 @@ type FiatPriceService interface {
 	InitFiatPrice()
 	UpdateFiatPrice()
 	SyncFiatPrice() error
-	GetFiatPriceChart() ([]string, error)
+	GetFiatPriceChart() (map[string][]string, error)
 }
 
 type NotificationService interface {

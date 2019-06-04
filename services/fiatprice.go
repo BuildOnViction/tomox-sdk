@@ -51,7 +51,12 @@ func (s *FiatPriceService) InitFiatPrice() {
 				FiatCurrency: vsCurrency,
 			}
 
-			_, err := s.FiatPriceDao.FindAndModify(fiatPriceItem.Timestamp, fiatPriceItem)
+			_, err := s.FiatPriceDao.FindAndModify(
+				fiatPriceItem.Symbol,
+				fiatPriceItem.FiatCurrency,
+				fiatPriceItem.Timestamp,
+				fiatPriceItem,
+			)
 
 			if err != nil {
 				logger.Error(err)
@@ -89,7 +94,12 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 				FiatCurrency: vsCurrency,
 			}
 
-			_, err := s.FiatPriceDao.FindAndModify(fiatPriceItem.Timestamp, fiatPriceItem)
+			_, err := s.FiatPriceDao.FindAndModify(
+				fiatPriceItem.Symbol,
+				fiatPriceItem.FiatCurrency,
+				fiatPriceItem.Timestamp,
+				fiatPriceItem,
+			)
 
 			if err != nil {
 				logger.Error(err)
@@ -119,6 +129,13 @@ func (s *FiatPriceService) SyncFiatPrice() error {
 	return nil
 }
 
-func (s *FiatPriceService) GetFiatPriceChart() ([]string, error) {
-	return []string{}, nil
+func (s *FiatPriceService) GetFiatPriceChart() (map[string][]string, error) {
+	// Fix ids with 4 coins
+	ids := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+
+	for _, id := range ids {
+		logger.Debug(id)
+	}
+
+	return map[string][]string{}, nil
 }
