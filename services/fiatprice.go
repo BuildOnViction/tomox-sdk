@@ -46,7 +46,7 @@ func (s *FiatPriceService) InitFiatPrice() {
 		for _, item := range items {
 			fiatPriceItem := &types.FiatPriceItem{
 				Symbol:       id,
-				Timestamp:    fmt.Sprintf("%f", item[0]),
+				Timestamp:    fmt.Sprintf("%d", int64(item[0])), // Convert timestamp from float64 to int64
 				Price:        fmt.Sprintf("%f", item[1]),
 				FiatCurrency: vsCurrency,
 			}
@@ -89,7 +89,7 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 		for _, item := range items {
 			fiatPriceItem := &types.FiatPriceItem{
 				Symbol:       id,
-				Timestamp:    fmt.Sprintf("%f", item[0]),
+				Timestamp:    fmt.Sprintf("%d", int64(item[0])), // Convert timestamp from float64 to int64
 				Price:        fmt.Sprintf("%f", item[1]),
 				FiatCurrency: vsCurrency,
 			}

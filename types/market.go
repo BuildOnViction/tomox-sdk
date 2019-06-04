@@ -9,7 +9,7 @@ type MarketData struct {
 	SmallChartsData map[string][]string `json:"smallChartsData" bson:"smallChartsData"`
 }
 
-type ChartItem [2]float32
+type ChartItem [2]float64
 
 type CoinsIDMarketChart struct {
 	Prices       []*ChartItem `json:"prices"`
