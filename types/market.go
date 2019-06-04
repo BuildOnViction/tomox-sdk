@@ -1,5 +1,9 @@
 package types
 
+import (
+	"github.com/globalsign/mgo/bson"
+)
+
 type MarketData struct {
 	PairData        []*PairData        `json:"pairData" bson:"pairData"`
 	SmallChartsData map[string][]*Tick `json:"smallChartsData" bson:"smallChartsData"`
@@ -22,4 +26,37 @@ type FiatPriceItem struct {
 
 type FiatPriceItemBSONUpdate struct {
 	*FiatPriceItem
+}
+
+func (i *FiatPriceItem) GetBSON() (interface{}, error) {
+	nr := FiatPriceItem{
+		Symbol:       i.Symbol,
+		Price:        i.Price,
+		Timestamp:    i.Timestamp,
+		FiatCurrency: i.FiatCurrency,
+	}
+
+	return nr, nil
+}
+
+func (i *FiatPriceItem) SetBSON(raw bson.Raw) error {
+	decoded := new(struct {
+		Symbol       string `json:"symbol" bson:"symbol"`
+		Price        string `json:"price" bson:"price"`
+		Timestamp    string `json:"timestamp" bson:"timestamp"`
+		FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`
+	})
+
+	err := raw.Unmarshal(decoded)
+
+	if err != nil {
+		return err
+	}
+
+	i.Symbol = decoded.Symbol
+	i.Price = decoded.Price
+	i.Timestamp = decoded.Timestamp
+	i.FiatCurrency = decoded.FiatCurrency
+
+	return nil
 }
