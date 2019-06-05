@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/tomochain/tomoxsdk/interfaces"
 	"github.com/tomochain/tomoxsdk/types"
@@ -73,11 +72,8 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 	// Fix fiat currency with USD
 	vsCurrency := "usd"
 
-	now := time.Now()
-	then := now.Add(time.Duration(-30) * time.Minute)
-
 	for _, id := range ids {
-		data, err := s.FiatPriceDao.GetCoinMarketChartRange(id, vsCurrency, then.Unix(), now.Unix())
+		data, err := s.FiatPriceDao.GetCoinMarketChart(id, vsCurrency, "2")
 
 		if err != nil {
 			logger.Error(err)
