@@ -5,8 +5,8 @@ import (
 )
 
 type MarketData struct {
-	PairData        []*PairData         `json:"pairData" bson:"pairData"`
-	SmallChartsData map[string][]string `json:"smallChartsData" bson:"smallChartsData"`
+	PairData        []*PairData                 `json:"pairData" bson:"pairData"`
+	SmallChartsData map[string][]*FiatPriceItem `json:"smallChartsData" bson:"smallChartsData"`
 }
 
 type ChartItem [2]float64
@@ -18,7 +18,7 @@ type CoinsIDMarketChart struct {
 }
 
 type FiatPriceItem struct {
-	Symbol       string `json:"symbol" bson:"symbol"`
+	Symbol       string `json:"-" bson:"symbol"`
 	Price        string `json:"price" bson:"price"`
 	Timestamp    string `json:"timestamp" bson:"timestamp"`
 	FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`

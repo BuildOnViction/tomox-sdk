@@ -28,12 +28,12 @@ func NewFiatPriceService(
 // InitFiatPrice will query Coingecko API and stores fiat price data in the last 1 day after booting up server
 func (s *FiatPriceService) InitFiatPrice() {
 	// Fix ids with 4 coins
-	ids := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+	symbols := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
 	// Fix fiat currency with USD
 	vsCurrency := "usd"
 
-	for _, id := range ids {
-		data, err := s.FiatPriceDao.GetCoinMarketChart(id, vsCurrency, "2")
+	for _, symbol := range symbols {
+		data, err := s.FiatPriceDao.GetCoinMarketChart(symbol, vsCurrency, "2")
 
 		if err != nil {
 			logger.Error(err)
@@ -44,7 +44,7 @@ func (s *FiatPriceService) InitFiatPrice() {
 
 		for _, item := range items {
 			fiatPriceItem := &types.FiatPriceItem{
-				Symbol:       id,
+				Symbol:       symbol,
 				Timestamp:    fmt.Sprintf("%d", int64(item[0])), // Convert timestamp from float64 to int64
 				Price:        fmt.Sprintf("%f", item[1]),
 				FiatCurrency: vsCurrency,
@@ -68,12 +68,12 @@ func (s *FiatPriceService) InitFiatPrice() {
 // UpdateFiatPrice will query Coingecko API and stores fiat price data in the last 30 minutes
 func (s *FiatPriceService) UpdateFiatPrice() {
 	// Fix ids with 4 coins
-	ids := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+	symbols := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
 	// Fix fiat currency with USD
 	vsCurrency := "usd"
 
-	for _, id := range ids {
-		data, err := s.FiatPriceDao.GetCoinMarketChart(id, vsCurrency, "2")
+	for _, symbol := range symbols {
+		data, err := s.FiatPriceDao.GetCoinMarketChart(symbol, vsCurrency, "2")
 
 		if err != nil {
 			logger.Error(err)
@@ -84,7 +84,7 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 
 		for _, item := range items {
 			fiatPriceItem := &types.FiatPriceItem{
-				Symbol:       id,
+				Symbol:       symbol,
 				Timestamp:    fmt.Sprintf("%d", int64(item[0])), // Convert timestamp from float64 to int64
 				Price:        fmt.Sprintf("%f", item[1]),
 				FiatCurrency: vsCurrency,
@@ -125,13 +125,22 @@ func (s *FiatPriceService) SyncFiatPrice() error {
 	return nil
 }
 
-func (s *FiatPriceService) GetFiatPriceChart() (map[string][]string, error) {
-	// Fix ids with 4 coins
-	ids := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+func (s *FiatPriceService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error) {
+	result := make(map[string][]*types.FiatPriceItem)
 
-	for _, id := range ids {
-		logger.Debug(id)
+	// Fix ids with 4 coins
+	symbols := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+
+	for _, symbol := range symbols {
+		data, err := s.FiatPriceDao.Get24hChart(symbol, "usd")
+
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+
+		result[symbol] = data
 	}
 
-	return map[string][]string{}, nil
+	return result, nil
 }

@@ -135,6 +135,28 @@ func (dao *FiatPriceDao) GetCoinMarketChartRange(id string, vsCurrency string, f
 	return data, nil
 }
 
+// Get24hChart gets price chart of symbol by fiatCurrency in 24h
+// It's not guaranteed in exact 24h because we are using data from Coingecko
+func (dao *FiatPriceDao) Get24hChart(symbol, fiatCurrency string) ([]*types.FiatPriceItem, error) {
+	var res []*types.FiatPriceItem
+	q := bson.M{"symbol": symbol, "fiatCurrency": fiatCurrency}
+
+	limit := 24
+
+	err := db.GetAndSort(dao.dbName, dao.collectionName, q, []string{"-timestamp"}, 0, limit, &res)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		return []*types.FiatPriceItem{}, nil
+	}
+
+	return res, nil
+}
+
 // Create function performs the DB insertion task for fiat_price collection
 // It accepts 1 or more fiat price items as input.
 // All the fiat price items are inserted in one query itself.
