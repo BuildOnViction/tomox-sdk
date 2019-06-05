@@ -10,6 +10,7 @@ type CronService struct {
 	OHLCVService      *services.OHLCVService
 	PriceBoardService *services.PriceBoardService
 	PairService       *services.PairService
+	FiatPriceService  *services.FiatPriceService
 }
 
 // NewCronService returns a new instance of CronService
@@ -17,11 +18,13 @@ func NewCronService(
 	ohlcvService *services.OHLCVService,
 	priceBoardService *services.PriceBoardService,
 	pairService *services.PairService,
+	fiatPriceService *services.FiatPriceService,
 ) *CronService {
 	return &CronService{
 		OHLCVService:      ohlcvService,
 		PriceBoardService: priceBoardService,
 		PairService:       pairService,
+		FiatPriceService:  fiatPriceService,
 	}
 }
 

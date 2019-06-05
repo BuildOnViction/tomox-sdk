@@ -15,9 +15,11 @@ import (
 // MarketsService struct with daos required, responsible for communicating with daos.
 // MarketsService functions are responsible for interacting with daos and implements business logics.
 type MarketsService struct {
-	PairDao  interfaces.PairDao
-	OrderDao interfaces.OrderDao
-	TradeDao interfaces.TradeDao
+	PairDao          interfaces.PairDao
+	OrderDao         interfaces.OrderDao
+	TradeDao         interfaces.TradeDao
+	OHLCVService     interfaces.OHLCVService
+	FiatPriceService interfaces.FiatPriceService
 }
 
 // NewTradeService returns a new instance of TradeService
@@ -25,11 +27,15 @@ func NewMarketsService(
 	pairDao interfaces.PairDao,
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
+	ohlcvService interfaces.OHLCVService,
+	fiatPriceService interfaces.FiatPriceService,
 ) *MarketsService {
 	return &MarketsService{
-		PairDao:  pairDao,
-		OrderDao: orderdao,
-		TradeDao: tradeDao,
+		PairDao:          pairDao,
+		OrderDao:         orderdao,
+		TradeDao:         tradeDao,
+		OHLCVService:     ohlcvService,
+		FiatPriceService: fiatPriceService,
 	}
 }
 
@@ -53,11 +59,11 @@ func (s *MarketsService) Subscribe(c *ws.Client) {
 		return
 	}
 
-	tickResult, err := s.GetSmallChartsData()
+	smallChartsDataResult, err := s.FiatPriceService.GetFiatPriceChart()
 
 	data := &types.MarketData{
 		PairData:        pairData,
-		SmallChartsData: tickResult,
+		SmallChartsData: smallChartsDataResult,
 	}
 
 	ws.RegisterConnectionUnsubscribeHandler(c, socket.UnsubscribeChannelHandler(id))
@@ -238,74 +244,4 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 	}
 
 	return pairsData, nil
-}
-
-func (s *MarketsService) GetSmallChartsData() (map[string][]*types.Tick, error) {
-	p := make([]types.PairAddresses, 0)
-	duration := int64(1)
-	unit := "hour"
-	end := int64(time.Now().Unix())
-	start := end - 24*60*60 // -1 day
-	ticks, err := s.GetOHLCV(p, duration, unit, start, end)
-
-	if err != nil {
-		return nil, err
-	}
-
-	tickResult := make(map[string][]*types.Tick)
-
-	for _, tick := range ticks {
-		tickResult[tick.Pair.PairName] = append(tickResult[tick.Pair.PairName], &types.Tick{
-			Close:     tick.Close,
-			Timestamp: tick.Timestamp,
-			Pair:      tick.Pair,
-		})
-	}
-
-	return tickResult, nil
-}
-
-// TODO: Refactor this somehow, it's duplicated in OHLCVService
-// GetOHLCV fetches OHLCV data using
-// pairName: can be "" for fetching data for all pairs
-// duration: in integer
-// unit: sec,min,hour,day,week,month,yr
-// timeInterval: 0-2 entries (0 argument: latest data,1st argument: from timestamp, 2nd argument: to timestamp)
-func (s *MarketsService) GetOHLCV(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {
-	res := make([]*types.Tick, 0)
-
-	currentTimestamp := time.Now().Unix()
-
-	modTime, intervalInSeconds := getModTime(currentTimestamp, duration, unit)
-
-	start := time.Unix(modTime-intervalInSeconds, 0)
-	end := time.Unix(currentTimestamp, 0)
-
-	if len(timeInterval) >= 1 {
-		end = time.Unix(timeInterval[1], 0)
-		start = time.Unix(timeInterval[0], 0)
-	}
-
-	match := make(bson.M)
-	match = getMatchQuery(start, end, pairs...)
-	match = bson.M{"$match": match}
-
-	addFields := make(bson.M)
-	group, addFields := getGroupAddFieldBson("$createdAt", unit, duration)
-	group = bson.M{"$group": group}
-
-	sort := bson.M{"$sort": bson.M{"timestamp": 1}}
-
-	query := []bson.M{match, group, addFields, sort}
-
-	res, err := s.TradeDao.Aggregate(query)
-	if err != nil {
-		return nil, err
-	}
-
-	if res == nil {
-		return []*types.Tick{}, nil
-	}
-
-	return res, nil
 }

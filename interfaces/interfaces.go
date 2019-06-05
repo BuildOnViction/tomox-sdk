@@ -143,8 +143,14 @@ type TokenDao interface {
 	Drop() error
 }
 
-type PriceBoardDao interface {
+type FiatPriceDao interface {
 	GetLatestQuotes() (map[string]float64, error)
+	GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error)
+	GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error)
+	Get24hChart(symbol, fiatCurrency string) ([]*types.FiatPriceItem, error)
+	Create(items ...*types.FiatPriceItem) error
+	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
+	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
 }
 
 type NotificationDao interface {
@@ -285,6 +291,13 @@ type MarketsService interface {
 	Subscribe(c *ws.Client)
 	UnsubscribeChannel(c *ws.Client)
 	Unsubscribe(c *ws.Client)
+}
+
+type FiatPriceService interface {
+	InitFiatPrice()
+	UpdateFiatPrice()
+	SyncFiatPrice() error
+	GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error)
 }
 
 type NotificationService interface {

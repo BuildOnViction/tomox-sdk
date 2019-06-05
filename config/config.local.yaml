@@ -72,6 +72,7 @@ jwt_signing_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
 # The default signing method is HS256.
 #jwt_signing_method: "HS256"
 
+coingecko_api_url: https://api.coingecko.com/api/v3
 coinmarketcap_api_url: https://pro-api.coinmarketcap.com/v1
 coinmarketcap_api_key: a928d4ca-37cc-41b8-a9ea-5a65ae025aa5
 supported_currencies: ETH,TOMO,BTC,USDT # For getting fiat price from coinmarketcap.com

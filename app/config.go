@@ -54,6 +54,8 @@ type appConfig struct {
 
 	Deposit *config.Config `mapstructure:"deposit"`
 
+	CoingeckoAPIUrl string `mapstructure:"coingecko_api_url"`
+
 	CoinmarketcapAPIUrl string `mapstructure:"coinmarketcap_api_url"`
 
 	CoinmarketcapAPIKey string `mapstructure:"coinmarketcap_api_key"`

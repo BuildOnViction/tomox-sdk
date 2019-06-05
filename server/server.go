@@ -81,7 +81,7 @@ func NewRouter(
 	walletDao := daos.NewWalletDao()
 	configDao := daos.NewConfigDao()
 	associationDao := daos.NewAssociationDao()
-	priceBoardDao := daos.NewPriceBoardDao()
+	fiatPriceDao := daos.NewFiatPriceDao()
 	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
@@ -109,12 +109,13 @@ func NewRouter(
 	}
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
-	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
-	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao)
+	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
+	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceService)
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service
-	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService)
+	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, fiatPriceService)
 
 	// get exchange contract instance
 	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
@@ -168,6 +169,9 @@ func NewRouter(
 	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 	rabbitConn.SubscribeTrades(op.HandleTrades)
 	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
+
+	// Initialize fiat price
+	fiatPriceService.InitFiatPrice()
 
 	cronService.InitCrons()
 	return r
