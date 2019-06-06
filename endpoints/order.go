@@ -35,6 +35,7 @@ func ServeOrderResource(
 	r.HandleFunc("/orders", e.handleNewOrder).Methods("POST")
 	r.HandleFunc("/orders/stop", e.handleNewStopOrder).Methods("POST")
 	r.HandleFunc("/orders/cancel", e.handleCancelOrder).Methods("POST")
+	r.HandleFunc("/orders/stop/cancel", e.handleCancelStopOrder).Methods("POST")
 
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
@@ -291,6 +292,37 @@ func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request
 	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
 }
 
+func (e *orderEndpoint) handleCancelStopOrder(w http.ResponseWriter, r *http.Request) {
+	oc := &types.OrderCancel{}
+
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&oc)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	_, err = oc.GetSenderAddress()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = e.orderService.CancelStopOrder(oc)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
+}
+
 // ws function handles incoming websocket messages on the order channel
 func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	msg := &types.WebsocketEvent{}
@@ -308,6 +340,8 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 		e.handleWSNewStopOrder(msg, c)
 	case "CANCEL_ORDER":
 		e.handleWSCancelOrder(msg, c)
+	case "CANCEL_STOP_ORDER":
+		e.handleWSCancelStopOrder(msg, c)
 	default:
 		log.Print("Response with error")
 	}
@@ -415,6 +449,33 @@ func (e *orderEndpoint) handleWSCancelOrder(ev *types.WebsocketEvent, c *ws.Clie
 	ws.RegisterOrderConnection(addr, c)
 
 	orderErr := e.orderService.CancelOrder(oc)
+	if orderErr != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(orderErr, oc.Hash)
+		return
+	}
+}
+
+// handleWSCancelStopOrder handles CancelStopOrder message.
+func (e *orderEndpoint) handleWSCancelStopOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	bytes, err := json.Marshal(ev.Payload)
+	oc := &types.OrderCancel{}
+
+	err = json.Unmarshal(bytes, &oc)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, oc.Hash)
+	}
+
+	addr, err := oc.GetSenderAddress()
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, oc.Hash)
+	}
+
+	ws.RegisterOrderConnection(addr, c)
+
+	orderErr := e.orderService.CancelStopOrder(oc)
 	if orderErr != nil {
 		logger.Error(err)
 		c.SendOrderErrorMessage(orderErr, oc.Hash)
