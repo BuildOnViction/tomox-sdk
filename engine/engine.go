@@ -73,6 +73,12 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 			logger.Error(err)
 			return err
 		}
+	case "CANCEL_STOP_ORDER":
+		err := e.handleCancelStopOrder(msg.Data)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
 	case "INVALIDATE_MAKER_ORDERS":
 		err := e.handleInvalidateMakerOrders(msg.Data)
 		if err != nil {
@@ -168,6 +174,34 @@ func (e *Engine) handleCancelOrder(bytes []byte) error {
 	}
 
 	err = ob.cancelOrder(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (e *Engine) handleCancelStopOrder(bytes []byte) error {
+	so := &types.StopOrder{}
+	err := json.Unmarshal(bytes, so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	code, err := so.PairCode()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	ob := e.orderbooks[code]
+	if ob == nil {
+		return errors.New("Orderbook error")
+	}
+
+	err = ob.cancelStopOrder(so)
 	if err != nil {
 		logger.Error(err)
 		return err

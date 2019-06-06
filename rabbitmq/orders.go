@@ -100,6 +100,26 @@ func (c *Connection) PublishCancelOrderMessage(o *types.Order) error {
 	return nil
 }
 
+func (c *Connection) PublishCancelStopOrderMessage(so *types.StopOrder) error {
+	b, err := json.Marshal(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = c.PublishOrder(&Message{
+		Type: "CANCEL_STOP_ORDER",
+		Data: b,
+	})
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 func (c *Connection) PublishInvalidateMakerOrdersMessage(m types.Matches) error {
 	utils.PrintJSON("In publish invalidate")
 

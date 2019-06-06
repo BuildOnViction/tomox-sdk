@@ -332,6 +332,32 @@ func (ob *OrderBook) cancelOrder(o *types.Order) error {
 	return nil
 }
 
+// cancelStopOrder is used to cancel the stop order from stop_order collection
+func (ob *OrderBook) cancelStopOrder(so *types.StopOrder) error {
+	ob.mutex.Lock()
+	defer ob.mutex.Unlock()
+
+	so.Status = "CANCELLED"
+	err := ob.stopOrderDao.UpdateStopOrderStatus(so.Hash, "CANCELLED")
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	res := &types.EngineResponse{
+		Status:    "STOP_ORDER_CANCELLED",
+		StopOrder: so,
+	}
+
+	err = ob.rabbitMQConn.PublishEngineResponse(res)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // cancelTrades revertTrades and reintroduces the taker orders in the orderbook
 func (ob *OrderBook) invalidateMakerOrders(matches types.Matches) error {
 	ob.mutex.Lock()

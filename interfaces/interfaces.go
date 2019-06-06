@@ -56,8 +56,9 @@ type StopOrderDao interface {
 	Upsert(id bson.ObjectId, so *types.StopOrder) error
 	UpsertByHash(h common.Hash, so *types.StopOrder) error
 	UpdateAllByHash(h common.Hash, so *types.StopOrder) error
-	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.StopOrder, error)
-	UpdateOrderStatus(h common.Hash, status string) error
+	UpdateStopOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.StopOrder, error)
+	UpdateStopOrderStatus(h common.Hash, status string) error
+	GetByHash(h common.Hash) (*types.StopOrder, error)
 	FindAndModify(h common.Hash, so *types.StopOrder) (*types.StopOrder, error)
 	Drop() error
 }
@@ -242,6 +243,7 @@ type OrderService interface {
 	NewOrder(o *types.Order) error
 	NewStopOrder(so *types.StopOrder) error
 	CancelOrder(oc *types.OrderCancel) error
+	CancelStopOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
 }
 

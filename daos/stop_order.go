@@ -217,6 +217,25 @@ func (dao *StopOrderDao) UpdateAllByHash(h common.Hash, so *types.StopOrder) err
 	return nil
 }
 
+// GetByHash function fetches a single document from stop_order collection based on the hash.
+// Returns StopOrder type struct
+func (dao *StopOrderDao) GetByHash(hash common.Hash) (*types.StopOrder, error) {
+	q := bson.M{"hash": hash.Hex()}
+	res := []types.StopOrder{}
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if len(res) == 0 {
+		return nil, nil
+	}
+
+	return &res[0], nil
+}
+
 func (dao *StopOrderDao) FindAndModify(h common.Hash, so *types.StopOrder) (*types.StopOrder, error) {
 	so.UpdatedAt = time.Now()
 	query := bson.M{"hash": h.Hex()}
@@ -239,7 +258,7 @@ func (dao *StopOrderDao) FindAndModify(h common.Hash, so *types.StopOrder) (*typ
 	return updated, nil
 }
 
-func (dao *StopOrderDao) UpdateOrderStatus(h common.Hash, status string) error {
+func (dao *StopOrderDao) UpdateStopOrderStatus(h common.Hash, status string) error {
 	query := bson.M{"hash": h.Hex()}
 	update := bson.M{"$set": bson.M{
 		"status": status,
@@ -254,7 +273,7 @@ func (dao *StopOrderDao) UpdateOrderStatus(h common.Hash, status string) error {
 	return nil
 }
 
-func (dao *StopOrderDao) UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.StopOrder, error) {
+func (dao *StopOrderDao) UpdateStopOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.StopOrder, error) {
 	hexes := make([]string, 0)
 	for _, h := range hashes {
 		hexes = append(hexes, h.Hex())

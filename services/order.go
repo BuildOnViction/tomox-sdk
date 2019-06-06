@@ -234,6 +234,33 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 	return nil
 }
 
+// CancelStopOrder handles the cancellation stop order requests.
+// Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
+// can be cancelled
+func (s *OrderService) CancelStopOrder(oc *types.OrderCancel) error {
+	o, err := s.stopOrderDao.GetByHash(oc.OrderHash)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if o == nil {
+		return errors.New("No stop order with corresponding hash")
+	}
+
+	if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
+		return fmt.Errorf("cannot cancel order. Status is %v", o.Status)
+	}
+
+	err = s.broker.PublishCancelStopOrderMessage(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // HandleEngineResponse listens to messages incoming from the engine and handles websocket
 // responses and database updates accordingly
 func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
