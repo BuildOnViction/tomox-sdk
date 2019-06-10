@@ -18,6 +18,9 @@ import (
 const (
 	TypeStopMarketOrder = "SMO"
 	TypeStopLimitOrder  = "SLO"
+
+	StopOrderStatusOpen = "OPEN"
+	StopOrderStatusDone = "DONE"
 )
 
 type StopOrder struct {

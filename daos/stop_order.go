@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -301,6 +302,42 @@ func (dao *StopOrderDao) UpdateStopOrderStatusesByHashes(status string, hashes .
 	}
 
 	return orders, nil
+}
+
+func (dao *StopOrderDao) GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error) {
+	var stopOrders []*types.StopOrder
+
+	q := bson.M{
+		"$or": []bson.M{
+			bson.M{
+				"baseToken":  baseToken.Hex(),
+				"quoteToken": quoteToken.Hex(),
+				"direction":  -1,
+				"stopPrice": bson.M{
+					"$gte": lastPrice,
+				},
+				"status": types.StopOrderStatusOpen,
+			},
+			bson.M{
+				"baseToken":  baseToken.Hex(),
+				"quoteToken": quoteToken.Hex(),
+				"direction":  1,
+				"stopPrice": bson.M{
+					"$lte": lastPrice,
+				},
+				"status": types.StopOrderStatusOpen,
+			},
+		},
+	}
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &stopOrders)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return stopOrders, nil
 }
 
 // Drop drops all the order documents in the current database

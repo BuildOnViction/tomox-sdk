@@ -60,6 +60,7 @@ type StopOrderDao interface {
 	UpdateStopOrderStatus(h common.Hash, status string) error
 	GetByHash(h common.Hash) (*types.StopOrder, error)
 	FindAndModify(h common.Hash, so *types.StopOrder) (*types.StopOrder, error)
+	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
 	Drop() error
 }
 
