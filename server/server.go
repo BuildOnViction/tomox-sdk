@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomoxsdk/app"
-	"github.com/tomochain/tomoxsdk/contracts"
 	"github.com/tomochain/tomoxsdk/crons"
 	"github.com/tomochain/tomoxsdk/daos"
 	"github.com/tomochain/tomoxsdk/endpoints"
@@ -114,7 +113,7 @@ func NewRouter(
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service
-	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, eng)
+	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, fiatPriceService, eng)
 
 	// deploy operator
 	op, err := operator.NewOperator(

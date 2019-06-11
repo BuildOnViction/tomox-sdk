@@ -132,6 +132,8 @@ github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51 h1:BP2bjP495BBPaBcS
 github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tomochain/tomochain v1.3.3-0.20190424032001-8fb10a7ea1d9 h1:QPb6GUpJR/u6mwDGFvHJLJediCb3Lw9/psOf0j3ASAk=
 github.com/tomochain/tomochain v1.3.3-0.20190424032001-8fb10a7ea1d9/go.mod h1:P2WCRgVo6taq0uP7EMLjuxtGY2ISiIFgZ+ZZ1DzQDxc=
+github.com/tomochain/tomodex v0.4.0 h1:jGxCz1jgzijslDc2qsGQjg1ibt0L0lSU871xqxa5Vcw=
+github.com/tomochain/tomodex v0.4.0/go.mod h1:DGv/E5Xs9x/HUuVhK1LR6ysJz4o/Z5Nr69tHikX6o3k=
 github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564 h1:NXXyQVeRVLK8Xu27/hkkjwVOZLk5v4ZBEvvMtqMqznM=
 github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564/go.mod h1:0/YuQQF676+d4CMNclTqGUam1EDwz0B8o03K9pQqA3c=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=

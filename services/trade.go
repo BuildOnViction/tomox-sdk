@@ -5,9 +5,9 @@ import (
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/interfaces"
-	"github.com/tomochain/tomodex/rabbitmq"
+	"github.com/tomochain/tomoxsdk/rabbitmq"
 	"github.com/tomochain/tomoxsdk/types"
 	"github.com/tomochain/tomoxsdk/utils"
 	"github.com/tomochain/tomoxsdk/ws"

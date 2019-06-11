@@ -10,7 +10,6 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
 	"github.com/tomochain/tomoxsdk/rabbitmq"
 	swapBitcoin "github.com/tomochain/tomoxsdk/swap/bitcoin"
 	swapEthereum "github.com/tomochain/tomoxsdk/swap/ethereum"

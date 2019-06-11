@@ -10,9 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/gorilla/mux"
-
-	// "github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
-
 	"github.com/tomochain/tomoxsdk/contracts"
 	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
 	"github.com/tomochain/tomoxsdk/errors"
