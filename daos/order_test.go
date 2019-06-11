@@ -9,12 +9,12 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils"
-	"github.com/tomochain/tomodex/utils/math"
-	"github.com/tomochain/tomodex/utils/testutils"
-	"github.com/tomochain/tomodex/utils/units"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils"
+	"github.com/tomochain/tomoxsdk/utils/math"
+	"github.com/tomochain/tomoxsdk/utils/testutils"
+	"github.com/tomochain/tomoxsdk/utils/units"
 )
 
 func init() {
@@ -716,8 +716,8 @@ func TestGetOrderBook(t *testing.T) {
 	}
 
 	db = &Database{session}
-	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomoxsdk"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomoxsdk"))
 	pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
 	if err != nil {
 		panic(err)
@@ -738,8 +738,8 @@ func TestGetExchangeRate(t *testing.T) {
 	}
 
 	db = &Database{session}
-	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomoxsdk"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomoxsdk"))
 	// pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
 	pair, err := pairDao.GetByName("AE/WETH")
 	if err != nil {
@@ -775,8 +775,8 @@ func TestGetOrderBookPricePoint(t *testing.T) {
 
 	db = &Database{session}
 
-	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomoxsdk"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomoxsdk"))
 	pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
 	if err != nil {
 		panic(err)
@@ -798,8 +798,8 @@ func TestGetRawOrderBook(t *testing.T) {
 
 	db = &Database{session}
 
-	pairDao := NewPairDao(PairDaoDBOption("tomodex"))
-	orderDao := NewOrderDao(OrderDaoDBOption("tomodex"))
+	pairDao := NewPairDao(PairDaoDBOption("tomoxsdk"))
+	orderDao := NewOrderDao(OrderDaoDBOption("tomoxsdk"))
 	pair, err := pairDao.GetByTokenSymbols("AE", "WETH")
 	if err != nil {
 		panic(err)

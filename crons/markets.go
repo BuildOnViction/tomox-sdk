@@ -2,12 +2,11 @@ package crons
 
 import (
 	"log"
-	"time"
 
 	"github.com/robfig/cron"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils"
-	"github.com/tomochain/tomodex/ws"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils"
+	"github.com/tomochain/tomoxsdk/ws"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming
@@ -27,26 +26,11 @@ func (s *CronService) getMarketsData() func() {
 			return
 		}
 
-		p := make([]types.PairAddresses, 0)
-		duration := int64(1)
-		unit := "hour"
-		end := int64(time.Now().Unix())
-		start := end - 24*60*60 // -1 day
-		ticks, err := s.OHLCVService.GetOHLCV(p, duration, unit, start, end)
-
-		tickResult := make(map[string][]*types.Tick)
-
-		for _, tick := range ticks {
-			tickResult[tick.Pair.PairName] = append(tickResult[tick.Pair.PairName], &types.Tick{
-				Close:     tick.Close,
-				Timestamp: tick.Timestamp,
-				Pair:      tick.Pair,
-			})
-		}
+		smallChartsDataResult, err := s.FiatPriceService.GetFiatPriceChart()
 
 		res := &types.MarketData{
 			PairData:        pairData,
-			SmallChartsData: tickResult,
+			SmallChartsData: smallChartsDataResult,
 		}
 
 		id := utils.GetMarketsChannelID(ws.MarketsChannel)

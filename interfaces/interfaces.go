@@ -10,11 +10,12 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/rabbitmq"
-	swapBitcoin "github.com/tomochain/tomodex/swap/bitcoin"
-	swapEthereum "github.com/tomochain/tomodex/swap/ethereum"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/ws"
+	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
+	"github.com/tomochain/tomoxsdk/rabbitmq"
+	swapBitcoin "github.com/tomochain/tomoxsdk/swap/bitcoin"
+	swapEthereum "github.com/tomochain/tomoxsdk/swap/ethereum"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/ws"
 )
 
 type OrderDao interface {
@@ -149,8 +150,14 @@ type TokenDao interface {
 	Drop() error
 }
 
-type PriceBoardDao interface {
+type FiatPriceDao interface {
 	GetLatestQuotes() (map[string]float64, error)
+	GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error)
+	GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error)
+	Get24hChart(symbol, fiatCurrency string) ([]*types.FiatPriceItem, error)
+	Create(items ...*types.FiatPriceItem) error
+	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
+	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
 }
 
 type NotificationDao interface {
@@ -268,6 +275,13 @@ type MarketsService interface {
 	Subscribe(c *ws.Client)
 	UnsubscribeChannel(c *ws.Client)
 	Unsubscribe(c *ws.Client)
+}
+
+type FiatPriceService interface {
+	InitFiatPrice()
+	UpdateFiatPrice()
+	SyncFiatPrice() error
+	GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error)
 }
 
 type NotificationService interface {

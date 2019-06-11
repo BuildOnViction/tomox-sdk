@@ -3,7 +3,7 @@ package utils
 import (
 	"math/big"
 
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/utils/math"
 )
 
 func ToDecimal(value *big.Int) float64 {

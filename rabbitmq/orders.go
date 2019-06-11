@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/tomochain/tomodex/errors"
+	"github.com/tomochain/tomoxsdk/errors"
 
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils"
 )
 
 func (c *Connection) SubscribeOrders(fn func(*Message) error) error {

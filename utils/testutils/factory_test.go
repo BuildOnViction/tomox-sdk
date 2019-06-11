@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/units"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/units"
 )
 
 func TestNewOrderFromFactory(t *testing.T) {

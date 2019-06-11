@@ -1,16 +1,18 @@
 # DEX backend
 
 Official decentralized exchange backend, forked from the Proof project.  
-Support deposit scenarios: coin-coin, token-coin, token-token.  
 The matching-engine will be soon moved to blockchain services.
 
-## Getting Started
+_**Note: This project is under active development. We are using Github Issues to keep track of milestones, tasks, bugs, ....
+It will be officially released when the version is v1.0.0**_
+
+# Getting Started
 
 ### Requirements
 
 - **mongoDB** version 3.6 or newer
 - **rabbitmq** version 3.7.7 or newer
-- **dep** latest
+- **Go Modules** latest
 
 ### Deployment guide step by step
 ```

@@ -1,4 +1,4 @@
-module github.com/tomochain/tomodex
+module github.com/tomochain/tomoxsdk
 
 go 1.12
 

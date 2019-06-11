@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
-	"github.com/tomochain/tomodex/swap/config"
-	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomoxsdk/swap/config"
+	"github.com/tomochain/tomoxsdk/utils"
 )
 
 // Config stores the application-wide configurations
@@ -53,6 +53,8 @@ type appConfig struct {
 	Ethereum map[string]string `mapstructure:"ethereum"`
 
 	Deposit *config.Config `mapstructure:"deposit"`
+
+	CoingeckoAPIUrl string `mapstructure:"coingecko_api_url"`
 
 	CoinmarketcapAPIUrl string `mapstructure:"coinmarketcap_api_url"`
 

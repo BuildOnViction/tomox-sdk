@@ -11,18 +11,18 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/gorilla/mux"
 
-	// "github.com/tomochain/tomodex/contracts/contractsinterfaces"
+	// "github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
 
-	"github.com/tomochain/tomodex/contracts"
-	"github.com/tomochain/tomodex/contracts/contractsinterfaces"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/interfaces"
-	"github.com/tomochain/tomodex/swap"
-	"github.com/tomochain/tomodex/swap/bitcoin"
-	"github.com/tomochain/tomodex/swap/ethereum"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/httputils"
-	"github.com/tomochain/tomodex/ws"
+	"github.com/tomochain/tomoxsdk/contracts"
+	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/interfaces"
+	"github.com/tomochain/tomoxsdk/swap"
+	"github.com/tomochain/tomoxsdk/swap/bitcoin"
+	"github.com/tomochain/tomoxsdk/swap/ethereum"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/httputils"
+	"github.com/tomochain/tomoxsdk/ws"
 )
 
 type depositEndpoint struct {

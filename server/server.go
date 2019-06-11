@@ -8,19 +8,20 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/crons"
-	"github.com/tomochain/tomodex/daos"
-	"github.com/tomochain/tomodex/endpoints"
-	"github.com/tomochain/tomodex/engine"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/ethereum"
-	"github.com/tomochain/tomodex/operator"
-	"github.com/tomochain/tomodex/rabbitmq"
-	"github.com/tomochain/tomodex/services"
-	"github.com/tomochain/tomodex/swap"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/ws"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/contracts"
+	"github.com/tomochain/tomoxsdk/crons"
+	"github.com/tomochain/tomoxsdk/daos"
+	"github.com/tomochain/tomoxsdk/endpoints"
+	"github.com/tomochain/tomoxsdk/engine"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/ethereum"
+	"github.com/tomochain/tomoxsdk/operator"
+	"github.com/tomochain/tomoxsdk/rabbitmq"
+	"github.com/tomochain/tomoxsdk/services"
+	"github.com/tomochain/tomoxsdk/swap"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/ws"
 )
 
 const (
@@ -79,7 +80,7 @@ func NewRouter(
 	walletDao := daos.NewWalletDao()
 	configDao := daos.NewConfigDao()
 	associationDao := daos.NewAssociationDao()
-	priceBoardDao := daos.NewPriceBoardDao()
+	fiatPriceDao := daos.NewFiatPriceDao()
 	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
@@ -107,8 +108,9 @@ func NewRouter(
 	}
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
-	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, priceBoardDao)
-	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao)
+	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
+	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceService)
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service
@@ -153,6 +155,9 @@ func NewRouter(
 	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 	rabbitConn.SubscribeTrades(op.HandleTrades)
 	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
+
+	// Initialize fiat price
+	fiatPriceService.InitFiatPrice()
 
 	// initialize MongoDB Change Streams
 	go orderService.WatchChanges()

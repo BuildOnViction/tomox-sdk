@@ -6,11 +6,11 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/interfaces"
+	"github.com/tomochain/tomoxsdk/interfaces"
 	"github.com/tomochain/tomodex/rabbitmq"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils"
-	"github.com/tomochain/tomodex/ws"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils"
+	"github.com/tomochain/tomoxsdk/ws"
 
 	"github.com/ethereum/go-ethereum/common"
 )

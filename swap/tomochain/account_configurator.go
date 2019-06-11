@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 func (ac *AccountConfigurator) Start() error {

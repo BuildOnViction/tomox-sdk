@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 const (

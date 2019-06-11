@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/utils/math"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"

@@ -2,7 +2,7 @@ package ws
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomodex/types"
+	"github.com/tomochain/tomoxsdk/types"
 )
 
 // DepositConn is websocket deposit connection struct

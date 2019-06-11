@@ -10,9 +10,9 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomochain/tomox"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/math"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/math"
 )
 
 // OrderDao contains:

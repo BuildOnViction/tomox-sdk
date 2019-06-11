@@ -4,12 +4,12 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/tomochain/tomodex/rabbitmq"
+	"github.com/tomochain/tomoxsdk/rabbitmq"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomodex/types"
-	"github.com/tomochain/tomodex/utils/testutils"
-	"github.com/tomochain/tomodex/utils/testutils/mocks"
+	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/testutils"
+	"github.com/tomochain/tomoxsdk/utils/testutils/mocks"
 )
 
 func TestCancelTrades(t *testing.T) {

@@ -1,6 +1,6 @@
 package testutils
 
-import "github.com/tomochain/tomodex/types"
+import "github.com/tomochain/tomoxsdk/types"
 
 func GetTestWallet() *types.Wallet {
 	return types.NewWalletFromPrivateKey("3411b45169aa5a8312e51357db68621031020dcf46011d7431db1bbb6d3922ce")

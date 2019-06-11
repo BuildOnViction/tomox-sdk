@@ -2,8 +2,8 @@ package crons
 
 import (
 	"github.com/robfig/cron"
-	"github.com/tomochain/tomodex/engine"
-	"github.com/tomochain/tomodex/services"
+	"github.com/tomochain/tomoxsdk/engine"
+	"github.com/tomochain/tomoxsdk/services"
 )
 
 // CronService contains the services required to initialize crons
@@ -11,6 +11,7 @@ type CronService struct {
 	OHLCVService      *services.OHLCVService
 	PriceBoardService *services.PriceBoardService
 	PairService       *services.PairService
+	FiatPriceService  *services.FiatPriceService
 	Engine            *engine.Engine
 }
 
@@ -19,12 +20,14 @@ func NewCronService(
 	ohlcvService *services.OHLCVService,
 	priceBoardService *services.PriceBoardService,
 	pairService *services.PairService,
+	fiatPriceService *services.FiatPriceService,
 	engine *engine.Engine,
 ) *CronService {
 	return &CronService{
 		OHLCVService:      ohlcvService,
 		PriceBoardService: priceBoardService,
 		PairService:       pairService,
+		FiatPriceService:  fiatPriceService,
 		Engine:            engine,
 	}
 }

@@ -1,8 +1,8 @@
 package operator
 
 // import (
-// 	"github.com/tomochain/tomodex/types"
-// 	"github.com/tomochain/tomodex/utils"
+// 	"github.com/tomochain/tomoxsdk/types"
+// 	"github.com/tomochain/tomoxsdk/utils"
 // 	logging "github.com/op/go-logging"
 // )
 

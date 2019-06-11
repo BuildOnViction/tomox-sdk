@@ -6,9 +6,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/tomochain/tomodex/errors"
-	"github.com/tomochain/tomodex/swap/storage"
-	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomoxsdk/swap/storage"
+	"github.com/tomochain/tomoxsdk/utils"
 	"github.com/tyler-smith/go-bip32"
 )
 

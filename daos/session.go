@@ -5,8 +5,8 @@ import (
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomodex/app"
-	"github.com/tomochain/tomodex/utils"
+	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomoxsdk/utils"
 )
 
 // Database struct contains the pointer to mgo.session
