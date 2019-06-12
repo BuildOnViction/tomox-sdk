@@ -132,8 +132,8 @@ func (o *Order) ComputeHash() common.Hash {
 	sha.Write(common.BigToHash(o.PricePoint).Bytes())
 	sha.Write(common.BigToHash(o.EncodedSide()).Bytes())
 	sha.Write(common.BigToHash(o.Nonce).Bytes())
-	sha.Write(common.BigToHash(o.TakeFee).Bytes())
 	sha.Write(common.BigToHash(o.MakeFee).Bytes())
+	sha.Write(common.BigToHash(o.TakeFee).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 
