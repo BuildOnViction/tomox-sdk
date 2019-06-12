@@ -456,8 +456,8 @@ func (so *StopOrder) ComputeHash() common.Hash {
 	sha.Write(common.BigToHash(so.StopPrice).Bytes())
 	sha.Write(common.BigToHash(so.EncodedSide()).Bytes())
 	sha.Write(common.BigToHash(so.Nonce).Bytes())
-	sha.Write(common.BigToHash(so.TakeFee).Bytes())
 	sha.Write(common.BigToHash(so.MakeFee).Bytes())
+	sha.Write(common.BigToHash(so.TakeFee).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 
