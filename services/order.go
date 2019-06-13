@@ -662,3 +662,7 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 	id := utils.GetTradeChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
 	ws.GetTradeSocket().BroadcastMessage(id, trades)
 }
+
+func (s *OrderService) GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error) {
+	return s.stopOrderDao.GetTriggeredStopOrders(baseToken, quoteToken, lastPrice)
+}

@@ -246,6 +246,7 @@ type OrderService interface {
 	CancelOrder(oc *types.OrderCancel) error
 	CancelStopOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
+	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
 }
 
 type OrderBookService interface {
