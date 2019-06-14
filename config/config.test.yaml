@@ -1,11 +1,11 @@
 db_name: tomodex
 deposit:
-  ethereum:
-    master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
-    minimum_value_eth: 1e-05
-    network_id: 8888
-    rpc_server: http://localhost:8545 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
-    token_price: 1
+#  ethereum:
+#    master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
+#    minimum_value_eth: 1e-05
+#    network_id: 8888
+#    rpc_server: http://localhost:8545 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
+#    token_price: 1
   tomochain:
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
