@@ -252,6 +252,14 @@ func (txq *TxQueue) handleStopOrder(so *types.StopOrder) error {
 		return err
 	}
 
+	so.Status = types.StopOrderStatusDone
+	err = txq.OrderService.UpdateStopOrder(so.Hash, so)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
 	return nil
 }
 

@@ -19,8 +19,9 @@ const (
 	TypeStopMarketOrder = "SMO"
 	TypeStopLimitOrder  = "SLO"
 
-	StopOrderStatusOpen = "OPEN"
-	StopOrderStatusDone = "DONE"
+	StopOrderStatusOpen      = "OPEN"
+	StopOrderStatusDone      = "DONE"
+	StopOrderStatusCancelled = "CANCELLED"
 )
 
 type StopOrder struct {

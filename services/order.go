@@ -666,3 +666,7 @@ func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
 func (s *OrderService) GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error) {
 	return s.stopOrderDao.GetTriggeredStopOrders(baseToken, quoteToken, lastPrice)
 }
+
+func (s *OrderService) UpdateStopOrder(h common.Hash, so *types.StopOrder) error {
+	return s.stopOrderDao.UpdateByHash(h, so)
+}

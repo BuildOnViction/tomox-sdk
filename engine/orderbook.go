@@ -337,8 +337,8 @@ func (ob *OrderBook) cancelStopOrder(so *types.StopOrder) error {
 	ob.mutex.Lock()
 	defer ob.mutex.Unlock()
 
-	so.Status = "CANCELLED"
-	err := ob.stopOrderDao.UpdateStopOrderStatus(so.Hash, "CANCELLED")
+	so.Status = types.StopOrderStatusCancelled
+	err := ob.stopOrderDao.UpdateByHash(so.Hash, so)
 	if err != nil {
 		logger.Error(err)
 		return err

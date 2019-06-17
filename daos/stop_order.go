@@ -259,51 +259,6 @@ func (dao *StopOrderDao) FindAndModify(h common.Hash, so *types.StopOrder) (*typ
 	return updated, nil
 }
 
-func (dao *StopOrderDao) UpdateStopOrderStatus(h common.Hash, status string) error {
-	query := bson.M{"hash": h.Hex()}
-	update := bson.M{"$set": bson.M{
-		"status": status,
-	}}
-
-	err := db.Update(dao.dbName, dao.collectionName, query, update)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (dao *StopOrderDao) UpdateStopOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.StopOrder, error) {
-	hexes := make([]string, 0)
-	for _, h := range hashes {
-		hexes = append(hexes, h.Hex())
-	}
-
-	query := bson.M{"hash": bson.M{"$in": hexes}}
-	update := bson.M{
-		"$set": bson.M{
-			"updatedAt": time.Now(),
-			"status":    status,
-		},
-	}
-
-	err := db.UpdateAll(dao.dbName, dao.collectionName, query, update)
-	if err != nil {
-		logger.Error(err)
-		return nil, nil
-	}
-
-	orders := make([]*types.StopOrder, 0)
-	err = db.Get(dao.dbName, dao.collectionName, query, 0, 0, &orders)
-	if err != nil {
-		logger.Error(err)
-		return nil, nil
-	}
-
-	return orders, nil
-}
-
 func (dao *StopOrderDao) GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error) {
 	var stopOrders []*types.StopOrder
 
