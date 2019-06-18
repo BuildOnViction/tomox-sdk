@@ -24,13 +24,13 @@ func ServeTradeResource(
 	tradeService interfaces.TradeService,
 ) {
 	e := &tradeEndpoint{tradeService}
-	r.HandleFunc("/trades/pair", e.HandleGetTradeHistory)
 	r.HandleFunc("/trades", e.HandleGetTrades)
+	r.HandleFunc("/trades/history", e.HandleGetTradesHistory)
 	ws.RegisterChannel(ws.TradeChannel, e.tradeWebsocket)
 }
 
-// history is reponsible for handling pair's trade history requests
-func (e *tradeEndpoint) HandleGetTradeHistory(w http.ResponseWriter, r *http.Request) {
+// HandleGetTrades is responsible for getting pair's trade history requests
+func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	bt := v.Get("baseToken")
 	qt := v.Get("quoteToken")
@@ -78,8 +78,8 @@ func (e *tradeEndpoint) HandleGetTradeHistory(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
-// get is reponsible for handling user's trade history requests
-func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) {
+// HandleGetTradesHistory is responsible for handling user's trade history requests
+func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	addr := v.Get("address")
 	limit := v.Get("limit")

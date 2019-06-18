@@ -3,24 +3,17 @@
     "tags": [
       "trades"
     ],
-    "summary": "Retrieve all trades corresponding to a baseToken and a quoteToken",
+    "summary": "Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker",
     "description": "Return all trades in an array",
-    "operationId": "HandleGetTradeHistory",
+    "operationId": "HandleGetTradesHistory",
     "produces": [
       "application/json"
     ],
     "parameters": [
       {
-        "name": "baseToken",
+        "name": "address",
         "in": "query",
-        "description": "Base token address",
-        "required": true,
-        "type": "string"
-      },
-      {
-        "name": "quoteToken",
-        "in": "query",
-        "description": "Quote token address",
+        "description": "User address",
         "required": true,
         "type": "string"
       },
@@ -43,7 +36,7 @@
         }
       },
       "400": {
-        "description": "*** Parameter missing"
+        "description": "address Parameter missing"
       },
       "500": {
         "description": "Internal Server Error"

@@ -111,8 +111,8 @@
     "/trades": {
       "$ref": "./paths/trades.json"
     },
-    "/trades/pair": {
-      "$ref": "./components/trades/handleGetTradeHistory.json"
+    "/trades/history": {
+      "$ref": "./components/trades/handleGetTradesHistory.json"
     },
     "/ohlcv": {
       "$ref": "./paths/ohlcv.json"
