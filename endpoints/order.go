@@ -69,6 +69,8 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	v := r.URL.Query()
 	addr := v.Get("address")
 	limit := v.Get("limit")
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
@@ -77,6 +79,16 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 
 	if !common.IsHexAddress(addr) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	if baseToken != "" && !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
+
+	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
 		return
 	}
 
