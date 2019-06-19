@@ -137,12 +137,6 @@
                 "exchangeAddress": {
                   "type": "string"
                 },
-                "operators": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
                 "fees": {
                   "type": "array",
                   "items": {
@@ -185,32 +179,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/info/operators": {
-      "get": {
-        "tags": [
-          "info"
-        ],
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "operators": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
           }
         }
       }

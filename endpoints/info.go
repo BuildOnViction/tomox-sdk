@@ -24,19 +24,11 @@ func ServeInfoResource(
 	e := &infoEndpoint{walletService, tokenService}
 	r.HandleFunc("/info", e.handleGetInfo)
 	r.HandleFunc("/info/exchange", e.handleGetExchangeInfo)
-	r.HandleFunc("/info/operators", e.handleGetOperatorsInfo)
 	r.HandleFunc("/info/fees", e.handleGetFeeInfo)
 }
 
 func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	ex := common.HexToAddress(app.Config.Ethereum["exchange_address"])
-
-	operators, err := e.walletService.GetOperatorAddresses()
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteJSON(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
 
 	quotes, err := e.tokenService.GetQuoteTokens()
 	if err != nil {
@@ -55,7 +47,6 @@ func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	res := map[string]interface{}{
 		"exchangeAddress": ex.Hex(),
 		"fees":            fees,
-		"operators":       operators,
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
@@ -66,18 +57,6 @@ func (e *infoEndpoint) handleGetExchangeInfo(w http.ResponseWriter, r *http.Requ
 
 	res := map[string]string{"exchangeAddress": ex.Hex()}
 
-	httputils.WriteJSON(w, http.StatusOK, res)
-}
-
-func (e *infoEndpoint) handleGetOperatorsInfo(w http.ResponseWriter, r *http.Request) {
-	addresses, err := e.walletService.GetOperatorAddresses()
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteJSON(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	res := map[string][]common.Address{"operators": addresses}
 	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
