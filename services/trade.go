@@ -68,8 +68,8 @@ func (s *TradeService) GetAllTradesByPairAddress(bt, qt common.Address) ([]*type
 	return s.tradeDao.GetAllTradesByPairAddress(bt, qt)
 }
 
-func (s *TradeService) GetSortedTradesByUserAddress(a common.Address, limit ...int) ([]*types.Trade, error) {
-	return s.tradeDao.GetSortedTradesByUserAddress(a, limit...)
+func (s *TradeService) GetSortedTradesByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Trade, error) {
+	return s.tradeDao.GetSortedTradesByUserAddress(a, bt, qt, limit...)
 }
 
 func (s *TradeService) GetSortedTrades(bt, qt common.Address, n int) ([]*types.Trade, error) {

@@ -83,6 +83,8 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 	v := r.URL.Query()
 	addr := v.Get("address")
 	limit := v.Get("limit")
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
@@ -94,13 +96,39 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// Client must provides both tokens or none of them
+	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
+		return
+	}
+
+	if baseToken != "" && !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
+
+	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
+
 	lim := 100
 	if limit != "" {
 		lim, _ = strconv.Atoi(limit)
 	}
 
 	address := common.HexToAddress(addr)
-	res, err := e.tradeService.GetSortedTradesByUserAddress(address, lim)
+
+	var baseTokenAddr, quoteTokenAddr common.Address
+	if baseToken != "" && quoteToken != "" {
+		baseTokenAddr = common.HexToAddress(baseToken)
+		quoteTokenAddr = common.HexToAddress(quoteToken)
+	} else {
+		baseTokenAddr = common.Address{}
+		quoteTokenAddr = common.Address{}
+	}
+
+	res, err := e.tradeService.GetSortedTradesByUserAddress(address, baseTokenAddr, quoteTokenAddr, lim)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")

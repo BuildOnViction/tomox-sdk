@@ -331,9 +331,15 @@ func (dao *TradeDao) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, err
 func (dao *TradeDao) GetSortedTrades(bt, qt common.Address, n int) ([]*types.Trade, error) {
 	res := make([]*types.Trade, 0)
 
-	q := bson.M{"baseToken": bt.Hex(), "quoteToken": qt.Hex()}
+	q := bson.M{
+		"baseToken":  bt.Hex(),
+		"quoteToken": qt.Hex(),
+	}
+
 	sort := []string{"-createdAt"}
+
 	err := db.GetAndSort(dao.dbName, dao.collectionName, q, sort, 0, n, &res)
+
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -376,13 +382,32 @@ func (dao *TradeDao) GetTradesByPairAddress(bt, qt common.Address, n int) ([]*ty
 	return res, nil
 }
 
-func (dao *TradeDao) GetSortedTradesByUserAddress(a common.Address, limit ...int) ([]*types.Trade, error) {
+func (dao *TradeDao) GetSortedTradesByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Trade, error) {
 	if limit == nil {
 		limit = []int{0}
 	}
 
 	var res []*types.Trade
-	q := bson.M{"$or": []bson.M{{"maker": a.Hex()}, {"taker": a.Hex()}}}
+	var q bson.M
+
+	if (bt == common.Address{} || qt == common.Address{}) {
+		q = bson.M{
+			"$or": []bson.M{
+				{"maker": a.Hex()},
+				{"taker": a.Hex()},
+			},
+		}
+	} else {
+		q = bson.M{
+			"baseToken":  bt.Hex(),
+			"quoteToken": qt.Hex(),
+			"$or": []bson.M{
+				{"maker": a.Hex()},
+				{"taker": a.Hex()},
+			},
+		}
+	}
+
 	sort := []string{"-createdAt"}
 
 	err := db.GetAndSort(dao.dbName, dao.collectionName, q, sort, 0, limit[0], &res)
