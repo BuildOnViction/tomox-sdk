@@ -462,7 +462,7 @@ func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, limit ...int) ([]*types.Order, error) {
+func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
 		limit = []int{0}
 	}
@@ -471,12 +471,22 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, limit ...int)
 	var q bson.M
 
 	if (bt == common.Address{} || qt == common.Address{}) {
-		q = bson.M{"userAddress": addr.Hex()}
+		q = bson.M{
+			"userAddress": addr.Hex(),
+			"createdAt": bson.M{
+				"$gte": from,
+				"$lt":  to,
+			},
+		}
 	} else {
 		q = bson.M{
 			"userAddress": addr.Hex(),
 			"baseToken":   bt.Hex(),
 			"quoteToken":  qt.Hex(),
+			"createdAt": bson.M{
+				"$gte": from,
+				"$lt":  to,
+			},
 		}
 	}
 

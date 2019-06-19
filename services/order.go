@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
@@ -64,8 +65,8 @@ func (s *OrderService) GetByID(id bson.ObjectId) (*types.Order, error) {
 }
 
 // GetByUserAddress fetches all the orders placed by passed user address
-func (s *OrderService) GetByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Order, error) {
-	return s.orderDao.GetByUserAddress(a, bt, qt, limit...)
+func (s *OrderService) GetByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+	return s.orderDao.GetByUserAddress(a, bt, qt, from, to, limit...)
 }
 
 // GetByHash fetches all trades corresponding to a trade hash

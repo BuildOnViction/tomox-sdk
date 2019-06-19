@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -71,6 +72,8 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	limit := v.Get("limit")
 	baseToken := v.Get("baseToken")
 	quoteToken := v.Get("quoteToken")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
@@ -82,7 +85,7 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Client must provides with both tokens or none of them
+	// Client must provides both tokens or none of them
 	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
 		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
 		return
@@ -98,6 +101,32 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Client must provides both "from" and "to" or none of them
+	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
+		return
+	}
+
+	var from, to int64
+	now := time.Now()
+
+	if toParam == "" {
+		to = now.Unix()
+	} else {
+		t, _ := strconv.Atoi(toParam)
+		to = int64(t)
+	}
+
+	if fromParam == "" {
+		from = now.AddDate(-1, 0, 0).Unix()
+	} else {
+		f, _ := strconv.Atoi(fromParam)
+		from = int64(f)
+	}
+
+	start := time.Unix(from, 0)
+	end := time.Unix(to, 0)
+
 	var err error
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
@@ -112,10 +141,10 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if limit == "" {
-		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr)
+		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end)
 	} else {
 		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, lim)
+		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
 	}
 
 	if err != nil {

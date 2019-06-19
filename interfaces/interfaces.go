@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -30,7 +31,7 @@ type OrderDao interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
-	GetByUserAddress(addr, bt, qt common.Address, limit ...int) ([]*types.Order, error)
+	GetByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Order, error)
 	GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error)
@@ -223,7 +224,7 @@ type OrderService interface {
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
-	GetByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Order, error)
+	GetByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
