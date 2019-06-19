@@ -20,7 +20,18 @@
       "name": "limit",
       "in": "query",
       "description": "Number of orders returned in query",
-      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "baseToken",
+      "in": "query",
+      "description": "Base token address",
+      "type": "string"
+    },
+    {
+      "name": "quoteToken",
+      "in": "query",
+      "description": "Quote token address",
       "type": "string"
     }
   ],
