@@ -27,7 +27,6 @@
       "name": "limit",
       "in": "query",
       "description": "Number of trades returned in query",
-      "required": true,
       "type": "string"
     }
   ],
