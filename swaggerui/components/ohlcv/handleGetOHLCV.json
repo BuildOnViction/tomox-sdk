@@ -24,13 +24,6 @@
       "type": "string"
     },
     {
-      "name": "pairName",
-      "in": "query",
-      "description": "the pair name under the format {baseTokenSymbol}/{quoteTokenSymbol}(eg. \"ZRX/WETH\"). I believe this parameter is currently required but it's planned to be optional. The idea is for this parameter to be used for verifications purposes and the API to send back an eror if it does not correspond to a baseToken/quoteToken parameters",
-      "required": true,
-      "type": "string"
-    },
-    {
       "name": "unit",
       "in": "query",
       "description": "unit used to represent the above duration: \"min\", \"hour\", \"day\", \"week\", \"month\", \"year\"",

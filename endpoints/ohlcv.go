@@ -33,7 +33,6 @@ func (e *OHLCVEndpoint) handleGetOHLCV(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	bt := v.Get("baseToken")
 	qt := v.Get("quoteToken")
-	pair := v.Get("pairName")
 	unit := v.Get("unit")
 	duration := v.Get("duration")
 	from := v.Get("from")
@@ -91,7 +90,6 @@ func (e *OHLCVEndpoint) handleGetOHLCV(w http.ResponseWriter, r *http.Request) {
 	p.Pair = []types.PairAddresses{{
 		BaseToken:  common.HexToAddress(bt),
 		QuoteToken: common.HexToAddress(qt),
-		Name:       pair,
 	}}
 
 	res, err := e.ohlcvService.GetOHLCV(p.Pair, p.Duration, p.Units, p.From, p.To)
