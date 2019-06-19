@@ -82,6 +82,12 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Client must provides with both tokens or none of them
+	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
+		return
+	}
+
 	if baseToken != "" && !common.IsHexAddress(baseToken) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
 		return
@@ -96,11 +102,20 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
 
+	var baseTokenAddr, quoteTokenAddr common.Address
+	if baseToken != "" && quoteToken != "" {
+		baseTokenAddr = common.HexToAddress(baseToken)
+		quoteTokenAddr = common.HexToAddress(quoteToken)
+	} else {
+		baseTokenAddr = common.Address{}
+		quoteTokenAddr = common.Address{}
+	}
+
 	if limit == "" {
-		orders, err = e.orderService.GetByUserAddress(address)
+		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr)
 	} else {
 		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetByUserAddress(address, lim)
+		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, lim)
 	}
 
 	if err != nil {
@@ -161,6 +176,8 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	v := r.URL.Query()
 	addr := v.Get("address")
 	limit := v.Get("limit")
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
@@ -172,15 +189,40 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Client must provides with both tokens or none of them
+	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
+		return
+	}
+
+	if baseToken != "" && !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
+
+	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
+
 	var err error
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
 
+	var baseTokenAddr, quoteTokenAddr common.Address
+	if baseToken != "" && quoteToken != "" {
+		baseTokenAddr = common.HexToAddress(baseToken)
+		quoteTokenAddr = common.HexToAddress(quoteToken)
+	} else {
+		baseTokenAddr = common.Address{}
+		quoteTokenAddr = common.Address{}
+	}
+
 	if limit == "" {
-		orders, err = e.orderService.GetHistoryByUserAddress(address)
+		orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr)
 	} else {
 		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetHistoryByUserAddress(address, lim)
+		orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, lim)
 	}
 
 	if err != nil {

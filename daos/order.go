@@ -462,13 +462,23 @@ func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error) {
+func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
 		limit = []int{0}
 	}
 
 	var res []*types.Order
-	q := bson.M{"userAddress": addr.Hex()}
+	var q bson.M
+
+	if (bt == common.Address{} || qt == common.Address{}) {
+		q = bson.M{"userAddress": addr.Hex()}
+	} else {
+		q = bson.M{
+			"userAddress": addr.Hex(),
+			"baseToken":   bt.Hex(),
+			"quoteToken":  qt.Hex(),
+		}
+	}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
 	if err != nil {
@@ -516,19 +526,34 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 // GetHistoryByUserAddress function fetches list of orders which are not in open/partial order status
 // from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetHistoryByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error) {
+func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
 		limit = []int{0}
 	}
 
 	var res []*types.Order
-	q := bson.M{
-		"userAddress": addr.Hex(),
-		"status": bson.M{"$nin": []string{
-			"OPEN",
-			"PARTIAL_FILLED",
-		},
-		},
+	var q bson.M
+
+	if (bt == common.Address{} || qt == common.Address{}) {
+		q = bson.M{
+			"userAddress": addr.Hex(),
+			"status": bson.M{"$nin": []string{
+				"OPEN",
+				"PARTIAL_FILLED",
+			},
+			},
+		}
+	} else {
+		q = bson.M{
+			"userAddress": addr.Hex(),
+			"baseToken":   bt.Hex(),
+			"quoteToken":  qt.Hex(),
+			"status": bson.M{"$nin": []string{
+				"OPEN",
+				"PARTIAL_FILLED",
+			},
+			},
+		}
 	}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
