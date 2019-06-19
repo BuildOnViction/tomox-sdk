@@ -137,22 +137,8 @@
                 "exchangeAddress": {
                   "type": "string"
                 },
-                "fees": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "makeFee": {
-                        "type": "string"
-                      },
-                      "takeFee": {
-                        "type": "string"
-                      },
-                      "quote": {
-                        "type": "string"
-                      }
-                    }
-                  }
+                "fee": {
+                  "type": "string"
                 }
               }
             }
@@ -192,19 +178,10 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "makeFee": {
-                    "type": "string"
-                  },
-                  "takeFee": {
-                    "type": "string"
-                  },
-                  "quote": {
-                    "type": "string"
-                  }
+              "type": "object",
+              "properties": {
+                "fee": {
+                  "type": "string"
                 }
               }
             }
