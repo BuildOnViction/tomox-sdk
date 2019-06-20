@@ -14,14 +14,6 @@ var (
 	app = cli.NewApp()
 )
 
-var networks = map[string]string{
-	"ethereum":         "1",
-	"rinkeby":          "4",
-	"tomochain":        "88",
-	"tomochainTestnet": "89",
-	"development":      "8888",
-}
-
 func batch(networkId string, funcs ...func(string) error) error {
 	var err error
 	for _, funcObj := range funcs {
@@ -39,7 +31,7 @@ func init() {
 		cli.Command{
 			Name: "seeds",
 			Action: func(c *cli.Context) error {
-				networkId := getNetworkID(os.Args[2])
+				networkId := os.Args[2]
 				return batch(
 					networkId,
 					generateConfig,
@@ -67,11 +59,11 @@ func generateConfig(networkId string) error {
 
 	// Choose config file based on deployment network
 	switch networkId {
-	case networks["tomochain"]:
+	case "88":
 		v.SetConfigName("config.prod")
-	case networks["tomochainTestnet"]:
+	case "89":
 		v.SetConfigName("config.dev")
-	case networks["development"]:
+	case "8888":
 		v.SetConfigName("config.local")
 	default:
 		v.SetConfigName("config.local")
@@ -91,8 +83,4 @@ func generateConfig(networkId string) error {
 	err := v.WriteConfigAs(path.Join(configPath, "config.yaml"))
 
 	return err
-}
-
-func getNetworkID(networkName string) string {
-	return networks[networkName]
 }

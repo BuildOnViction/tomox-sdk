@@ -24,38 +24,27 @@ func ServeInfoResource(
 	e := &infoEndpoint{walletService, tokenService}
 	r.HandleFunc("/info", e.handleGetInfo)
 	r.HandleFunc("/info/exchange", e.handleGetExchangeInfo)
-	r.HandleFunc("/info/operators", e.handleGetOperatorsInfo)
 	r.HandleFunc("/info/fees", e.handleGetFeeInfo)
 }
 
 func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	ex := common.HexToAddress(app.Config.Ethereum["exchange_address"])
 
-	operators, err := e.walletService.GetOperatorAddresses()
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteJSON(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	quotes, err := e.tokenService.GetQuoteTokens()
+	quotes, err := e.tokenService.GetAll()
 	if err != nil {
 		logger.Error(err)
 	}
 
-	fees := []map[string]string{}
-	for _, q := range quotes {
-		fees = append(fees, map[string]string{
-			"quote":   q.Symbol,
-			"makeFee": q.MakeFee.String(),
-			"takeFee": q.TakeFee.String(),
-		})
+	var fee string
+	if len(quotes) == 0 {
+		fee = "0"
+	} else {
+		fee = quotes[0].MakeFee.String()
 	}
 
 	res := map[string]interface{}{
 		"exchangeAddress": ex.Hex(),
-		"fees":            fees,
-		"operators":       operators,
+		"fee":             fee, // This value will be divided by 10000 on TomoX
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
@@ -69,32 +58,20 @@ func (e *infoEndpoint) handleGetExchangeInfo(w http.ResponseWriter, r *http.Requ
 	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
-func (e *infoEndpoint) handleGetOperatorsInfo(w http.ResponseWriter, r *http.Request) {
-	addresses, err := e.walletService.GetOperatorAddresses()
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteJSON(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	res := map[string][]common.Address{"operators": addresses}
-	httputils.WriteJSON(w, http.StatusOK, res)
-}
-
 func (e *infoEndpoint) handleGetFeeInfo(w http.ResponseWriter, r *http.Request) {
-	quotes, err := e.tokenService.GetQuoteTokens()
+	quotes, err := e.tokenService.GetAll()
 	if err != nil {
 		logger.Error(err)
 	}
 
-	fees := []map[string]string{}
-	for _, q := range quotes {
-		fees = append(fees, map[string]string{
-			"quote":   q.Symbol,
-			"makeFee": q.MakeFee.String(),
-			"takeFee": q.TakeFee.String(),
-		})
+	var fee string
+	if len(quotes) == 0 {
+		fee = "0"
+	} else {
+		fee = quotes[0].MakeFee.String()
 	}
 
-	httputils.WriteJSON(w, http.StatusOK, fees)
+	res := map[string]string{"fee": fee}
+
+	httputils.WriteJSON(w, http.StatusOK, res) // This value will be divided by 10000 on TomoX
 }

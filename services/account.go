@@ -54,22 +54,22 @@ func (s *AccountService) Create(a *types.Account) error {
 	for _, token := range tokens {
 		decimals := big.NewInt(int64(token.Decimals))
 		a.TokenBalances[token.ContractAddress] = &types.TokenBalance{
-			Address:        token.ContractAddress,
-			Symbol:         token.Symbol,
-			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
-			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
-			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
+			Address:          token.ContractAddress,
+			Symbol:           token.Symbol,
+			Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
+			InOrderBalance:   big.NewInt(types.DefaultTestInOrderBalance()),
+			AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 		}
 	}
 
 	nativeCurrency := types.GetNativeCurrency()
 
 	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
-		Address:        nativeCurrency.Address,
-		Symbol:         nativeCurrency.Symbol,
-		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
-		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
-		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
+		Address:          nativeCurrency.Address,
+		Symbol:           nativeCurrency.Symbol,
+		Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
+		InOrderBalance:   big.NewInt(types.DefaultTestInOrderBalance()),
+		AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 	}
 
 	if a != nil {
@@ -112,22 +112,22 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 	for _, t := range tokens {
 		decimals := big.NewInt(int64(t.Decimals))
 		a.TokenBalances[t.ContractAddress] = &types.TokenBalance{
-			Address:        t.ContractAddress,
-			Symbol:         t.Symbol,
-			Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
-			LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
-			PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
+			Address:          t.ContractAddress,
+			Symbol:           t.Symbol,
+			Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
+			InOrderBalance:   big.NewInt(types.DefaultTestInOrderBalance()),
+			AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 		}
 	}
 
 	nativeCurrency := types.GetNativeCurrency()
 
 	a.TokenBalances[nativeCurrency.Address] = &types.TokenBalance{
-		Address:        nativeCurrency.Address,
-		Symbol:         nativeCurrency.Symbol,
-		Balance:        math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
-		LockedBalance:  big.NewInt(types.DefaultTestLockedBalance()),
-		PendingBalance: big.NewInt(types.DefaultTestPendingBalance()),
+		Address:          nativeCurrency.Address,
+		Symbol:           nativeCurrency.Symbol,
+		Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
+		InOrderBalance:   big.NewInt(types.DefaultTestInOrderBalance()),
+		AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 	}
 
 	err = s.AccountDao.Create(a)

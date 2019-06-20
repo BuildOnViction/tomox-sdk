@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -71,6 +72,8 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	limit := v.Get("limit")
 	baseToken := v.Get("baseToken")
 	quoteToken := v.Get("quoteToken")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
@@ -79,6 +82,12 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 
 	if !common.IsHexAddress(addr) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	// Client must provides both tokens or none of them
+	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
 		return
 	}
 
@@ -92,16 +101,51 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Client must provides both "from" and "to" or none of them
+	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
+		return
+	}
+
+	var from, to int64
+	now := time.Now()
+
+	if toParam == "" {
+		to = now.Unix()
+	} else {
+		t, _ := strconv.Atoi(toParam)
+		to = int64(t)
+	}
+
+	if fromParam == "" {
+		from = now.AddDate(-1, 0, 0).Unix()
+	} else {
+		f, _ := strconv.Atoi(fromParam)
+		from = int64(f)
+	}
+
+	start := time.Unix(from, 0)
+	end := time.Unix(to, 0)
+
 	var err error
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
 
-	if limit == "" {
-		orders, err = e.orderService.GetByUserAddress(address)
+	var baseTokenAddr, quoteTokenAddr common.Address
+	if baseToken != "" && quoteToken != "" {
+		baseTokenAddr = common.HexToAddress(baseToken)
+		quoteTokenAddr = common.HexToAddress(quoteToken)
 	} else {
-		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetByUserAddress(address, lim)
+		baseTokenAddr = common.Address{}
+		quoteTokenAddr = common.Address{}
 	}
+
+	lim := types.DefaultLimit
+	if limit != "" {
+		lim, _ = strconv.Atoi(limit)
+	}
+
+	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
 
 	if err != nil {
 		logger.Error(err)
@@ -161,6 +205,10 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	v := r.URL.Query()
 	addr := v.Get("address")
 	limit := v.Get("limit")
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
@@ -172,16 +220,67 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Client must provides with both tokens or none of them
+	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
+		return
+	}
+
+	if baseToken != "" && !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
+
+	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
+
+	// Client must provides both "from" and "to" or none of them
+	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
+		return
+	}
+
+	var from, to int64
+	now := time.Now()
+
+	if toParam == "" {
+		to = now.Unix()
+	} else {
+		t, _ := strconv.Atoi(toParam)
+		to = int64(t)
+	}
+
+	if fromParam == "" {
+		from = now.AddDate(-1, 0, 0).Unix()
+	} else {
+		f, _ := strconv.Atoi(fromParam)
+		from = int64(f)
+	}
+
+	start := time.Unix(from, 0)
+	end := time.Unix(to, 0)
+
 	var err error
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
 
-	if limit == "" {
-		orders, err = e.orderService.GetHistoryByUserAddress(address)
+	var baseTokenAddr, quoteTokenAddr common.Address
+	if baseToken != "" && quoteToken != "" {
+		baseTokenAddr = common.HexToAddress(baseToken)
+		quoteTokenAddr = common.HexToAddress(quoteToken)
 	} else {
-		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetHistoryByUserAddress(address, lim)
+		baseTokenAddr = common.Address{}
+		quoteTokenAddr = common.Address{}
 	}
+
+	lim := types.DefaultLimit
+	if limit != "" {
+		lim, _ = strconv.Atoi(limit)
+	}
+
+	orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
 
 	if err != nil {
 		logger.Error(err)

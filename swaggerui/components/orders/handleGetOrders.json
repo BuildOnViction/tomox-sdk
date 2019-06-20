@@ -20,7 +20,30 @@
       "name": "limit",
       "in": "query",
       "description": "Number of orders returned in query",
-      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "baseToken",
+      "in": "query",
+      "description": "Base token address",
+      "type": "string"
+    },
+    {
+      "name": "quoteToken",
+      "in": "query",
+      "description": "Quote token address",
+      "type": "string"
+    },
+    {
+      "name": "from",
+      "in": "query",
+      "description": "the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried",
+      "type": "string"
+    },
+    {
+      "name": "to",
+      "in": "query",
+      "description": "the ending timestamp ((number of seconds from 1970/01/01)) until which order data has to be queried",
       "type": "string"
     }
   ],

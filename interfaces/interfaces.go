@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -30,9 +31,9 @@ type OrderDao interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
-	GetByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error)
+	GetByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
-	GetHistoryByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
+	GetHistoryByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error)
 	GetMatchingSellOrders(o *types.Order) ([]*types.Order, error)
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
@@ -118,8 +119,8 @@ type TradeDao interface {
 	GetByMakerOrderHash(h common.Hash) ([]*types.Trade, error)
 	GetByTakerOrderHash(h common.Hash) ([]*types.Trade, error)
 	GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, error)
-	GetSortedTrades(bt, qt common.Address, n int) ([]*types.Trade, error)
-	GetSortedTradesByUserAddress(a common.Address, limit ...int) ([]*types.Trade, error)
+	GetSortedTrades(bt, qt common.Address, from, to time.Time, n int) ([]*types.Trade, error)
+	GetSortedTradesByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Trade, error)
 	GetNTradesByPairAddress(bt, qt common.Address, n int) ([]*types.Trade, error)
 	GetTradesByPairAddress(bt, qt common.Address, n int) ([]*types.Trade, error)
 	GetAllTradesByPairAddress(bt, qt common.Address) ([]*types.Trade, error)
@@ -223,9 +224,9 @@ type OrderService interface {
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
-	GetByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
+	GetByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
-	GetHistoryByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
+	GetHistoryByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
 	CancelOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
@@ -266,8 +267,8 @@ type TokenService interface {
 type TradeService interface {
 	GetByPairName(p string) ([]*types.Trade, error)
 	GetAllTradesByPairAddress(bt, qt common.Address) ([]*types.Trade, error)
-	GetSortedTrades(bt, qt common.Address, n int) ([]*types.Trade, error)
-	GetSortedTradesByUserAddress(a common.Address, limit ...int) ([]*types.Trade, error)
+	GetSortedTrades(bt, qt common.Address, from, to time.Time, n int) ([]*types.Trade, error)
+	GetSortedTradesByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Trade, error)
 	GetByUserAddress(a common.Address) ([]*types.Trade, error)
 	GetByHash(h common.Hash) (*types.Trade, error)
 	GetByOrderHashes(h []common.Hash) ([]*types.Trade, error)

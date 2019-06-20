@@ -77,13 +77,13 @@ func DefaultTestBalance() int64 {
 
 // DefaultTestBalance returns the default locked balance
 // Only for testing/mock purpose
-func DefaultTestLockedBalance() int64 {
+func DefaultTestInOrderBalance() int64 {
 	return 0
 }
 
-// DefaultTestBalance returns the default pending balance
+// DefaultTestAvailableBalance returns the default available balance
 // Only for testing/mock purpose
-func DefaultTestPendingBalance() int64 {
+func DefaultTestAvailableBalance() int64 {
 	return 0
 }
 
