@@ -256,10 +256,10 @@
         "balance": {
           "type": "string"
         },
-        "pendingBalance": {
+        "availableBalance": {
           "type": "string"
         },
-        "lockedBalance": {
+        "inOrderBalance": {
           "type": "string"
         }
       }
