@@ -235,6 +235,39 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 	return nil
 }
 
+// CancelOrder handles the cancellation order requests.
+// Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
+// can be cancelled
+func (s *OrderService) CancelAllOrder(a common.Address) error {
+	orders, err := s.GetByUserAddress(a, common.Address{}, common.Address{}, time.Time{}, time.Time{})
+
+	utils.PrintJSON(orders)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if len(orders) == 0 {
+		return nil
+	}
+
+	for _, o := range orders {
+		if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
+			continue
+		}
+
+		err = s.broker.PublishCancelOrderMessage(o)
+
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+	}
+
+	return nil
+}
+
 // CancelStopOrder handles the cancellation stop order requests.
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled
