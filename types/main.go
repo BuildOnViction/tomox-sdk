@@ -6,7 +6,7 @@ const (
 	PENDING      = "PENDING"
 	SUCCESS      = "SUCCESS"
 	FAILED       = "FAILED"
-	DefaultLimit = 20
+	DefaultLimit = 50
 )
 
 var logger = utils.Logger
