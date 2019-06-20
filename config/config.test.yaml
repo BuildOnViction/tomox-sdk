@@ -26,12 +26,10 @@ logs:
   engine: ./engine.log
   main: ./main.log
   operator: ./operator.log
-make_fee: 10000
 mongo_url: 127.0.0.1
 rabbitmq_url: amqp://guest:guest@localhost:5672/
 server_port: 8080
 simulated: false
-take_fee: 10000
 tick_duration:
   min:
     - 1
