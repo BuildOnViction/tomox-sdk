@@ -26,6 +26,8 @@ func (a *Account) GetBSON() (interface{}, error) {
 	ar := AccountRecord{
 		IsBlocked: a.IsBlocked,
 		Address:   a.Address.Hex(),
+		CreatedAt: a.CreatedAt,
+		UpdatedAt: a.UpdatedAt,
 	}
 
 	tokenBalances := make(map[string]TokenBalanceRecord)
