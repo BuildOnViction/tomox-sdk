@@ -186,7 +186,7 @@ func (dao *AccountDao) UpdateTokenBalance(owner, token common.Address, tokenBala
 	updateQuery := bson.M{
 		"$set": bson.M{
 			"tokenBalances." + token.Hex() + ".balance":          tokenBalance.Balance.String(),
-			"tokenBalances." + token.Hex() + ".lockedBalance":    tokenBalance.LockedBalance.String(),
+			"tokenBalances." + token.Hex() + ".inOrderBalance":   tokenBalance.InOrderBalance.String(),
 			"tokenBalances." + token.Hex() + ".availableBalance": tokenBalance.AvailableBalance.String(),
 		},
 	}

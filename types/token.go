@@ -77,7 +77,7 @@ func DefaultTestBalance() int64 {
 
 // DefaultTestBalance returns the default locked balance
 // Only for testing/mock purpose
-func DefaultTestLockedBalance() int64 {
+func DefaultTestInOrderBalance() int64 {
 	return 0
 }
 
