@@ -92,8 +92,8 @@ func (s *OrderService) GetCurrentByUserAddress(addr common.Address, limit ...int
 // GetHistoryByUserAddress function fetches list of orders which are not in open/partial order status
 // from order collection based on user address.
 // Returns array of Order type struct
-func (s *OrderService) GetHistoryByUserAddress(addr, bt, qt common.Address, limit ...int) ([]*types.Order, error) {
-	return s.orderDao.GetHistoryByUserAddress(addr, bt, qt, limit...)
+func (s *OrderService) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+	return s.orderDao.GetHistoryByUserAddress(addr, bt, qt, from, to, limit...)
 }
 
 // NewOrder validates if the passed order is valid or not based on user's available

@@ -33,7 +33,7 @@ type OrderDao interface {
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	GetByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
-	GetHistoryByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Order, error)
+	GetHistoryByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error)
 	GetMatchingSellOrders(o *types.Order) ([]*types.Order, error)
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
@@ -226,7 +226,7 @@ type OrderService interface {
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
 	GetByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
-	GetHistoryByUserAddress(a, bt, qt common.Address, limit ...int) ([]*types.Order, error)
+	GetHistoryByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
 	CancelOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
