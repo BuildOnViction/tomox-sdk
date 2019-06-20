@@ -140,12 +140,12 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		quoteTokenAddr = common.Address{}
 	}
 
-	if limit == "" {
-		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end)
-	} else {
-		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
+	lim := types.DefaultLimit
+	if limit != "" {
+		lim, _ = strconv.Atoi(limit)
 	}
+
+	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
 
 	if err != nil {
 		logger.Error(err)
@@ -275,12 +275,12 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 		quoteTokenAddr = common.Address{}
 	}
 
-	if limit == "" {
-		orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end)
-	} else {
-		lim, _ := strconv.Atoi(limit)
-		orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
+	lim := types.DefaultLimit
+	if limit != "" {
+		lim, _ = strconv.Atoi(limit)
 	}
+
+	orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
 
 	if err != nil {
 		logger.Error(err)
