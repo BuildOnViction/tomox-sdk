@@ -464,7 +464,7 @@ func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 // Returns array of Order type struct
 func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
-		limit = []int{0}
+		limit = []int{types.DefaultLimit}
 	}
 
 	var res []*types.Order
@@ -507,7 +507,7 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 // Returns array of Order type struct
 func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
-		limit = []int{0}
+		limit = []int{types.DefaultLimit}
 	}
 
 	var res []*types.Order
@@ -538,7 +538,7 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 // Returns array of Order type struct
 func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
-		limit = []int{0}
+		limit = []int{types.DefaultLimit}
 	}
 
 	var res []*types.Order
