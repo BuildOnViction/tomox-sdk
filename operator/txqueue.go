@@ -2,17 +2,17 @@ package operator
 
 import (
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomoxsdk/errors"
-	"github.com/tomochain/tomoxsdk/utils/math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/streadway/amqp"
+	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/interfaces"
 	"github.com/tomochain/tomoxsdk/rabbitmq"
 	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomoxsdk/utils/math"
 )
 
 type TxQueue struct {
@@ -208,6 +208,53 @@ func (txq *TxQueue) ExecuteTrade(m *types.Matches, tag uint64) error {
 	}
 
 	err = txq.HandleTxSuccess(m)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	txq.triggerStopOrders(m.Trades)
+
+	return nil
+}
+
+func (txq *TxQueue) triggerStopOrders(trades []*types.Trade) {
+	for _, trade := range trades {
+		stopOrders, err := txq.OrderService.GetTriggeredStopOrders(trade.BaseToken, trade.QuoteToken, trade.PricePoint)
+
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+
+		for _, stopOrder := range stopOrders {
+			err := txq.handleStopOrder(stopOrder)
+
+			if err != nil {
+				logger.Error(err)
+				continue
+			}
+		}
+	}
+}
+
+func (txq *TxQueue) handleStopOrder(so *types.StopOrder) error {
+	o, err := so.ToOrder()
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = txq.OrderService.NewOrder(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	so.Status = types.StopOrderStatusDone
+	err = txq.OrderService.UpdateStopOrder(so.Hash, so)
+
 	if err != nil {
 		logger.Error(err)
 		return err

@@ -3,13 +3,13 @@ coinmarketcap_api_key: a928d4ca-37cc-41b8-a9ea-5a65ae025aa5
 coinmarketcap_api_url: https://pro-api.coinmarketcap.com/v1
 db_name: tomodex
 deposit:
-  ethereum:
-    confirmed_block_number: 30
-    master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
-    minimum_value_eth: 1e-05
-    network_id: 3
-    rpc_server: https://ropsten.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
-    token_price: 1
+#  ethereum:
+#    confirmed_block_number: 30
+#    master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
+#    minimum_value_eth: 1e-05
+#    network_id: 8888
+#    rpc_server: https://ropsten.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
+#    token_price: 1
   tomochain:
     distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
     issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
@@ -17,27 +17,25 @@ deposit:
     signer_private_key: 0x7f4c1bacba63f05827f6d8fc0e22cf68c42005775a7f73abff7d819986bae77c
     starting_balance: 100
     token_asset_code: WETH
-env: local
+env: dev
 error_file: config/errors.yaml
 ethereum:
   decimal: 8
   exchange_address: 0xd68c26b99a40227C4AbE51020eDFd9BbA438B297
   fee_account: 0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c
-  http_url: http://localhost:8545
-  ws_url: ws://localhost:8545
+  http_url: https://testnet.tomochain.com
+  ws_url: wss://testnet.tomochain.com/ws
 jwt_signing_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
 jwt_verification_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
 logs:
   engine: ./engine.log
   main: ./main.log
   operator: ./operator.log
-make_fee: 10000
 mongo_url: 127.0.0.1
 rabbitmq_url: amqp://guest:guest@localhost:5672/
 server_port: 8080
 simulated: false
 supported_currencies: ETH,TOMO,BTC,USDT
-take_fee: 10000
 tick_duration:
   day:
   - 1

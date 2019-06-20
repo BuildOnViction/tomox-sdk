@@ -17,11 +17,15 @@ import (
 )
 
 const (
-	BUY         = "BUY"
-	SELL        = "SELL"
-	MarketOrder = "MO"
-	LimitOrder  = "LO"
-	StopOrder   = "SO"
+	BUY             = "BUY"
+	SELL            = "SELL"
+	TypeMarketOrder = "MO"
+	TypeLimitOrder  = "LO"
+
+	OrderStatusOpen          = "OPEN"
+	OrderStatusPartialFilled = "PARTIAL_FILLED"
+	OrderStatusFilled        = "FILLED"
+	OrderStatusCancelled     = "CANCELLED"
 )
 
 // Order contains the data related to an order sent by the user
@@ -178,8 +182,8 @@ func (o *Order) Process(p *Pair) error {
 	}
 
 	// TODO: Handle this in Validate function
-	if o.Type != MarketOrder && o.Type != LimitOrder && o.Type != StopOrder {
-		o.Type = LimitOrder
+	if o.Type != TypeMarketOrder && o.Type != TypeLimitOrder {
+		o.Type = TypeLimitOrder
 	}
 
 	if !math.IsEqual(o.MakeFee, p.MakeFee) {
@@ -372,10 +376,8 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		"pricepoint":      o.PricePoint.String(),
 		"makeFee":         o.MakeFee.String(),
 		"takeFee":         o.TakeFee.String(),
-		// NOTE: Currently removing this to simplify public API, might reinclude
-		// later. An alternative would be to create additional simplified type
-		"createdAt": o.CreatedAt.Format(time.RFC3339Nano),
-		// "updatedAt": o.UpdatedAt.Format(time.RFC3339Nano),
+		"createdAt":       o.CreatedAt.Format(time.RFC3339Nano),
+		"updatedAt":       o.UpdatedAt.Format(time.RFC3339Nano),
 	}
 
 	if o.FilledAmount != nil {

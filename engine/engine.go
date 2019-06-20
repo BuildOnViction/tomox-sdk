@@ -2,7 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/ethereum"
@@ -25,6 +24,7 @@ var logger = utils.Logger
 func NewEngine(
 	rabbitMQConn *rabbitmq.Connection,
 	orderDao interfaces.OrderDao,
+	stopOrderDao interfaces.StopOrderDao,
 	tradeDao interfaces.TradeDao,
 	pairDao interfaces.PairDao,
 	provider *ethereum.EthereumProvider,
@@ -37,13 +37,7 @@ func NewEngine(
 
 	obs := map[string]*OrderBook{}
 	for _, p := range pairs {
-		ob := &OrderBook{
-			rabbitMQConn: rabbitMQConn,
-			orderDao:     orderDao,
-			tradeDao:     tradeDao,
-			pair:         &p,
-			mutex:        &sync.Mutex{},
-		}
+		ob := NewOrderBook(rabbitMQConn, orderDao, stopOrderDao, tradeDao, p)
 
 		obs[p.Code()] = ob
 	}
@@ -67,8 +61,20 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 			logger.Error(err)
 			return err
 		}
+	case "NEW_STOP_ORDER":
+		err := e.handleNewStopOrder(msg.Data)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
 	case "CANCEL_ORDER":
 		err := e.handleCancelOrder(msg.Data)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	case "CANCEL_STOP_ORDER":
+		err := e.handleCancelStopOrder(msg.Data)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -120,6 +126,34 @@ func (e *Engine) handleNewOrder(bytes []byte) error {
 	return nil
 }
 
+func (e *Engine) handleNewStopOrder(bytes []byte) error {
+	so := &types.StopOrder{}
+	err := json.Unmarshal(bytes, so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	code, err := so.PairCode()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	ob := e.orderbooks[code]
+	if ob == nil {
+		return errors.New("Orderbook error")
+	}
+
+	err = ob.newStopOrder(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 func (e *Engine) handleCancelOrder(bytes []byte) error {
 	o := &types.Order{}
 	err := json.Unmarshal(bytes, o)
@@ -140,6 +174,34 @@ func (e *Engine) handleCancelOrder(bytes []byte) error {
 	}
 
 	err = ob.cancelOrder(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (e *Engine) handleCancelStopOrder(bytes []byte) error {
+	so := &types.StopOrder{}
+	err := json.Unmarshal(bytes, so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	code, err := so.PairCode()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	ob := e.orderbooks[code]
+	if ob == nil {
+		return errors.New("Orderbook error")
+	}
+
+	err = ob.cancelStopOrder(so)
 	if err != nil {
 		logger.Error(err)
 		return err

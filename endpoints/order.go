@@ -33,8 +33,10 @@ func ServeOrderResource(
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
-	r.HandleFunc("/orders", e.HandleNewOrder).Methods("POST")
-	r.HandleFunc("/orders/cancel", e.HandleCancelOrder).Methods("POST")
+	r.HandleFunc("/orders", e.handleNewOrder).Methods("POST")
+	r.HandleFunc("/orders/stop", e.handleNewStopOrder).Methods("POST")
+	r.HandleFunc("/orders/cancel", e.handleCancelOrder).Methods("POST")
+	r.HandleFunc("/orders/stop/cancel", e.handleCancelStopOrder).Methods("POST")
 
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
@@ -296,7 +298,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, orders)
 }
 
-func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
+func (e *orderEndpoint) handleNewOrder(w http.ResponseWriter, r *http.Request) {
 	var o *types.Order
 	decoder := json.NewDecoder(r.Body)
 
@@ -333,7 +335,44 @@ func (e *orderEndpoint) HandleNewOrder(w http.ResponseWriter, r *http.Request) {
 	httputils.WriteJSON(w, http.StatusCreated, o)
 }
 
-func (e *orderEndpoint) HandleCancelOrder(w http.ResponseWriter, r *http.Request) {
+func (e *orderEndpoint) handleNewStopOrder(w http.ResponseWriter, r *http.Request) {
+	var so *types.StopOrder
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&so)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	so.Hash = so.ComputeHash()
+
+	acc, err := e.accountService.FindOrCreate(so.UserAddress)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if acc.IsBlocked {
+		httputils.WriteError(w, http.StatusForbidden, "Account is blocked")
+		return
+	}
+
+	err = e.orderService.NewStopOrder(so)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusCreated, so)
+}
+
+func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 	oc := &types.OrderCancel{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -364,6 +403,37 @@ func (e *orderEndpoint) HandleCancelOrder(w http.ResponseWriter, r *http.Request
 	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
 }
 
+func (e *orderEndpoint) handleCancelStopOrder(w http.ResponseWriter, r *http.Request) {
+	oc := &types.OrderCancel{}
+
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&oc)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
+	_, err = oc.GetSenderAddress()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = e.orderService.CancelStopOrder(oc)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
+}
+
 // ws function handles incoming websocket messages on the order channel
 func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	msg := &types.WebsocketEvent{}
@@ -377,8 +447,12 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 	switch msg.Type {
 	case "NEW_ORDER":
 		e.handleWSNewOrder(msg, c)
+	case "NEW_STOP_ORDER":
+		e.handleWSNewStopOrder(msg, c)
 	case "CANCEL_ORDER":
 		e.handleWSCancelOrder(msg, c)
+	case "CANCEL_STOP_ORDER":
+		e.handleWSCancelStopOrder(msg, c)
 	default:
 		log.Print("Response with error")
 	}
@@ -425,6 +499,47 @@ func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client)
 	}
 }
 
+// handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
+func (e *orderEndpoint) handleWSNewStopOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	so := &types.StopOrder{}
+
+	bytes, err := json.Marshal(ev.Payload)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
+
+	err = json.Unmarshal(bytes, &so)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, so.Hash)
+		return
+	}
+
+	so.Hash = so.ComputeHash()
+	ws.RegisterOrderConnection(so.UserAddress, c)
+
+	acc, err := e.accountService.FindOrCreate(so.UserAddress)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, so.Hash)
+	}
+
+	if acc.IsBlocked {
+		c.SendMessage(ws.OrderChannel, types.ERROR, errors.New("Account is blocked"))
+	}
+
+	err = e.orderService.NewStopOrder(so)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, so.Hash)
+		return
+	}
+}
+
 // handleCancelOrder handles CancelOrder message.
 func (e *orderEndpoint) handleWSCancelOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	bytes, err := json.Marshal(ev.Payload)
@@ -445,6 +560,33 @@ func (e *orderEndpoint) handleWSCancelOrder(ev *types.WebsocketEvent, c *ws.Clie
 	ws.RegisterOrderConnection(addr, c)
 
 	orderErr := e.orderService.CancelOrder(oc)
+	if orderErr != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(orderErr, oc.Hash)
+		return
+	}
+}
+
+// handleWSCancelStopOrder handles CancelStopOrder message.
+func (e *orderEndpoint) handleWSCancelStopOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	bytes, err := json.Marshal(ev.Payload)
+	oc := &types.OrderCancel{}
+
+	err = json.Unmarshal(bytes, &oc)
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, oc.Hash)
+	}
+
+	addr, err := oc.GetSenderAddress()
+	if err != nil {
+		logger.Error(err)
+		c.SendOrderErrorMessage(err, oc.Hash)
+	}
+
+	ws.RegisterOrderConnection(addr, c)
+
+	orderErr := e.orderService.CancelStopOrder(oc)
 	if orderErr != nil {
 		logger.Error(err)
 		c.SendOrderErrorMessage(orderErr, oc.Hash)

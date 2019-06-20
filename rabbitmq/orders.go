@@ -60,6 +60,26 @@ func (c *Connection) PublishNewOrderMessage(o *types.Order) error {
 	return nil
 }
 
+func (c *Connection) PublishNewStopOrderMessage(so *types.StopOrder) error {
+	b, err := json.Marshal(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = c.PublishOrder(&Message{
+		Type: "NEW_STOP_ORDER",
+		Data: b,
+	})
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 func (c *Connection) PublishCancelOrderMessage(o *types.Order) error {
 	b, err := json.Marshal(o)
 	if err != nil {
@@ -69,6 +89,26 @@ func (c *Connection) PublishCancelOrderMessage(o *types.Order) error {
 
 	err = c.PublishOrder(&Message{
 		Type: "CANCEL_ORDER",
+		Data: b,
+	})
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *Connection) PublishCancelStopOrderMessage(so *types.StopOrder) error {
+	b, err := json.Marshal(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = c.PublishOrder(&Message{
+		Type: "CANCEL_STOP_ORDER",
 		Data: b,
 	})
 

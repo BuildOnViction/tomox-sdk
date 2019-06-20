@@ -50,6 +50,19 @@ type OrderDao interface {
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 }
 
+type StopOrderDao interface {
+	Create(so *types.StopOrder) error
+	Update(id bson.ObjectId, so *types.StopOrder) error
+	UpdateByHash(h common.Hash, so *types.StopOrder) error
+	Upsert(id bson.ObjectId, so *types.StopOrder) error
+	UpsertByHash(h common.Hash, so *types.StopOrder) error
+	UpdateAllByHash(h common.Hash, so *types.StopOrder) error
+	GetByHash(h common.Hash) (*types.StopOrder, error)
+	FindAndModify(h common.Hash, so *types.StopOrder) (*types.StopOrder, error)
+	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
+	Drop() error
+}
+
 type AccountDao interface {
 	Create(account *types.Account) (err error)
 	GetAll() (res []types.Account, err error)
@@ -228,8 +241,12 @@ type OrderService interface {
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
+	NewStopOrder(so *types.StopOrder) error
 	CancelOrder(oc *types.OrderCancel) error
+	CancelStopOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
+	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
+	UpdateStopOrder(h common.Hash, so *types.StopOrder) error
 }
 
 type OrderBookService interface {
