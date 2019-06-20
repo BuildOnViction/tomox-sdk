@@ -58,7 +58,7 @@ func (s *AccountService) Create(a *types.Account) error {
 			Symbol:           token.Symbol,
 			Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
 			LockedBalance:    big.NewInt(types.DefaultTestLockedBalance()),
-			AvailableBalance: big.NewInt(types.DefaultTestPendingBalance()),
+			AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 		}
 	}
 
@@ -69,7 +69,7 @@ func (s *AccountService) Create(a *types.Account) error {
 		Symbol:           nativeCurrency.Symbol,
 		Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
 		LockedBalance:    big.NewInt(types.DefaultTestLockedBalance()),
-		AvailableBalance: big.NewInt(types.DefaultTestPendingBalance()),
+		AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 	}
 
 	if a != nil {
@@ -116,7 +116,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 			Symbol:           t.Symbol,
 			Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
 			LockedBalance:    big.NewInt(types.DefaultTestLockedBalance()),
-			AvailableBalance: big.NewInt(types.DefaultTestPendingBalance()),
+			AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 		}
 	}
 
@@ -127,7 +127,7 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 		Symbol:           nativeCurrency.Symbol,
 		Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, big.NewInt(int64(nativeCurrency.Decimals)))),
 		LockedBalance:    big.NewInt(types.DefaultTestLockedBalance()),
-		AvailableBalance: big.NewInt(types.DefaultTestPendingBalance()),
+		AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
 	}
 
 	err = s.AccountDao.Create(a)
