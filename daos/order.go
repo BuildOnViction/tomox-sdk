@@ -516,6 +516,31 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 	return res, nil
 }
 
+// GetOpenOrdersByUserAddress function fetches list of open/partial filled orders from order collection based on user address.
+// Returns array of Order type struct
+func (dao *OrderDao) GetOpenOrdersByUserAddress(addr common.Address) ([]*types.Order, error) {
+	var res []*types.Order
+	var q bson.M
+
+	q = bson.M{
+		"userAddress": addr.Hex(),
+		"status":      bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+	}
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &res)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		return []*types.Order{}, nil
+	}
+
+	return res, nil
+}
+
 // GetCurrentByUserAddress function fetches list of open/partial orders from order collection based on user address.
 // Returns array of Order type struct
 func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error) {

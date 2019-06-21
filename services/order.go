@@ -239,7 +239,7 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled
 func (s *OrderService) CancelAllOrder(a common.Address) error {
-	orders, err := s.GetByUserAddress(a, common.Address{}, common.Address{}, time.Time{}, time.Time{})
+	orders, err := s.orderDao.GetOpenOrdersByUserAddress(a)
 
 	if err != nil {
 		logger.Error(err)
@@ -251,10 +251,6 @@ func (s *OrderService) CancelAllOrder(a common.Address) error {
 	}
 
 	for _, o := range orders {
-		if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
-			continue
-		}
-
 		err = s.broker.PublishCancelOrderMessage(o)
 
 		if err != nil {
