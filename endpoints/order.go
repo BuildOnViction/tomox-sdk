@@ -405,21 +405,11 @@ func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request
 }
 
 func (e *orderEndpoint) handleCancelAllOrder(w http.ResponseWriter, r *http.Request) {
-	var addr string
-
-	decoder := json.NewDecoder(r.Body)
-
-	defer r.Body.Close()
-
-	err := decoder.Decode(&addr)
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
-		return
-	}
+	v := r.URL.Query()
+	addr := v.Get("address")
 
 	if addr == "" {
-		httputils.WriteError(w, http.StatusBadRequest, "Body payload missing")
+		httputils.WriteError(w, http.StatusBadRequest, "Address parameter missing")
 		return
 	}
 
@@ -430,7 +420,7 @@ func (e *orderEndpoint) handleCancelAllOrder(w http.ResponseWriter, r *http.Requ
 
 	a := common.HexToAddress(addr)
 
-	err = e.orderService.CancelAllOrder(a)
+	err := e.orderService.CancelAllOrder(a)
 
 	if err != nil {
 		logger.Error(err)

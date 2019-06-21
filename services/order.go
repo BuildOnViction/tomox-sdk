@@ -241,8 +241,6 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 func (s *OrderService) CancelAllOrder(a common.Address) error {
 	orders, err := s.GetByUserAddress(a, common.Address{}, common.Address{}, time.Time{}, time.Time{})
 
-	utils.PrintJSON(orders)
-
 	if err != nil {
 		logger.Error(err)
 		return err
