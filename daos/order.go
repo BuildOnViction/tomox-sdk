@@ -467,6 +467,19 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 		limit = []int{types.DefaultLimit}
 	}
 
+	var fromTemp, toTemp int64
+	now := time.Now()
+
+	if (to == time.Time{}) {
+		toTemp = now.Unix()
+		to = time.Unix(toTemp, 0)
+	}
+
+	if (from == time.Time{}) {
+		fromTemp = now.AddDate(-1, 0, 0).Unix()
+		from = time.Unix(fromTemp, 0)
+	}
+
 	var res []*types.Order
 	var q bson.M
 
@@ -491,6 +504,31 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 	}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		return []*types.Order{}, nil
+	}
+
+	return res, nil
+}
+
+// GetOpenOrdersByUserAddress function fetches list of open/partial filled orders from order collection based on user address.
+// Returns array of Order type struct
+func (dao *OrderDao) GetOpenOrdersByUserAddress(addr common.Address) ([]*types.Order, error) {
+	var res []*types.Order
+	var q bson.M
+
+	q = bson.M{
+		"userAddress": addr.Hex(),
+		"status":      bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+	}
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &res)
+
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -539,6 +577,20 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
 		limit = []int{types.DefaultLimit}
+	}
+
+	// Set default time range
+	var fromTemp, toTemp int64
+	now := time.Now()
+
+	if (to == time.Time{}) {
+		toTemp = now.Unix()
+		to = time.Unix(toTemp, 0)
+	}
+
+	if (from == time.Time{}) {
+		fromTemp = now.AddDate(-1, 0, 0).Unix()
+		from = time.Unix(fromTemp, 0)
 	}
 
 	var res []*types.Order

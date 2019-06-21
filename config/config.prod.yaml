@@ -4,8 +4,6 @@ mongo_url: 127.0.0.1
 simulated: false
 server_port: 8080
 db_name: tomodex
-make_fee: 10000
-take_fee: 10000
 error_file: config/errors.yaml
 rabbitmq_url: amqp://guest:guest@localhost:5672/
 

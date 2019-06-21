@@ -102,6 +102,9 @@
     "/orders/cancel": {
       "$ref": "./components/orders/handleCancelOrder.json"
     },
+    "/orders/cancelAll": {
+      "$ref": "./components/orders/handleCancelAllOrder.json"
+    },
     "/orderbook": {
       "$ref": "./components/orderbook/handleGetOrderBook.json"
     },

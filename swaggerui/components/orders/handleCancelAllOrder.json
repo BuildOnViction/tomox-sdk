@@ -1,0 +1,38 @@
+{
+  "post": {
+    "tags": [
+      "orders"
+    ],
+    "summary": "Cancel all orders",
+    "description": "This endpoint should implements signature authentication",
+    "operationId": "handleCancelAllOrders",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "address",
+        "in": "query",
+        "description": "User address",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "successful operation",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "400": {
+        "description": "Invalid payload"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    },
+    "security": [
+    ]
+  }
+}

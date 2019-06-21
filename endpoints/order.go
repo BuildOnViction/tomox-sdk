@@ -36,6 +36,7 @@ func ServeOrderResource(
 	r.HandleFunc("/orders", e.handleNewOrder).Methods("POST")
 	r.HandleFunc("/orders/stop", e.handleNewStopOrder).Methods("POST")
 	r.HandleFunc("/orders/cancel", e.handleCancelOrder).Methods("POST")
+	r.HandleFunc("/orders/cancelAll", e.handleCancelAllOrders).Methods("POST")
 	r.HandleFunc("/orders/stop/cancel", e.handleCancelStopOrder).Methods("POST")
 
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
@@ -401,6 +402,34 @@ func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
+}
+
+// handleCancelAllOrder cancels all open/partial filled orders of an user address
+func (e *orderEndpoint) handleCancelAllOrders(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	addr := v.Get("address")
+
+	if addr == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "Address parameter missing")
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	a := common.HexToAddress(addr)
+
+	err := e.orderService.CancelAllOrder(a)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, a)
 }
 
 func (e *orderEndpoint) handleCancelStopOrder(w http.ResponseWriter, r *http.Request) {
