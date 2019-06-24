@@ -18,12 +18,10 @@ import (
 )
 
 const (
-	BUY  = "BUY"
-	SELL = "SELL"
-
-	MarketOrder = "MO"
-	LimitOrder  = "LO"
-	StopOrder   = "SO"
+	BUY             = "BUY"
+	SELL            = "SELL"
+	TypeMarketOrder = "MO"
+	TypeLimitOrder  = "LO"
 
 	OrderStatusOpen          = "OPEN"
 	OrderStatusPartialFilled = "PARTIAL_FILLED"
@@ -144,8 +142,8 @@ func (o *Order) ComputeHash() common.Hash {
 	sha.Write(common.BigToHash(o.PricePoint).Bytes())
 	sha.Write(common.BigToHash(o.EncodedSide()).Bytes())
 	sha.Write(common.BigToHash(o.Nonce).Bytes())
-	sha.Write(common.BigToHash(o.TakeFee).Bytes())
 	sha.Write(common.BigToHash(o.MakeFee).Bytes())
+	sha.Write(common.BigToHash(o.TakeFee).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 
@@ -190,8 +188,8 @@ func (o *Order) Process(p *Pair) error {
 	}
 
 	// TODO: Handle this in Validate function
-	if o.Type != MarketOrder && o.Type != LimitOrder && o.Type != StopOrder {
-		o.Type = LimitOrder
+	if o.Type != TypeMarketOrder && o.Type != TypeLimitOrder {
+		o.Type = TypeLimitOrder
 	}
 
 	if !math.IsEqual(o.MakeFee, p.MakeFee) {

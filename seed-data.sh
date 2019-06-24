@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-NETWORK="development"
+NETWORKID="89"
 
 echo "Update config"
-go run utils/seed-data/main.go seeds $NETWORK
+go run utils/seed-data/main.go seeds $NETWORKID

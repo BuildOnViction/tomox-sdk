@@ -102,6 +102,9 @@
     "/orders/cancel": {
       "$ref": "./components/orders/handleCancelOrder.json"
     },
+    "/orders/cancelAll": {
+      "$ref": "./components/orders/handleCancelAllOrder.json"
+    },
     "/orderbook": {
       "$ref": "./components/orderbook/handleGetOrderBook.json"
     },
@@ -111,8 +114,8 @@
     "/trades": {
       "$ref": "./paths/trades.json"
     },
-    "/trades/pair": {
-      "$ref": "./components/trades/handleGetTradeHistory.json"
+    "/trades/history": {
+      "$ref": "./components/trades/handleGetTradesHistory.json"
     },
     "/ohlcv": {
       "$ref": "./paths/ohlcv.json"
@@ -137,28 +140,8 @@
                 "exchangeAddress": {
                   "type": "string"
                 },
-                "operators": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "fees": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "makeFee": {
-                        "type": "string"
-                      },
-                      "takeFee": {
-                        "type": "string"
-                      },
-                      "quote": {
-                        "type": "string"
-                      }
-                    }
-                  }
+                "fee": {
+                  "type": "string"
                 }
               }
             }
@@ -189,7 +172,7 @@
         }
       }
     },
-    "/info/operators": {
+    "/info/fees": {
       "get": {
         "tags": [
           "info"
@@ -200,43 +183,8 @@
             "schema": {
               "type": "object",
               "properties": {
-                "operators": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        }
-      }
-    },
-    "/info/fees": {
-      "get": {
-        "tags": [
-          "info"
-        ],
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "makeFee": {
-                    "type": "string"
-                  },
-                  "takeFee": {
-                    "type": "string"
-                  },
-                  "quote": {
-                    "type": "string"
-                  }
+                "fee": {
+                  "type": "string"
                 }
               }
             }
@@ -311,10 +259,10 @@
         "balance": {
           "type": "string"
         },
-        "pendingBalance": {
+        "availableBalance": {
           "type": "string"
         },
-        "lockedBalance": {
+        "inOrderBalance": {
           "type": "string"
         }
       }

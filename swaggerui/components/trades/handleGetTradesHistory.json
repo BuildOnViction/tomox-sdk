@@ -1,11 +1,11 @@
 {
   "get": {
     "tags": [
-      "orders"
+      "trades"
     ],
-    "summary": "Retrieve the list of filled order for an Ethereum address",
-    "description": "Return all orders in an array",
-    "operationId": "handleGetOrderHistory",
+    "summary": "Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker",
+    "description": "Return all trades in an array",
+    "operationId": "HandleGetTradesHistory",
     "produces": [
       "application/json"
     ],
@@ -20,7 +20,7 @@
       {
         "name": "limit",
         "in": "query",
-        "description": "Number of orders returned in query",
+        "description": "Number of trades returned in query",
         "type": "string"
       },
       {
@@ -54,7 +54,7 @@
         "schema": {
           "type": "array",
           "items": {
-            "$ref": "../../swagger.json#/definitions/Order"
+            "$ref": "../../swagger.json#/definitions/Trade"
           }
         }
       },

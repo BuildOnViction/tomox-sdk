@@ -6,6 +6,9 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomoxsdk/errors"
+	"time"
+
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/tomoxsdk/interfaces"
 	"github.com/tomochain/tomoxsdk/rabbitmq"
 	"github.com/tomochain/tomoxsdk/types"
@@ -40,8 +43,8 @@ func NewTradeService(
 func (s *TradeService) Subscribe(c *ws.Client, bt, qt common.Address) {
 	socket := ws.GetTradeSocket()
 
-	numTrades := 40
-	trades, err := s.GetSortedTrades(bt, qt, numTrades)
+	numTrades := types.DefaultLimit
+	trades, err := s.GetSortedTrades(bt, qt, time.Time{}, time.Time{}, numTrades)
 	if err != nil {
 		logger.Error(err)
 		socket.SendErrorMessage(c, err.Error())
@@ -84,12 +87,12 @@ func (s *TradeService) GetAllTradesByPairAddress(bt, qt common.Address) ([]*type
 	return s.tradeDao.GetAllTradesByPairAddress(bt, qt)
 }
 
-func (s *TradeService) GetSortedTradesByUserAddress(a common.Address, limit ...int) ([]*types.Trade, error) {
-	return s.tradeDao.GetSortedTradesByUserAddress(a, limit...)
+func (s *TradeService) GetSortedTradesByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Trade, error) {
+	return s.tradeDao.GetSortedTradesByUserAddress(a, bt, qt, from, to, limit...)
 }
 
-func (s *TradeService) GetSortedTrades(bt, qt common.Address, n int) ([]*types.Trade, error) {
-	return s.tradeDao.GetSortedTrades(bt, qt, n)
+func (s *TradeService) GetSortedTrades(bt, qt common.Address, from, to time.Time, n int) ([]*types.Trade, error) {
+	return s.tradeDao.GetSortedTrades(bt, qt, from, to, n)
 }
 
 // GetByUserAddress fetches all the trades corresponding to a user address

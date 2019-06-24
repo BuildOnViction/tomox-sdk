@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -24,17 +25,19 @@ func ServeTradeResource(
 	tradeService interfaces.TradeService,
 ) {
 	e := &tradeEndpoint{tradeService}
-	r.HandleFunc("/trades/pair", e.HandleGetTradeHistory)
 	r.HandleFunc("/trades", e.HandleGetTrades)
+	r.HandleFunc("/trades/history", e.HandleGetTradesHistory)
 	ws.RegisterChannel(ws.TradeChannel, e.tradeWebsocket)
 }
 
-// history is reponsible for handling pair's trade history requests
-func (e *tradeEndpoint) HandleGetTradeHistory(w http.ResponseWriter, r *http.Request) {
+// HandleGetTrades is responsible for getting pair's trade history requests
+func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	bt := v.Get("baseToken")
 	qt := v.Get("quoteToken")
 	l := v.Get("limit")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
 
 	if bt == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "baseToken Parameter missing")
@@ -56,14 +59,40 @@ func (e *tradeEndpoint) HandleGetTradeHistory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	limit := 20
+	// Client must provides both "from" and "to" or none of them
+	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
+		return
+	}
+
+	var from, to int64
+	now := time.Now()
+
+	if toParam == "" {
+		to = now.Unix()
+	} else {
+		t, _ := strconv.Atoi(toParam)
+		to = int64(t)
+	}
+
+	if fromParam == "" {
+		from = now.AddDate(-1, 0, 0).Unix()
+	} else {
+		f, _ := strconv.Atoi(fromParam)
+		from = int64(f)
+	}
+
+	start := time.Unix(from, 0)
+	end := time.Unix(to, 0)
+
+	limit := types.DefaultLimit
 	if l != "" {
 		limit, _ = strconv.Atoi(l)
 	}
 
 	baseToken := common.HexToAddress(bt)
 	quoteToken := common.HexToAddress(qt)
-	res, err := e.tradeService.GetSortedTrades(baseToken, quoteToken, limit)
+	res, err := e.tradeService.GetSortedTrades(baseToken, quoteToken, start, end, limit)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -78,11 +107,15 @@ func (e *tradeEndpoint) HandleGetTradeHistory(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
-// get is reponsible for handling user's trade history requests
-func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) {
+// HandleGetTradesHistory is responsible for handling user's trade history requests
+func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	addr := v.Get("address")
 	limit := v.Get("limit")
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
@@ -94,13 +127,65 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	lim := 100
+	// Client must provides both tokens or none of them
+	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
+		return
+	}
+
+	if baseToken != "" && !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
+
+	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
+
+	// Client must provides both "from" and "to" or none of them
+	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
+		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
+		return
+	}
+
+	var from, to int64
+	now := time.Now()
+
+	if toParam == "" {
+		to = now.Unix()
+	} else {
+		t, _ := strconv.Atoi(toParam)
+		to = int64(t)
+	}
+
+	if fromParam == "" {
+		from = now.AddDate(-1, 0, 0).Unix()
+	} else {
+		f, _ := strconv.Atoi(fromParam)
+		from = int64(f)
+	}
+
+	start := time.Unix(from, 0)
+	end := time.Unix(to, 0)
+
+	lim := types.DefaultLimit
 	if limit != "" {
 		lim, _ = strconv.Atoi(limit)
 	}
 
 	address := common.HexToAddress(addr)
-	res, err := e.tradeService.GetSortedTradesByUserAddress(address, lim)
+
+	var baseTokenAddr, quoteTokenAddr common.Address
+	if baseToken != "" && quoteToken != "" {
+		baseTokenAddr = common.HexToAddress(baseToken)
+		quoteTokenAddr = common.HexToAddress(quoteToken)
+	} else {
+		baseTokenAddr = common.Address{}
+		quoteTokenAddr = common.Address{}
+	}
+
+	res, err := e.tradeService.GetSortedTradesByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")

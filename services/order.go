@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
@@ -20,8 +21,8 @@ import (
 
 // OrderService
 type OrderService struct {
-	// tokenDao      interfaces.TokenDao
 	orderDao        interfaces.OrderDao
+	stopOrderDao    interfaces.StopOrderDao
 	pairDao         interfaces.PairDao
 	accountDao      interfaces.AccountDao
 	tradeDao        interfaces.TradeDao
@@ -34,6 +35,7 @@ type OrderService struct {
 // NewOrderService returns a new instance of orderservice
 func NewOrderService(
 	orderDao interfaces.OrderDao,
+	stopOrderDao interfaces.StopOrderDao,
 	pairDao interfaces.PairDao,
 	accountDao interfaces.AccountDao,
 	tradeDao interfaces.TradeDao,
@@ -45,6 +47,7 @@ func NewOrderService(
 
 	return &OrderService{
 		orderDao,
+		stopOrderDao,
 		pairDao,
 		accountDao,
 		tradeDao,
@@ -66,8 +69,8 @@ func (s *OrderService) GetByID(id bson.ObjectId) (*types.Order, error) {
 }
 
 // GetByUserAddress fetches all the orders placed by passed user address
-func (s *OrderService) GetByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error) {
-	return s.orderDao.GetByUserAddress(addr, limit...)
+func (s *OrderService) GetByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+	return s.orderDao.GetByUserAddress(a, bt, qt, from, to, limit...)
 }
 
 // GetByHash fetches all trades corresponding to a trade hash
@@ -93,8 +96,8 @@ func (s *OrderService) GetCurrentByUserAddress(addr common.Address, limit ...int
 // GetHistoryByUserAddress function fetches list of orders which are not in open/partial order status
 // from order collection based on user address.
 // Returns array of Order type struct
-func (s *OrderService) GetHistoryByUserAddress(addr common.Address, limit ...int) ([]*types.Order, error) {
-	return s.orderDao.GetHistoryByUserAddress(addr, limit...)
+func (s *OrderService) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+	return s.orderDao.GetHistoryByUserAddress(addr, bt, qt, from, to, limit...)
 }
 
 // NewOrder validates if the passed order is valid or not based on user's available
@@ -152,6 +155,61 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 	return nil
 }
 
+// NewOrder validates if the passed order is valid or not based on user's available
+// funds and order data.
+// If valid: Order is inserted in DB with order status as new and order is publiched
+// on rabbitmq queue for matching engine to process the order
+func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
+	if err := so.Validate(); err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	ok, err := so.VerifySignature()
+	if err != nil {
+		logger.Error(err)
+	}
+
+	if !ok {
+		return errors.New("Invalid Signature")
+	}
+
+	p, err := s.pairDao.GetByTokenAddress(so.BaseToken, so.QuoteToken)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if p == nil {
+		return errors.New("Pair not found")
+	}
+
+	if math.IsStrictlySmallerThan(so.QuoteAmount(p), p.MinQuoteAmount()) {
+		return errors.New("Order amount too low")
+	}
+
+	// Fill token and pair data
+	err = so.Process(p)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	//err = s.validator.ValidateAvailableBalance(so)
+	//if err != nil {
+	//	logger.Error(err)
+	//	return err
+	//}
+
+	err = s.broker.PublishNewStopOrderMessage(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // CancelOrder handles the cancellation order requests.
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled
@@ -171,6 +229,60 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 	}
 
 	err = s.broker.PublishCancelOrderMessage(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// CancelOrder handles the cancellation order requests.
+// Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
+// can be cancelled
+func (s *OrderService) CancelAllOrder(a common.Address) error {
+	orders, err := s.orderDao.GetOpenOrdersByUserAddress(a)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if len(orders) == 0 {
+		return nil
+	}
+
+	for _, o := range orders {
+		err = s.broker.PublishCancelOrderMessage(o)
+
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+	}
+
+	return nil
+}
+
+// CancelStopOrder handles the cancellation stop order requests.
+// Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
+// can be cancelled
+func (s *OrderService) CancelStopOrder(oc *types.OrderCancel) error {
+	o, err := s.stopOrderDao.GetByHash(oc.OrderHash)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if o == nil {
+		return errors.New("No stop order with corresponding hash")
+	}
+
+	if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
+		return fmt.Errorf("cannot cancel order. Status is %v", o.Status)
+	}
+
+	err = s.broker.PublishCancelStopOrderMessage(o)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -669,4 +781,12 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 	}
 
 	return nil
+}
+
+func (s *OrderService) GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error) {
+	return s.stopOrderDao.GetTriggeredStopOrders(baseToken, quoteToken, lastPrice)
+}
+
+func (s *OrderService) UpdateStopOrder(h common.Hash, so *types.StopOrder) error {
+	return s.stopOrderDao.UpdateByHash(h, so)
 }

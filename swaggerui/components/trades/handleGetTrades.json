@@ -2,7 +2,7 @@
   "tags": [
     "trades"
   ],
-  "summary": "Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker",
+  "summary": "Retrieve all trades corresponding to a baseToken and a quoteToken",
   "description": "Return all trades in an array",
   "operationId": "HandleGetTrades",
   "produces": [
@@ -10,9 +10,16 @@
   ],
   "parameters": [
     {
-      "name": "address",
+      "name": "baseToken",
       "in": "query",
-      "description": "User address",
+      "description": "Base token address",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "quoteToken",
+      "in": "query",
+      "description": "Quote token address",
       "required": true,
       "type": "string"
     },
@@ -20,7 +27,18 @@
       "name": "limit",
       "in": "query",
       "description": "Number of trades returned in query",
-      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "from",
+      "in": "query",
+      "description": "the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried",
+      "type": "string"
+    },
+    {
+      "name": "to",
+      "in": "query",
+      "description": "the ending timestamp ((number of seconds from 1970/01/01)) until which order data has to be queried",
       "type": "string"
     }
   ],
@@ -35,7 +53,7 @@
       }
     },
     "400": {
-      "description": "address Parameter missing"
+      "description": "*** Parameter missing"
     },
     "500": {
       "description": "Internal Server Error"

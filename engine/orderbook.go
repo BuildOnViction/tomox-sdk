@@ -37,6 +37,7 @@ import (
 type OrderBook struct {
 	rabbitMQConn *rabbitmq.Connection
 	orderDao     interfaces.OrderDao
+	stopOrderDao interfaces.StopOrderDao
 	tradeDao     interfaces.TradeDao
 	pair         *types.Pair
 	mutex        *sync.Mutex
@@ -66,6 +67,24 @@ func NewOrderBook(
 	}
 }
 
+func NewOrderBook(
+	rabbitMQConn *rabbitmq.Connection,
+	orderDao interfaces.OrderDao,
+	stopOrderDao interfaces.StopOrderDao,
+	tradeDao interfaces.TradeDao,
+	p types.Pair,
+) *OrderBook {
+
+	return &OrderBook{
+		rabbitMQConn: rabbitMQConn,
+		orderDao:     orderDao,
+		stopOrderDao: stopOrderDao,
+		tradeDao:     tradeDao,
+		pair:         &p,
+		mutex:        &sync.Mutex{},
+	}
+}
+
 // newOrder calls buyOrder/sellOrder based on type of order recieved and
 // publishes the response back to rabbitmq
 func (ob *OrderBook) newOrder(o *types.Order) error {
@@ -76,6 +95,23 @@ func (ob *OrderBook) newOrder(o *types.Order) error {
 	topic := ob.pair.EncodedTopic()
 
 	err := ob.orderDao.AddNewOrder(o, topic)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// newStopOrder adds a new stop order into "stop_orders" collection
+// It checks for duplicate
+func (ob *OrderBook) newStopOrder(so *types.StopOrder) error {
+	// Attain lock on engineResource, so that recovery or cancel order function doesn't interfere
+	ob.mutex.Lock()
+	defer ob.mutex.Unlock()
+
+	_, err := ob.stopOrderDao.FindAndModify(so.Hash, so)
 
 	if err != nil {
 		logger.Error(err)
@@ -288,6 +324,32 @@ func (ob *OrderBook) cancelOrder(o *types.Order) error {
 
 	err := ob.orderDao.CancelOrder(o, topic)
 
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// cancelStopOrder is used to cancel the stop order from stop_order collection
+func (ob *OrderBook) cancelStopOrder(so *types.StopOrder) error {
+	ob.mutex.Lock()
+	defer ob.mutex.Unlock()
+
+	so.Status = types.StopOrderStatusCancelled
+	err := ob.stopOrderDao.UpdateByHash(so.Hash, so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	res := &types.EngineResponse{
+		Status:    "STOP_ORDER_CANCELLED",
+		StopOrder: so,
+	}
+
+	err = ob.rabbitMQConn.PublishEngineResponse(res)
 	if err != nil {
 		logger.Error(err)
 		return err

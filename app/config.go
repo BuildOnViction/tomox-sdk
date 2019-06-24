@@ -31,10 +31,6 @@ type appConfig struct {
 
 	// the data source name (DSN) for connecting to the database. required.
 	DBName string `mapstructure:"db_name"`
-	// the make fee is the percentage to charged from maker
-	MakeFee float64 `mapstructure:"make_fee"`
-	// the take fee is the percentage to charged from maker
-	TakeFee float64 `mapstructure:"take_fee"`
 
 	// the RabbitMQURL is the URI of rabbitmq to use
 	RabbitMQURL string `mapstructure:"rabbitmq_url"`

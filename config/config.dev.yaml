@@ -4,8 +4,6 @@ mongo_url: 127.0.0.1
 simulated: false
 server_port: 8080
 db_name: tomodex
-make_fee: 10000
-take_fee: 10000
 error_file: config/errors.yaml
 rabbitmq_url: amqp://guest:guest@localhost:5672/
 
@@ -46,14 +44,14 @@ ethereum:
 
 # Configuration for deposit function
 deposit:
-  ethereum:
-    # for demo we can deposit in the same network
-    network_id: 8888
-    master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
-    minimum_value_eth: 0.00001
-    token_price: 1
-    rpc_server: https://ropsten.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
-    confirmed_block_number: 30
+#  ethereum:
+#    # for demo we can deposit in the same network
+#    network_id: 8888
+#    master_public_key: xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u
+#    minimum_value_eth: 0.00001
+#    token_price: 1
+#    rpc_server: https://ropsten.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8 # The Ethereum blockchain, e.x https://mainnet.infura.io/v3/ebaf1785cc1b4f319e0ff07f26cadae8
+#    confirmed_block_number: 30
   tomochain:
     token_asset_code: WETH
     # using this private key, or secret from ENV to run smart contract
