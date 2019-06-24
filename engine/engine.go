@@ -2,7 +2,6 @@ package engine
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/ethereum"

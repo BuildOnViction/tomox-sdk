@@ -47,29 +47,6 @@ type OrderBook struct {
 func NewOrderBook(
 	rabbitMQConn *rabbitmq.Connection,
 	orderDao interfaces.OrderDao,
-	tradeDao interfaces.TradeDao,
-	p types.Pair,
-) *OrderBook {
-
-	//t, err := orderDao.AddTopic([]string{p.EncodedTopic()})
-
-	//if err != nil {
-	//	logger.Error(err)
-	//}
-
-	return &OrderBook{
-		rabbitMQConn: rabbitMQConn,
-		orderDao:     orderDao,
-		tradeDao:     tradeDao,
-		pair:         &p,
-		mutex:        &sync.Mutex{},
-		topic:        "",
-	}
-}
-
-func NewOrderBook(
-	rabbitMQConn *rabbitmq.Connection,
-	orderDao interfaces.OrderDao,
 	stopOrderDao interfaces.StopOrderDao,
 	tradeDao interfaces.TradeDao,
 	p types.Pair,

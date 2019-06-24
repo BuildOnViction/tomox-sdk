@@ -2,20 +2,17 @@ package services
 
 import (
 	"context"
-
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomoxsdk/errors"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/interfaces"
 	"github.com/tomochain/tomoxsdk/rabbitmq"
 	"github.com/tomochain/tomoxsdk/types"
 	"github.com/tomochain/tomoxsdk/utils"
 	"github.com/tomochain/tomoxsdk/ws"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // TradeService struct with daos required, responsible for communicating with daos.
