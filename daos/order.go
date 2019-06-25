@@ -3,6 +3,7 @@ package daos
 import (
 	"encoding/json"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -469,7 +470,7 @@ func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
 		limit = []int{types.DefaultLimit}
 	}
@@ -477,14 +478,14 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 	var fromTemp, toTemp int64
 	now := time.Now()
 
-	if (to == time.Time{}) {
+	if to == 0 {
 		toTemp = now.Unix()
-		to = time.Unix(toTemp, 0)
+		to = toTemp
 	}
 
-	if (from == time.Time{}) {
+	if from == 0 {
 		fromTemp = now.AddDate(-1, 0, 0).Unix()
-		from = time.Unix(fromTemp, 0)
+		from = fromTemp
 	}
 
 	var res []*types.Order
@@ -494,8 +495,8 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 		q = bson.M{
 			"userAddress": addr.Hex(),
 			"createdAt": bson.M{
-				"$gte": from,
-				"$lt":  to,
+				"$gte": strconv.FormatInt(from, 10),
+				"$lt":  strconv.FormatInt(to, 10),
 			},
 		}
 	} else {
@@ -504,8 +505,8 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to time
 			"baseToken":   bt.Hex(),
 			"quoteToken":  qt.Hex(),
 			"createdAt": bson.M{
-				"$gte": from,
-				"$lt":  to,
+				"$gte": strconv.FormatInt(from, 10),
+				"$lt":  strconv.FormatInt(to, 10),
 			},
 		}
 	}
@@ -581,7 +582,7 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 // GetHistoryByUserAddress function fetches list of orders which are not in open/partial order status
 // from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
 	if limit == nil {
 		limit = []int{types.DefaultLimit}
 	}
@@ -590,14 +591,14 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 	var fromTemp, toTemp int64
 	now := time.Now()
 
-	if (to == time.Time{}) {
+	if to == 0 {
 		toTemp = now.Unix()
-		to = time.Unix(toTemp, 0)
+		to = toTemp
 	}
 
-	if (from == time.Time{}) {
+	if from == 0 {
 		fromTemp = now.AddDate(-1, 0, 0).Unix()
-		from = time.Unix(fromTemp, 0)
+		from = fromTemp
 	}
 
 	var res []*types.Order
@@ -607,8 +608,8 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 		q = bson.M{
 			"userAddress": addr.Hex(),
 			"createdAt": bson.M{
-				"$gte": from,
-				"$lt":  to,
+				"$gte": strconv.FormatInt(from, 10),
+				"$lt":  strconv.FormatInt(to, 10),
 			},
 			"status": bson.M{"$nin": []string{
 				"OPEN",
@@ -627,8 +628,8 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 			},
 			},
 			"createdAt": bson.M{
-				"$gte": from,
-				"$lt":  to,
+				"$gte": strconv.FormatInt(from, 10),
+				"$lt":  strconv.FormatInt(to, 10),
 			},
 		}
 	}

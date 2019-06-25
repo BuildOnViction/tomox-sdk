@@ -127,9 +127,6 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		from = int64(f)
 	}
 
-	start := time.Unix(from, 0)
-	end := time.Unix(to, 0)
-
 	var err error
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
@@ -148,7 +145,7 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		lim, _ = strconv.Atoi(limit)
 	}
 
-	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
+	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, lim)
 
 	if err != nil {
 		logger.Error(err)
@@ -262,9 +259,6 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 		from = int64(f)
 	}
 
-	start := time.Unix(from, 0)
-	end := time.Unix(to, 0)
-
 	var err error
 	var orders []*types.Order
 	address := common.HexToAddress(addr)
@@ -283,7 +277,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 		lim, _ = strconv.Atoi(limit)
 	}
 
-	orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
+	orders, err = e.orderService.GetHistoryByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, lim)
 
 	if err != nil {
 		logger.Error(err)

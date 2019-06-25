@@ -82,9 +82,6 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 		from = int64(f)
 	}
 
-	start := time.Unix(from, 0)
-	end := time.Unix(to, 0)
-
 	limit := types.DefaultLimit
 	if l != "" {
 		limit, _ = strconv.Atoi(l)
@@ -92,7 +89,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 
 	baseToken := common.HexToAddress(bt)
 	quoteToken := common.HexToAddress(qt)
-	res, err := e.tradeService.GetSortedTrades(baseToken, quoteToken, start, end, limit)
+	res, err := e.tradeService.GetSortedTrades(baseToken, quoteToken, from, to, limit)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -166,9 +163,6 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 		from = int64(f)
 	}
 
-	start := time.Unix(from, 0)
-	end := time.Unix(to, 0)
-
 	lim := types.DefaultLimit
 	if limit != "" {
 		lim, _ = strconv.Atoi(limit)
@@ -185,7 +179,7 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 		quoteTokenAddr = common.Address{}
 	}
 
-	res, err := e.tradeService.GetSortedTradesByUserAddress(address, baseTokenAddr, quoteTokenAddr, start, end, lim)
+	res, err := e.tradeService.GetSortedTradesByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, lim)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")

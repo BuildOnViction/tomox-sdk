@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
@@ -69,7 +68,7 @@ func (s *OrderService) GetByID(id bson.ObjectId) (*types.Order, error) {
 }
 
 // GetByUserAddress fetches all the orders placed by passed user address
-func (s *OrderService) GetByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+func (s *OrderService) GetByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
 	return s.orderDao.GetByUserAddress(a, bt, qt, from, to, limit...)
 }
 
@@ -96,7 +95,7 @@ func (s *OrderService) GetCurrentByUserAddress(addr common.Address, limit ...int
 // GetHistoryByUserAddress function fetches list of orders which are not in open/partial order status
 // from order collection based on user address.
 // Returns array of Order type struct
-func (s *OrderService) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Order, error) {
+func (s *OrderService) GetHistoryByUserAddress(addr, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
 	return s.orderDao.GetHistoryByUserAddress(addr, bt, qt, from, to, limit...)
 }
 

@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
@@ -41,7 +40,7 @@ func (s *TradeService) Subscribe(c *ws.Client, bt, qt common.Address) {
 	socket := ws.GetTradeSocket()
 
 	numTrades := types.DefaultLimit
-	trades, err := s.GetSortedTrades(bt, qt, time.Time{}, time.Time{}, numTrades)
+	trades, err := s.GetSortedTrades(bt, qt, 0, 0, numTrades)
 	if err != nil {
 		logger.Error(err)
 		socket.SendErrorMessage(c, err.Error())
@@ -84,11 +83,11 @@ func (s *TradeService) GetAllTradesByPairAddress(bt, qt common.Address) ([]*type
 	return s.tradeDao.GetAllTradesByPairAddress(bt, qt)
 }
 
-func (s *TradeService) GetSortedTradesByUserAddress(a, bt, qt common.Address, from, to time.Time, limit ...int) ([]*types.Trade, error) {
+func (s *TradeService) GetSortedTradesByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Trade, error) {
 	return s.tradeDao.GetSortedTradesByUserAddress(a, bt, qt, from, to, limit...)
 }
 
-func (s *TradeService) GetSortedTrades(bt, qt common.Address, from, to time.Time, n int) ([]*types.Trade, error) {
+func (s *TradeService) GetSortedTrades(bt, qt common.Address, from, to int64, n int) ([]*types.Trade, error) {
 	return s.tradeDao.GetSortedTrades(bt, qt, from, to, n)
 }
 
