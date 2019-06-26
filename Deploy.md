@@ -43,6 +43,8 @@ RPC_URL=https://testnet.tomochain.com
 
 5. Run `yarn reset-env`
 
+5.5. Wait for about 30 seconds after finishing above command
+
 6. Run `yarn seeds`
 
 ----------------
