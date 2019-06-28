@@ -32,8 +32,8 @@ logs:
   main: ./main.log
   operator: ./operator.log
 make_fee: 10000
-mongo_url: 127.0.0.1
-rabbitmq_url: amqp://guest:guest@localhost:5672/
+mongo_url: mongodb://rs1:27017,rs2:27017,rs3:27017/tomodex?replicaSet=rs
+rabbitmq_url: amqp://guest:guest@rabbitmq:5672/
 server_port: 8080
 simulated: false
 supported_currencies: ETH,TOMO,BTC,USDT

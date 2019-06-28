@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - db-data:/data/db
+    ports:
+      - "27017"
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "5672"
+      - "15672"
+    networks:
+      - backend
+
+  server:
+    image: backend
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8080"
+    networks:
+      - backend
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+volumes:
+  db-data:
+
+networks:
+  backend:
+    external: true
