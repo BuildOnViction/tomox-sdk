@@ -695,7 +695,7 @@ func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 		},
 		bson.M{
 			"$sort": bson.M{
-				"pricepoint": 1,
+				"price": 1,
 			},
 		},
 	}
@@ -727,11 +727,11 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limi
 		},
 		bson.M{
 			"$group": bson.M{
-				"_id":        bson.M{"$toDecimal": "$pricepoint"},
-				"pricepoint": bson.M{"$first": "$pricepoint"},
+				"_id":        bson.M{"$toDecimal": "$price"},
+				"pricepoint": bson.M{"$first": "$price"},
 				"amount": bson.M{
 					"$sum": bson.M{
-						"$subtract": []bson.M{bson.M{"$toDecimal": "$amount"}, bson.M{"$toDecimal": "$filledAmount"}},
+						"$subtract": []bson.M{bson.M{"$toDecimal": "$quantity"}, bson.M{"$toDecimal": "$filledAmount"}},
 					},
 				},
 			},
@@ -786,17 +786,17 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
 				"baseToken":  p.BaseTokenAddress.Hex(),
 				"quoteToken": p.QuoteTokenAddress.Hex(),
-				"pricepoint": pp.String(),
+				"price":      pp.String(),
 				"side":       side,
 			},
 		},
 		bson.M{
 			"$group": bson.M{
-				"_id":        bson.M{"$toDecimal": "$pricepoint"},
-				"pricepoint": bson.M{"$first": "$pricepoint"},
+				"_id":        bson.M{"$toDecimal": "$price"},
+				"pricepoint": bson.M{"$first": "$price"},
 				"amount": bson.M{
 					"$sum": bson.M{
-						"$subtract": []bson.M{bson.M{"$toDecimal": "$amount"}, bson.M{"$toDecimal": "$filledAmount"}},
+						"$subtract": []bson.M{bson.M{"$toDecimal": "$quantity"}, bson.M{"$toDecimal": "$filledAmount"}},
 					},
 				},
 			},
