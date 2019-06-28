@@ -3,8 +3,8 @@ package testutils
 import (
 	"time"
 
-	"github.com/tomochain/tomoxsdk/ethereum"
-	"github.com/tomochain/tomoxsdk/utils/testutils/mocks"
+	"github.com/tomochain/tomox-sdk/ethereum"
+	"github.com/tomochain/tomox-sdk/utils/testutils/mocks"
 )
 
 func Mine(client *ethereum.SimulatedClient) {

@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 func (c *Connection) SubscribeTrades(fn func(*types.OperatorMessage) error) error {

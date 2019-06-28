@@ -2,8 +2,8 @@ package ws
 
 import (
 	"github.com/op/go-logging"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
 )
 
 type WebsocketLogger struct {

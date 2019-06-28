@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomoxsdk/interfaces"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils"
-	"github.com/tomochain/tomoxsdk/utils/math"
-	"github.com/tomochain/tomoxsdk/ws"
+	"github.com/tomochain/tomox-sdk/interfaces"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
+	"github.com/tomochain/tomox-sdk/utils/math"
+	"github.com/tomochain/tomox-sdk/ws"
 )
 
 // MarketsService struct with daos required, responsible for communicating with daos.

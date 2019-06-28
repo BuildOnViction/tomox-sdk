@@ -1,6 +1,6 @@
 package types
 
-import "github.com/tomochain/tomoxsdk/utils"
+import "github.com/tomochain/tomox-sdk/utils"
 
 const (
 	PENDING      = "PENDING"

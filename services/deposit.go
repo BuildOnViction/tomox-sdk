@@ -5,14 +5,14 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomoxsdk/errors"
-	"github.com/tomochain/tomoxsdk/ethereum"
-	"github.com/tomochain/tomoxsdk/interfaces"
-	"github.com/tomochain/tomoxsdk/rabbitmq"
-	"github.com/tomochain/tomoxsdk/swap"
-	swapConfig "github.com/tomochain/tomoxsdk/swap/config"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/ws"
+	"github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/ethereum"
+	"github.com/tomochain/tomox-sdk/interfaces"
+	"github.com/tomochain/tomox-sdk/rabbitmq"
+	"github.com/tomochain/tomox-sdk/swap"
+	swapConfig "github.com/tomochain/tomox-sdk/swap/config"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/ws"
 )
 
 // need to refractor using interface.SwappEngine and only expose neccessary methods

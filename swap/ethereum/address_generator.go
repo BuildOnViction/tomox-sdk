@@ -4,8 +4,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/tomochain/tomoxsdk/errors"
-	"github.com/tomochain/tomoxsdk/swap/config"
+	"github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/swap/config"
 	"github.com/tyler-smith/go-bip32"
 )
 

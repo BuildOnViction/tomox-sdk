@@ -8,11 +8,11 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomoxsdk/rabbitmq"
-	swapBitcoin "github.com/tomochain/tomoxsdk/swap/bitcoin"
-	swapEthereum "github.com/tomochain/tomoxsdk/swap/ethereum"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/ws"
+	"github.com/tomochain/tomox-sdk/rabbitmq"
+	swapBitcoin "github.com/tomochain/tomox-sdk/swap/bitcoin"
+	swapEthereum "github.com/tomochain/tomox-sdk/swap/ethereum"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/ws"
 	"math/big"
 )
 

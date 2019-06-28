@@ -3,7 +3,7 @@ package ws
 import (
 	"fmt"
 
-	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomox-sdk/errors"
 )
 
 const (

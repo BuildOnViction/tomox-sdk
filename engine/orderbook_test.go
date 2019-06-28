@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomoxsdk/daos"
-	"github.com/tomochain/tomoxsdk/rabbitmq"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils"
-	"github.com/tomochain/tomoxsdk/utils/testutils"
-	"github.com/tomochain/tomoxsdk/utils/testutils/mocks"
-	"github.com/tomochain/tomoxsdk/utils/units"
+	"github.com/tomochain/tomox-sdk/daos"
+	"github.com/tomochain/tomox-sdk/rabbitmq"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
+	"github.com/tomochain/tomox-sdk/utils/testutils"
+	"github.com/tomochain/tomox-sdk/utils/testutils/mocks"
+	"github.com/tomochain/tomox-sdk/utils/units"
 )
 
 var db *daos.Database

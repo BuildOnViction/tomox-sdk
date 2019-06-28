@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomox-sdk/errors"
 
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 // by default the exchange type is fanout, which means it broadcast all the queues

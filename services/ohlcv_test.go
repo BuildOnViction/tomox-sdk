@@ -13,9 +13,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
-	"github.com/tomochain/tomoxsdk/app"
-	"github.com/tomochain/tomoxsdk/daos"
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/app"
+	"github.com/tomochain/tomox-sdk/daos"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 const timeLayoutString = "Jan 2 2006 15:04:05"

@@ -1,6 +1,6 @@
 package queue
 
-import "github.com/tomochain/tomoxsdk/types"
+import "github.com/tomochain/tomox-sdk/types"
 
 // Queue implements transactions queue.
 // The queue must not allow duplicates (including history) or must implement deduplication

@@ -2,7 +2,7 @@ package queue
 
 import (
 	"github.com/stretchr/testify/mock"
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 // MockQueue is a mockable queue.

@@ -28,10 +28,10 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomoxsdk/interfaces"
-	"github.com/tomochain/tomoxsdk/rabbitmq"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils/math"
+	"github.com/tomochain/tomox-sdk/interfaces"
+	"github.com/tomochain/tomox-sdk/rabbitmq"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
 type OrderBook struct {

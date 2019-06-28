@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils"
-	"github.com/tomochain/tomoxsdk/ws"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
+	"github.com/tomochain/tomox-sdk/ws"
 
 	"github.com/robfig/cron"
-	"github.com/tomochain/tomoxsdk/app"
+	"github.com/tomochain/tomox-sdk/app"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming

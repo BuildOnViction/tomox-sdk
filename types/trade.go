@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/tomochain/tomoxsdk/errors"
+	"github.com/tomochain/tomox-sdk/errors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
-	"github.com/tomochain/tomoxsdk/utils/math"
+	"github.com/tomochain/tomox-sdk/utils/math"
 
 	"github.com/globalsign/mgo/bson"
 )

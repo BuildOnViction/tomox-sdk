@@ -3,12 +3,12 @@ package engine
 import (
 	"encoding/json"
 
-	"github.com/tomochain/tomoxsdk/errors"
-	"github.com/tomochain/tomoxsdk/ethereum"
-	"github.com/tomochain/tomoxsdk/interfaces"
-	"github.com/tomochain/tomoxsdk/rabbitmq"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils"
+	"github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/ethereum"
+	"github.com/tomochain/tomox-sdk/interfaces"
+	"github.com/tomochain/tomox-sdk/rabbitmq"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
 )
 
 // Engine contains daos required for engine to work

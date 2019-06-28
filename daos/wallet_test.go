@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/globalsign/mgo/dbtest"
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 var server dbtest.DBServer

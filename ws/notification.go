@@ -2,7 +2,7 @@ package ws
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 // NotificationConnection is websocket notification connection struct

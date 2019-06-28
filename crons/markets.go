@@ -4,9 +4,9 @@ import (
 	"log"
 
 	"github.com/robfig/cron"
-	"github.com/tomochain/tomoxsdk/types"
-	"github.com/tomochain/tomoxsdk/utils"
-	"github.com/tomochain/tomoxsdk/ws"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
+	"github.com/tomochain/tomox-sdk/ws"
 )
 
 // tickStreamingCron takes instance of cron.Cron and adds tickStreaming

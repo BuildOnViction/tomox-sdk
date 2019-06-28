@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"strconv"
 
-	"github.com/tomochain/tomoxsdk/errors"
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 func (ac *AccountConfigurator) createAccountTransaction(chain types.Chain, destination string) error {

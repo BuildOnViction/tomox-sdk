@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-ozzo/ozzo-validation"
-	"github.com/tomochain/tomoxsdk/utils/math"
+	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
 // Token struct is used to model the token data in the system and DB

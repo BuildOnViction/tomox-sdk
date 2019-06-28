@@ -2,8 +2,8 @@ package services
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomoxsdk/interfaces"
-	"github.com/tomochain/tomoxsdk/types"
+	"github.com/tomochain/tomox-sdk/interfaces"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 // WalletService struct with daos required, responsible for communicating with daos

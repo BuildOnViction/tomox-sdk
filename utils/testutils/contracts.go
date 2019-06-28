@@ -11,10 +11,10 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/tomochain/tomoxsdk/contracts"
-	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
-	"github.com/tomochain/tomoxsdk/ethereum"
-	"github.com/tomochain/tomoxsdk/interfaces"
+	"github.com/tomochain/tomox-sdk/contracts"
+	"github.com/tomochain/tomox-sdk/contracts/contractsinterfaces"
+	"github.com/tomochain/tomox-sdk/ethereum"
+	"github.com/tomochain/tomox-sdk/interfaces"
 )
 
 type Deployer struct {

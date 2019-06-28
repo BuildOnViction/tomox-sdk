@@ -3,7 +3,7 @@ package units
 import (
 	"math/big"
 
-	"github.com/tomochain/tomoxsdk/utils/math"
+	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
 func Ethers(value int64) *big.Int {

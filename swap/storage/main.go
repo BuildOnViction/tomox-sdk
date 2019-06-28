@@ -1,6 +1,6 @@
 package storage
 
-import "github.com/tomochain/tomoxsdk/types"
+import "github.com/tomochain/tomox-sdk/types"
 
 // Storage is an interface that must be implemented by an object using
 // persistent storage.

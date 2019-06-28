@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tomochain/tomoxsdk/utils/httputils"
+	"github.com/tomochain/tomox-sdk/utils/httputils"
 )
 
 func VerifySignature(next http.Handler) http.Handler {
