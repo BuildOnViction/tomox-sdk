@@ -528,3 +528,48 @@ func (s *OrderService) GetTriggeredStopOrders(baseToken, quoteToken common.Addre
 func (s *OrderService) UpdateStopOrder(h common.Hash, so *types.StopOrder) error {
 	return s.stopOrderDao.UpdateByHash(h, so)
 }
+
+func (s *OrderService) triggerStopOrders(trades []*types.Trade) {
+	for _, trade := range trades {
+		stopOrders, err := s.GetTriggeredStopOrders(trade.BaseToken, trade.QuoteToken, trade.PricePoint)
+
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+
+		for _, stopOrder := range stopOrders {
+			err := s.handleStopOrder(stopOrder)
+
+			if err != nil {
+				logger.Error(err)
+				continue
+			}
+		}
+	}
+}
+
+func (s *OrderService) handleStopOrder(so *types.StopOrder) error {
+	o, err := so.ToOrder()
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = s.NewOrder(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	so.Status = types.StopOrderStatusDone
+	err = s.UpdateStopOrder(so.Hash, so)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
