@@ -79,18 +79,6 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 			logger.Error(err)
 			return err
 		}
-	case "INVALIDATE_MAKER_ORDERS":
-		err := e.handleInvalidateMakerOrders(msg.Data)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
-	case "INVALIDATE_TAKER_ORDERS":
-		err := e.handleInvalidateTakerOrders(msg.Data)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
 	default:
 		logger.Error("Unknown message", msg)
 	}
@@ -202,63 +190,6 @@ func (e *Engine) handleCancelStopOrder(bytes []byte) error {
 	}
 
 	err = ob.cancelStopOrder(so)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (e *Engine) handleInvalidateMakerOrders(bytes []byte) error {
-	m := types.Matches{}
-	err := json.Unmarshal(bytes, &m)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	code, err := m.PairCode()
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	ob := e.orderbooks[code]
-	if ob == nil {
-		return errors.New("Orderbook error")
-	}
-
-	err = ob.invalidateMakerOrders(m)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (e *Engine) handleInvalidateTakerOrders(bytes []byte) error {
-	m := types.Matches{}
-	err := json.Unmarshal(bytes, &m)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	code, err := m.PairCode()
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	ob := e.orderbooks[code]
-	if ob == nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = ob.invalidateTakerOrders(m)
 	if err != nil {
 		logger.Error(err)
 		return err

@@ -298,8 +298,6 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 		s.handleEngineOrderAdded(res)
 	case types.ORDER_CANCELLED:
 		s.handleOrderCancelled(res)
-	case types.TRADES_CANCELLED:
-		s.handleOrdersInvalidated(res)
 	case types.ERROR_STATUS:
 		s.handleEngineError(res)
 	default:
@@ -353,29 +351,6 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
-}
-
-func (s *OrderService) handleOrdersInvalidated(res *types.EngineResponse) error {
-	orders := res.InvalidatedOrders
-	trades := res.CancelledTrades
-
-	for _, o := range *orders {
-		ws.SendOrderMessage("ORDER_INVALIDATED", o.UserAddress, o)
-	}
-
-	if orders != nil && len(*orders) != 0 {
-		s.broadcastOrderBookUpdate(*orders)
-	}
-
-	if orders != nil && len(*orders) != 0 {
-		s.broadcastRawOrderBookUpdate(*orders)
-	}
-
-	if trades != nil && len(*trades) != 0 {
-		s.broadcastTradeUpdate(*trades)
-	}
-
-	return nil
 }
 
 // handleEngineError returns an websocket error message to the client and recovers orders on the

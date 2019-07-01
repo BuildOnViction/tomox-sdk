@@ -161,30 +161,6 @@ func (c *Connection) PublishTradeSentMessage(matches *types.Matches) error {
 	return nil
 }
 
-// PublishTradeCancelMessage publishes a message when a trade is cancelled
-func (c *Connection) PublishTradeCancelMessage(matches *types.Matches) error {
-	ch := c.GetChannel("OPERATOR_PUB")
-	q := c.GetQueue(ch, "TX_MESSAGES")
-	msg := &types.OperatorMessage{
-		MessageType: types.TRADES_CANCELLED,
-		Matches:     matches,
-	}
-
-	bytes, err := json.Marshal(msg)
-	if err != nil {
-		logger.Infof("Failed to marshal %s: %s", msg.MessageType, err)
-	}
-
-	err = c.Publish(ch, q, bytes)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	logger.Info("PUBLISH TRADE CANCEL MESSAGE")
-	return nil
-}
-
 // PublishTradeSuccessMessage publishes a message when a trade transaction is successful
 func (c *Connection) PublishTradeSuccessMessage(matches *types.Matches) error {
 	ch := c.GetChannel("OPERATOR_PUB")
