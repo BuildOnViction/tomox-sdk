@@ -296,10 +296,6 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 	switch res.Status {
 	case types.ORDER_ADDED:
 		s.handleEngineOrderAdded(res)
-	case types.ORDER_FILLED:
-		s.handleEngineOrderMatched(res)
-	case types.ORDER_PARTIALLY_FILLED:
-		s.handleEngineOrderMatched(res)
 	case types.ORDER_CANCELLED:
 		s.handleOrderCancelled(res)
 	case types.TRADES_CANCELLED:
@@ -335,66 +331,6 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 
 	s.broadcastOrderBookUpdate([]*types.Order{o})
 	s.broadcastRawOrderBookUpdate([]*types.Order{o})
-}
-
-// handleEngineOrderMatched returns a websocket message informing the client that his order has been added.
-// The request signature message also signals the client to sign trades.
-func (s *OrderService) handleEngineOrderMatched(res *types.EngineResponse) {
-	o := res.Order //res.Order is the "taker" order
-	taker := o.UserAddress
-	matches := *res.Matches
-
-	orders := []*types.Order{o}
-	validMatches := types.Matches{TakerOrder: o}
-	invalidMatches := types.Matches{TakerOrder: o}
-
-	//res.Matches is an array of (order, trade) pairs where each order is an "maker" order that is being matched
-	for i, _ := range matches.Trades {
-		err := s.validator.ValidateBalance(matches.MakerOrders[i])
-		if err != nil {
-			logger.Error(err)
-			invalidMatches.AppendMatch(matches.MakerOrders[i], matches.Trades[i])
-
-		} else {
-			validMatches.AppendMatch(matches.MakerOrders[i], matches.Trades[i])
-			orders = append(orders, matches.MakerOrders[i])
-		}
-	}
-
-	// if there are any invalid matches, the maker orders are at cause (since maker orders have been validated in the
-	// newOrder() function. We remove the maker orders from the orderbook)
-	if invalidMatches.Length() > 0 {
-		err := s.broker.PublishInvalidateMakerOrdersMessage(invalidMatches)
-		if err != nil {
-			logger.Error(err)
-		}
-	}
-
-	if validMatches.Length() > 0 {
-		err := s.tradeDao.Create(validMatches.Trades...)
-		if err != nil {
-			logger.Error(err)
-			ws.SendOrderMessage("ERROR", taker, err)
-			return
-		}
-
-		err = s.broker.PublishTrades(&validMatches)
-		if err != nil {
-			logger.Error(err)
-			ws.SendOrderMessage("ERROR", taker, err)
-			return
-		}
-
-		ws.SendOrderMessage("ORDER_MATCHED", taker, types.OrderMatchedPayload{&matches})
-	}
-
-	// we only update the orderbook with the current set of orders if there are no invalid matches.
-	// If there are invalid matches, the corresponding maker orders will be removed and the taker order
-	// amount filled will be updated as a result, and therefore does not represent the current state of the orderbook
-	if invalidMatches.Length() == 0 {
-		s.broadcastOrderBookUpdate(orders)
-		s.broadcastRawOrderBookUpdate(orders)
-	}
 }
 
 func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
