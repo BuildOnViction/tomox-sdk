@@ -15,7 +15,6 @@ import (
 	"github.com/tomochain/tomox-sdk/engine"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/ethereum"
-	"github.com/tomochain/tomox-sdk/operator"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/services"
 	"github.com/tomochain/tomox-sdk/swap"
@@ -116,21 +115,6 @@ func NewRouter(
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, fiatPriceService, eng)
 
-	// deploy operator
-	op, err := operator.NewOperator(
-		walletService,
-		tradeService,
-		orderService,
-		provider,
-		rabbitConn,
-		accountService,
-		tokenService,
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
 	// deploy http and ws endpoints
 	endpoints.ServeInfoResource(r, walletService, tokenService)
 	endpoints.ServeAccountResource(r, accountService)
@@ -153,8 +137,6 @@ func NewRouter(
 	//initialize rabbitmq subscriptions
 	rabbitConn.SubscribeOrders(eng.HandleOrders)
 	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
-	rabbitConn.SubscribeTrades(op.HandleTrades)
-	rabbitConn.SubscribeOperator(orderService.HandleOperatorMessages)
 
 	// Initialize fiat price
 	fiatPriceService.InitFiatPrice()
