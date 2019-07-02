@@ -18,6 +18,12 @@ npm i -g yarn
 ```
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04
 ```
+
+0.5 Install docker-compose
+```
+https://docs.docker.com/compose/install/
+```
+
 ----------------
 
 ## tomox-launch-kit
