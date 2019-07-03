@@ -96,7 +96,10 @@ yarn start
 git clone git@github.com:tomochain/tomox-sdk-ui.git
 ```
 
-2.  Checkout `develop` branch
+2.  Checkout `test/bypass-validation` branch
+```
+This branch contains code that will work with TomoX
+```
 
 3. Install dependencies
 ```
