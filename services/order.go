@@ -223,7 +223,7 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 		return errors.New("No order with corresponding hash")
 	}
 
-	if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
+	if o.Status == types.ORDER_FILLED || o.Status == types.ERROR_STATUS || o.Status == types.ORDER_CANCELLED {
 		return fmt.Errorf("Cannot cancel order. Status is %v", o.Status)
 	}
 
@@ -277,7 +277,7 @@ func (s *OrderService) CancelStopOrder(oc *types.OrderCancel) error {
 		return errors.New("No stop order with corresponding hash")
 	}
 
-	if o.Status == types.FILLED || o.Status == types.ERROR_STATUS || o.Status == types.CANCELLED {
+	if o.Status == types.ORDER_FILLED || o.Status == types.ERROR_STATUS || o.Status == types.ORDER_CANCELLED {
 		return fmt.Errorf("cannot cancel order. Status is %v", o.Status)
 	}
 
@@ -420,17 +420,6 @@ func (s *OrderService) broadcastRawOrderBookUpdate(orders []*types.Order) {
 	ws.GetRawOrderBookSocket().BroadcastMessage(id, orders)
 }
 
-func (s *OrderService) broadcastTradeUpdate(trades []*types.Trade) {
-	p, err := trades[0].Pair()
-	if err != nil {
-		logger.Error(err)
-		return
-	}
-
-	id := utils.GetTradeChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
-	ws.GetTradeSocket().BroadcastMessage(id, trades)
-}
-
 func (s *OrderService) WatchChanges() {
 	pipeline := []bson.M{}
 
@@ -495,15 +484,13 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 		}
 		break
 	case types.OPERATION_TYPE_UPDATE:
-		if ev.FullDocument.Status == "CANCELLED" {
-			res.Status = types.ORDER_CANCELLED
-			res.Order = ev.FullDocument
-		}
-		break
 	case types.OPERATION_TYPE_REPLACE:
 		if ev.FullDocument.Status == "CANCELLED" {
 			res.Status = types.ORDER_CANCELLED
 			res.Order = ev.FullDocument
+		} else if ev.FullDocument.Status == types.ORDER_FILLED || ev.FullDocument.Status == types.ORDER_PARTIALLY_FILLED {
+			s.broadcastOrderBookUpdate([]*types.Order{ev.FullDocument})
+			s.broadcastRawOrderBookUpdate([]*types.Order{ev.FullDocument})
 		}
 		break
 	default:
