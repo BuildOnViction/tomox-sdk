@@ -30,12 +30,6 @@ const (
 	ORDER_CANCELLED        = "ORDER_CANCELLED"
 	ERROR_STATUS           = "ERROR"
 
-	TRADE_ERROR      = "TRADE_ERROR"
-	TRADE_TX_PENDING = "TRADE_TX_PENDING"
-	TRADE_TX_SUCCESS = "TRADE_TX_SUCCESS"
-	TRADE_TX_ERROR   = "TRADE_TX_ERROR"
-	TRADE_INVALID    = "TRADE_INVALID"
-
 	// channel
 	TradeChannel     = "trades"
 	OrderbookChannel = "orderbook"
