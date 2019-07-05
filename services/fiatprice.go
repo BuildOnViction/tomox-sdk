@@ -41,13 +41,15 @@ func (s *FiatPriceService) InitFiatPrice() {
 		}
 
 		items := data.Prices
+		totalVolumes := data.TotalVolumes
 
-		for _, item := range items {
+		for i, item := range items {
 			fiatPriceItem := &types.FiatPriceItem{
 				Symbol:       symbol,
 				Timestamp:    fmt.Sprintf("%d", int64(item[0])), // Convert timestamp from float64 to int64
 				Price:        fmt.Sprintf("%f", item[1]),
 				FiatCurrency: vsCurrency,
+				TotalVolume:  fmt.Sprintf("%f", totalVolumes[i][1]),
 			}
 
 			_, err := s.FiatPriceDao.FindAndModify(
@@ -81,13 +83,15 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 		}
 
 		items := data.Prices
+		totalVolumes := data.TotalVolumes
 
-		for _, item := range items {
+		for i, item := range items {
 			fiatPriceItem := &types.FiatPriceItem{
 				Symbol:       symbol,
 				Timestamp:    fmt.Sprintf("%d", int64(item[0])), // Convert timestamp from float64 to int64
 				Price:        fmt.Sprintf("%f", item[1]),
 				FiatCurrency: vsCurrency,
+				TotalVolume:  fmt.Sprintf("%f", totalVolumes[i][1]),
 			}
 
 			_, err := s.FiatPriceDao.FindAndModify(

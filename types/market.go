@@ -22,6 +22,7 @@ type FiatPriceItem struct {
 	Price        string `json:"price" bson:"price"`
 	Timestamp    string `json:"timestamp" bson:"timestamp"`
 	FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`
+	TotalVolume  string `json:"totalVolume" bson:"totalVolume"`
 }
 
 type FiatPriceItemBSONUpdate struct {
@@ -34,6 +35,7 @@ func (i *FiatPriceItem) GetBSON() (interface{}, error) {
 		Price:        i.Price,
 		Timestamp:    i.Timestamp,
 		FiatCurrency: i.FiatCurrency,
+		TotalVolume:  i.TotalVolume,
 	}
 
 	return nr, nil
@@ -45,6 +47,7 @@ func (i *FiatPriceItem) SetBSON(raw bson.Raw) error {
 		Price        string `json:"price" bson:"price"`
 		Timestamp    string `json:"timestamp" bson:"timestamp"`
 		FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`
+		TotalVolume  string `json:"totalVolume" bson:"totalVolume"`
 	})
 
 	err := raw.Unmarshal(decoded)
@@ -57,6 +60,7 @@ func (i *FiatPriceItem) SetBSON(raw bson.Raw) error {
 	i.Price = decoded.Price
 	i.Timestamp = decoded.Timestamp
 	i.FiatCurrency = decoded.FiatCurrency
+	i.TotalVolume = decoded.TotalVolume
 
 	return nil
 }
