@@ -1,5 +1,7 @@
 # build stage
-FROM golang
+FROM golang:1.12.5
+
+LABEL maintainer="Hai Dam <haidv@tomochain.com>"
 
 ENV GO111MODULE=on
 
