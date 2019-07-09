@@ -35,6 +35,7 @@ require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da
+	github.com/karalabe/xgo v0.0.0-20190301120235-2d6d1848fb02 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
