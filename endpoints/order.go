@@ -38,8 +38,35 @@ func ServeOrderResource(
 	r.HandleFunc("/orders/cancel", e.handleCancelOrder).Methods("POST")
 	r.HandleFunc("/orders/cancelAll", e.handleCancelAllOrders).Methods("POST")
 	r.HandleFunc("/orders/stop/cancel", e.handleCancelStopOrder).Methods("POST")
-
+	r.HandleFunc("/orders/balance/lock", e.handleGetLockedBalanceInOrder).Methods("GET")
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
+}
+
+func (e *orderEndpoint) handleGetLockedBalanceInOrder(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	addr := v.Get("address")
+
+	if addr == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	a := common.HexToAddress(addr)
+
+	total, err := e.orderService.GetOrdersLockedBalanceByUserAddress(a)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, total)
 }
 
 func (e *orderEndpoint) handleGetCountOrder(w http.ResponseWriter, r *http.Request) {

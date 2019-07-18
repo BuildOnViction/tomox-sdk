@@ -92,7 +92,7 @@ func NewRouter(
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, eng, provider)
-	orderService := services.NewOrderService(orderDao, stopOrderDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
+	orderService := services.NewOrderService(orderDao, stopOrderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	tradeService := services.NewTradeService(orderDao, tradeDao, rabbitConn)
 

@@ -449,7 +449,7 @@ func (dao *OrderDao) GetByHash(hash common.Hash) (*types.Order, error) {
 	return &res[0], nil
 }
 
-// GetByHashes
+// GetByHashes return Order DAO by address
 func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 	hexes := []string{}
 	for _, h := range hashes {
@@ -648,7 +648,8 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 	return res, nil
 }
 
-func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.Address, p *types.Pair) (*big.Int, error) {
+//GetUserLockedBalance return balance using selling
+func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.Address, pairs []*types.Pair) (*big.Int, error) {
 	var orders []*types.Order
 
 	q := bson.M{
@@ -676,8 +677,14 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 
 	totalLockedBalance := big.NewInt(0)
 	for _, o := range orders {
-		lockedBalance := o.RemainingSellAmount(p)
-		totalLockedBalance = math.Add(totalLockedBalance, lockedBalance)
+		for _, p := range pairs {
+			if p.BaseTokenSymbol == o.BaseTokenSymbol() && p.QuoteTokenSymbol == o.QuoteTokenSymbol() {
+				lockedBalance := o.RemainingSellAmount(p)
+				totalLockedBalance = math.Add(totalLockedBalance, lockedBalance)
+				break
+			}
+		}
+
 	}
 
 	return totalLockedBalance, nil
