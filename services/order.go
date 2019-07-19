@@ -21,6 +21,7 @@ import (
 type OrderService struct {
 	orderDao        interfaces.OrderDao
 	stopOrderDao    interfaces.StopOrderDao
+	tokenDao        interfaces.TokenDao
 	pairDao         interfaces.PairDao
 	accountDao      interfaces.AccountDao
 	tradeDao        interfaces.TradeDao
@@ -34,6 +35,7 @@ type OrderService struct {
 func NewOrderService(
 	orderDao interfaces.OrderDao,
 	stopOrderDao interfaces.StopOrderDao,
+	tokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
 	accountDao interfaces.AccountDao,
 	tradeDao interfaces.TradeDao,
@@ -46,6 +48,7 @@ func NewOrderService(
 	return &OrderService{
 		orderDao,
 		stopOrderDao,
+		tokenDao,
 		pairDao,
 		accountDao,
 		tradeDao,
@@ -54,6 +57,24 @@ func NewOrderService(
 		validator,
 		broker,
 	}
+}
+
+// GetOrdersLockedBalanceByUserAddress get the total number of orders amount created by a user
+func (s *OrderService) GetOrdersLockedBalanceByUserAddress(addr common.Address) (map[string]*big.Int, error) {
+	mapAccountBalance := make(map[string]*big.Int)
+	pairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		return nil, err
+	}
+	tokens, err := s.tokenDao.GetAll()
+	for _, t := range tokens {
+		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, pairs)
+		if err != nil {
+			return nil, err
+		}
+		mapAccountBalance[t.Symbol] = lockBalance
+	}
+	return mapAccountBalance, nil
 }
 
 // GetOrderCountByUserAddress get the total number of orders created by a user
