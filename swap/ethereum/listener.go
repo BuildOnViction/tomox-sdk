@@ -6,7 +6,7 @@ import (
 	"time"
 
 	ethereumTypes "github.com/ethereum/go-ethereum/core/types"
-	//"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tomochain/tomoxsdk/errors"
 	"github.com/tomochain/tomoxsdk/types"
 )
@@ -47,9 +47,9 @@ func (l *Listener) Start() error {
 }
 
 func (l *Listener) Stop() error {
-	//ethClient := l.Client.(*ethclient.Client)
-	//ethClient.Close()
-	//l.Enabled = false
+	ethClient := l.Client.(*ethclient.Client)
+	ethClient.Close()
+	l.Enabled = false
 	return nil
 }
 
