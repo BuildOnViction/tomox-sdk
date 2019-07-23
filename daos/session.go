@@ -151,6 +151,20 @@ func (d *Database) UpdateAll(dbName, collection string, query interface{}, updat
 	return nil
 }
 
+// ChangeAll update all document and return change information
+func (d *Database) ChangeAll(dbName, collection string, query interface{}, update interface{}) (*mgo.ChangeInfo, error) {
+	sc := d.Session.Copy()
+	defer sc.Close()
+
+	changeInfo, err := sc.DB(dbName).C(collection).UpdateAll(query, update)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return changeInfo, nil
+}
+
 func (d *Database) FindAndModify(dbName, collection string, query interface{}, change mgo.Change, response interface{}) error {
 	sc := d.Session.Copy()
 	defer sc.Close()

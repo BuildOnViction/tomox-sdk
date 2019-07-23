@@ -172,6 +172,7 @@ type NotificationDao interface {
 	Create(notifications ...*types.Notification) ([]*types.Notification, error)
 	GetAll() ([]types.Notification, error)
 	GetByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error)
+	GetSortDecByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error)
 	GetByID(id bson.ObjectId) (*types.Notification, error)
 	FindAndModify(id bson.ObjectId, n *types.Notification) (*types.Notification, error)
 	Update(n *types.Notification) error
@@ -180,6 +181,9 @@ type NotificationDao interface {
 	DeleteByIds(ids ...bson.ObjectId) error
 	Aggregate(q []bson.M) ([]*types.Notification, error)
 	Drop()
+	MarkRead(id bson.ObjectId) error
+	MarkUnRead(id bson.ObjectId) error
+	MarkAllRead(addr common.Address) error
 }
 
 type Exchange interface {
@@ -325,8 +329,12 @@ type NotificationService interface {
 	Create(n *types.Notification) ([]*types.Notification, error)
 	GetAll() ([]types.Notification, error)
 	GetByUserAddress(a common.Address, limit int, offset int) ([]*types.Notification, error)
+	GetSortDecByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error)
 	GetByID(id bson.ObjectId) (*types.Notification, error)
 	Update(n *types.Notification) (*types.Notification, error)
+	MarkRead(id bson.ObjectId) error
+	MarkUnRead(id bson.ObjectId) error
+	MarkAllRead(addr common.Address) error
 }
 
 type TxService interface {
