@@ -317,10 +317,19 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 	switch res.Status {
 	case types.ORDER_ADDED:
 		s.handleEngineOrderAdded(res)
+		break
 	case types.ORDER_CANCELLED:
 		s.handleOrderCancelled(res)
+		break
+	case types.ORDER_PARTIALLY_FILLED:
+		s.handleOrderPartialFilled(res)
+		break
+	case types.ORDER_FILLED:
+		s.handleOrderFilled(res)
+		break
 	case types.ERROR_STATUS:
 		s.handleEngineError(res)
+		break
 	default:
 		s.handleEngineUnknownMessage(res)
 	}
@@ -350,6 +359,16 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 
 	s.broadcastOrderBookUpdate([]*types.Order{o})
 	s.broadcastRawOrderBookUpdate([]*types.Order{o})
+}
+
+func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {
+	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+}
+
+func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
+	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
@@ -494,6 +513,7 @@ func (s *OrderService) WatchChanges() {
 	}
 }
 
+// HandleDocumentType handle order frome changing db
 func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 	res := &types.EngineResponse{}
 
@@ -510,8 +530,8 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 			res.Status = types.ORDER_CANCELLED
 			res.Order = ev.FullDocument
 		} else if ev.FullDocument.Status == types.ORDER_FILLED || ev.FullDocument.Status == types.ORDER_PARTIALLY_FILLED {
-			s.broadcastOrderBookUpdate([]*types.Order{ev.FullDocument})
-			s.broadcastRawOrderBookUpdate([]*types.Order{ev.FullDocument})
+			res.Status = ev.FullDocument.Status
+			res.Order = ev.FullDocument
 		}
 		break
 	default:
@@ -519,7 +539,7 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 	}
 
 	if res.Status != "" {
-		err := s.broker.PublishEngineResponse(res)
+		err := s.broker.PublishOrderResponse(res)
 		if err != nil {
 			logger.Error(err)
 			return err

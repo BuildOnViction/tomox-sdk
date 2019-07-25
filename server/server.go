@@ -138,6 +138,9 @@ func NewRouter(
 	rabbitConn.SubscribeOrders(eng.HandleOrders)
 	rabbitConn.SubscribeEngineResponses(orderService.HandleEngineResponse)
 
+	rabbitConn.SubscribeOrderResponses(orderService.HandleEngineResponse)
+	rabbitConn.SubscribeTradeResponses(tradeService.HandleTradeResponse)
+
 	// Initialize fiat price
 	fiatPriceService.InitFiatPrice()
 

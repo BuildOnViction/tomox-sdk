@@ -166,28 +166,55 @@ func (s *TradeService) WatchChanges() {
 	}
 }
 
-func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) {
+// HandleDocumentType handle trade insert/update db trigger
+func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) error {
+	res := &types.EngineResponse{}
 
 	switch ev.OperationType {
 	case types.OPERATION_TYPE_INSERT:
-		s.HandleOperationInsert(ev)
+		res.Status = types.TradeAdded
+		res.Trade = ev.FullDocument
 		break
 	case types.OPERATION_TYPE_UPDATE:
-		s.HandleOperationUpdate(ev)
-		break
 	case types.OPERATION_TYPE_REPLACE:
-		s.HandleOperationUpdate(ev)
+		res.Status = types.TradeUpdated
+		res.Trade = ev.FullDocument
 		break
 	default:
 		break
 	}
+
+	if res.Status != "" {
+		err := s.broker.PublishTradeResponse(res)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// HandleTradeResponse listens to messages incoming from the engine and handles websocket
+// responses and database updates accordingly
+func (s *TradeService) HandleTradeResponse(res *types.EngineResponse) error {
+	switch res.Status {
+	case types.TradeAdded:
+		s.HandleOperationInsert(res.Trade)
+		break
+	case types.TradeUpdated:
+		s.HandleOperationUpdate(res.Trade)
+		break
+	}
+
+	return nil
 }
 
 // HandleOperationInsert sent WS messages to client when a trade is created with status "PENDING""
-func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
-	m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
+func (s *TradeService) HandleOperationInsert(trade *types.Trade) error {
+	m := &types.Matches{Trades: []*types.Trade{trade}}
 
-	to, err := s.OrderDao.GetByHash(ev.FullDocument.TakerOrderHash)
+	to, err := s.OrderDao.GetByHash(trade.TakerOrderHash)
 
 	if err != nil {
 		logger.Error(err)
@@ -196,7 +223,7 @@ func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
 
 	m.TakerOrder = to
 
-	mo, err := s.OrderDao.GetByHash(ev.FullDocument.MakerOrderHash)
+	mo, err := s.OrderDao.GetByHash(trade.MakerOrderHash)
 
 	if err != nil {
 		logger.Error(err)
@@ -211,11 +238,11 @@ func (s *TradeService) HandleOperationInsert(ev types.TradeChangeEvent) error {
 }
 
 // HandleOperationUpdate sent WS messages to client when a trade is updated with status "SUCCESS" or "ERROR"
-func (s *TradeService) HandleOperationUpdate(ev types.TradeChangeEvent) error {
-	logger.Debug(ev.FullDocument.Status)
-	m := &types.Matches{Trades: []*types.Trade{ev.FullDocument}}
+func (s *TradeService) HandleOperationUpdate(trade *types.Trade) error {
+	logger.Debug(trade.Status)
+	m := &types.Matches{Trades: []*types.Trade{trade}}
 
-	to, err := s.OrderDao.GetByHash(ev.FullDocument.TakerOrderHash)
+	to, err := s.OrderDao.GetByHash(trade.TakerOrderHash)
 
 	if err != nil {
 		logger.Error(err)
@@ -224,7 +251,7 @@ func (s *TradeService) HandleOperationUpdate(ev types.TradeChangeEvent) error {
 
 	m.TakerOrder = to
 
-	mo, err := s.OrderDao.GetByHash(ev.FullDocument.MakerOrderHash)
+	mo, err := s.OrderDao.GetByHash(trade.MakerOrderHash)
 
 	if err != nil {
 		logger.Error(err)
@@ -233,7 +260,7 @@ func (s *TradeService) HandleOperationUpdate(ev types.TradeChangeEvent) error {
 
 	m.MakerOrders = []*types.Order{mo}
 
-	if ev.FullDocument.Status == types.TradeStatusSuccess {
+	if trade.Status == types.TradeStatusSuccess {
 		s.HandleTradeSuccess(m)
 	}
 

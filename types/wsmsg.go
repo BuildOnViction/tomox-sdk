@@ -30,6 +30,8 @@ const (
 	ORDER_CANCELLED        = "ORDER_CANCELLED"
 	ERROR_STATUS           = "ERROR"
 
+	TradeAdded   = "TRADE_ADDED"
+	TradeUpdated = "TRADE_UPDATED"
 	// channel
 	TradeChannel     = "trades"
 	OrderbookChannel = "orderbook"
