@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -231,4 +233,37 @@ func (dao *FiatPriceDao) Aggregate(q []bson.M) ([]*types.FiatPriceItem, error) {
 // Drop drops all the order documents in the current database
 func (dao *FiatPriceDao) Drop() {
 	db.DropCollection(dao.dbName, dao.collectionName)
+}
+
+// GetLastPriceCurrentByTime get lastest price at time
+func (dao *FiatPriceDao) GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*types.FiatPriceItem, error) {
+	res := &types.FiatPriceItem{}
+
+	symbolName := "NA"
+	switch symbol {
+	case "BTC":
+		symbolName = "bitcoin"
+		break
+	case "ETH":
+		symbolName = "ethereum"
+		break
+	case "TOMO":
+		symbolName = "tomo"
+		break
+	case "TRIIP":
+		symbolName = "triip"
+		break
+	case "BNB":
+		symbolName = "binance"
+		break
+	}
+	q := bson.M{
+		"timestamp": bson.M{
+			"$lte": strconv.FormatInt(createAt.Unix(), 10),
+		},
+		"symbol": symbolName,
+	}
+	sort := []string{"-$timestamp"}
+	err := db.GetSortOne(dao.dbName, dao.collectionName, q, sort, &res)
+	return res, err
 }

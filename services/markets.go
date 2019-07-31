@@ -18,22 +18,25 @@ type MarketsService struct {
 	PairDao          interfaces.PairDao
 	OrderDao         interfaces.OrderDao
 	TradeDao         interfaces.TradeDao
+	FiatPriceDao     interfaces.FiatPriceDao
 	OHLCVService     interfaces.OHLCVService
 	FiatPriceService interfaces.FiatPriceService
 }
 
-// NewTradeService returns a new instance of TradeService
+// NewMarketsService returns a new instance of TradeService
 func NewMarketsService(
 	pairDao interfaces.PairDao,
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
 	ohlcvService interfaces.OHLCVService,
+	fiatPriceDao interfaces.FiatPriceDao,
 	fiatPriceService interfaces.FiatPriceService,
 ) *MarketsService {
 	return &MarketsService{
 		PairDao:          pairDao,
 		OrderDao:         orderdao,
 		TradeDao:         tradeDao,
+		FiatPriceDao:     fiatPriceDao,
 		OHLCVService:     ohlcvService,
 		FiatPriceService: fiatPriceService,
 	}
@@ -112,12 +115,14 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 					"baseToken":  "$baseToken",
 					"quoteToken": "$quoteToken",
 				},
-				"count":  bson.M{"$sum": one},
-				"open":   bson.M{"$first": "$pricepoint"},
-				"high":   bson.M{"$max": "$pricepoint"},
-				"low":    bson.M{"$min": "$pricepoint"},
-				"close":  bson.M{"$last": "$pricepoint"},
-				"volume": bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
+				"count":     bson.M{"$sum": one},
+				"open":      bson.M{"$first": "$pricepoint"},
+				"openTime":  bson.M{"$first": "$createdAt"},
+				"high":      bson.M{"$max": "$pricepoint"},
+				"low":       bson.M{"$min": "$pricepoint"},
+				"close":     bson.M{"$last": "$pricepoint"},
+				"closeTime": bson.M{"$last": "$createdAt"},
+				"volume":    bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
 			},
 		},
 	}
@@ -193,18 +198,19 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 	pairsData := make([]*types.PairData, 0)
 	for _, p := range pairs {
 		pairData := &types.PairData{
-			Pair:        types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
-			Open:        big.NewInt(0),
-			High:        big.NewInt(0),
-			Low:         big.NewInt(0),
-			Volume:      big.NewInt(0),
-			Close:       big.NewInt(0),
-			Count:       big.NewInt(0),
-			OrderVolume: big.NewInt(0),
-			OrderCount:  big.NewInt(0),
-			BidPrice:    big.NewInt(0),
-			AskPrice:    big.NewInt(0),
-			Price:       big.NewInt(0),
+			Pair:         types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
+			Open:         big.NewInt(0),
+			High:         big.NewInt(0),
+			Low:          big.NewInt(0),
+			Volume:       big.NewInt(0),
+			Close:        big.NewInt(0),
+			CloseBaseUsd: big.NewFloat(0),
+			Count:        big.NewInt(0),
+			OrderVolume:  big.NewInt(0),
+			OrderCount:   big.NewInt(0),
+			BidPrice:     big.NewInt(0),
+			AskPrice:     big.NewInt(0),
+			Price:        big.NewInt(0),
 		}
 
 		for _, t := range tradeData {
@@ -215,6 +221,11 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 				pairData.Volume = t.Volume
 				pairData.Close = t.Close
 				pairData.Count = t.Count
+				fiatItem, err := s.FiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
+				if err == nil {
+					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
+				}
+
 			}
 		}
 

@@ -110,6 +110,16 @@ func (d *Database) GetAndSort(dbName, collection string, query interface{}, sort
 	return
 }
 
+// GetSortOne is a wrapper for mgo.Find function with SORT function in pipeline.
+// It creates a copy of session initialized, sends query over this session
+// and returns the session to connection pool
+func (d *Database) GetSortOne(dbName, collection string, query interface{}, sort []string, response interface{}) (err error) {
+	sc := d.Session.Copy()
+	defer sc.Close()
+	err = sc.DB(dbName).C(collection).Find(query).Sort(sort...).One(response)
+	return
+}
+
 // Update is a wrapper for mgo.Update function.
 // It creates a copy of session initialized, sends query over this session
 // and returns the session to connection pool

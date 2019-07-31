@@ -112,7 +112,7 @@ func NewRouter(
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
 	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
-	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceService)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService)
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service

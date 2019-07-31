@@ -166,6 +166,7 @@ type FiatPriceDao interface {
 	Create(items ...*types.FiatPriceItem) error
 	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
 	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
+	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*types.FiatPriceItem, error)
 }
 
 type NotificationDao interface {
