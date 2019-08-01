@@ -95,7 +95,7 @@ func NewRouter(
 	tokenService := services.NewTokenService(tokenDao)
 	tradeService := services.NewTradeService(tradeDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
-	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, eng, provider)
+	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider)
 	orderService := services.NewOrderService(orderDao, stopOrderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 
@@ -112,7 +112,7 @@ func NewRouter(
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
 	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
-	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service

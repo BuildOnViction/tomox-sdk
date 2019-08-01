@@ -14,11 +14,13 @@ import (
 // PairService struct with daos required, responsible for communicating with daos.
 // PairService functions are responsible for interacting with daos and implements business logics.
 type PairService struct {
-	pairDao  interfaces.PairDao
-	tokenDao interfaces.TokenDao
-	tradeDao interfaces.TradeDao
-	orderDao interfaces.OrderDao
-	eng      interfaces.Engine
+	pairDao      interfaces.PairDao
+	tokenDao     interfaces.TokenDao
+	tradeDao     interfaces.TradeDao
+	orderDao     interfaces.OrderDao
+	fiatPriceDao interfaces.FiatPriceDao
+	eng          interfaces.Engine
+
 	provider interfaces.EthereumProvider
 }
 
@@ -28,11 +30,12 @@ func NewPairService(
 	tokenDao interfaces.TokenDao,
 	tradeDao interfaces.TradeDao,
 	orderDao interfaces.OrderDao,
+	fiatPriceDao interfaces.FiatPriceDao,
 	eng interfaces.Engine,
 	provider interfaces.EthereumProvider,
 ) *PairService {
 
-	return &PairService{pairDao, tokenDao, tradeDao, orderDao, eng, provider}
+	return &PairService{pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider}
 }
 
 func (s *PairService) CreatePairs(addr common.Address) ([]*types.Pair, error) {
@@ -338,18 +341,19 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	pairsData := make([]*types.PairData, 0)
 	for _, p := range pairs {
 		pairData := &types.PairData{
-			Pair:        types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
-			Open:        big.NewInt(0),
-			High:        big.NewInt(0),
-			Low:         big.NewInt(0),
-			Volume:      big.NewInt(0),
-			Close:       big.NewInt(0),
-			Count:       big.NewInt(0),
-			OrderVolume: big.NewInt(0),
-			OrderCount:  big.NewInt(0),
-			BidPrice:    big.NewInt(0),
-			AskPrice:    big.NewInt(0),
-			Price:       big.NewInt(0),
+			Pair:         types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
+			Open:         big.NewInt(0),
+			High:         big.NewInt(0),
+			Low:          big.NewInt(0),
+			Volume:       big.NewInt(0),
+			Close:        big.NewInt(0),
+			CloseBaseUsd: big.NewFloat(0),
+			Count:        big.NewInt(0),
+			OrderVolume:  big.NewInt(0),
+			OrderCount:   big.NewInt(0),
+			BidPrice:     big.NewInt(0),
+			AskPrice:     big.NewInt(0),
+			Price:        big.NewInt(0),
 		}
 
 		for _, t := range tradeData {
@@ -360,6 +364,11 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 				pairData.Volume = t.Volume
 				pairData.Close = t.Close
 				pairData.Count = t.Count
+				fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
+				if err == nil {
+					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
+				}
+
 			}
 		}
 

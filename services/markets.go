@@ -21,6 +21,7 @@ type MarketsService struct {
 	FiatPriceDao     interfaces.FiatPriceDao
 	OHLCVService     interfaces.OHLCVService
 	FiatPriceService interfaces.FiatPriceService
+	PairService      interfaces.PairService
 }
 
 // NewMarketsService returns a new instance of TradeService
@@ -31,6 +32,7 @@ func NewMarketsService(
 	ohlcvService interfaces.OHLCVService,
 	fiatPriceDao interfaces.FiatPriceDao,
 	fiatPriceService interfaces.FiatPriceService,
+	pairService interfaces.PairService,
 ) *MarketsService {
 	return &MarketsService{
 		PairDao:          pairDao,
@@ -39,14 +41,15 @@ func NewMarketsService(
 		FiatPriceDao:     fiatPriceDao,
 		OHLCVService:     ohlcvService,
 		FiatPriceService: fiatPriceService,
+		PairService:      pairService,
 	}
 }
 
-// Subscribe
+// Subscribe market
 func (s *MarketsService) Subscribe(c *ws.Client) {
 	socket := ws.GetMarketSocket()
 
-	pairData, err := s.GetPairData()
+	pairData, err := s.PairService.GetAllTokenPairData()
 
 	if err != nil {
 		logger.Error(err)
