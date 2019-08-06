@@ -60,7 +60,7 @@ func NewOrderService(
 	}
 }
 
-// GetOrdersBalanceByUserAddress get the total number of orders created by a user
+// GetOrdersLockedBalanceByUserAddress get the total number of orders amount created by a user
 func (s *OrderService) GetOrdersLockedBalanceByUserAddress(addr common.Address) (map[string]*big.Int, error) {
 	mapAccountBalance := make(map[string]*big.Int)
 	pairs, err := s.pairDao.GetActivePairs()

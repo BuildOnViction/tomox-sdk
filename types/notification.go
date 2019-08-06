@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomox-sdk/errors"
 )
 
 const (
@@ -38,6 +37,7 @@ type NotificationRecord struct {
 	UpdatedAt time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
 
+// NotificationBSONUpdate return BSON structure for NotificationSpec structure
 type NotificationBSONUpdate struct {
 	*Notification
 }
@@ -45,6 +45,7 @@ type NotificationBSONUpdate struct {
 // MarshalJSON returns the json encoded byte array representing the notification struct
 func (n *Notification) MarshalJSON() ([]byte, error) {
 	notification := map[string]interface{}{
+		"id":        n.ID,
 		"recipient": n.Recipient,
 		"message":   n.Message,
 		"type":      n.Type,
@@ -69,9 +70,11 @@ func (n *Notification) UnmarshalJSON(b []byte) error {
 	if notification["_id"] != nil && bson.IsObjectIdHex(notification["_id"].(string)) {
 		n.ID = bson.ObjectIdHex(notification["_id"].(string))
 	}
-
+	if notification["id"] != nil && bson.IsObjectIdHex(notification["id"].(string)) {
+		n.ID = bson.ObjectIdHex(notification["id"].(string))
+	}
 	if notification["recipient"] == nil {
-		return errors.New("Order Hash is not set")
+		// return errors.New("Order Hash is not set")
 	} else {
 		n.Recipient = common.HexToAddress(notification["recipient"].(string))
 	}
@@ -111,7 +114,6 @@ func (n *Notification) GetBSON() (interface{}, error) {
 		CreatedAt: n.CreatedAt,
 		UpdatedAt: n.UpdatedAt,
 	}
-
 	return nr, nil
 }
 

@@ -29,9 +29,77 @@ func ServeNotificationResource(
 	r.HandleFunc("/notifications", e.HandleGetNotifications).Methods("GET")
 	r.HandleFunc("/notifications/{id}", e.HandleUpdateNotification).Methods("PUT")
 
+	r.HandleFunc("/notification/mark/read", e.HandleMarkReadNotification).Methods("PUT")
+	r.HandleFunc("/notification/mark/unread", e.HandleMarkUnReadNotification).Methods("PUT")
+	r.HandleFunc("/notification/mark/readall", e.HandleMarkReadAllNotification).Methods("PUT")
+
 	ws.RegisterChannel(ws.NotificationChannel, e.handleNotificationWebSocket)
 }
 
+// HandleMarkReadAllNotification mark all read status
+func (e *NotificationEndpoint) HandleMarkReadAllNotification(w http.ResponseWriter, r *http.Request) {
+	var n types.Notification
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&n)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+	defer r.Body.Close()
+	err = e.NotificationService.MarkAllRead(n.Recipient)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteMessage(w, http.StatusOK, "Mark all message successfully")
+}
+
+// HandleMarkReadNotification mark read status by id
+func (e *NotificationEndpoint) HandleMarkReadNotification(w http.ResponseWriter, r *http.Request) {
+	var n types.Notification
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&n)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+	defer r.Body.Close()
+	err = e.NotificationService.MarkRead(n.ID)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteMessage(w, http.StatusOK, "Mark read status successfully")
+}
+
+// HandleMarkUnReadNotification mark unread status by id
+func (e *NotificationEndpoint) HandleMarkUnReadNotification(w http.ResponseWriter, r *http.Request) {
+	var n types.Notification
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&n)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+	defer r.Body.Close()
+	err = e.NotificationService.MarkUnRead(n.ID)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteMessage(w, http.StatusOK, "Mark unread status successfully")
+}
+
+// HandleGetNotifications get notifications user address
 func (e *NotificationEndpoint) HandleGetNotifications(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	page := v.Get("page")
@@ -73,7 +141,7 @@ func (e *NotificationEndpoint) HandleGetNotifications(w http.ResponseWriter, r *
 
 	a := common.HexToAddress(userAddress)
 
-	notifications, err := e.NotificationService.GetByUserAddress(a, pp, (p-1)*pp) // limit = perPage, offset = (page-1)*perPage
+	notifications, err := e.NotificationService.GetSortDecByUserAddress(a, pp, (p-1)*pp) // limit = perPage, offset = (page-1)*perPage
 
 	if err != nil {
 		logger.Error(err)
@@ -84,6 +152,7 @@ func (e *NotificationEndpoint) HandleGetNotifications(w http.ResponseWriter, r *
 	httputils.WriteJSON(w, http.StatusOK, notifications)
 }
 
+// HandleUpdateNotification handle notification update
 func (e *NotificationEndpoint) HandleUpdateNotification(w http.ResponseWriter, r *http.Request) {
 	var n types.Notification
 	decoder := json.NewDecoder(r.Body)
@@ -97,8 +166,7 @@ func (e *NotificationEndpoint) HandleUpdateNotification(w http.ResponseWriter, r
 	}
 
 	defer r.Body.Close()
-
-	n.Status = types.StatusRead
+	// n.Status = types.StatusRead
 	updated, err := e.NotificationService.Update(&n)
 
 	if err != nil {

@@ -640,14 +640,13 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		panic(err)
 	}
 	o.CreatedAt = time.Unix(createdAt, 0)
-
 	updatedAt, err := strconv.ParseInt(decoded.UpdatedAt, 10, 64)
 	if err != nil {
 		logger.Error(err)
 		panic(err)
 	}
 	o.UpdatedAt = time.Unix(updatedAt, 0)
-
+	o.UpdatedAt = time.Now()
 	orderID, err := strconv.ParseInt(decoded.OrderID, 10, 64)
 	if err != nil {
 		logger.Error(err)

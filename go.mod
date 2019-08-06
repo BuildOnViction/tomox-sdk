@@ -19,6 +19,7 @@ require (
 	github.com/jackpal/go-nat-pmp v1.0.1 // indirect
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da
 	github.com/karalabe/hid v0.0.0-20181128192157-d815e0c1a2e2 // indirect
+	github.com/karalabe/xgo v0.0.0-20190301120235-2d6d1848fb02 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.1

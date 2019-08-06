@@ -7,6 +7,7 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomox-sdk/app"
+	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
@@ -74,6 +75,29 @@ func (dao *NotificationDao) GetByUserAddress(addr common.Address, limit int, off
 	q := bson.M{"recipient": addr.Hex()}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, offset, limit, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if res == nil {
+		return []*types.Notification{}, nil
+	}
+
+	return res, nil
+}
+
+// GetSortDecByUserAddress function fetches list of orders from order collection based on user address, result sorted by created date.
+// Returns array of notification type struct
+func (dao *NotificationDao) GetSortDecByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error) {
+	if limit == 0 {
+		limit = 10 // Get last 10 records
+	}
+
+	var res []*types.Notification
+	q := bson.M{"recipient": addr.Hex()}
+	sort := []string{"-createdAt"}
+	err := db.GetAndSort(dao.dbName, dao.collectionName, q, sort, offset, limit, &res)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -189,4 +213,61 @@ func (dao *NotificationDao) Aggregate(q []bson.M) ([]*types.Notification, error)
 // Drop drops all the order documents in the current database
 func (dao *NotificationDao) Drop() {
 	db.DropCollection(dao.dbName, dao.collectionName)
+}
+
+// MarkStatus update UNREAD status to READ status
+func (dao *NotificationDao) MarkStatus(id bson.ObjectId, status string) error {
+	query := bson.M{"_id": id}
+	updated := &types.Notification{}
+	changeData := bson.M{}
+	changeData["status"] = status
+	changeData["updatedAt"] = time.Now()
+	changeDataSet := bson.M{"$set": changeData}
+
+	change := mgo.Change{
+		Update:    changeDataSet,
+		Upsert:    false,
+		Remove:    false,
+		ReturnNew: true,
+	}
+
+	err := db.FindAndModify(dao.dbName, dao.collectionName, query, change, &updated)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// MarkRead update UNREAD status to READ status
+func (dao *NotificationDao) MarkRead(id bson.ObjectId) error {
+	return dao.MarkStatus(id, types.StatusRead)
+}
+
+// MarkUnRead update READ status to UNREAD status
+func (dao *NotificationDao) MarkUnRead(id bson.ObjectId) error {
+	return dao.MarkStatus(id, types.StatusUnread)
+}
+
+// MarkAllRead update all UNREAD status to READ status
+func (dao *NotificationDao) MarkAllRead(addr common.Address) error {
+	query := bson.M{"recipient": addr.Hex(), "status": types.StatusUnread}
+	changeData := bson.M{}
+	changeData["status"] = types.StatusRead
+	changeData["updatedAt"] = time.Now()
+	changeDataSet := bson.M{"$set": changeData}
+	changeInfo, err := db.ChangeAll(dao.dbName, dao.collectionName, query, changeDataSet)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	if changeInfo.Matched == 0 {
+		return errors.New("User address not found or all user notificaions have been read")
+	}
+	if changeInfo.Updated < changeInfo.Matched {
+		return errors.New("Update process is not completed")
+
+	}
+	return nil
 }

@@ -44,6 +44,12 @@ func (s *NotificationService) GetByUserAddress(addr common.Address, limit int, o
 	return s.NotificationDao.GetByUserAddress(addr, limit, offset)
 }
 
+// GetSortDecByUserAddress function fetches list of orders from order collection based on user address, result sorted by created date.
+// Returns array of notification type struct
+func (s *NotificationService) GetSortDecByUserAddress(addr common.Address, limit int, offset int) ([]*types.Notification, error) {
+	return s.NotificationDao.GetSortDecByUserAddress(addr, limit, offset)
+}
+
 // GetByID fetches the detailed document of a notification using its mongo ID
 func (s *NotificationService) GetByID(id bson.ObjectId) (*types.Notification, error) {
 	return s.NotificationDao.GetByID(id)
@@ -59,4 +65,19 @@ func (s *NotificationService) Update(n *types.Notification) (*types.Notification
 	}
 
 	return updated, nil
+}
+
+// MarkRead update UNREAD status to READ status
+func (s *NotificationService) MarkRead(id bson.ObjectId) error {
+	return s.NotificationDao.MarkRead(id)
+}
+
+// MarkUnRead update READ status to UNREAD status
+func (s *NotificationService) MarkUnRead(id bson.ObjectId) error {
+	return s.NotificationDao.MarkUnRead(id)
+}
+
+// MarkAllRead update all UNREAD status to READ status
+func (s *NotificationService) MarkAllRead(addr common.Address) error {
+	return s.NotificationDao.MarkAllRead(addr)
 }
