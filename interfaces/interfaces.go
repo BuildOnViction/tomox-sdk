@@ -12,6 +12,7 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomoxsdk/contracts/contractsinterfaces"
 	"github.com/tomochain/tomoxsdk/rabbitmq"
+	"github.com/tomochain/tomoxsdk/relayer"
 	swapBitcoin "github.com/tomochain/tomoxsdk/swap/bitcoin"
 	swapEthereum "github.com/tomochain/tomoxsdk/swap/ethereum"
 	"github.com/tomochain/tomoxsdk/types"
@@ -120,6 +121,7 @@ type PairDao interface {
 	GetByTokenAddress(baseToken, quoteToken common.Address) (*types.Pair, error)
 	GetListedPairs() ([]types.Pair, error)
 	GetUnlistedPairs() ([]types.Pair, error)
+	DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error
 }
 
 type TradeDao interface {
@@ -156,6 +158,7 @@ type TokenDao interface {
 	GetBaseTokens() ([]types.Token, error)
 	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
+	DeleteByToken(contractAddress common.Address) error
 }
 
 type FiatPriceDao interface {
@@ -430,4 +433,14 @@ type EthereumProvider interface {
 	BalanceOf(owner common.Address, token common.Address) (*big.Int, error)
 	Decimals(token common.Address) (uint8, error)
 	Symbol(token common.Address) (string, error)
+}
+
+// RelayerService interface for relayer
+type RelayerService interface {
+	UpdateRelayer() error
+}
+
+// Relayer interface for relayer
+type Relayer interface {
+	GetRelayer() (*relayer.RInfo, error)
 }

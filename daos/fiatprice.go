@@ -263,6 +263,8 @@ func (dao *FiatPriceDao) GetLastPriceCurrentByTime(symbol string, createAt time.
 		},
 		"symbol": symbolName,
 	}
+	a := strconv.FormatInt(createAt.Unix(), 10)
+	fmt.Print(a)
 	sort := []string{"-$timestamp"}
 	err := db.GetSortOne(dao.dbName, dao.collectionName, q, sort, &res)
 	return res, err

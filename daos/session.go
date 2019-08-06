@@ -220,6 +220,20 @@ func (d *Database) Remove(dbName, collection string, query []bson.M) error {
 	return nil
 }
 
+// Remove removes one document matching a certain query
+func (d *Database) RemoveItem(dbName, collection string, query interface{}) error {
+	sc := d.Session.Copy()
+	defer sc.Close()
+
+	err := sc.DB(dbName).C(collection).Remove(query)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // RemoveAll removes all the documents from a collection matching a certain query
 func (d *Database) RemoveAll(dbName, collection string, query interface{}) error {
 	sc := d.Session.Copy()

@@ -19,6 +19,7 @@ import (
 	"github.com/tomochain/tomoxsdk/ethereum"
 	"github.com/tomochain/tomoxsdk/operator"
 	"github.com/tomochain/tomoxsdk/rabbitmq"
+	"github.com/tomochain/tomoxsdk/relayer"
 	"github.com/tomochain/tomoxsdk/services"
 	"github.com/tomochain/tomoxsdk/swap"
 	"github.com/tomochain/tomoxsdk/types"
@@ -160,6 +161,11 @@ func NewRouter(
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService)
 	endpoints.ServeNotificationResource(r, notificationService)
+
+	contractAddress := common.HexToAddress(app.Config.Ethereum["contract_address"])
+	relayerEngine := relayer.NewRelayer(app.Config.Ethereum["http_url"], exchangeAddress, contractAddress)
+	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao)
+	endpoints.ServeRelayerResource(r, relayerService)
 
 	// Swagger UI
 	sh := http.StripPrefix(swaggerUIDir, http.FileServer(http.Dir("."+swaggerUIDir)))
