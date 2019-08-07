@@ -200,3 +200,9 @@ func (dao *PairDao) GetByTokenAddress(baseToken, quoteToken common.Address) (*ty
 
 	return res[0], nil
 }
+
+// DeleteByToken delete token by contract address
+func (dao *PairDao) DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error {
+	query := bson.M{"baseTokenAddress": baseAddress.Hex(), "quoteTokenAddress": quoteAddress.Hex()}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}

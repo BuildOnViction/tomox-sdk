@@ -345,9 +345,12 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 	// Save notification
 	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
-		Message:   fmt.Sprintf("ORDER_ADDED - Order Hash: %s", o.Hash.Hex()),
-		Type:      types.TypeLog,
-		Status:    types.StatusUnread,
+		Message: types.Message{
+			MessageType: "ORDER_ADDED",
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
 	})
 
 	if err != nil {
@@ -377,9 +380,12 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 	// Save notification
 	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
-		Message:   fmt.Sprintf("ORDER_CANCELLED - Order Hash: %s", o.Hash.Hex()),
-		Type:      types.TypeLog,
-		Status:    types.StatusUnread,
+		Message: types.Message{
+			MessageType: "ORDER_CANCELLED",
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
 	})
 
 	if err != nil {

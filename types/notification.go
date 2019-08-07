@@ -17,20 +17,28 @@ const (
 	TypeLog      = "LOG"
 )
 
+//Message struct
+type Message struct {
+	MessageType string `json:"type" bson:"type"`
+	Description string `json:"description" bson:"description"`
+}
+
+// Notification struct
 type Notification struct {
 	ID        bson.ObjectId  `json:"_id" bson:"_id"`
 	Recipient common.Address `json:"recipient" bson:"recipient"`
-	Message   string         `json:"message" bson:"message"`
+	Message   Message        `json:"message" bson:"message"`
 	Type      string         `json:"type" bson:"type"`
 	Status    string         `json:"status" bson:"status"`
 	CreatedAt time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
+// NotificationRecord struct
 type NotificationRecord struct {
 	ID        bson.ObjectId `json:"_id" bson:"_id"`
 	Recipient string        `json:"recipient" bson:"recipient"`
-	Message   string        `json:"message" bson:"message"`
+	Message   Message       `json:"message" bson:"message"`
 	Type      string        `json:"type" bson:"type"`
 	Status    string        `json:"status" bson:"status"`
 	CreatedAt time.Time     `json:"createdAt" bson:"createdAt"`
@@ -80,7 +88,7 @@ func (n *Notification) UnmarshalJSON(b []byte) error {
 	}
 
 	if notification["message"] != nil {
-		n.Message = notification["message"].(string)
+		n.Message = notification["message"].(Message)
 	}
 
 	if notification["type"] != nil {
@@ -104,6 +112,7 @@ func (n *Notification) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// GetBSON get Notification struct
 func (n *Notification) GetBSON() (interface{}, error) {
 	nr := NotificationRecord{
 		ID:        n.ID,
@@ -117,11 +126,12 @@ func (n *Notification) GetBSON() (interface{}, error) {
 	return nr, nil
 }
 
+// SetBSON json to Notification
 func (n *Notification) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID        bson.ObjectId `json:"_id" bson:"_id"`
 		Recipient string        `json:"recipient" bson:"recipient"`
-		Message   string        `json:"message" bson:"message"`
+		Message   Message       `json:"message" bson:"message"`
 		Type      string        `json:"type" bson:"type"`
 		Status    string        `json:"status" bson:"status"`
 		CreatedAt time.Time     `json:"createdAt" bson:"createdAt"`

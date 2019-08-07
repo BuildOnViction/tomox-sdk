@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomox-sdk/app"
@@ -16,6 +17,7 @@ import (
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/ethereum"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
+	"github.com/tomochain/tomox-sdk/relayer"
 	"github.com/tomochain/tomox-sdk/services"
 	"github.com/tomochain/tomox-sdk/swap"
 	"github.com/tomochain/tomox-sdk/types"
@@ -91,7 +93,7 @@ func NewRouter(
 	ohlcvService := services.NewOHLCVService(tradeDao)
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
-	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, eng, provider)
+	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider)
 	orderService := services.NewOrderService(orderDao, stopOrderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	tradeService := services.NewTradeService(orderDao, tradeDao, rabbitConn)
@@ -109,7 +111,7 @@ func NewRouter(
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
 	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
-	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceService)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// start cron service
@@ -129,6 +131,12 @@ func NewRouter(
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService)
 	endpoints.ServeNotificationResource(r, notificationService)
+
+	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
+	contractAddress := common.HexToAddress(app.Config.Ethereum["contract_address"])
+	relayerEngine := relayer.NewRelayer(app.Config.Ethereum["http_url"], exchangeAddress, contractAddress)
+	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao)
+	endpoints.ServeRelayerResource(r, relayerService)
 
 	// Swagger UI
 	sh := http.StripPrefix(swaggerUIDir, http.FileServer(http.Dir("."+swaggerUIDir)))

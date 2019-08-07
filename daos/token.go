@@ -144,3 +144,9 @@ func (dao *TokenDao) Drop() error {
 
 	return nil
 }
+
+// DeleteByToken delete token by contract address
+func (dao *TokenDao) DeleteByToken(contractAddress common.Address) error {
+	query := bson.M{"contractAddress": contractAddress.Hex()}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}

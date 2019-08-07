@@ -108,3 +108,19 @@ func GetAddressFromPublicKey(pk []byte) common.Address {
 
 	return publicAddress
 }
+
+// Union get set of two array
+func Union(a, b []common.Address) []common.Address {
+	m := make(map[common.Address]bool)
+
+	for _, item := range a {
+		m[item] = true
+	}
+
+	for _, item := range b {
+		if _, ok := m[item]; !ok {
+			a = append(a, item)
+		}
+	}
+	return a
+}

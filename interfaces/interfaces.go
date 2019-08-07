@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,6 +12,7 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
+	"github.com/tomochain/tomox-sdk/relayer"
 	swapBitcoin "github.com/tomochain/tomox-sdk/swap/bitcoin"
 	swapEthereum "github.com/tomochain/tomox-sdk/swap/ethereum"
 	"github.com/tomochain/tomox-sdk/types"
@@ -124,6 +126,7 @@ type PairDao interface {
 	GetByTokenAddress(baseToken, quoteToken common.Address) (*types.Pair, error)
 	GetListedPairs() ([]types.Pair, error)
 	GetUnlistedPairs() ([]types.Pair, error)
+	DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error
 }
 
 type TradeDao interface {
@@ -161,6 +164,7 @@ type TokenDao interface {
 	GetBaseTokens() ([]types.Token, error)
 	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
+	DeleteByToken(contractAddress common.Address) error
 }
 
 type FiatPriceDao interface {
@@ -171,6 +175,7 @@ type FiatPriceDao interface {
 	Create(items ...*types.FiatPriceItem) error
 	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
 	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
+	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*types.FiatPriceItem, error)
 }
 
 type NotificationDao interface {
@@ -411,4 +416,14 @@ type EthereumProvider interface {
 	BalanceOf(owner common.Address, token common.Address) (*big.Int, error)
 	Decimals(token common.Address) (uint8, error)
 	Symbol(token common.Address) (string, error)
+}
+
+// RelayerService interface for relayer
+type RelayerService interface {
+	UpdateRelayer() error
+}
+
+// Relayer interface for relayer
+type Relayer interface {
+	GetRelayer() (*relayer.RInfo, error)
 }
