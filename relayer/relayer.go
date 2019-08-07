@@ -2,7 +2,6 @@ package relayer
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -33,17 +32,13 @@ func NewRelayer(rpcURL string,
 
 // GetRelayer get relayer information
 func (r *Relayer) GetRelayer() (*RInfo, error) {
-	fileLocation := "/home/nghiatt/go/src/github.com/tomochain/tomoxsdk/relayer"
-	relayerAbi := filepath.Join(fileLocation, "./abi/relayer_registration.abi")
-	tokenAbi := filepath.Join(fileLocation, "./abi/token.abi")
-	path := filepath.Join(fileLocation, "./signer_config.json")
-	signer := NewSigner(path, fileLocation)
+	signer := NewSigner()
 	client, err := rpc.Dial(rcpURL)
 	if err != nil {
 		fmt.Println(err)
 	}
 	ethclient := ethclient.NewClient(client)
 	bc := NewBlockchain(client, ethclient, signer)
-	return bc.GetRelayer(r.coinBase, relayerAbi, tokenAbi, r.relayerAddress)
+	return bc.GetRelayer(r.coinBase, r.relayerAddress)
 
 }

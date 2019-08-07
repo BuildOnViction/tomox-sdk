@@ -31,7 +31,7 @@ func (self *Signer) Sign(tx *types.Transaction) (*types.Transaction, error) {
 	return self.opts.Signer(types.HomesteadSigner{}, self.GetAddress(), tx)
 }
 
-func NewSigner(file string, fileLocation string) *Signer {
+func NewSignerFile(file string, fileLocation string) *Signer {
 	raw, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
@@ -47,6 +47,21 @@ func NewSigner(file string, fileLocation string) *Signer {
 		panic(err)
 	}
 	log.Println("keyio: ", keyio)
+	auth, err := bind.NewTransactor(keyio, signer.Passphrase)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("auth: ", auth.From.Hex())
+	signer.opts = auth
+
+	return signer
+}
+
+func NewSigner() *Signer {
+	signer := &Signer{}
+	passParser, keyio := GetKeyStore()
+	signer.Passphrase = passParser
+
 	auth, err := bind.NewTransactor(keyio, signer.Passphrase)
 	if err != nil {
 		panic(err)

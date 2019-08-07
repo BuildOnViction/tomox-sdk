@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	relayerAbi "github.com/tomochain/tomox-sdk/relayer/abi"
 	"github.com/tomochain/tomox-sdk/utils"
 )
 
@@ -130,12 +131,16 @@ func (b *Blockchain) setBaseAddress() common.Address {
 }
 
 // GetRelayer return all tokens in smart contract
-func (b *Blockchain) GetRelayer(coinAddress common.Address, abiFile string, tokenAbiFile string, contractAddress common.Address) (*RInfo, error) {
-	abi, err := b.abiFrom(abiFile)
+func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress common.Address) (*RInfo, error) {
+	abiRelayer, err := relayerAbi.GetRelayerAbi()
 	if err != nil {
 		return nil, err
 	}
-	input, err := abi.Pack("getRelayerByCoinbase", coinAddress)
+	abiToken, err := relayerAbi.GetTokenAbi()
+	if err != nil {
+		return nil, err
+	}
+	input, err := abiRelayer.Pack("getRelayerByCoinbase", coinAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +156,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, abiFile string, toke
 	relayerInfo := RInfo{
 		Tokens: make(map[common.Address]*TokenInfo),
 	}
-	if method, ok := abi.Methods["getRelayerByCoinbase"]; ok {
+	if method, ok := abiRelayer.Methods["getRelayerByCoinbase"]; ok {
 		if len(result)%32 != 0 {
 
 		}
@@ -164,7 +169,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, abiFile string, toke
 				toTokens := contractData[4].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
 				for _, t := range setToken {
-					tokenInfo, err := b.GetTokenInfoEx(t, tokenAbiFile)
+					tokenInfo, err := b.GetTokenInfo(t, &abiToken)
 					if err != nil {
 						return nil, err
 					}
