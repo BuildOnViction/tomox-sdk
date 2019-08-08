@@ -56,7 +56,10 @@ func (s *PriceBoardService) Subscribe(c *ws.Client, bt, qt common.Address) {
 		socket.SendErrorMessage(c, err.Error())
 		return
 	}
-
+	if quoteToken == nil {
+		socket.SendErrorMessage(c, "Token not found")
+		return
+	}
 	var lastTradePrice string
 	lastTrade, err := s.TradeDao.GetLatestTrade(bt, qt)
 	if lastTrade == nil {
