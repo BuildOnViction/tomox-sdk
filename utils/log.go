@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/op/go-logging"
@@ -20,11 +21,18 @@ var Logger = NewLogger("main", "./logs/main.log")
 var StdoutLogger = NewStandardOutputLogger()
 var TerminalLogger = NewColoredLogger()
 
-// NewFileLogger creates a logging utility that outputs to the file passed as argument and also output to stdout.
+// NewLogger creates a logging utility that outputs to the file passed as argument and also output to stdout.
 func NewLogger(module string, logFile string) *logging.Logger {
 	_, fileName, _, _ := runtime.Caller(1)
-	logDir := path.Join(path.Dir(fileName), "../logs/")
-	logFile = path.Join(path.Dir(fileName), "../", logFile)
+
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	fileName = exPath
+	logDir := path.Join(fileName, "./logs/")
+	logFile = path.Join(fileName, "./", logFile)
 
 	logger, err := logging.GetLogger(module)
 	if err != nil {
