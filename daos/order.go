@@ -966,7 +966,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		CreatedAt:    uint64(o.CreatedAt.Unix()),
 		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
 	}
-
+	logger.Info("Order user address:", o.UserAddress.Hex())
 	var result interface{}
 	params := make(map[string]interface{})
 	params["topic"] = topic
@@ -1027,7 +1027,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		OrderID:      o.OrderID,
 		Key:          o.Key,
 	}
-
+	logger.Info(oi.Hash.Hex())
 	var result interface{}
 	params := make(map[string]interface{})
 	params["topic"] = topic

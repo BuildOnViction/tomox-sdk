@@ -15,6 +15,10 @@ import (
 type Engine struct {
 	orderbooks   map[string]*OrderBook
 	rabbitMQConn *rabbitmq.Connection
+	orderDao     interfaces.OrderDao
+	stopOrderDao interfaces.StopOrderDao
+	tradeDao     interfaces.TradeDao
+	pairDao      interfaces.PairDao
 	provider     *ethereum.EthereumProvider
 }
 
@@ -42,13 +46,28 @@ func NewEngine(
 		obs[p.Code()] = ob
 	}
 
-	engine := &Engine{obs, rabbitMQConn, provider}
+	engine := &Engine{obs, rabbitMQConn, orderDao, stopOrderDao, tradeDao, pairDao, provider}
 	return engine
 }
 
 // Provider : implement engine interface
 func (e *Engine) Provider() interfaces.EthereumProvider {
 	return e.provider
+}
+
+func (e *Engine) getObs() (map[string]*OrderBook, error) {
+	pairs, err := e.pairDao.GetAll()
+
+	if err != nil {
+		return nil, err
+	}
+	obs := map[string]*OrderBook{}
+	for _, p := range pairs {
+		ob := NewOrderBook(e.rabbitMQConn, e.orderDao, e.stopOrderDao, e.tradeDao, p)
+
+		obs[p.Code()] = ob
+	}
+	return obs, nil
 }
 
 // HandleOrders parses incoming rabbitmq order messages and redirects them to the appropriate
@@ -99,8 +118,11 @@ func (e *Engine) handleNewOrder(bytes []byte) error {
 		logger.Error(err)
 		return err
 	}
-
-	ob := e.orderbooks[code]
+	obs, err := e.getObs()
+	if err != nil {
+		return errors.New("Orderbook error")
+	}
+	ob := obs[code]
 	if ob == nil {
 		return errors.New("Orderbook error")
 	}
@@ -128,7 +150,12 @@ func (e *Engine) handleNewStopOrder(bytes []byte) error {
 		return err
 	}
 
-	ob := e.orderbooks[code]
+	obs, err := e.getObs()
+	if err != nil {
+		return errors.New("Orderbook error")
+	}
+	ob := obs[code]
+
 	if ob == nil {
 		return errors.New("Orderbook error")
 	}
@@ -156,7 +183,12 @@ func (e *Engine) handleCancelOrder(bytes []byte) error {
 		return err
 	}
 
-	ob := e.orderbooks[code]
+	obs, err := e.getObs()
+	if err != nil {
+		return errors.New("Orderbook error")
+	}
+	ob := obs[code]
+
 	if ob == nil {
 		return errors.New("Orderbook error")
 	}
@@ -184,7 +216,12 @@ func (e *Engine) handleCancelStopOrder(bytes []byte) error {
 		return err
 	}
 
-	ob := e.orderbooks[code]
+	obs, err := e.getObs()
+	if err != nil {
+		return errors.New("Orderbook error")
+	}
+	ob := obs[code]
+
 	if ob == nil {
 		return errors.New("Orderbook error")
 	}
