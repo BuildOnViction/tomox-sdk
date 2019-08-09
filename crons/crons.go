@@ -12,6 +12,7 @@ type CronService struct {
 	PriceBoardService *services.PriceBoardService
 	PairService       *services.PairService
 	FiatPriceService  *services.FiatPriceService
+	RelayService      *services.RelayerService
 	Engine            *engine.Engine
 }
 
@@ -21,6 +22,7 @@ func NewCronService(
 	priceBoardService *services.PriceBoardService,
 	pairService *services.PairService,
 	fiatPriceService *services.FiatPriceService,
+	relayService *services.RelayerService,
 	engine *engine.Engine,
 ) *CronService {
 	return &CronService{
@@ -28,6 +30,7 @@ func NewCronService(
 		PriceBoardService: priceBoardService,
 		PairService:       pairService,
 		FiatPriceService:  fiatPriceService,
+		RelayService:      relayService,
 		Engine:            engine,
 	}
 }
@@ -39,5 +42,6 @@ func (s *CronService) InitCrons() {
 	s.getFiatPriceCron(c)    // Cron to query USD price from coinmarketcap.com and update "tokens" collection
 	s.startPriceBoardCron(c) // Cron to fetch data for top price board
 	s.startMarketsCron(c)    // Cron to fetch markets data
+	s.startRelayerUpdate(c)
 	c.Start()
 }

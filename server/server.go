@@ -114,9 +114,6 @@ func NewRouter(
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
 
-	// start cron service
-	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, fiatPriceService, eng)
-
 	// deploy http and ws endpoints
 	endpoints.ServeInfoResource(r, walletService, tokenService)
 	endpoints.ServeAccountResource(r, accountService)
@@ -152,6 +149,8 @@ func NewRouter(
 	// Initialize fiat price
 	fiatPriceService.InitFiatPrice()
 
+	// start cron service
+	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, fiatPriceService, relayerService, eng)
 	// initialize MongoDB Change Streams
 	go orderService.WatchChanges()
 	go tradeService.WatchChanges()
