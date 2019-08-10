@@ -17,21 +17,27 @@ import (
 // TradeService struct with daos required, responsible for communicating with daos.
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type TradeService struct {
-	OrderDao interfaces.OrderDao
-	tradeDao interfaces.TradeDao
-	broker   *rabbitmq.Connection
+	OrderDao        interfaces.OrderDao
+	tradeDao        interfaces.TradeDao
+	accountDao      interfaces.AccountDao
+	notificationDao interfaces.NotificationDao
+	broker          *rabbitmq.Connection
 }
 
 // NewTradeService returns a new instance of TradeService
 func NewTradeService(
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
+	accountDao interfaces.AccountDao,
+	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
 ) *TradeService {
 	return &TradeService{
-		OrderDao: orderdao,
-		tradeDao: tradeDao,
-		broker:   broker,
+		OrderDao:        orderdao,
+		tradeDao:        tradeDao,
+		accountDao:      accountDao,
+		notificationDao: notificationDao,
+		broker:          broker,
 	}
 }
 
@@ -267,6 +273,7 @@ func (s *TradeService) HandleOperationUpdate(trade *types.Trade) error {
 	return nil
 }
 
+// HandleTradeSuccess handle order match success
 func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	trades := m.Trades
 	orders := m.MakerOrders
@@ -274,14 +281,32 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	// Send ORDER_SUCCESS message to order takers
 	taker := trades[0].Taker
 	ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{Matches: m})
+	s.notificationDao.Create(&types.Notification{
+		Recipient: taker,
+		Message: types.Message{
+			MessageType: "ORDER_SUCCESS",
+			Description: m.TakerOrderHash().Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
 
 	// Send ORDER_SUCCESS message to order makers
 	for _, o := range orders {
 		maker := o.UserAddress
 		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{Matches: m})
+		s.notificationDao.Create(&types.Notification{
+			Recipient: o.UserAddress,
+			Message: types.Message{
+				MessageType: "ORDER_SUCCESS",
+				Description: o.Hash.Hex(),
+			},
+			Type:   types.TypeLog,
+			Status: types.StatusUnread,
+		})
 	}
-
 	s.broadcastTradeUpdate(trades)
+
 }
 
 func (s *TradeService) broadcastTradeUpdate(trades []*types.Trade) {
