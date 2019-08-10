@@ -20,7 +20,7 @@ type CoinsIDMarketChart struct {
 type FiatPriceItem struct {
 	Symbol       string `json:"-" bson:"symbol"`
 	Price        string `json:"price" bson:"price"`
-	Timestamp    string `json:"timestamp" bson:"timestamp"`
+	Timestamp    int64  `json:"timestamp" bson:"timestamp"`
 	FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`
 	TotalVolume  string `json:"totalVolume" bson:"totalVolume"`
 }
@@ -45,7 +45,7 @@ func (i *FiatPriceItem) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		Symbol       string `json:"symbol" bson:"symbol"`
 		Price        string `json:"price" bson:"price"`
-		Timestamp    string `json:"timestamp" bson:"timestamp"`
+		Timestamp    int64  `json:"timestamp" bson:"timestamp"`
 		FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`
 		TotalVolume  string `json:"totalVolume" bson:"totalVolume"`
 	})
