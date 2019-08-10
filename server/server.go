@@ -96,7 +96,7 @@ func NewRouter(
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider)
 	orderService := services.NewOrderService(orderDao, stopOrderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
-	tradeService := services.NewTradeService(orderDao, tradeDao, rabbitConn)
+	tradeService := services.NewTradeService(orderDao, tradeDao, accountDao, notificationDao, rabbitConn)
 
 	walletService := services.NewWalletService(walletDao)
 
