@@ -202,6 +202,31 @@ func (dao *FiatPriceDao) FindAndModify(symbol, fiatCurrency, timestamp string, i
 	return updated, nil
 }
 
+// FindAndUpdate update fiat price
+func (dao *FiatPriceDao) FindAndUpdate(symbol string, fiatCurrency string, timestamp int64, i *types.FiatPriceItem) (*types.FiatPriceItem, error) {
+	query := bson.M{
+		"symbol":       symbol,
+		"fiatCurrency": fiatCurrency,
+		"timestamp":    timestamp,
+	}
+	updated := &types.FiatPriceItem{}
+	change := mgo.Change{
+		Update:    types.FiatPriceItemBSONUpdate{FiatPriceItem: i},
+		Upsert:    true,
+		Remove:    false,
+		ReturnNew: true,
+	}
+
+	err := db.FindAndModify(dao.dbName, dao.collectionName, query, change, &updated)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return updated, nil
+}
+
 func (dao *FiatPriceDao) Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error {
 	_, err := db.Upsert(dao.dbName, dao.collectionName, bson.M{
 		"symbol":       symbol,

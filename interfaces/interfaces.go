@@ -174,6 +174,7 @@ type FiatPriceDao interface {
 	Get24hChart(symbol, fiatCurrency string) ([]*types.FiatPriceItem, error)
 	Create(items ...*types.FiatPriceItem) error
 	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
+	FindAndUpdate(symbol string, fiatCurrency string, timestamp int64, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
 	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
 	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*types.FiatPriceItem, error)
 }
