@@ -72,8 +72,8 @@ func (b *Blockchain) RunContract(contractAddr common.Address, abi *abi.ABI, meth
 	if err != nil {
 		return nil, err
 	}
-	from := b.signer.GetAddress()
-	msg := ether.CallMsg{From: from, To: &contractAddr, Data: input}
+
+	msg := ether.CallMsg{To: &contractAddr, Data: input}
 	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
 	if err != nil {
 		log.Println(err)
@@ -145,8 +145,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 		return nil, err
 	}
 
-	from := b.signer.GetAddress()
-	msg := ether.CallMsg{From: from, To: &contractAddress, Data: input}
+	msg := ether.CallMsg{To: &contractAddress, Data: input}
 	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
 	if err != nil {
 		log.Println(err)

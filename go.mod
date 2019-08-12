@@ -34,7 +34,7 @@ require (
 	github.com/tomochain/tomodex v0.4.0 // indirect
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
-	gopkg.in/fatih/set.v0 v0.2.1 // indirect
+	gopkg.in/fatih/set.v0 v0.1.0 // indirect
 	gopkg.in/urfave/cli.v1 v1.20.0
 	gopkg.in/yaml.v2 v2.2.1
 )

@@ -8,9 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-const rcpURL string = "https://testnet.tomochain.com/"
-const coinBase string = "0xF9D87abd60435b70415CcC1FAAcA4F8B91786eDb"
-
 // Relayer get token
 type Relayer struct {
 	rpcURL         string
@@ -33,7 +30,7 @@ func NewRelayer(rpcURL string,
 // GetRelayer get relayer information
 func (r *Relayer) GetRelayer() (*RInfo, error) {
 	signer := NewSigner()
-	client, err := rpc.Dial(rcpURL)
+	client, err := rpc.Dial(r.rpcURL)
 	if err != nil {
 		fmt.Println(err)
 	}
