@@ -7,21 +7,23 @@ import (
 	"github.com/tomochain/tomox-sdk/types"
 )
 
-// TradeService struct with daos required, responsible for communicating with daos.
-// TradeService functions are responsible for interacting with daos and implements business logics.
+// FiatPriceService functions are responsible for interacting with daos and implements business logics.
 type FiatPriceService struct {
-	TokenDao     interfaces.TokenDao
-	FiatPriceDao interfaces.FiatPriceDao
+	TokenDao       interfaces.TokenDao
+	FiatPriceDao   interfaces.FiatPriceDao
+	FiatPriceCache interfaces.FiatPriceCache
 }
 
 // NewFiatPriceService returns a new instance of TradeService
 func NewFiatPriceService(
 	tokenDao interfaces.TokenDao,
 	fiatPriceDao interfaces.FiatPriceDao,
+	fiatPriceCache interfaces.FiatPriceCache,
 ) *FiatPriceService {
 	return &FiatPriceService{
-		TokenDao:     tokenDao,
-		FiatPriceDao: fiatPriceDao,
+		TokenDao:       tokenDao,
+		FiatPriceDao:   fiatPriceDao,
+		FiatPriceCache: fiatPriceCache,
 	}
 }
 
@@ -67,7 +69,10 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 
 			if err != nil {
 				logger.Error(err)
-				continue
+			}
+			err = s.FiatPriceCache.AddFiat(symbol, fiatPriceItem)
+			if err != nil {
+				logger.Error(err)
 			}
 		}
 	}
@@ -92,6 +97,7 @@ func (s *FiatPriceService) SyncFiatPrice() error {
 	return nil
 }
 
+// GetFiatPriceChart return price chart
 func (s *FiatPriceService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error) {
 	result := make(map[string][]*types.FiatPriceItem)
 
@@ -99,14 +105,19 @@ func (s *FiatPriceService) GetFiatPriceChart() (map[string][]*types.FiatPriceIte
 	symbols := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
 
 	for _, symbol := range symbols {
-		data, err := s.FiatPriceDao.Get24hChart(symbol, "usd")
-
+		data, err := s.FiatPriceCache.GetFiatRange(symbol, 24)
 		if err != nil {
-			logger.Error(err)
-			continue
+			data, err = s.FiatPriceDao.Get24hChart(symbol, "usd")
+			if err != nil {
+				logger.Error(err)
+			} else {
+				result[symbol] = data
+			}
+
+		} else {
+			result[symbol] = data
 		}
 
-		result[symbol] = data
 	}
 
 	return result, nil

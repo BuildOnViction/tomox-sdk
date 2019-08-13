@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomox-sdk/app"
+	"github.com/tomochain/tomox-sdk/cache"
 	"github.com/tomochain/tomox-sdk/crons"
 	"github.com/tomochain/tomox-sdk/daos"
 	"github.com/tomochain/tomox-sdk/endpoints"
@@ -107,10 +108,11 @@ func NewRouter(
 		Address:    app.Config.Deposit.Tomochain.GetPublicKey(),
 		PrivateKey: app.Config.Deposit.Tomochain.GetPrivateKey(),
 	}
+	fiatCache := cache.NewFiatCacheClient("localhost:6379", "", 0)
 	txService := services.NewTxService(walletDao, wallet)
 	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
-	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
+	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao, fiatCache)
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
 

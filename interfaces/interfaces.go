@@ -428,3 +428,9 @@ type RelayerService interface {
 type Relayer interface {
 	GetRelayer() (*relayer.RInfo, error)
 }
+
+// FiatPriceCache fiat cache
+type FiatPriceCache interface {
+	GetFiatRange(symbol string, hour float64) ([]*types.FiatPriceItem, error)
+	AddFiat(symbol string, fiatItem *types.FiatPriceItem) error
+}

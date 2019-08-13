@@ -18,7 +18,7 @@ type CoinsIDMarketChart struct {
 }
 
 type FiatPriceItem struct {
-	Symbol       string `json:"-" bson:"symbol"`
+	Symbol       string `json:"symbol" bson:"symbol"`
 	Price        string `json:"price" bson:"price"`
 	Timestamp    int64  `json:"timestamp" bson:"timestamp"`
 	FiatCurrency string `json:"fiatCurrency" bson:"fiatCurrency"`
