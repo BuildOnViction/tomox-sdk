@@ -19,7 +19,8 @@ type PairService struct {
 	tradeDao     interfaces.TradeDao
 	orderDao     interfaces.OrderDao
 	fiatPriceDao interfaces.FiatPriceDao
-	eng          interfaces.Engine
+
+	eng interfaces.Engine
 
 	provider interfaces.EthereumProvider
 }

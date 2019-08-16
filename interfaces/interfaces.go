@@ -434,3 +434,8 @@ type FiatPriceCache interface {
 	GetFiatRange(symbol string, hour float64) ([]*types.FiatPriceItem, error)
 	AddFiat(symbol string, fiatItem *types.FiatPriceItem) error
 }
+
+// TokenDataCache cache for token
+type TokenDataCache interface {
+	GetPairData() (*types.PairData, error)
+}

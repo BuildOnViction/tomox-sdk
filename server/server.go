@@ -156,7 +156,7 @@ func NewRouter(
 	// initialize MongoDB Change Streams
 	go orderService.WatchChanges()
 	go tradeService.WatchChanges()
-
+ 
 	cronService.InitCrons()
 	return r
 }
