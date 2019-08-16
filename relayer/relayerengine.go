@@ -32,6 +32,7 @@ type TokenInfo struct {
 	Name     string
 	Symbol   string
 	Decimals uint8
+	address  common.Address
 }
 
 // RInfo struct
@@ -120,14 +121,27 @@ func (b *Blockchain) GetTokenInfo(token common.Address, abi *abi.ABI) (*TokenInf
 		Decimals: decimals,
 	}, nil
 }
-func (b *Blockchain) isBaseToken(info *TokenInfo) bool {
+func (b *Blockchain) isBaseTokenByInfo(info *TokenInfo) bool {
 	if info.Symbol == "TOMO" {
+		return true
+	}
+	return false
+}
+func (b *Blockchain) isBaseTokenByAddress(address common.Address) bool {
+	if address.Hex() == "0x0000000000000000000000000000000000000001" {
 		return true
 	}
 	return false
 }
 func (b *Blockchain) setBaseAddress() common.Address {
 	return common.HexToAddress("0x0000000000000000000000000000000000000001")
+}
+func (b *Blockchain) setBaseTokenInfo() *TokenInfo {
+	return &TokenInfo{
+		Name:     "TOMO",
+		Symbol:   "TOMO",
+		Decimals: 18,
+	}
 }
 
 // GetRelayer return all tokens in smart contract
@@ -149,6 +163,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	log.Println("data: ", result)
 
@@ -168,22 +183,23 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 				toTokens := contractData[4].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
 				for _, t := range setToken {
-					tokenInfo, err := b.GetTokenInfo(t, &abiToken)
-					if err != nil {
-						return nil, err
+					if b.isBaseTokenByAddress(t) {
+						tokenInfo := b.setBaseTokenInfo()
+						relayerInfo.Tokens[t] = tokenInfo
+					} else {
+						tokenInfo, err := b.GetTokenInfo(t, &abiToken)
+						if err != nil {
+							return nil, err
+						}
+						relayerInfo.Tokens[t] = tokenInfo
 					}
-					relayerInfo.Tokens[t] = tokenInfo
+
 				}
 				if len(fromTokens) == len(toTokens) {
 					for i, v := range fromTokens {
 						base := v
 						quote := toTokens[i]
-						if b.isBaseToken(relayerInfo.Tokens[base]) {
-							base = b.setBaseAddress()
-						}
-						if b.isBaseToken(relayerInfo.Tokens[quote]) {
-							quote = b.setBaseAddress()
-						}
+
 						pairToken := &PairToken{
 							BaseToken:  base,
 							QuoteToken: quote,
@@ -191,13 +207,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 						relayerInfo.Pairs = append(relayerInfo.Pairs, pairToken)
 					}
 				}
-				for k, v := range relayerInfo.Tokens {
-					if b.isBaseToken(v) {
-						relayerInfo.Tokens[b.setBaseAddress()] = v
-						delete(relayerInfo.Tokens, k)
-						break
-					}
-				}
+
 			}
 		}
 	}
