@@ -177,6 +177,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 				fromTokens := contractData[3].([]common.Address)
 				toTokens := contractData[4].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
+				log.Println("Relayer data:", fromTokens, toTokens)
 				for _, t := range setToken {
 					if utils.IsNativeTokenByAddress(t) {
 						tokenInfo := b.setBaseTokenInfo()
@@ -187,6 +188,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 							return nil, err
 						}
 						relayerInfo.Tokens[t] = tokenInfo
+						log.Println("Token data:", tokenInfo.Name, tokenInfo.Symbol, tokenInfo.address)
 					}
 
 				}
