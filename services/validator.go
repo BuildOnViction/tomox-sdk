@@ -46,9 +46,16 @@ func (s *ValidatorService) ValidateAvailableBalance(o *types.Order) error {
 
 	// we implement retries in the case the provider connection fell asleep
 	err = utils.Retry(3, func() error {
-		sellTokenBalance, err = s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken())
-		if err != nil {
-			return err
+		if utils.IsNativeTokenByAddress(o.SellToken()) {
+			sellTokenBalance, err = s.ethereumProvider.GetBalanceAt(o.UserAddress)
+			if err != nil {
+				return err
+			}
+		} else {
+			sellTokenBalance, err = s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken())
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

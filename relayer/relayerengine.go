@@ -127,12 +127,7 @@ func (b *Blockchain) isBaseTokenByInfo(info *TokenInfo) bool {
 	}
 	return false
 }
-func (b *Blockchain) isBaseTokenByAddress(address common.Address) bool {
-	if address.Hex() == "0x0000000000000000000000000000000000000001" {
-		return true
-	}
-	return false
-}
+
 func (b *Blockchain) setBaseAddress() common.Address {
 	return common.HexToAddress("0x0000000000000000000000000000000000000001")
 }
@@ -183,7 +178,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 				toTokens := contractData[4].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
 				for _, t := range setToken {
-					if b.isBaseTokenByAddress(t) {
+					if utils.IsNativeTokenByAddress(t) {
 						tokenInfo := b.setBaseTokenInfo()
 						relayerInfo.Tokens[t] = tokenInfo
 					} else {
