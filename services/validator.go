@@ -34,6 +34,7 @@ func NewValidatorService(
 
 // ValidateAvailableBalance get balance
 func (s *ValidatorService) ValidateAvailableBalance(o *types.Order) error {
+	logger.Info("ValidateAvailableBalance start...")
 	pair, err := s.pairDao.GetByTokenAddress(o.BaseToken, o.QuoteToken)
 	if err != nil {
 		logger.Error(err)
@@ -51,11 +52,13 @@ func (s *ValidatorService) ValidateAvailableBalance(o *types.Order) error {
 			if err != nil {
 				return err
 			}
+			logger.Info("GetBalanceAt:", sellTokenBalance)
 		} else {
 			sellTokenBalance, err = s.ethereumProvider.BalanceOf(o.UserAddress, o.SellToken())
 			if err != nil {
 				return err
 			}
+			logger.Info("BalanceOf:", sellTokenBalance)
 		}
 
 		return nil
