@@ -124,3 +124,10 @@ func Union(a, b []common.Address) []common.Address {
 	}
 	return a
 }
+
+func IsNativeTokenByAddress(address common.Address) bool {
+	if address.Hex() == "0x0000000000000000000000000000000000000001" {
+		return true
+	}
+	return false
+}
