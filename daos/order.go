@@ -928,6 +928,7 @@ func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
 	return orderData, nil
 }
 
+// AddNewOrder add order
 func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
 
@@ -939,7 +940,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	}
 
 	if o.Status == "" {
-		o.Status = "OPEN"
+		o.Status = types.OrderStatusNew
 	}
 
 	oi := &tomox.OrderItem{
