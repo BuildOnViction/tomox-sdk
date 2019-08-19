@@ -21,9 +21,9 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o backend
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o backend
 
-FROM scratch AS final
+FROM ubuntu AS final
 
 LABEL author="Hai Dam <haidv@tomochain.com>"
 
@@ -31,12 +31,14 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 COPY --from=builder /user/group /user/passwd /etc/
 
-COPY --from=builder /app/backend /
+COPY --from=builder /app/backend /tomox/
 
-WORKDIR /
+WORKDIR /tomox
 
 USER nobody:nobody
 
-ENTRYPOINT ["/backend"]
+RUN mkdir logs
+
+ENTRYPOINT ["/tomox/backend"]
 
 EXPOSE 8080
