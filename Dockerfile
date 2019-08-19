@@ -10,7 +10,8 @@ RUN apk update && apk add --no-cache git \
                                      gcc \
                                      musl-dev \
                                      linux-headers \
-                                     tzdata
+                                     tzdata \
+                                     ca-certificates && update-ca-certificates
 
 WORKDIR /app
 
@@ -26,6 +27,8 @@ RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-st
 FROM ubuntu AS final
 
 LABEL author="Hai Dam <haidv@tomochain.com>"
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
