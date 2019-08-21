@@ -104,6 +104,8 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	quoteToken := v.Get("quoteToken")
 	fromParam := v.Get("from")
 	toParam := v.Get("to")
+	pageOffset := v.Get("pageOffset")
+	pageSize := v.Get("pageSize")
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
@@ -136,6 +138,20 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
 		return
 	}
+	offset := 0
+	size := 50
+	if pageOffset != "" {
+		offset, err := strconv.Atoi(pageOffset)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid pageOffset field")
+		}
+	}
+	if pageSize != "" {
+		size, err := strconv.Atoi(pageSize)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid pageSize field")
+		}
+	}
 
 	var from, to int64
 	now := time.Now()
@@ -167,12 +183,7 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 		quoteTokenAddr = common.Address{}
 	}
 
-	lim := types.DefaultLimit
-	if limit != "" {
-		lim, _ = strconv.Atoi(limit)
-	}
-
-	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, lim)
+	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, offset, size)
 
 	if err != nil {
 		logger.Error(err)

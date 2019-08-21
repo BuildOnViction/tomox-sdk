@@ -17,9 +17,15 @@
       "type": "string"
     },
     {
-      "name": "limit",
+      "name": "pageOffset",
       "in": "query",
-      "description": "Number of orders returned in query",
+      "description": "Page offset",
+      "type": "string"
+    },
+    {
+      "name": "pageSize",
+      "in": "query",
+      "description": "Number of items per a page",
       "type": "string"
     },
     {

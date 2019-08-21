@@ -38,7 +38,7 @@ func NewSimulatedClientWithGasLimit(accs []common.Address, gasLimit uint64) *Sim
 		}
 	}
 
-	client := backends.NewSimulatedBackend(alloc, gasLimit)
+	client := backends.NewSimulatedBackend(alloc)
 
 	return &SimulatedClient{client}
 }

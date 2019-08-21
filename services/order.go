@@ -89,8 +89,8 @@ func (s *OrderService) GetByID(id bson.ObjectId) (*types.Order, error) {
 }
 
 // GetByUserAddress fetches all the orders placed by passed user address
-func (s *OrderService) GetByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
-	return s.orderDao.GetByUserAddress(a, bt, qt, from, to, limit...)
+func (s *OrderService) GetByUserAddress(addr, bt, qt common.Address, from, to int64, offset int, size int) (*types.OrderRes, error) {
+	return s.orderDao.GetByUserAddress(addr, bt, qt, from, to, offset, size)
 }
 
 // GetByHash fetches all trades corresponding to a trade hash
