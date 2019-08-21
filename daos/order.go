@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -470,7 +471,11 @@ func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int64, offset int, size int) (*types.OrderRes, error) {
+func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
+	if limit == nil {
+		limit = []int{types.DefaultLimit}
+	}
+
 	var fromTemp, toTemp int64
 	now := time.Now()
 
@@ -507,20 +512,62 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int6
 		}
 	}
 
-	err := db.Get(dao.dbName, dao.collectionName, q, offset, (offset+1)*size, &res)
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
 
 	if res == nil {
-		return &types.OrderRes{}, nil
+		return []*types.Order{}, nil
 	}
-	r := &types.OrderRes{
-		Total:  0,
-		Orders: res,
+
+	return res, nil
+}
+
+// GetOrders filter order
+func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error) {
+
+	q := bson.M{}
+	if orderSpec.UserAddress != "" {
+		q["userAddress"] = orderSpec.UserAddress
 	}
-	return r, nil
+	if orderSpec.DateFrom != 0 || orderSpec.DateTo != 0 {
+		dateFilter := bson.M{}
+		if orderSpec.DateFrom != 0 {
+			dateFilter["$gte"] = strconv.FormatInt(orderSpec.DateFrom, 10)
+		}
+		if orderSpec.DateTo != 0 {
+			dateFilter["$lt"] = strconv.FormatInt(orderSpec.DateTo, 10)
+		}
+		q["createdAt"] = dateFilter
+	}
+	if orderSpec.BaseToken != "" {
+		q["baseToken"] = orderSpec.BaseToken
+	}
+	if orderSpec.QuoteToken != "" {
+		q["quoteToken"] = orderSpec.BaseToken
+	}
+
+	if orderSpec.Side != "" {
+		q["side"] = strings.ToUpper(orderSpec.Side)
+	}
+	if orderSpec.Status != "" {
+		q["status"] = strings.ToUpper(orderSpec.Status)
+	}
+	if orderSpec.OrderType != "" {
+		q["type"] = strings.ToUpper(orderSpec.OrderType)
+	}
+	var res types.OrderRes
+	var orders []*types.Order
+	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sort, offset, size, &orders)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	res.Total = c
+	res.Orders = orders
+	return &res, nil
 }
 
 // GetOpenOrdersByUserAddress function fetches list of open/partial filled orders from order collection based on user address.

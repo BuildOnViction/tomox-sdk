@@ -56,7 +56,8 @@ func NewWebsocketProvider() *EthereumProvider {
 
 	conn, err := rpc.DialWebsocket(context.Background(), url, "")
 	if err != nil {
-		panic(err)
+		return nil
+		//panic(err)
 	}
 
 	ethClient := ethclient.NewClient(conn)

@@ -99,91 +99,112 @@ func (e *orderEndpoint) handleGetCountOrder(w http.ResponseWriter, r *http.Reque
 func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	addr := v.Get("address")
-	limit := v.Get("limit")
 	baseToken := v.Get("baseToken")
 	quoteToken := v.Get("quoteToken")
 	fromParam := v.Get("from")
 	toParam := v.Get("to")
 	pageOffset := v.Get("pageOffset")
 	pageSize := v.Get("pageSize")
+	sortBy := v.Get("sortBy")
+	sortType := v.Get("sortType")
+	side := v.Get("orderSide")
+	status := v.Get("orderStatus")
+	orderType := v.Get("orderType")
 
-	if addr == "" {
-		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
-		return
+	sortedList := make(map[string]string)
+	sortedList["time"] = "createdAt"
+	sortedList["orderStatus"] = "status"
+	sortedList["orderType"] = "type"
+	sortedList["orderSide"] = "side"
+
+	var orderSpec types.OrderSpec
+	if addr != "" {
+		if !common.IsHexAddress(addr) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+			return
+		}
+		orderSpec.UserAddress = addr
+
 	}
 
-	if !common.IsHexAddress(addr) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
-		return
+	if baseToken != "" {
+		if !common.IsHexAddress(baseToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+			return
+		}
+		orderSpec.BaseToken = baseToken
 	}
 
-	// Client must provides both tokens or none of them
-	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
-		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
-		return
+	if quoteToken != "" {
+		if !common.IsHexAddress(quoteToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+			return
+		}
+		orderSpec.QuoteToken = quoteToken
 	}
 
-	if baseToken != "" && !common.IsHexAddress(baseToken) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
-		return
+	if fromParam != "" {
+		t, err := strconv.Atoi(fromParam)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid time from value")
+			return
+		}
+		orderSpec.DateFrom = int64(t)
 	}
 
-	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
-		return
-	}
-
-	// Client must provides both "from" and "to" or none of them
-	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
-		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
-		return
+	if toParam != "" {
+		t, err := strconv.Atoi(toParam)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid time to value")
+			return
+		}
+		orderSpec.DateTo = int64(t)
 	}
 	offset := 0
-	size := 50
-	if pageOffset != "" {
-		offset, err := strconv.Atoi(pageOffset)
-		if err != nil {
-			httputils.WriteError(w, http.StatusBadRequest, "Invalid pageOffset field")
+	size := 10
+	sortDB := []string{}
+	if sortType != "asc" && sortType != "dec" {
+		sortType = "asc"
+	}
+	if sortBy != "" {
+		if val, ok := sortedList[sortBy]; ok {
+			if sortType == "asc" {
+				sortDB = append(sortDB, "+"+val)
+			} else {
+				sortDB = append(sortDB, "-"+val)
+			}
+
 		}
+	}
+	if pageOffset != "" {
+		t, err := strconv.Atoi(pageOffset)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
+			return
+		}
+		offset = t
 	}
 	if pageSize != "" {
-		size, err := strconv.Atoi(pageSize)
+		t, err := strconv.Atoi(pageSize)
 		if err != nil {
-			httputils.WriteError(w, http.StatusBadRequest, "Invalid pageSize field")
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
+			return
 		}
+		size = t
 	}
-
-	var from, to int64
-	now := time.Now()
-
-	if toParam == "" {
-		to = now.Unix()
-	} else {
-		t, _ := strconv.Atoi(toParam)
-		to = int64(t)
+	if side != "" {
+		orderSpec.Side = side
 	}
-
-	if fromParam == "" {
-		from = now.AddDate(-1, 0, 0).Unix()
-	} else {
-		f, _ := strconv.Atoi(fromParam)
-		from = int64(f)
+	if status != "" {
+		orderSpec.Status = status
 	}
-
+	if orderType != "" {
+		orderSpec.OrderType = orderType
+	}
 	var err error
-	var orders []*types.Order
-	address := common.HexToAddress(addr)
+	var orders *types.OrderRes
 
-	var baseTokenAddr, quoteTokenAddr common.Address
-	if baseToken != "" && quoteToken != "" {
-		baseTokenAddr = common.HexToAddress(baseToken)
-		quoteTokenAddr = common.HexToAddress(quoteToken)
-	} else {
-		baseTokenAddr = common.Address{}
-		quoteTokenAddr = common.Address{}
-	}
-
-	orders, err = e.orderService.GetByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, offset, size)
+	orders, err = e.orderService.GetOrders(orderSpec, sortDB, offset*size, size)
 
 	if err != nil {
 		logger.Error(err)

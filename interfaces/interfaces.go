@@ -33,7 +33,7 @@ type OrderDao interface {
 	GetByID(id bson.ObjectId) (*types.Order, error)
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
-	GetByUserAddress(addr, bt, qt common.Address, from, to int64, offset int, size int) (*types.OrderRes, error)
+	GetByUserAddress(addr, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error)
 	GetOpenOrdersByUserAddress(addr common.Address) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error)
@@ -55,6 +55,7 @@ type OrderDao interface {
 	CancelOrder(o *types.Order, topic string) error
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
+	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 }
 
 type StopOrderDao interface {
@@ -234,7 +235,7 @@ type OrderService interface {
 	GetByHash(h common.Hash) (*types.Order, error)
 	GetByHashes(hashes []common.Hash) ([]*types.Order, error)
 	// GetTokenByAddress(a common.Address) (*types.Token, error)
-	GetByUserAddress(addr, bt, qt common.Address, from, to int64, offset int, size int) (*types.OrderRes, error)
+	GetByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
@@ -245,6 +246,7 @@ type OrderService interface {
 	HandleEngineResponse(res *types.EngineResponse) error
 	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
 	UpdateStopOrder(h common.Hash, so *types.StopOrder) error
+	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 }
 
 type OrderBookService interface {
