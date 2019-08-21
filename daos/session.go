@@ -116,6 +116,16 @@ func (d *Database) GetAndSort(dbName, collection string, query interface{}, sort
 	return
 }
 
+// GetEx extend get function
+func (d *Database) GetEx(dbName, collection string, query interface{}, sort []string, offset, limit int, response interface{}) (count int, err error) {
+	sc := d.Session.Copy()
+	defer sc.Close()
+	cursor := sc.DB(dbName).C(collection).Find(query).Sort(sort...)
+	c, _ := cursor.Count()
+	err = cursor.Skip(offset).Limit(limit).All(response)
+	return c, err
+}
+
 // GetSortOne is a wrapper for mgo.Find function with SORT function in pipeline.
 // It creates a copy of session initialized, sends query over this session
 // and returns the session to connection pool

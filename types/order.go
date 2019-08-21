@@ -58,17 +58,29 @@ type Order struct {
 	Key             string         `json:"key" bson:"key"`
 }
 
-// OrderRes for response api
+// OrderRes use for api
 type OrderRes struct {
-	Total  int64    `json:"total" bson:"total"`
+	Total  int      `json:"total" bson:"total"`
 	Orders []*Order `json:"orders" bson:"orders"`
+}
+
+// OrderSpec contains field for filter
+type OrderSpec struct {
+	UserAddress string
+	BaseToken   string
+	QuoteToken  string
+	Status      string
+	Side        string
+	OrderType   string
+	DateFrom    int64
+	DateTo      int64
 }
 
 func (o *Order) String() string {
 	return fmt.Sprintf("Pair: %v, Pricepoint: %v, Hash: %v", o.PairName, o.PricePoint.String(), o.Hash.Hex())
 }
 
-// TODO: Verify userAddress, baseToken, quoteToken, etc. conditions are working
+// Validate Verify userAddress, baseToken, quoteToken, etc. conditions are working
 func (o *Order) Validate() error {
 	if o.ExchangeAddress != common.HexToAddress(app.Config.Ethereum["exchange_address"]) {
 		return errors.New("Order 'exchangeAddress' parameter is incorrect")
@@ -643,17 +655,16 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 
 	createdAt, err := strconv.ParseInt(decoded.CreatedAt, 10, 64)
 	if err != nil {
-		logger.Error(err)
-		panic(err)
+		logger.Error("parse time error, set time to now", err)
+		createdAt = time.Now().Unix()
 	}
 	o.CreatedAt = time.Unix(createdAt, 0)
 	updatedAt, err := strconv.ParseInt(decoded.UpdatedAt, 10, 64)
 	if err != nil {
-		logger.Error(err)
-		panic(err)
+		logger.Error("parse time error, set time to now", err)
+		updatedAt = time.Now().Unix()
 	}
 	o.UpdatedAt = time.Unix(updatedAt, 0)
-	o.UpdatedAt = time.Now()
 	orderID, err := strconv.ParseInt(decoded.OrderID, 10, 64)
 	if err != nil {
 		logger.Error(err)

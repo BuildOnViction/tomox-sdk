@@ -13,7 +13,6 @@
       "name": "address",
       "in": "query",
       "description": "User address",
-      "required": true,
       "type": "string"
     },
     {
@@ -26,6 +25,36 @@
       "name": "pageSize",
       "in": "query",
       "description": "Number of items per a page",
+      "type": "string"
+    },
+    {
+      "name": "sortBy",
+      "in": "query",
+      "description": "Sort for query (time, orderStatus, orderType, orderSide)",
+      "type": "string"
+    },
+    {
+      "name": "sortType",
+      "in": "query",
+      "description": "asc/dec",
+      "type": "string"
+    },
+    {
+      "name": "orderStatus",
+      "in": "query",
+      "description": "OPEN/CANCELLED/FILLED/PARTIAL_FILLED",
+      "type": "string"
+    },
+    {
+      "name": "orderSide",
+      "in": "query",
+      "description": "SELL/BUY",
+      "type": "string"
+    },
+    {
+      "name": "orderType",
+      "in": "query",
+      "description": "LO/MO",
       "type": "string"
     },
     {
@@ -57,10 +86,19 @@
     "200": {
       "description": "successful operation",
       "schema": {
-        "type": "array",
-        "items": {
-          "$ref": "../../swagger.json#/definitions/Order"
+        "type": "object",
+        "properties":{
+          "total": {
+            "type":"integer"
+          },
+          "order":{
+            "type": "array",
+            "items":{
+              "$ref": "../../swagger.json#/definitions/Order"
+            }
+          }     
         }
+          
       }
     },
     "400": {
