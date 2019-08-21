@@ -470,11 +470,7 @@ func (dao *OrderDao) GetByHashes(hashes []common.Hash) ([]*types.Order, error) {
 
 // GetByUserAddress function fetches list of orders from order collection based on user address.
 // Returns array of Order type struct
-func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error) {
-	if limit == nil {
-		limit = []int{types.DefaultLimit}
-	}
-
+func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int64, offset int, size int) (*types.OrderRes, error) {
 	var fromTemp, toTemp int64
 	now := time.Now()
 
@@ -511,17 +507,20 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int6
 		}
 	}
 
-	err := db.Get(dao.dbName, dao.collectionName, q, 0, limit[0], &res)
+	err := db.Get(dao.dbName, dao.collectionName, q, offset, (offset+1)*size, &res)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
 
 	if res == nil {
-		return []*types.Order{}, nil
+		return &types.OrderRes{}, nil
 	}
-
-	return res, nil
+	r := &types.OrderRes{
+		Total:  0,
+		Orders: res,
+	}
+	return r, nil
 }
 
 // GetOpenOrdersByUserAddress function fetches list of open/partial filled orders from order collection based on user address.

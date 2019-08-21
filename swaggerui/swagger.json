@@ -13,7 +13,7 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     }
   },
-  "host": "dex.devnet.tomochain.com/api",
+  "host": "127.0.0.1:8080",
   "basePath": "/",
   "tags": [
     {
@@ -54,7 +54,7 @@
     }
   ],
   "schemes": [
-    "https"
+    "http"
   ],
   "paths": {
     "/account/{userAddress}": {

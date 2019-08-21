@@ -58,6 +58,12 @@ type Order struct {
 	Key             string         `json:"key" bson:"key"`
 }
 
+// OrderRes for response api
+type OrderRes struct {
+	Total  int64    `json:"total" bson:"total"`
+	Orders []*Order `json:"orders" bson:"orders"`
+}
+
 func (o *Order) String() string {
 	return fmt.Sprintf("Pair: %v, Pricepoint: %v, Hash: %v", o.PairName, o.PricePoint.String(), o.Hash.Hex())
 }
