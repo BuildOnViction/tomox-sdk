@@ -44,6 +44,19 @@ type Trade struct {
 	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
+// TradeSpec for query
+type TradeSpec struct {
+	BaseToken  string
+	QuoteToken string
+	DateFrom   int64
+	DateTo     int64
+}
+
+// TradeRes response api
+type TradeRes struct {
+	Total  int      `json:"total" bson:"total"`
+	Trades []*Trade `json:"trades" bson:"orders"`
+}
 type TradeRecord struct {
 	ID             bson.ObjectId `json:"id" bson:"_id"`
 	Taker          string        `json:"taker" bson:"taker"`

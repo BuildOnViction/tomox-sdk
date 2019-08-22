@@ -319,3 +319,8 @@ func (s *TradeService) broadcastTradeUpdate(trades []*types.Trade) {
 	id := utils.GetTradeChannelID(p.BaseTokenAddress, p.QuoteTokenAddress)
 	ws.GetTradeSocket().BroadcastMessage(id, trades)
 }
+
+// GetTrades filter trade
+func (s *TradeService) GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error) {
+	return s.tradeDao.GetTrades(tradeSpec, sortedBy, pageOffset, pageSize)
+}

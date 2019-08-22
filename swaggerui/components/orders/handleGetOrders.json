@@ -91,7 +91,7 @@
           "total": {
             "type":"integer"
           },
-          "order":{
+          "orders":{
             "type": "array",
             "items":{
               "$ref": "../../swagger.json#/definitions/Order"
