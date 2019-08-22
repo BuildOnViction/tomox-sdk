@@ -634,3 +634,39 @@ func (dao *TradeDao) GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pa
 	res.Trades = trades
 	return &res, nil
 }
+
+// GetTradesUserHistory get trade by user address
+func (dao *TradeDao) GetTradesUserHistory(a common.Address, tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error) {
+
+	q := bson.M{}
+	if tradeSpec.DateFrom != 0 || tradeSpec.DateTo != 0 {
+		dateFilter := bson.M{}
+		if tradeSpec.DateFrom != 0 {
+			dateFilter["$gte"] = strconv.FormatInt(tradeSpec.DateFrom, 10)
+		}
+		if tradeSpec.DateTo != 0 {
+			dateFilter["$lt"] = strconv.FormatInt(tradeSpec.DateTo, 10)
+		}
+		q["createdAt"] = dateFilter
+	}
+	q["$or"] = []bson.M{
+		{"maker": a.Hex()},
+		{"taker": a.Hex()},
+	}
+	if tradeSpec.BaseToken != "" {
+		q["baseToken"] = tradeSpec.BaseToken
+	}
+	if tradeSpec.QuoteToken != "" {
+		q["quoteToken"] = tradeSpec.QuoteToken
+	}
+	var res types.TradeRes
+	var trades []*types.Trade
+	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sortedBy, pageOffset, pageSize, &trades)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	res.Total = c
+	res.Trades = trades
+	return &res, nil
+}

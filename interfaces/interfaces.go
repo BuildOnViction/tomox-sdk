@@ -155,6 +155,7 @@ type TradeDao interface {
 	UpdateTradeStatusesByOrderHashes(status string, hashes ...common.Hash) ([]*types.Trade, error)
 	Drop()
 	GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error)
+	GetTradesUserHistory(a common.Address, tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error)
 }
 
 type TokenDao interface {
@@ -296,6 +297,7 @@ type TradeService interface {
 	UnsubscribeChannel(c *ws.Client, bt, qt common.Address)
 	Unsubscribe(c *ws.Client)
 	GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error)
+	GetTradesUserHistory(a common.Address, tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error)
 }
 
 type PriceBoardService interface {

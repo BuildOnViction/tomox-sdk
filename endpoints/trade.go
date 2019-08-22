@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -75,7 +74,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 	}
 
 	offset := 0
-	size := 10
+	size := types.DefaultLimit
 	sortDB := []string{}
 	if sortType != "asc" && sortType != "dec" {
 		sortType = "asc"
@@ -107,7 +106,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 		size = t
 	}
 
-	res, err := e.tradeService.GetTrades(&tradeSpec, sortDB, offset, size)
+	res, err := e.tradeService.GetTrades(&tradeSpec, sortDB, offset*size, size)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -126,11 +125,19 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	addr := v.Get("address")
-	limit := v.Get("limit")
-	baseToken := v.Get("baseToken")
-	quoteToken := v.Get("quoteToken")
+	bt := v.Get("baseToken")
+	qt := v.Get("quoteToken")
 	fromParam := v.Get("from")
 	toParam := v.Get("to")
+
+	pageOffset := v.Get("pageOffset")
+	pageSize := v.Get("pageSize")
+	sortBy := v.Get("sortBy")
+	sortType := v.Get("sortType")
+
+	sortedList := make(map[string]string)
+	sortedList["time"] = "createdAt"
+	var tradeSpec types.TradeSpec
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
@@ -142,62 +149,67 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Client must provides both tokens or none of them
-	if (baseToken != "" && quoteToken == "") || (quoteToken != "" && baseToken == "") {
-		httputils.WriteError(w, http.StatusBadRequest, "Both token addresses are required")
-		return
+	if bt != "" {
+		if !common.IsHexAddress(bt) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid base token address")
+			return
+		} else {
+			tradeSpec.BaseToken = bt
+		}
 	}
 
-	if baseToken != "" && !common.IsHexAddress(baseToken) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
-		return
+	if qt != "" {
+		if !common.IsHexAddress(qt) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid base token address")
+			return
+		} else {
+			tradeSpec.QuoteToken = qt
+		}
 	}
 
-	if quoteToken != "" && !common.IsHexAddress(quoteToken) {
-		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
-		return
-	}
-
-	// Client must provides both "from" and "to" or none of them
-	if (fromParam != "" && toParam == "") || (toParam != "" && fromParam == "") {
-		httputils.WriteError(w, http.StatusBadRequest, "Both \"from\" and \"to\" are required")
-		return
-	}
-
-	var from, to int64
-	now := time.Now()
-
-	if toParam == "" {
-		to = now.Unix()
-	} else {
+	if toParam != "" {
 		t, _ := strconv.Atoi(toParam)
-		to = int64(t)
+		tradeSpec.DateTo = int64(t)
+	}
+	if fromParam != "" {
+		t, _ := strconv.Atoi(fromParam)
+		tradeSpec.DateFrom = int64(t)
 	}
 
-	if fromParam == "" {
-		from = now.AddDate(-1, 0, 0).Unix()
-	} else {
-		f, _ := strconv.Atoi(fromParam)
-		from = int64(f)
+	offset := 0
+	size := types.DefaultLimit
+	sortDB := []string{}
+	if sortType != "asc" && sortType != "dec" {
+		sortType = "asc"
+	}
+	if sortBy != "" {
+		if val, ok := sortedList[sortBy]; ok {
+			if sortType == "asc" {
+				sortDB = append(sortDB, "+"+val)
+			} else {
+				sortDB = append(sortDB, "-"+val)
+			}
+
+		}
+	}
+	if pageOffset != "" {
+		t, err := strconv.Atoi(pageOffset)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
+			return
+		}
+		offset = t
+	}
+	if pageSize != "" {
+		t, err := strconv.Atoi(pageSize)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
+			return
+		}
+		size = t
 	}
 
-	lim := types.DefaultLimit
-	if limit != "" {
-		lim, _ = strconv.Atoi(limit)
-	}
-
-	address := common.HexToAddress(addr)
-
-	var baseTokenAddr, quoteTokenAddr common.Address
-	if baseToken != "" && quoteToken != "" {
-		baseTokenAddr = common.HexToAddress(baseToken)
-		quoteTokenAddr = common.HexToAddress(quoteToken)
-	} else {
-		baseTokenAddr = common.Address{}
-		quoteTokenAddr = common.Address{}
-	}
-
-	res, err := e.tradeService.GetSortedTradesByUserAddress(address, baseTokenAddr, quoteTokenAddr, from, to, lim)
+	res, err := e.tradeService.GetTradesUserHistory(common.HexToAddress(addr), &tradeSpec, sortDB, offset*size, size)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, "")
@@ -210,6 +222,7 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
+
 }
 
 func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {

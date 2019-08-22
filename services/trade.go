@@ -324,3 +324,8 @@ func (s *TradeService) broadcastTradeUpdate(trades []*types.Trade) {
 func (s *TradeService) GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error) {
 	return s.tradeDao.GetTrades(tradeSpec, sortedBy, pageOffset, pageSize)
 }
+
+// GetTradesUserHistory get trade by history
+func (s *TradeService) GetTradesUserHistory(a common.Address, tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error) {
+	return s.tradeDao.GetTradesUserHistory(a, tradeSpec, sortedBy, pageOffset, pageSize)
+}
