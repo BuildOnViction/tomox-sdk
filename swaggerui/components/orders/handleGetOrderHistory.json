@@ -14,13 +14,49 @@
         "name": "address",
         "in": "query",
         "description": "User address",
-        "required": true,
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "pageOffset",
+        "in": "query",
+        "description": "Page offset, default 0",
         "type": "string"
       },
       {
-        "name": "limit",
+        "name": "pageSize",
         "in": "query",
-        "description": "Number of orders returned in query",
+        "description": "Number of items per a page, defaul 50",
+        "type": "string"
+      },
+      {
+        "name": "sortBy",
+        "in": "query",
+        "description": "Sort for query (time(default), orderStatus, orderType, orderSide)",
+        "type": "string"
+      },
+      {
+        "name": "sortType",
+        "in": "query",
+        "description": "asc/dec, default asc",
+        "type": "string"
+      },
+      {
+        "name": "orderStatus",
+        "in": "query",
+        "description": "OPEN/CANCELLED/FILLED/PARTIAL_FILLED",
+        "type": "string"
+      },
+      {
+        "name": "orderSide",
+        "in": "query",
+        "description": "SELL/BUY",
+        "type": "string"
+      },
+      {
+        "name": "orderType",
+        "in": "query",
+        "description": "LO/MO",
         "type": "string"
       },
       {
@@ -52,9 +88,17 @@
       "200": {
         "description": "successful operation",
         "schema": {
-          "type": "array",
-          "items": {
-            "$ref": "../../swagger.json#/definitions/Order"
+          "type": "object",
+          "properties":{
+            "total": {
+              "type":"integer"
+            },
+            "orders":{
+              "type": "array",
+              "items":{
+                "$ref": "../../swagger.json#/definitions/Order"
+              }
+            }     
           }
         }
       },
