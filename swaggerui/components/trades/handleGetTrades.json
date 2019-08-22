@@ -30,7 +30,7 @@
     {
       "name": "pageSize",
       "in": "query",
-      "description": "number of trade item per page",
+      "description": "number of trade item per page, default 50",
       "type": "string"
     },
     {

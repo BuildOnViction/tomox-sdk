@@ -4,7 +4,7 @@
       "trades"
     ],
     "summary": "Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker",
-    "description": "Return all trades in an array",
+    "description": "Return trades array",
     "operationId": "HandleGetTradesHistory",
     "produces": [
       "application/json"
@@ -18,9 +18,27 @@
         "type": "string"
       },
       {
-        "name": "limit",
+        "name": "pageOffset",
         "in": "query",
-        "description": "Number of trades returned in query",
+        "description": "",
+        "type": "string"
+      },
+      {
+        "name": "pageSize",
+        "in": "query",
+        "description": "number of trade item per page, default 50",
+        "type": "string"
+      },
+      {
+        "name": "sortBy",
+        "in": "query",
+        "description": "Sort for query (suported sort by time)",
+        "type": "string"
+      },
+      {
+        "name": "sortType",
+        "in": "query",
+        "description": "asc/dec",
         "type": "string"
       },
       {
@@ -52,9 +70,17 @@
       "200": {
         "description": "successful operation",
         "schema": {
-          "type": "array",
-          "items": {
-            "$ref": "../../swagger.json#/definitions/Trade"
+          "type": "object",
+          "properties":{
+            "total": {
+              "type":"integer"
+            },
+            "trades":{
+              "type": "array",
+              "items":{
+                "$ref": "../../swagger.json#/definitions/Trade"
+              }
+            }     
           }
         }
       },
