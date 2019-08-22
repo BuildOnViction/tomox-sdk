@@ -536,6 +536,62 @@
         }
       }
     },
+    "OrderCreate": {
+     
+      "properties": {
+        "userAddress": {
+          "type": "string",
+          "example": "0x15e08dE16f534c890828F2a0D935433aF5B3CE0C"
+        },
+        "exchangeAddress": {
+          "type": "string",
+          "example": "0x0D3ab14BBaD3D99F4203bd7a11aCB94882050E7e"
+        },
+        "baseToken": {
+          "type": "string",
+          "example": "0x4d7eA2cE949216D6b120f3AA10164173615A2b6C"
+        },
+        "quoteToken": {
+          "type": "string",
+          "example": "0x0000000000000000000000000000000000000001"
+        },
+        "side": {
+          "type": "string",
+          "example": "SELL/BUY"
+        },
+        "type": {
+          "type": "string",
+          "example": "LO/MO"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "signature": {
+          "$ref": "#/definitions/Signature"
+        },
+        "pricepoint": {
+          "type": "string",
+          "example": "21207020000000000000000"
+        },
+        "amount": {
+          "type": "string",
+          "example": "4693386710283129"
+        },
+        "nonce": {
+          "type": "string",
+          "example": "1"
+        },
+        "makeFee": {
+          "type": "string",
+          "example": "1"
+        },
+        "takeFee": {
+          "type": "string",
+          "example": "1"
+        }
+     
+      }
+    },
     "OrderCancel": {
       "type": "object",
       "properties": {

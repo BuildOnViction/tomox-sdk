@@ -15,7 +15,7 @@
       "description": "Order object that needs to be added",
       "required": true,
       "schema": {
-        "$ref": "../../swagger.json#/definitions/Order"
+        "$ref": "../../swagger.json#/definitions/OrderCreate"
       }
     }
   ],
