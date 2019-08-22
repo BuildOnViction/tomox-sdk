@@ -37,6 +37,8 @@ type Trade struct {
 	PairName       string         `json:"pairName" bson:"pairName"`
 	PricePoint     *big.Int       `json:"pricepoint" bson:"pricepoint"`
 	Amount         *big.Int       `json:"amount" bson:"amount"`
+	MakeFee        *big.Int       `json:"makeFee" bson:"makeFee"`
+	TakeFee        *big.Int       `json:"takeFee" bson:"takeFee"`
 	Status         string         `json:"status" bson:"status"`
 	CreatedAt      time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt"`
