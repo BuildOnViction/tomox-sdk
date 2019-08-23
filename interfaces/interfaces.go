@@ -351,6 +351,7 @@ type AccountService interface {
 	GetFavoriteTokens(account common.Address) (map[common.Address]bool, error)
 	AddFavoriteToken(account, token common.Address) error
 	DeleteFavoriteToken(account, token common.Address) error
+	GetTokenBalanceProvidor(owner common.Address, token common.Address) (*types.TokenBalance, error)
 }
 
 type DepositService interface {
