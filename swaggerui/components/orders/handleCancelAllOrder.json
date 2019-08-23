@@ -3,7 +3,7 @@
     "tags": [
       "orders"
     ],
-    "summary": "Cancel all orders",
+    "summary": "[Deprecated] Cancel all orders",
     "description": "This endpoint should implements signature authentication",
     "operationId": "handleCancelAllOrders",
     "produces": [
