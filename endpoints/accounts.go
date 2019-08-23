@@ -99,7 +99,7 @@ func (e *AccountEndpoint) handleGetAccount(w http.ResponseWriter, r *http.Reques
 	a, err := e.AccountService.GetByAddress(address)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, "")
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
