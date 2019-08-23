@@ -158,11 +158,6 @@ func (s *AccountService) GetAll() ([]types.Account, error) {
 
 // GetByAddress get account from address
 func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) {
-	return s.AccountDao.GetByAddress(a)
-}
-
-// GetByAddressProvidor get account from address
-func (s *AccountService) GetByAddressProvidor(a common.Address) (*types.Account, error) {
 	account, err := s.AccountDao.GetByAddress(a)
 	if err != nil {
 		return nil, err
