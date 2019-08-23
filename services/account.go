@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
+	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/math"
@@ -162,6 +163,9 @@ func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) 
 	if err != nil {
 		return nil, err
 	}
+	if account == nil {
+		return nil, errors.New("User address not found")
+	}
 	for token, _ := range account.TokenBalances {
 
 		balance, err := s.GetTokenBalanceProvidor(a, token)
@@ -184,6 +188,9 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, token com
 	if err != nil {
 		logger.Error(err)
 		return nil, err
+	}
+	if tokenBalance == nil {
+		return nil, errors.New("User address not found")
 	}
 	b, err := s.Provider.Balance(owner, token)
 	if err != nil {
