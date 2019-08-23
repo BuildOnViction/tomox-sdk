@@ -423,6 +423,7 @@ type EthereumProvider interface {
 	BalanceOf(owner common.Address, token common.Address) (*big.Int, error)
 	Decimals(token common.Address) (uint8, error)
 	Symbol(token common.Address) (string, error)
+	Balance(owner common.Address, token common.Address) (*big.Int, error)
 }
 
 // RelayerService interface for relayer
