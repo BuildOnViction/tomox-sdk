@@ -3,7 +3,7 @@
     "tags": [
       "orders"
     ],
-    "summary": "Retrieve the list of positions for an Ethereum address. Positions are order that have been sent to the matching engine and that are waiting to be matched",
+    "summary": "[Deprecated] Retrieve the list of positions for an Ethereum address. Positions are order that have been sent to the matching engine and that are waiting to be matched",
     "description": "Return all orders in an array",
     "operationId": "handleGetPositions",
     "produces": [

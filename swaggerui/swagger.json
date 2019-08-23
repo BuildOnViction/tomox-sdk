@@ -222,14 +222,22 @@
         },
         "tokenBalances": {
           "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/TokenBalance"
-          }
-        },
-        "favoriteTokens": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean"
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "symbol": {
+              "type": "string"
+            },
+            "balance": {
+              "type": "string"
+            },
+            "availableBalance": {
+              "type": "string"
+            },
+            "inOrderBalance": {
+              "type": "string"
+            }
           }
         },
         "isBlocked": {

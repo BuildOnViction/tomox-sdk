@@ -3,7 +3,7 @@
     "tags": [
       "accounts"
     ],
-    "summary": "Find account's token balance by user address and token address",
+    "summary": "[Deprecated]Find account's token balance by user address and token address",
     "description": "Returns an object contains token balance of user",
     "operationId": "handleGetAccountTokenBalance",
     "produces": [
