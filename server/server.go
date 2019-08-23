@@ -89,7 +89,7 @@ func NewRouter(
 	swapEngine := swap.NewEngine(app.Config.Deposit)
 
 	// get services for injection
-	accountService := services.NewAccountService(accountDao, tokenDao)
+	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
 	ohlcvService := services.NewOHLCVService(tradeDao)
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)

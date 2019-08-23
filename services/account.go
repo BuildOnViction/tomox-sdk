@@ -13,16 +13,25 @@ import (
 type AccountService struct {
 	AccountDao interfaces.AccountDao
 	TokenDao   interfaces.TokenDao
+	PairDao    interfaces.PairDao
+	OrderDao   interfaces.OrderDao
+	Provider   interfaces.EthereumProvider
 }
 
-// NewAddressService returns a new instance of accountService
+// NewAccountService returns a new instance of accountService
 func NewAccountService(
 	accountDao interfaces.AccountDao,
 	tokenDao interfaces.TokenDao,
+	pairDao interfaces.PairDao,
+	orderDao interfaces.OrderDao,
+	provider interfaces.EthereumProvider,
 ) *AccountService {
 	return &AccountService{
 		AccountDao: accountDao,
 		TokenDao:   tokenDao,
+		PairDao:    pairDao,
+		OrderDao:   orderDao,
+		Provider:   provider,
 	}
 }
 
@@ -147,12 +156,59 @@ func (s *AccountService) GetAll() ([]types.Account, error) {
 	return s.AccountDao.GetAll()
 }
 
+// GetByAddress get account from address
 func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) {
 	return s.AccountDao.GetByAddress(a)
 }
 
+// GetByAddressProvidor get account from address
+func (s *AccountService) GetByAddressProvidor(a common.Address) (*types.Account, error) {
+	account, err := s.AccountDao.GetByAddress(a)
+	if err != nil {
+		return nil, err
+	}
+	for token, _ := range account.TokenBalances {
+
+		balance, err := s.GetTokenBalanceProvidor(a, token)
+		if err != nil {
+			return nil, err
+		}
+		account.TokenBalances[token] = balance
+	}
+	return account, nil
+}
+
+// GetTokenBalance database
 func (s *AccountService) GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error) {
 	return s.AccountDao.GetTokenBalance(owner, token)
+}
+
+// GetTokenBalanceProvidor get balance from chain
+func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, token common.Address) (*types.TokenBalance, error) {
+	tokenBalance, err := s.AccountDao.GetTokenBalance(owner, token)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	b, err := s.Provider.Balance(owner, token)
+	if err != nil {
+		return nil, err
+	}
+	tokenBalance.Balance = b
+	pairs, err := s.PairDao.GetActivePairs()
+	sellTokenLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, token, pairs)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	tokenBalance.InOrderBalance = sellTokenLockedBalance
+	tokenBalance.AvailableBalance = math.Sub(b, sellTokenLockedBalance)
+	return tokenBalance, nil
+}
+
+// GetTokenBalancesProvidor get balances from chain
+func (s *AccountService) GetTokenBalancesProvidor(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
+	return s.AccountDao.GetTokenBalances(owner)
 }
 
 func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
