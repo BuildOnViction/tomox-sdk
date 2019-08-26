@@ -114,7 +114,11 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if res == nil {
-		httputils.WriteJSON(w, http.StatusOK, []types.Trade{})
+		r := types.TradeRes{
+			Total:  0,
+			Trades: []*types.Trade{},
+		}
+		httputils.WriteJSON(w, http.StatusOK, r)
 		return
 	}
 

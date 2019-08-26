@@ -212,7 +212,11 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if orders == nil {
-		httputils.WriteJSON(w, http.StatusOK, []types.Order{})
+		r := types.OrderRes{
+			Total:  0,
+			Orders: []*types.Order{},
+		}
+		httputils.WriteJSON(w, http.StatusOK, r)
 		return
 	}
 
@@ -378,7 +382,11 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	}
 
 	if orders == nil {
-		httputils.WriteJSON(w, http.StatusOK, []types.Order{})
+		r := types.OrderRes{
+			Total:  0,
+			Orders: []*types.Order{},
+		}
+		httputils.WriteJSON(w, http.StatusOK, r)
 		return
 	}
 
