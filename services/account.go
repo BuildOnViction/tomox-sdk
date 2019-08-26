@@ -164,7 +164,7 @@ func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) 
 		return nil, err
 	}
 	if account == nil {
-		return nil, errors.New("User address not found")
+		return nil, nil
 	}
 	for token, _ := range account.TokenBalances {
 
