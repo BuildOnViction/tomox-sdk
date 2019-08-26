@@ -559,7 +559,7 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 		q["type"] = strings.ToUpper(orderSpec.OrderType)
 	}
 	var res types.OrderRes
-	var orders []*types.Order
+	orders := []*types.Order{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sort, offset, size, &orders)
 	if err != nil {
 		logger.Error(err)

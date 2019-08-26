@@ -624,7 +624,7 @@ func (dao *TradeDao) GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pa
 	}
 
 	var res types.TradeRes
-	var trades []*types.Trade
+	trades := []*types.Trade{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sortedBy, pageOffset, pageSize, &trades)
 	if err != nil {
 		logger.Error(err)
@@ -660,7 +660,7 @@ func (dao *TradeDao) GetTradesUserHistory(a common.Address, tradeSpec *types.Tra
 		q["quoteToken"] = tradeSpec.QuoteToken
 	}
 	var res types.TradeRes
-	var trades []*types.Trade
+	trades := []*types.Trade{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sortedBy, pageOffset, pageSize, &trades)
 	if err != nil {
 		logger.Error(err)
