@@ -187,12 +187,14 @@ func getGroupAddFieldBson(key, units string, duration int64) (bson.M, bson.M) {
 
 	one, _ := bson.ParseDecimal128("1")
 	group = bson.M{
-		"count":  bson.M{"$sum": one},
-		"high":   bson.M{"$max": "$pricepoint"},
-		"low":    bson.M{"$min": "$pricepoint"},
-		"open":   bson.M{"$first": "$pricepoint"},
-		"close":  bson.M{"$last": "$pricepoint"},
-		"volume": bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
+		"count":     bson.M{"$sum": one},
+		"high":      bson.M{"$max": "$pricepoint"},
+		"low":       bson.M{"$min": "$pricepoint"},
+		"open":      bson.M{"$first": "$pricepoint"},
+		"close":     bson.M{"$last": "$pricepoint"},
+		"volume":    bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
+		"openTime":  bson.M{"$first": "$createdAt"},
+		"closeTime": bson.M{"$last": "$createdAt"},
 	}
 
 	groupID := make(bson.M)
