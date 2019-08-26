@@ -525,6 +525,10 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int6
 	return res, nil
 }
 
+func (dao *OrderDao) removeSignature(order *types.Order) {
+	order.Signature = nil
+}
+
 // GetOrders filter order
 func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error) {
 
@@ -566,6 +570,9 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 		return nil, err
 	}
 	res.Total = c
+	for i, _ := range orders {
+		dao.removeSignature(orders[i])
+	}
 	res.Orders = orders
 	return &res, nil
 }

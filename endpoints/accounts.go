@@ -102,6 +102,10 @@ func (e *AccountEndpoint) handleGetAccount(w http.ResponseWriter, r *http.Reques
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if a == nil {
+		httputils.WriteError(w, http.StatusNotFound, "Account not found")
+		return
+	}
 
 	httputils.WriteJSON(w, http.StatusOK, a)
 }
