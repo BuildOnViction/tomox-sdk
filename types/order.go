@@ -419,14 +419,6 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		order["nonce"] = o.Nonce.String()
 	}
 
-	if o.Signature != nil {
-		order["signature"] = map[string]interface{}{
-			"V": o.Signature.V,
-			"R": o.Signature.R,
-			"S": o.Signature.S,
-		}
-	}
-
 	return json.Marshal(order)
 }
 
