@@ -204,22 +204,31 @@ func (d *Database) FindAndModify(dbName, collection string, query interface{}, c
 	return nil
 }
 
-// Aggregate is a wrapper for mgo.Pipe function.
-// It is used to make mongo aggregate pipeline queries
-// It creates a copy of session initialized, sends query over this session
-// and returns the session to connection pool
-func (d *Database) Aggregate(dbName, collection string, query []bson.M, response interface{}) error {
+// AggregateEx add collation
+func (d *Database) AggregateEx(dbName, collection string, query []bson.M, response interface{}) error {
 	sc := d.Session.Copy()
 	defer sc.Close()
 
 	result := reflect.ValueOf(response).Interface()
-	err := sc.DB(dbName).C(collection).Pipe(query).All(result)
+	c := mgo.Collation{
+		NumericOrdering: true,
+		Locale:          "en_US",
+	}
+	err := sc.DB(dbName).C(collection).Pipe(query).Collation(&c).All(result)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
 	return nil
+}
+
+// Aggregate is a wrapper for mgo.Pipe function.
+// It is used to make mongo aggregate pipeline queries
+// It creates a copy of session initialized, sends query over this session
+// and returns the session to connection pool
+func (d *Database) Aggregate(dbName, collection string, query []bson.M, response interface{}) error {
+	return d.AggregateEx(dbName, collection, query, response)
 }
 
 // Remove removes one document matching a certain query
