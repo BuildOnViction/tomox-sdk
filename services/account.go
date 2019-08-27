@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/math"
@@ -93,6 +92,7 @@ func (s *AccountService) Create(a *types.Account) error {
 	return nil
 }
 
+//FindOrCreate find or create if not found [Deprecated]
 func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, error) {
 	a, err := s.AccountDao.GetByAddress(addr)
 	if err != nil {
@@ -149,10 +149,12 @@ func (s *AccountService) FindOrCreate(addr common.Address) (*types.Account, erro
 	return a, nil
 }
 
+// GetByID get account by id [Deprecated]
 func (s *AccountService) GetByID(id bson.ObjectId) (*types.Account, error) {
 	return s.AccountDao.GetByID(id)
 }
 
+// GetAll get all account [Deprecated]
 func (s *AccountService) GetAll() ([]types.Account, error) {
 	return s.AccountDao.GetAll()
 }
@@ -164,41 +166,52 @@ func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) 
 		return nil, err
 	}
 	if account == nil {
-		return nil, nil
+		account = &types.Account{
+			Address:       a,
+			TokenBalances: make(map[common.Address]*types.TokenBalance),
+			IsBlocked:     false,
+		}
 	}
-	for token, _ := range account.TokenBalances {
-
-		balance, err := s.GetTokenBalanceProvidor(a, token)
+	tokens, err := s.TokenDao.GetAll()
+	if err != nil || tokens == nil {
+		return nil, err
+	}
+	for _, token := range tokens {
+		balance, err := s.GetTokenBalanceProvidor(a, token.ContractAddress)
 		if err != nil {
 			return nil, err
 		}
-		account.TokenBalances[token] = balance
+		account.TokenBalances[token.ContractAddress] = balance
 	}
+
 	return account, nil
 }
 
-// GetTokenBalance database
+// GetTokenBalance database [Deprecated]
 func (s *AccountService) GetTokenBalance(owner common.Address, token common.Address) (*types.TokenBalance, error) {
 	return s.AccountDao.GetTokenBalance(owner, token)
 }
 
 // GetTokenBalanceProvidor get balance from chain
-func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, token common.Address) (*types.TokenBalance, error) {
-	tokenBalance, err := s.AccountDao.GetTokenBalance(owner, token)
-	if err != nil {
-		logger.Error(err)
+func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddress common.Address) (*types.TokenBalance, error) {
+	token, err := s.TokenDao.GetByAddress(tokenAddress)
+	if err != nil || token == nil {
 		return nil, err
 	}
-	if tokenBalance == nil {
-		return nil, errors.New("User address not found")
+	tokenBalance := &types.TokenBalance{
+		Address:          tokenAddress,
+		Symbol:           token.Symbol,
+		AvailableBalance: big.NewInt(0),
+		InOrderBalance:   big.NewInt(0),
+		Balance:          big.NewInt(0),
 	}
-	b, err := s.Provider.Balance(owner, token)
+	b, err := s.Provider.Balance(owner, tokenAddress)
 	if err != nil {
 		return nil, err
 	}
 	tokenBalance.Balance = b
 	pairs, err := s.PairDao.GetActivePairs()
-	sellTokenLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, token, pairs)
+	sellTokenLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, pairs)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -213,22 +226,27 @@ func (s *AccountService) GetTokenBalancesProvidor(owner common.Address) (map[com
 	return s.AccountDao.GetTokenBalances(owner)
 }
 
+// GetTokenBalances Deprecated
 func (s *AccountService) GetTokenBalances(owner common.Address) (map[common.Address]*types.TokenBalance, error) {
 	return s.AccountDao.GetTokenBalances(owner)
 }
 
+// Transfer transfer favorite token
 func (s *AccountService) Transfer(token common.Address, fromAddress common.Address, toAddress common.Address, amount *big.Int) error {
 	return s.AccountDao.Transfer(token, fromAddress, toAddress, amount)
 }
 
+// GetFavoriteTokens get favorite token
 func (s *AccountService) GetFavoriteTokens(owner common.Address) (map[common.Address]bool, error) {
 	return s.AccountDao.GetFavoriteTokens(owner)
 }
 
+// AddFavoriteToken add favorite token
 func (s *AccountService) AddFavoriteToken(owner, token common.Address) error {
 	return s.AccountDao.AddFavoriteToken(owner, token)
 }
 
+// DeleteFavoriteToken delete favorite token
 func (s *AccountService) DeleteFavoriteToken(owner, token common.Address) error {
 	return s.AccountDao.DeleteFavoriteToken(owner, token)
 }
