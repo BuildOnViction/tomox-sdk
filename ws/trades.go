@@ -1,11 +1,15 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
 var tradeSocket *TradeSocket
+
+var lockTrade = &sync.Mutex{}
 
 // TradeSocket holds the map of connections subscribed to pair channels
 // corresponding to the key/event they have subscribed to.
@@ -44,9 +48,9 @@ func (s *TradeSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-
+	lockTrade.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-
+	lockTrade.Unlock()
 	return nil
 }
 
@@ -65,10 +69,12 @@ func (s *TradeSocket) UnsubscribeHandler() func(c *Client) {
 
 // Unsubscribe removes a websocket connection from the trade channel updates
 func (s *TradeSocket) UnsubscribeChannel(channelID string, c *Client) {
+	lockTrade.Lock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
+	lockTrade.Unlock()
 }
 
 func (s *TradeSocket) Unsubscribe(c *Client) {

@@ -49,9 +49,9 @@ func (s *PriceBoardSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-
+	lockP.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-
+	lockP.Unlock()
 	return nil
 }
 

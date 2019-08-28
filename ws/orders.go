@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/tomox-sdk/types"
 )
@@ -9,6 +11,8 @@ import (
 // It holds the reference to connection and the channel of type OrderMessage
 
 type OrderConnection []*Client
+
+var lockOrder = &sync.Mutex{}
 
 var orderConnections map[string]OrderConnection
 
@@ -23,6 +27,7 @@ func GetOrderConnections(a common.Address) OrderConnection {
 	return orderConnections[a.Hex()]
 }
 
+// OrderSocketUnsubscribeHandler unsubscrible order
 func OrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 	return func(client *Client) {
 		logger.Info("In unsubscription handler")
@@ -33,11 +38,13 @@ func OrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 
 		if orderConnection != nil {
 			logger.Info("%v connections before unsubscription", len(orderConnections[a.Hex()]))
+			lockOrder.Lock()
 			for i, c := range orderConnection {
 				if client == c {
 					orderConnection = append(orderConnection[:i], orderConnection[i+1:]...)
 				}
 			}
+			lockOrder.Unlock()
 
 		}
 
@@ -66,7 +73,9 @@ func RegisterOrderConnection(a common.Address, c *Client) {
 
 		if !isClientConnected(orderConnections[a.Hex()], c) {
 			logger.Info("Registering a new order connection")
+			lockOrder.Lock()
 			orderConnections[a.Hex()] = append(orderConnections[a.Hex()], c)
+			lockOrder.Unlock()
 			RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
 			logger.Info("Number of connections for this address: %v", len(orderConnections))
 		}
