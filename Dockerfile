@@ -11,7 +11,7 @@ RUN apk update && apk add --no-cache git \
                                      musl-dev \
                                      linux-headers \
                                      tzdata \
-                                     ca-certificates && update-ca-certificates
+                                     ca-certificates && update-ca-certificates 2>/dev/null || true
 
 WORKDIR /app
 
