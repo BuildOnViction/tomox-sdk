@@ -42,6 +42,7 @@ type Trade struct {
 	Status         string         `json:"status" bson:"status"`
 	CreatedAt      time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time      `json:"updatedAt" bson:"updatedAt"`
+	TakerOrderSide string         `json:"takerOrderSide" bson:"takerOrderSide"`
 }
 
 // TradeSpec for query
@@ -75,6 +76,7 @@ type TradeRecord struct {
 	Status         string        `json:"status" bson:"status"`
 	CreatedAt      time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt" bson:"updatedAt"`
+	TakerOrderSide string        `json:"takerOrderSide" bson:"takerOrderSide"`
 }
 
 // NewTrade returns a new unsigned trade corresponding to an Order, amount and taker address
@@ -148,16 +150,17 @@ func (t *Trade) Validate() error {
 // MarshalJSON returns the json encoded byte array representing the trade struct
 func (t *Trade) MarshalJSON() ([]byte, error) {
 	trade := map[string]interface{}{
-		"taker":      t.Taker,
-		"maker":      t.Maker,
-		"status":     t.Status,
-		"hash":       t.Hash,
-		"pairName":   t.PairName,
-		"pricepoint": t.PricePoint.String(),
-		"amount":     t.Amount.String(),
-		"makeFee":    t.MakeFee.String(),
-		"takeFee":    t.TakeFee.String(),
-		"createdAt":  t.CreatedAt.Format(time.RFC3339Nano),
+		"taker":          t.Taker,
+		"maker":          t.Maker,
+		"status":         t.Status,
+		"hash":           t.Hash,
+		"pairName":       t.PairName,
+		"pricepoint":     t.PricePoint.String(),
+		"amount":         t.Amount.String(),
+		"makeFee":        t.MakeFee.String(),
+		"takeFee":        t.TakeFee.String(),
+		"createdAt":      t.CreatedAt.Format(time.RFC3339Nano),
+		"takerOrderSide": t.TakerOrderSide,
 	}
 
 	if (t.BaseToken != common.Address{}) {
@@ -269,6 +272,9 @@ func (t *Trade) UnmarshalJSON(b []byte) error {
 		tm, _ := time.Parse(time.RFC3339Nano, trade["createdAt"].(string))
 		t.CreatedAt = tm
 	}
+	if trade["takerOrderSide"] != nil {
+		t.TakerOrderSide = trade["takerOrderSide"].(string)
+	}
 
 	return nil
 }
@@ -297,6 +303,7 @@ func (t *Trade) GetBSON() (interface{}, error) {
 		Amount:         t.Amount.String(),
 		MakeFee:        t.MakeFee.String(),
 		TakeFee:        t.TakeFee.String(),
+		TakerOrderSide: t.TakerOrderSide,
 	}
 
 	return tr, nil
@@ -321,6 +328,7 @@ func (t *Trade) SetBSON(raw bson.Raw) error {
 		Amount         string        `json:"amount" bson:"amount"`
 		MakeFee        string        `json:"makeFee" bson:"makeFee"`
 		TakeFee        string        `json:"takeFee" bson:"takeFee"`
+		TakerOrderSide string        `json:"takerOrderSide" bson:"takerOrderSide"`
 	})
 
 	err := raw.Unmarshal(decoded)
@@ -347,6 +355,7 @@ func (t *Trade) SetBSON(raw bson.Raw) error {
 
 	t.CreatedAt = decoded.CreatedAt
 	t.UpdatedAt = decoded.UpdatedAt
+	t.TakerOrderSide = decoded.TakerOrderSide
 	return nil
 }
 

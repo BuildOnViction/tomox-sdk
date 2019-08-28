@@ -54,7 +54,7 @@ func (s *TradeSocket) Subscribe(channelID string, c *Client) error {
 	return nil
 }
 
-// UnsubscribeHandler unsubscribes a connection from a certain trade channel id
+// UnsubscribeChannelHandler unsubscribes a connection from a certain trade channel id
 func (s *TradeSocket) UnsubscribeChannelHandler(channelID string) func(c *Client) {
 	return func(c *Client) {
 		s.UnsubscribeChannel(channelID, c)
@@ -67,7 +67,7 @@ func (s *TradeSocket) UnsubscribeHandler() func(c *Client) {
 	}
 }
 
-// Unsubscribe removes a websocket connection from the trade channel updates
+// UnsubscribeChannel removes a websocket connection from the trade channel updates
 func (s *TradeSocket) UnsubscribeChannel(channelID string, c *Client) {
 	lockTrade.Lock()
 	if s.subscriptions[channelID][c] {
