@@ -1,11 +1,14 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
 var priceBoardSocket *PriceBoardSocket
+var lockP = &sync.Mutex{}
 
 // PriceBoardSocket holds the map of subscriptions subscribed to price board channels
 // corresponding to the key/event they have subscribed to.
@@ -65,12 +68,14 @@ func (s *PriceBoardSocket) UnsubscribeHandler() func(c *Client) {
 	}
 }
 
-// Unsubscribe removes a websocket connection from the price board channel updates
+// UnsubscribeChannel removes a websocket connection from the price board channel updates
 func (s *PriceBoardSocket) UnsubscribeChannel(channelID string, c *Client) {
+	lockP.Lock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
+	lockP.Unlock()
 }
 
 func (s *PriceBoardSocket) Unsubscribe(c *Client) {
