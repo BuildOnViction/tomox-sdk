@@ -1,11 +1,15 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
 var ohlcvSocket *OHLCVSocket
+
+var lockOhlc = &sync.Mutex{}
 
 // OHLCVSocket holds the map of subscribtions subscribed to OHLCV channels
 // corresponding to the key/event they have subscribed to.
@@ -46,9 +50,9 @@ func (s *OHLCVSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-
+	lockOhlc.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-
+	lockOhlc.Unlock()
 	return nil
 }
 
@@ -70,10 +74,12 @@ func (s *OHLCVSocket) UnsubscribeHandler() func(c *Client) {
 // subscribed to. It can be called on unsubscription message from user or due to some other reason by
 // system
 func (s *OHLCVSocket) UnsubscribeChannel(channelID string, c *Client) {
+	lockOhlc.Lock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
+	lockOhlc.Unlock()
 }
 
 func (s *OHLCVSocket) Unsubscribe(c *Client) {

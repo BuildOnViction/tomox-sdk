@@ -73,7 +73,9 @@ func RegisterNotificationConnection(a common.Address, c *Client) {
 
 		if !isClientConnected(notificationConnections[a.Hex()], c) {
 			logger.Info("Registering a new notification connection")
+			lockN.Lock()
 			notificationConnections[a.Hex()] = append(notificationConnections[a.Hex()], c)
+			lockN.Unlock()
 			RegisterConnectionUnsubscribeHandler(c, NotificationSocketUnsubscribeHandler(a))
 			logger.Info("Number of connections for this address: %v", len(notificationConnections))
 		}
