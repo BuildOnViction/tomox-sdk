@@ -267,7 +267,7 @@ type PairService interface {
 	CreatePairs(token common.Address) ([]*types.Pair, error)
 	GetByID(id bson.ObjectId) (*types.Pair, error)
 	GetByTokenAddress(bt, qt common.Address) (*types.Pair, error)
-	GetTokenPairData(bt, qt common.Address) ([]*types.Tick, error)
+	GetTokenPairData(bt, qt common.Address) (*types.PairData, error)
 	GetAllTokenPairData() ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
 	GetListedPairs() ([]types.Pair, error)

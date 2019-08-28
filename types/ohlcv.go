@@ -89,8 +89,8 @@ func (t *Tick) MarshalJSON() ([]byte, error) {
 	if t.Count != nil {
 		tick["count"] = t.Count.String()
 	}
-	tick["openTime"] = t.OpenTime
-	tick["closeTime"] = t.CloseTime
+	//tick["openTime"] = t.OpenTime
+	//tick["closeTime"] = t.CloseTime
 
 	bytes, err := json.Marshal(tick)
 	return bytes, err

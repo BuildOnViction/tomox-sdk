@@ -84,8 +84,11 @@
     "/pair": {
       "$ref": "./components/pairs/handleGetPair.json"
     },
-    "/pairs/data": {
+    "/pair/data": {
       "$ref": "./components/pairs/handleGetPairData.json"
+    },
+    "/pairs/data": {
+      "$ref": "./components/pairs/handleGetPairsData.json"
     },
     "/orders": {
       "$ref": "./paths/orders.json"
