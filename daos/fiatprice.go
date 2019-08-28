@@ -273,7 +273,7 @@ func (dao *FiatPriceDao) GetLastPriceCurrentByTime(symbol string, createAt time.
 		symbolName = "ethereum"
 		break
 	case "TOMO":
-		symbolName = "tomo"
+		symbolName = "tomochain"
 		break
 	case "TRIIP":
 		symbolName = "triip"
@@ -284,11 +284,11 @@ func (dao *FiatPriceDao) GetLastPriceCurrentByTime(symbol string, createAt time.
 	}
 	q := bson.M{
 		"timestamp": bson.M{
-			"$lte": strconv.FormatInt(createAt.Unix(), 10),
+			"$lte": createAt.Unix() * 1000,
 		},
 		"symbol": symbolName,
 	}
-	a := strconv.FormatInt(createAt.Unix(), 10)
+	a := strconv.FormatInt(createAt.Unix()*1000, 10)
 	fmt.Print(a)
 	sort := []string{"-$timestamp"}
 	err := db.GetSortOne(dao.dbName, dao.collectionName, q, sort, &res)

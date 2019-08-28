@@ -26,7 +26,8 @@ func ServePairResource(
 	r.HandleFunc("/pairs", e.HandleGetPairs).Methods("GET")
 	r.HandleFunc("/pair", e.HandleGetPair).Methods("GET")
 	r.HandleFunc("/pair", e.HandleCreatePair).Methods("POST")
-	r.HandleFunc("/pairs/data", e.HandleGetPairData).Methods("GET")
+	r.HandleFunc("/pairs/data", e.HandleGetPairsData).Methods("GET")
+	r.HandleFunc("/pair/data", e.HandleGetPairData).Methods("GET")
 }
 
 func (e *pairEndpoint) HandleCreatePair(w http.ResponseWriter, r *http.Request) {
@@ -130,27 +131,29 @@ func (e *pairEndpoint) HandleGetPair(w http.ResponseWriter, r *http.Request) {
 	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
+func (e *pairEndpoint) HandleGetPairsData(w http.ResponseWriter, r *http.Request) {
+
+	res, err := e.pairService.GetAllTokenPairData()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if res == nil {
+		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, res)
+	return
+
+}
+
 func (e *pairEndpoint) HandleGetPairData(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	baseToken := v.Get("baseToken")
 	quoteToken := v.Get("quoteToken")
-
-	if baseToken == "" && quoteToken == "" {
-		res, err := e.pairService.GetAllTokenPairData()
-		if err != nil {
-			logger.Error(err)
-			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if res == nil {
-			httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
-			return
-		}
-
-		httputils.WriteJSON(w, http.StatusOK, res)
-		return
-	}
 
 	if quoteToken == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "quoteToken Parameter missing")
@@ -186,6 +189,5 @@ func (e *pairEndpoint) HandleGetPairData(w http.ResponseWriter, r *http.Request)
 		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
 		return
 	}
-
 	httputils.WriteJSON(w, http.StatusOK, res)
 }
