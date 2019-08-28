@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/tomox-sdk/types"
 )
@@ -11,6 +13,8 @@ import (
 type NotificationConnection []*Client
 
 var notificationConnections map[string]NotificationConnection
+
+var lockN = &sync.Mutex{}
 
 // GetNotificationConnections returns the connection associated with an user address
 func GetNotificationConnections(a common.Address) NotificationConnection {
@@ -23,6 +27,7 @@ func GetNotificationConnections(a common.Address) NotificationConnection {
 	return notificationConnections[a.Hex()]
 }
 
+// NotificationSocketUnsubscribeHandler unsubscribe notification
 func NotificationSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 	return func(client *Client) {
 		logger.Info("In unsubscription handler")
@@ -33,11 +38,13 @@ func NotificationSocketUnsubscribeHandler(a common.Address) func(client *Client)
 
 		if notificationConnection != nil {
 			logger.Info("%v connections before unsubscription", len(notificationConnections[a.Hex()]))
+			lockN.Lock()
 			for i, c := range notificationConnection {
 				if client == c {
 					notificationConnection = append(notificationConnection[:i], notificationConnection[i+1:]...)
 				}
 			}
+			lockN.Unlock()
 
 		}
 
