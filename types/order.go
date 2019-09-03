@@ -126,7 +126,7 @@ func (o *Order) Validate() error {
 		return errors.New("Order 'signature' parameter is required")
 	}
 
-	if math.IsSmallerThan(o.Nonce, big.NewInt(0)) {
+	if math.IsStrictlySmallerThan(o.Nonce, big.NewInt(0)) {
 		return errors.New("Order 'nonce' parameter should be positive")
 	}
 
