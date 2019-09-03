@@ -102,8 +102,6 @@ github.com/posener/wstest v0.0.0-20180216222922-04b166ca0bf1 h1:YZbbjxtI2KV/9auL
 github.com/posener/wstest v0.0.0-20180216222922-04b166ca0bf1/go.mod h1:cjC8eRbwXrr5m2069dsjp7l7b0gWqFwMTUBDLNvVqho=
 github.com/prometheus/prometheus v1.7.1-0.20170814170113-3101606756c5 h1:UvMPPlTJi5oVyV1V78++tL/ZsDeSdkAIyn3MsA2Q1HM=
 github.com/prometheus/prometheus v1.7.1-0.20170814170113-3101606756c5/go.mod h1:oAIUtOny2rjMX0OWN5vPR5/q/twIROJvdqnQKDdil/s=
-github.com/rjeczalik/notify v0.9.1 h1:CLCKso/QK1snAlnhNR/CNvNiFU2saUtjV0bx3EwNeCE=
-github.com/rjeczalik/notify v0.9.1/go.mod h1:rKwnCoCGeuQnwBtTSPL9Dad03Vh2n40ePRrjvIXnJho=
 github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967 h1:x7xEyJDP7Hv3LVgvWhzioQqbC/KtuUhTigKlH/8ehhE=
 github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967/go.mod h1:JGuDeoQd7Z6yL4zQhZ3OPEVHB7fL6Ka6skscFHfmt2k=
 github.com/rs/cors v1.5.0 h1:dgSHE6+ia18arGOTIYQKKGWLvEbGvmbNE6NfxhoNHUY=
