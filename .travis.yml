@@ -6,21 +6,7 @@ go:
   - "1.12.x"  
 
 jobs:
-  include:
-    - stage: Build and push image
-      services:
-        - docker
-      install: skip
-      before_script:
-        - make
-      script:
-        - docker build -t tomochain/tomox-sdk .
-        - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-        - docker tag tomochain/tomox-sdk tomochain/tomox-sdk:latest
-        - docker push tomochain/tomox-sdk:latest
-        - docker tag tomochain/tomox-sdk tomochain/tomox-sdk:$TRAVIS_BUILD_ID
-        - docker push tomochain/tomox-sdk:$TRAVIS_BUILD_ID
-          
+  include:          
     - stage: Release application
       script:
         - GOARCH=amd64 GOOS=linux go build -o tomox-sdk.$TRAVIS_TAG.linux.amd64
@@ -39,7 +25,5 @@ jobs:
           tags: true
 
 stages:
-  - name: Build and push image
-    if: type != pull_request AND branch = master AND tag IS blank AND repo = tomochain/tomox-sdk
   - name: Release application
     if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk
