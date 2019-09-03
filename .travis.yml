@@ -23,8 +23,8 @@ jobs:
         overwrite: true
         file:
           - tomox-sdk.$TRAVIS_TAG.linux.amd64
-          #- proxy.$TRAVIS_TAG.darwin.amd64
-          #- proxy.$TRAVIS_TAG.amd64.exe
+          #- tomox-sdk.$TRAVIS_TAG.darwin.amd64
+          #- tomox-sdk.$TRAVIS_TAG.amd64.exe
         on:
           tags: true
 
