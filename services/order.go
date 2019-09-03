@@ -364,17 +364,19 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_ADDED", o.UserAddress, notifications)
-
+	logger.Info("BroadcastOrderBookUpdate add")
 	s.broadcastOrderBookUpdate([]*types.Order{o})
 	s.broadcastRawOrderBookUpdate([]*types.Order{o})
 }
 
 func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {
+	logger.Info("BroadcastOrderBookUpdate PartialFilled")
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
+	logger.Info("BroadcastOrderBookUpdate Filled")
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
@@ -399,7 +401,7 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 
 	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
-
+	logger.Info("BroadcastOrderBookUpdate Cancelled")
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
@@ -530,14 +532,14 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 
 	switch ev.OperationType {
 	case types.OPERATION_TYPE_INSERT:
-		if ev.FullDocument.Status == "OPEN" {
+		if ev.FullDocument.Status == types.OrderStatusOpen || ev.FullDocument.Status == types.OrderStatusNew {
 			res.Status = types.ORDER_ADDED
 			res.Order = ev.FullDocument
 		}
 		break
 	case types.OPERATION_TYPE_UPDATE:
 	case types.OPERATION_TYPE_REPLACE:
-		if ev.FullDocument.Status == "CANCELLED" {
+		if ev.FullDocument.Status == types.OrderStatusCancelled {
 			res.Status = types.ORDER_CANCELLED
 			res.Order = ev.FullDocument
 		} else if ev.FullDocument.Status == types.ORDER_FILLED || ev.FullDocument.Status == types.ORDER_PARTIALLY_FILLED {

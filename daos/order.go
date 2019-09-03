@@ -585,7 +585,7 @@ func (dao *OrderDao) GetOpenOrdersByUserAddress(addr common.Address) ([]*types.O
 
 	q = bson.M{
 		"userAddress": addr.Hex(),
-		"status":      bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+		"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 	}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &res)
@@ -613,8 +613,9 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 	q := bson.M{
 		"userAddress": addr.Hex(),
 		"status": bson.M{"$in": []string{
-			"OPEN",
-			"PARTIAL_FILLED",
+			types.OrderStatusNew,
+			types.OrderStatusOpen,
+			types.OrderStatusPartialFilled,
 		},
 		},
 	}
@@ -665,8 +666,9 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 				"$lt":  strconv.FormatInt(to, 10),
 			},
 			"status": bson.M{"$nin": []string{
-				"OPEN",
-				"PARTIAL_FILLED",
+				types.OrderStatusNew,
+				types.OrderStatusOpen,
+				types.OrderStatusPartialFilled,
 			},
 			},
 		}
@@ -676,8 +678,9 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 			"baseToken":   bt.Hex(),
 			"quoteToken":  qt.Hex(),
 			"status": bson.M{"$nin": []string{
-				"OPEN",
-				"PARTIAL_FILLED",
+				types.OrderStatusNew,
+				types.OrderStatusOpen,
+				types.OrderStatusPartialFilled,
 			},
 			},
 			"createdAt": bson.M{
@@ -709,13 +712,13 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 		"$or": []bson.M{
 			bson.M{
 				"userAddress": account.Hex(),
-				"status":      bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"quoteToken":  token.Hex(),
 				"side":        "BUY",
 			},
 			bson.M{
 				"userAddress": account.Hex(),
-				"status":      bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":   token.Hex(),
 				"side":        "SELL",
 			},
@@ -757,7 +760,7 @@ func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	q := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":  p.BaseTokenAddress.Hex(),
 				"quoteToken": p.QuoteTokenAddress.Hex(),
 			},
@@ -788,7 +791,7 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limi
 	sideQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":  p.BaseTokenAddress.Hex(),
 				"quoteToken": p.QuoteTokenAddress.Hex(),
 				"side":       side,
@@ -852,7 +855,7 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 	q := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":  p.BaseTokenAddress.Hex(),
 				"quoteToken": p.QuoteTokenAddress.Hex(),
 				"price":      pp.String(),
@@ -900,7 +903,7 @@ func (dao *OrderDao) GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error
 	q := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":  o.BaseToken.Hex(),
 				"quoteToken": o.QuoteToken.Hex(),
 				"side":       types.BUY,
@@ -937,7 +940,7 @@ func (dao *OrderDao) GetMatchingSellOrders(o *types.Order) ([]*types.Order, erro
 	q := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":  o.BaseToken.Hex(),
 				"quoteToken": o.QuoteToken.Hex(),
 				"side":       types.SELL,

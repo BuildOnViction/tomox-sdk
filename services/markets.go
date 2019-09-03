@@ -133,7 +133,7 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 	bidsQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status": bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":   "BUY",
 			},
 		},
@@ -158,7 +158,7 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 	asksQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status": bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":   "SELL",
 			},
 		},
