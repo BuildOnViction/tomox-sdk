@@ -22,7 +22,7 @@ jobs:
         skip_cleanup: true
         overwrite: true
         file:
-          - proxy.$TRAVIS_TAG.linux.amd64
+          - tomox-sdk.$TRAVIS_TAG.linux.amd64
           #- proxy.$TRAVIS_TAG.darwin.amd64
           #- proxy.$TRAVIS_TAG.amd64.exe
         on:
