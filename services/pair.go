@@ -229,7 +229,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, 
 	bidsQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":       "BUY",
 				"baseToken":  bt.Hex(),
 				"quoteToken": qt.Hex(),
@@ -256,7 +256,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, 
 	asksQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":       "SELL",
 				"baseToken":  bt.Hex(),
 				"quoteToken": qt.Hex(),
@@ -400,7 +400,7 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	bidsQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status": bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":   "BUY",
 			},
 		},
@@ -425,7 +425,7 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	asksQuery := []bson.M{
 		bson.M{
 			"$match": bson.M{
-				"status": bson.M{"$in": []string{"OPEN", "PARTIAL_FILLED"}},
+				"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":   "SELL",
 			},
 		},
