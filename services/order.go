@@ -542,8 +542,11 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 		if ev.FullDocument.Status == types.OrderStatusCancelled {
 			res.Status = types.ORDER_CANCELLED
 			res.Order = ev.FullDocument
-		} else if ev.FullDocument.Status == types.ORDER_FILLED || ev.FullDocument.Status == types.ORDER_PARTIALLY_FILLED {
-			res.Status = ev.FullDocument.Status
+		} else if ev.FullDocument.Status == types.OrderStatusFilled {
+			res.Status = types.ORDER_FILLED
+			res.Order = ev.FullDocument
+		} else if ev.FullDocument.Status == types.OrderStatusPartialFilled {
+			res.Status = types.ORDER_PARTIALLY_FILLED
 			res.Order = ev.FullDocument
 		}
 		break
