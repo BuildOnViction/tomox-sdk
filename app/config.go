@@ -46,7 +46,7 @@ type appConfig struct {
 
 	Logs map[string]string `mapstructure:"logs"`
 
-	Ethereum map[string]string `mapstructure:"ethereum"`
+	TomoChain map[string]string `mapstructure:"tomochain"`
 
 	Deposit *config.Config `mapstructure:"deposit"`
 
@@ -102,7 +102,6 @@ func LoadConfig(configPath string, env string) error {
 	logger.Infof("MongoDB url: %v", Config.MongoURL)
 	logger.Infof("RabbitMQ url: %v", Config.RabbitMQURL)
 	logger.Infof("Exchange contract address: %v", Config.Ethereum["exchange_address"])
-	logger.Infof("Fee Account: %v", Config.Ethereum["fee_account"])
 	logger.Infof("Env: %v", Config.Env)
 	return Config.Validate()
 }

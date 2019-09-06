@@ -13,10 +13,8 @@ deposit:
 env: dev
 error_file: config/errors.yaml
 ethereum:
-  decimal: 8
   exchange_address: 0x0D3ab14BBaD3D99F4203bd7a11aCB94882050E7e
   contract_address: 0x0342d186212b04E69eA682b3bed8e232b6b3361a
-  fee_account: 0x6e6BB166F420DDd682cAEbf55dAfBaFda74f2c9c
   http_url: https://dex.devnet.tomochain.com/xrpc
   ws_url: ws://54.169.177.246:9501
 jwt_signing_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
