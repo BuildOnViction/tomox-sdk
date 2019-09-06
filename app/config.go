@@ -46,7 +46,7 @@ type appConfig struct {
 
 	Logs map[string]string `mapstructure:"logs"`
 
-	TomoChain map[string]string `mapstructure:"tomochain"`
+	Ethereum map[string]string `mapstructure:"ethereum"`
 
 	Deposit *config.Config `mapstructure:"deposit"`
 
