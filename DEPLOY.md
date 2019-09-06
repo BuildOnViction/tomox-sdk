@@ -78,7 +78,12 @@ git clone git@github.com:tomochain/tomox-sdk.git
 go get github.com/codegangsta/gin
 ```
 
-4. Update `config/config.yaml` with the URL of TomoX:
+4. Create/Update `config/config.yaml`
+Create `config.yaml` file:
+```
+cp config/config.yaml.example config/config.yaml
+```
+And update it with the URL of TomoX:
 ```
   http_url: http://localhost:8501
   ws_url: ws://localhost:9501

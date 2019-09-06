@@ -9,15 +9,13 @@ It will be officially released when the version is v1.0.0**_
 # Getting Started
 
 ### Requirements
-
+- **golang** 1.12+
 - **mongoDB** version 3.6 or newer
 - **rabbitmq** version 3.7.7 or newer
 - **Go Modules** latest
 
 ### Deployment guide step by step
-```
-https://github.com/tomochain/dex-smart-contract/blob/develop/Deployment_step_by_step.md
-```
+Read [deployment guide](DEPLOY.md)
 
 ## REST API
 ```
