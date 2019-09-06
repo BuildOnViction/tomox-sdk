@@ -22,6 +22,8 @@ RUN go mod download
 
 COPY . .
 
+RUN cp config/config.yaml.example config/config.yaml
+
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o backend
 
 FROM ubuntu AS final

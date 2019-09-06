@@ -67,3 +67,4 @@ ethereum/client.go
 /main
 /tomox-sdk
 .*.sw*
+config/config.yml
