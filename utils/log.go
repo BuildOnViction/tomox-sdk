@@ -13,7 +13,7 @@ import (
 
 // TODO: add log prefix to params
 const (
-	LogPrefix = "tomochain"
+	LogPrefix = ""
 )
 
 var Logger = NewLogger("main", "./logs/main.log")
