@@ -82,7 +82,7 @@ func (o *Order) String() string {
 
 // Validate Verify userAddress, baseToken, quoteToken, etc. conditions are working
 func (o *Order) Validate() error {
-	if o.ExchangeAddress != common.HexToAddress(app.Config.Ethereum["exchange_address"]) {
+	if o.ExchangeAddress != common.HexToAddress(app.Config.Tomochain["exchange_address"]) {
 		return errors.New("Order 'exchangeAddress' parameter is incorrect")
 	}
 

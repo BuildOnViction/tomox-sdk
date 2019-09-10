@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
-	"github.com/tomochain/tomox-sdk/swap/config"
 	"github.com/tomochain/tomox-sdk/utils"
 )
 
@@ -46,9 +45,7 @@ type appConfig struct {
 
 	Logs map[string]string `mapstructure:"logs"`
 
-	Ethereum map[string]string `mapstructure:"ethereum"`
-
-	Deposit *config.Config `mapstructure:"deposit"`
+	Tomochain map[string]string `mapstructure:"tomochain"`
 
 	CoingeckoAPIUrl string `mapstructure:"coingecko_api_url"`
 
@@ -97,11 +94,11 @@ func LoadConfig(configPath string, env string) error {
 
 	// log information
 	logger.Infof("Server port: %v", Config.ServerPort)
-	logger.Infof("Ethereum node HTTP url: %v", Config.Ethereum["http_url"])
-	logger.Infof("Ethereum node WS url: %v", Config.Ethereum["ws_url"])
+	logger.Infof("Tomochain node HTTP url: %v", Config.Tomochain["http_url"])
+	logger.Infof("Tomochain node WS url: %v", Config.Tomochain["ws_url"])
 	logger.Infof("MongoDB url: %v", Config.MongoURL)
 	logger.Infof("RabbitMQ url: %v", Config.RabbitMQURL)
-	logger.Infof("Exchange contract address: %v", Config.Ethereum["exchange_address"])
+	logger.Infof("Exchange contract address: %v", Config.Tomochain["exchange_address"])
 	logger.Infof("Env: %v", Config.Env)
 	return Config.Validate()
 }
