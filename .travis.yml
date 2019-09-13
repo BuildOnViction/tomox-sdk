@@ -9,15 +9,16 @@ env:
   global:
     - GOPROXY=https://proxy.golang.org
     - GO111MODULE=on
+    - CGO_ENABLED=1
 jobs:
   include:          
     - stage: Release application
       before_install:
-        - sudo apt-get install gcc-multilib gcc-mingw-w64
+        - sudo apt-get install gcc-multilib gcc-mingw-w64 cmake clang
       script:
         - GOARCH=amd64 GOOS=linux go build -o tomox-sdk.$TRAVIS_TAG.linux.amd64
-        #- GOARCH=amd64 GOOS=darwin go build -o tomox-sdk.$TRAVIS_TAG.darwin.amd64
-        - CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ GOARCH=amd64 GOOS=windows go build -o tomox-sdk.$TRAVIS_TAG.amd64.exe
+        - GOARCH=amd64 GOOS=darwin go build -o tomox-sdk.$TRAVIS_TAG.darwin.amd64
+        - CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ GOARCH=amd64 GOOS=windows go build -o tomox-sdk.$TRAVIS_TAG.amd64.exe
       deploy:
         provider: releases
         api_key: $GH_TOKEN
@@ -25,11 +26,11 @@ jobs:
         overwrite: true
         file:
           - tomox-sdk.$TRAVIS_TAG.linux.amd64
-          #- tomox-sdk.$TRAVIS_TAG.darwin.amd64
+          - tomox-sdk.$TRAVIS_TAG.darwin.amd64
           - tomox-sdk.$TRAVIS_TAG.amd64.exe
         on:
           tags: true
 
 stages:
   - name: Release application
-    if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk
+    #if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk
