@@ -356,7 +356,7 @@ func (so *StopOrder) ToOrder() (*Order, error) {
 
 // TODO: Verify userAddress, baseToken, quoteToken, etc. conditions are working
 func (so *StopOrder) Validate() error {
-	if so.ExchangeAddress != common.HexToAddress(app.Config.Ethereum["exchange_address"]) {
+	if so.ExchangeAddress != common.HexToAddress(app.Config.Tomochain["exchange_address"]) {
 		return errors.New("Order 'exchangeAddress' parameter is incorrect")
 	}
 

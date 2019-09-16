@@ -56,6 +56,7 @@ type OrderDao interface {
 	AddTopic(t []string) (string, error)
 	DeleteTopic(t string) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
+	GetOrderNonce(addr common.Address) (interface{}, error)
 }
 
 type StopOrderDao interface {
@@ -249,6 +250,7 @@ type OrderService interface {
 	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
 	UpdateStopOrder(h common.Hash, so *types.StopOrder) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
+	GetOrderNonceByUserAddress(addr common.Address) (interface{}, error)
 }
 
 type OrderBookService interface {

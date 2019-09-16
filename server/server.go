@@ -19,8 +19,6 @@ import (
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/relayer"
 	"github.com/tomochain/tomox-sdk/services"
-	"github.com/tomochain/tomox-sdk/swap"
-	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
@@ -79,14 +77,11 @@ func NewRouter(
 	tradeDao := daos.NewTradeDao()
 	accountDao := daos.NewAccountDao()
 	walletDao := daos.NewWalletDao()
-	configDao := daos.NewConfigDao()
-	associationDao := daos.NewAssociationDao()
 	fiatPriceDao := daos.NewFiatPriceDao()
 	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, stopOrderDao, tradeDao, pairDao, provider)
-	swapEngine := swap.NewEngine(app.Config.Deposit)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
@@ -100,15 +95,6 @@ func NewRouter(
 
 	walletService := services.NewWalletService(walletDao)
 
-	// txservice for deposit
-	// wallet := &types.NewWalletFromPrivateKey(app.Config.Deposit.Tomochain.SignerPrivateKey)
-	// we already have them so no need to re-calculate
-	wallet := &types.Wallet{
-		Address:    app.Config.Deposit.Tomochain.GetPublicKey(),
-		PrivateKey: app.Config.Deposit.Tomochain.GetPrivateKey(),
-	}
-	txService := services.NewTxService(walletDao, wallet)
-	depositService := services.NewDepositService(configDao, associationDao, pairDao, orderDao, swapEngine, eng, rabbitConn)
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
 	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
@@ -124,14 +110,13 @@ func NewRouter(
 	endpoints.ServeTradeResource(r, tradeService)
 	endpoints.ServeOrderResource(r, orderService, accountService)
 
-	endpoints.ServeDepositResource(r, depositService, walletService, txService)
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService)
 	endpoints.ServeNotificationResource(r, notificationService)
 
-	exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
-	contractAddress := common.HexToAddress(app.Config.Ethereum["contract_address"])
-	relayerEngine := relayer.NewRelayer(app.Config.Ethereum["http_url"], exchangeAddress, contractAddress)
+	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
+	contractAddress := common.HexToAddress(app.Config.Tomochain["contract_address"])
+	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress)
 	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao)
 	endpoints.ServeRelayerResource(r, relayerService)
 

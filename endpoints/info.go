@@ -28,7 +28,7 @@ func ServeInfoResource(
 }
 
 func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
-	ex := common.HexToAddress(app.Config.Ethereum["exchange_address"])
+	ex := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 
 	quotes, err := e.tokenService.GetAll()
 	if err != nil {
@@ -51,7 +51,7 @@ func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *infoEndpoint) handleGetExchangeInfo(w http.ResponseWriter, r *http.Request) {
-	ex := common.HexToAddress(app.Config.Ethereum["exchange_address"])
+	ex := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 
 	res := map[string]string{"exchangeAddress": ex.Hex()}
 

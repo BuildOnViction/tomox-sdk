@@ -102,6 +102,9 @@
     "/orders/count": {
       "$ref": "./components/orders/handleGetCountOrder.json"
     },
+    "/orders/nonce": {
+      "$ref": "./components/orders/handleGetNonceOrder.json"
+    },
     "/orders/cancel": {
       "$ref": "./components/orders/handleCancelOrder.json"
     },

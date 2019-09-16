@@ -617,3 +617,8 @@ func (s *OrderService) handleStopOrder(so *types.StopOrder) error {
 
 	return nil
 }
+
+// GetOrderNonceByUserAddress return nonce of user order
+func (s *OrderService) GetOrderNonceByUserAddress(addr common.Address) (interface{}, error) {
+	return s.orderDao.GetOrderNonce(addr)
+}

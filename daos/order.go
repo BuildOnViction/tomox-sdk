@@ -994,7 +994,7 @@ func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
 
 // AddNewOrder add order
 func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
-	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 
 	defer rpcClient.Close()
 
@@ -1051,7 +1051,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 }
 
 func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
-	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 
 	defer rpcClient.Close()
 
@@ -1110,7 +1110,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 }
 
 func (dao *OrderDao) AddTopic(t []string) (string, error) {
-	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 
 	defer rpcClient.Close()
 
@@ -1139,7 +1139,7 @@ func (dao *OrderDao) AddTopic(t []string) (string, error) {
 }
 
 func (dao *OrderDao) DeleteTopic(t string) error {
-	rpcClient, err := rpc.DialHTTP(app.Config.Ethereum["http_url"])
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 
 	defer rpcClient.Close()
 
@@ -1164,4 +1164,31 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 	}
 
 	return nil
+}
+
+// GetOrderNonce get nonce of order
+func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	var result interface{}
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	err = rpcClient.Call(&result, "tomoX_getOrderNonce", userAddress.Hex())
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	logger.Info("OrderNonce:", result)
+	return result, nil
 }

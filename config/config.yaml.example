@@ -2,17 +2,9 @@ coingecko_api_url: https://api.coingecko.com/api/v3
 coinmarketcap_api_key: a928d4ca-37cc-41b8-a9ea-5a65ae025aa5
 coinmarketcap_api_url: https://pro-api.coinmarketcap.com/v1
 db_name: tomodex
-deposit:
-  tomochain:
-    distribution_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
-    issuer_public_key: 0x59B8515E7fF389df6926Cd52a086B0f1f46C630A
-    lock_unix_timestamp: 0
-    signer_private_key: 0x3411b45169aa5a8312e51357db68621031020dcf46011d7431db1bbb6d3922ce
-    starting_balance: 100
-    token_asset_code: WETH
 env: dev
 error_file: config/errors.yaml
-ethereum:
+tomochain:
   exchange_address: 0x0D3ab14BBaD3D99F4203bd7a11aCB94882050E7e
   contract_address: 0x0342d186212b04E69eA682b3bed8e232b6b3361a
   http_url: https://dex.devnet.tomochain.com/xrpc

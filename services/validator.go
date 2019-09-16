@@ -77,7 +77,7 @@ func (s *ValidatorService) ValidateAvailableBalance(o *types.Order) error {
 }
 
 func (s *ValidatorService) ValidateBalance(o *types.Order) error {
-	//exchangeAddress := common.HexToAddress(app.Config.Ethereum["exchange_address"])
+	//exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 
 	pair, err := s.pairDao.GetByTokenAddress(o.BaseToken, o.QuoteToken)
 	if err != nil {
