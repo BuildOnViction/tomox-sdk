@@ -258,8 +258,6 @@ func (dao *OrderDao) UpdateByHash(h common.Hash, o *types.Order) error {
 		"amount":       o.Amount.String(),
 		"status":       o.Status,
 		"filledAmount": o.FilledAmount.String(),
-		"makeFee":      o.MakeFee.String(),
-		"takeFee":      o.TakeFee.String(),
 		"updatedAt":    o.UpdatedAt,
 	}}
 
@@ -1027,8 +1025,6 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		},
 		FilledAmount: o.FilledAmount,
 		Nonce:        o.Nonce,
-		MakeFee:      o.MakeFee,
-		TakeFee:      o.TakeFee,
 		PairName:     o.PairName,
 		CreatedAt:    uint64(o.CreatedAt.Unix()),
 		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
@@ -1086,8 +1082,6 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		},
 		FilledAmount: o.FilledAmount,
 		Nonce:        o.Nonce,
-		MakeFee:      o.MakeFee,
-		TakeFee:      o.TakeFee,
 		PairName:     o.PairName,
 		CreatedAt:    uint64(o.CreatedAt.Unix()),
 		UpdatedAt:    uint64(o.UpdatedAt.Unix()),

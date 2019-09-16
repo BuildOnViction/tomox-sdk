@@ -24,11 +24,11 @@ func ServeTokenResource(
 	tokenService interfaces.TokenService,
 ) {
 	e := &tokenEndpoint{tokenService}
-	r.HandleFunc("/tokens/base", e.HandleGetBaseTokens).Methods("GET")
-	r.HandleFunc("/tokens/quote", e.HandleGetQuoteTokens).Methods("GET")
-	r.HandleFunc("/tokens/{address}", e.HandleGetToken).Methods("GET")
-	r.HandleFunc("/tokens", e.HandleGetTokens).Methods("GET")
-	r.HandleFunc("/tokens", e.HandleCreateToken).Methods("POST")
+	r.HandleFunc("/api/tokens/base", e.HandleGetBaseTokens).Methods("GET")
+	r.HandleFunc("/api/tokens/quote", e.HandleGetQuoteTokens).Methods("GET")
+	r.HandleFunc("/api/tokens/{address}", e.HandleGetToken).Methods("GET")
+	r.HandleFunc("/api/tokens", e.HandleGetTokens).Methods("GET")
+	r.HandleFunc("/api/tokens", e.HandleCreateToken).Methods("POST")
 
 	ws.RegisterChannel(ws.TokenChannel, e.ws)
 }

@@ -36,10 +36,10 @@ func ServeDepositResource(
 ) {
 
 	e := &depositEndpoint{depositService, walletService, txService}
-	r.HandleFunc("/deposit/schema", e.handleGetSchema).Methods("GET")
-	r.HandleFunc("/deposit/generate-address", e.handleGenerateAddress).Methods("POST")
-	r.HandleFunc("/deposit/history", e.handleGetHistory).Methods("GET")
-	r.HandleFunc("/deposit/recovery-transaction", e.handleRecoveryTransaction).Methods("GET")
+	r.HandleFunc("/api/deposit/schema", e.handleGetSchema).Methods("GET")
+	r.HandleFunc("/api/deposit/generate-address", e.handleGenerateAddress).Methods("POST")
+	r.HandleFunc("/api/deposit/history", e.handleGetHistory).Methods("GET")
+	r.HandleFunc("/api/deposit/recovery-transaction", e.handleRecoveryTransaction).Methods("GET")
 
 	// r.HandleFunc("/deposit/testws", e.handleTestWS).Methods("GET")
 

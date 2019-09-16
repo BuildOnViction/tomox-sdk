@@ -24,8 +24,8 @@ func ServeTradeResource(
 	tradeService interfaces.TradeService,
 ) {
 	e := &tradeEndpoint{tradeService}
-	r.HandleFunc("/trades", e.HandleGetTrades)
-	r.HandleFunc("/trades/history", e.HandleGetTradesHistory)
+	r.HandleFunc("/api/trades", e.HandleGetTrades)
+	r.HandleFunc("/api/trades/history", e.HandleGetTradesHistory)
 	ws.RegisterChannel(ws.TradeChannel, e.tradeWebsocket)
 }
 

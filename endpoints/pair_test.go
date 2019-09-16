@@ -40,7 +40,7 @@ func TestHandleCreatePair(t *testing.T) {
 	pairService.On("Create", &pair).Return(nil)
 
 	b, _ := json.Marshal(pair)
-	req, err := http.NewRequest("POST", "/pairs", bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", "/api/pairs", bytes.NewBuffer(b))
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,7 +110,7 @@ func TestHandleGetAllPairs(t *testing.T) {
 
 	pairService.On("GetAll").Return([]*types.Pair{p1, p2}, nil)
 
-	req, err := http.NewRequest("GET", "/pairs", nil)
+	req, err := http.NewRequest("GET", "/api/pairs", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -148,7 +148,7 @@ func TestHandleGetPair(t *testing.T) {
 
 	pairService.On("GetByTokenAddress", base, quote).Return(&p1, nil)
 
-	url := "/pairs/" + base.Hex() + "/" + quote.Hex()
+	url := "/api/pairs/" + base.Hex() + "/" + quote.Hex()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		t.Error(err)

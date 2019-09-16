@@ -23,11 +23,11 @@ func ServePairResource(
 	p interfaces.PairService,
 ) {
 	e := &pairEndpoint{p}
-	r.HandleFunc("/pairs", e.HandleGetPairs).Methods("GET")
-	r.HandleFunc("/pair", e.HandleGetPair).Methods("GET")
-	r.HandleFunc("/pair", e.HandleCreatePair).Methods("POST")
-	r.HandleFunc("/pairs/data", e.HandleGetPairsData).Methods("GET")
-	r.HandleFunc("/pair/data", e.HandleGetPairData).Methods("GET")
+	r.HandleFunc("/api/pairs", e.HandleGetPairs).Methods("GET")
+	r.HandleFunc("/api/pair", e.HandleGetPair).Methods("GET")
+	r.HandleFunc("/api/pair", e.HandleCreatePair).Methods("POST")
+	r.HandleFunc("/api/pairs/data", e.HandleGetPairsData).Methods("GET")
+	r.HandleFunc("/api/pair/data", e.HandleGetPairData).Methods("GET")
 }
 
 func (e *pairEndpoint) HandleCreatePair(w http.ResponseWriter, r *http.Request) {

@@ -46,8 +46,6 @@ type Order struct {
 	Amount          *big.Int       `json:"amount" bson:"quantity"`
 	FilledAmount    *big.Int       `json:"filledAmount" bson:"filledAmount"`
 	Nonce           *big.Int       `json:"nonce" bson:"nonce"`
-	MakeFee         *big.Int       `json:"makeFee" bson:"makeFee"`
-	TakeFee         *big.Int       `json:"takeFee" bson:"takeFee"`
 	PairName        string         `json:"pairName" bson:"pairName"`
 	CreatedAt       time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt" bson:"updatedAt"`
@@ -102,14 +100,6 @@ func (o *Order) Validate() error {
 		return errors.New("Order 'quoteToken' parameter is required")
 	}
 
-	if o.MakeFee == nil {
-		return errors.New("Order 'makeFee' parameter is required")
-	}
-
-	if o.TakeFee == nil {
-		return errors.New("Order 'takeFee' parameter is required")
-	}
-
 	if o.Amount == nil {
 		return errors.New("Order 'amount' parameter is required")
 	}
@@ -161,8 +151,6 @@ func (o *Order) ComputeHash() common.Hash {
 	sha.Write(common.BigToHash(o.PricePoint).Bytes())
 	sha.Write(common.BigToHash(o.EncodedSide()).Bytes())
 	sha.Write(common.BigToHash(o.Nonce).Bytes())
-	sha.Write(common.BigToHash(o.MakeFee).Bytes())
-	sha.Write(common.BigToHash(o.TakeFee).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 
@@ -209,14 +197,6 @@ func (o *Order) Process(p *Pair) error {
 	// TODO: Handle this in Validate function
 	if o.Type != TypeMarketOrder && o.Type != TypeLimitOrder {
 		o.Type = TypeLimitOrder
-	}
-
-	if !math.IsEqual(o.MakeFee, p.MakeFee) {
-		return errors.New("Invalid MakeFee")
-	}
-
-	if !math.IsEqual(o.TakeFee, p.TakeFee) {
-		return errors.New("Invalid TakeFee")
 	}
 
 	o.PairName = p.Name()
@@ -399,8 +379,6 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		"pairName":        o.PairName,
 		"amount":          o.Amount.String(),
 		"pricepoint":      o.PricePoint.String(),
-		"makeFee":         o.MakeFee.String(),
-		"takeFee":         o.TakeFee.String(),
 		"createdAt":       o.CreatedAt.Format(time.RFC3339Nano),
 		"updatedAt":       o.UpdatedAt.Format(time.RFC3339Nano),
 		"orderID":         strconv.FormatUint(o.OrderID, 10),
@@ -477,14 +455,6 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 		o.Nonce = math.ToBigInt(order["nonce"].(string))
 	}
 
-	if order["makeFee"] != nil {
-		o.MakeFee = math.ToBigInt(order["makeFee"].(string))
-	}
-
-	if order["takeFee"] != nil {
-		o.TakeFee = math.ToBigInt(order["takeFee"].(string))
-	}
-
 	if order["hash"] != nil {
 		o.Hash = common.HexToHash(order["hash"].(string))
 	}
@@ -550,8 +520,6 @@ func (o *Order) GetBSON() (interface{}, error) {
 		Quantity:        o.Amount.String(),
 		Price:           o.PricePoint.String(),
 		Nonce:           o.Nonce.String(),
-		MakeFee:         o.MakeFee.String(),
-		TakeFee:         o.TakeFee.String(),
 		CreatedAt:       strconv.FormatInt(o.CreatedAt.Unix(), 10),
 		UpdatedAt:       strconv.FormatInt(o.UpdatedAt.Unix(), 10),
 		OrderID:         strconv.FormatUint(o.OrderID, 10),
@@ -598,8 +566,6 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 		Quantity        string           `json:"quantity" bson:"quantity"`
 		FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 		Nonce           string           `json:"nonce" bson:"nonce"`
-		MakeFee         string           `json:"makeFee" bson:"makeFee"`
-		TakeFee         string           `json:"takeFee" bson:"takeFee"`
 		Signature       *SignatureRecord `json:"signature" bson:"signature"`
 		CreatedAt       string           `json:"createdAt" bson:"createdAt"`
 		UpdatedAt       string           `json:"updatedAt" bson:"updatedAt"`
@@ -624,8 +590,6 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 	o.QuoteToken = common.HexToAddress(decoded.QuoteToken)
 	o.FilledAmount = math.ToBigInt(decoded.FilledAmount)
 	o.Nonce = math.ToBigInt(decoded.Nonce)
-	o.MakeFee = math.ToBigInt(decoded.MakeFee)
-	o.TakeFee = math.ToBigInt(decoded.TakeFee)
 	o.Status = decoded.Status
 	o.Side = decoded.Side
 	o.Type = decoded.Type
@@ -691,8 +655,6 @@ type OrderRecord struct {
 	Quantity        string           `json:"quantity" bson:"quantity"`
 	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 	Nonce           string           `json:"nonce" bson:"nonce"`
-	MakeFee         string           `json:"makeFee" bson:"makeFee"`
-	TakeFee         string           `json:"takeFee" bson:"takeFee"`
 	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
 	PairName        string           `json:"pairName" bson:"pairName"`
 	CreatedAt       string           `json:"createdAt" bson:"createdAt"`
@@ -723,8 +685,6 @@ func (o OrderBSONUpdate) GetBSON() (interface{}, error) {
 		"pricepoint":      o.PricePoint.String(),
 		"amount":          o.Amount.String(),
 		"nonce":           o.Nonce.String(),
-		"makeFee":         o.MakeFee.String(),
-		"takeFee":         o.TakeFee.String(),
 		"updatedAt":       now,
 	}
 

@@ -18,7 +18,7 @@ func ServeRelayerResource(
 	relayerService interfaces.RelayerService,
 ) {
 	e := &relayerEndpoint{relayerService}
-	r.HandleFunc("/relayer", e.handleRelayerUpdate).Methods("PUT")
+	r.HandleFunc("/api/relayer", e.handleRelayerUpdate).Methods("PUT")
 }
 
 func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Request) {

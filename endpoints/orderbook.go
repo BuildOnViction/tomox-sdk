@@ -22,8 +22,8 @@ func ServeOrderBookResource(
 	orderBookService interfaces.OrderBookService,
 ) {
 	e := &OrderBookEndpoint{orderBookService}
-	r.HandleFunc("/orderbook/raw", e.handleGetRawOrderBook)
-	r.HandleFunc("/orderbook", e.handleGetOrderBook)
+	r.HandleFunc("/api/orderbook/raw", e.handleGetRawOrderBook)
+	r.HandleFunc("/api/orderbook", e.handleGetOrderBook)
 	ws.RegisterChannel(ws.OrderBookChannel, e.orderBookWebSocket)
 	ws.RegisterChannel(ws.RawOrderBookChannel, e.rawOrderBookWebSocket)
 }
