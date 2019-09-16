@@ -28,16 +28,16 @@ func ServeOrderResource(
 ) {
 	e := &orderEndpoint{orderService, accountService}
 
-	r.HandleFunc("/orders/count", e.handleGetCountOrder).Methods("GET")
-	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
-	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
-	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
-	r.HandleFunc("/orders", e.handleNewOrder).Methods("POST")
-	r.HandleFunc("/orders/stop", e.handleNewStopOrder).Methods("POST")
-	r.HandleFunc("/orders/cancel", e.handleCancelOrder).Methods("POST")
-	r.HandleFunc("/orders/cancelAll", e.handleCancelAllOrders).Methods("POST")
-	r.HandleFunc("/orders/stop/cancel", e.handleCancelStopOrder).Methods("POST")
-	r.HandleFunc("/orders/balance/lock", e.handleGetLockedBalanceInOrder).Methods("GET")
+	r.HandleFunc("/api/orders/count", e.handleGetCountOrder).Methods("GET")
+	r.HandleFunc("/api/orders/history", e.handleGetOrderHistory).Methods("GET")
+	r.HandleFunc("/api/orders/positions", e.handleGetPositions).Methods("GET")
+	r.HandleFunc("/api/orders", e.handleGetOrders).Methods("GET")
+	r.HandleFunc("/api/orders", e.handleNewOrder).Methods("POST")
+	r.HandleFunc("/api/orders/stop", e.handleNewStopOrder).Methods("POST")
+	r.HandleFunc("/api/orders/cancel", e.handleCancelOrder).Methods("POST")
+	r.HandleFunc("/api/orders/cancelAll", e.handleCancelAllOrders).Methods("POST")
+	r.HandleFunc("/api/orders/stop/cancel", e.handleCancelStopOrder).Methods("POST")
+	r.HandleFunc("/api/orders/balance/lock", e.handleGetLockedBalanceInOrder).Methods("GET")
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
 }
 

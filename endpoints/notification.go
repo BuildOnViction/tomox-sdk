@@ -26,12 +26,12 @@ func ServeNotificationResource(
 ) {
 	e := &NotificationEndpoint{notificationService}
 
-	r.HandleFunc("/notifications", e.HandleGetNotifications).Methods("GET")
-	r.HandleFunc("/notifications/{id}", e.HandleUpdateNotification).Methods("PUT")
+	r.HandleFunc("/api/notifications", e.HandleGetNotifications).Methods("GET")
+	r.HandleFunc("/api/notifications/{id}", e.HandleUpdateNotification).Methods("PUT")
 
-	r.HandleFunc("/notification/mark/read", e.HandleMarkReadNotification).Methods("PUT")
-	r.HandleFunc("/notification/mark/unread", e.HandleMarkUnReadNotification).Methods("PUT")
-	r.HandleFunc("/notification/mark/readall", e.HandleMarkReadAllNotification).Methods("PUT")
+	r.HandleFunc("/api/notification/mark/read", e.HandleMarkReadNotification).Methods("PUT")
+	r.HandleFunc("/api/notification/mark/unread", e.HandleMarkUnReadNotification).Methods("PUT")
+	r.HandleFunc("/api/notification/mark/readall", e.HandleMarkReadAllNotification).Methods("PUT")
 
 	ws.RegisterChannel(ws.NotificationChannel, e.handleNotificationWebSocket)
 }

@@ -22,9 +22,9 @@ func ServeInfoResource(
 ) {
 
 	e := &infoEndpoint{walletService, tokenService}
-	r.HandleFunc("/info", e.handleGetInfo)
-	r.HandleFunc("/info/exchange", e.handleGetExchangeInfo)
-	r.HandleFunc("/info/fees", e.handleGetFeeInfo)
+	r.HandleFunc("/api/info", e.handleGetInfo)
+	r.HandleFunc("/api/info/exchange", e.handleGetExchangeInfo)
+	r.HandleFunc("/api/info/fees", e.handleGetFeeInfo)
 }
 
 func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {

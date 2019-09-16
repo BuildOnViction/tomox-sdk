@@ -37,7 +37,7 @@ func TestHandleCreateTokens(t *testing.T) {
 	tokenService.On("Create", &token).Return(nil)
 
 	b, _ := json.Marshal(token)
-	req, err := http.NewRequest("POST", "/tokens", bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", "/api/tokens", bytes.NewBuffer(b))
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,7 +64,7 @@ func TestHandleGetTokens(t *testing.T) {
 
 	tokenService.On("GetAll").Return([]types.Token{t1, t2}, nil)
 
-	req, err := http.NewRequest("GET", "/tokens", nil)
+	req, err := http.NewRequest("GET", "/api/tokens", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -105,7 +105,7 @@ func TestHandleGetQuoteTokens(t *testing.T) {
 
 	tokenService.On("GetQuoteTokens").Return([]types.Token{t1, t2}, nil)
 
-	req, err := http.NewRequest("GET", "/tokens/quote", nil)
+	req, err := http.NewRequest("GET", "/api/tokens/quote", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -146,7 +146,7 @@ func TestHandleGetBaseTokens(t *testing.T) {
 
 	tokenService.On("GetBaseTokens").Return([]types.Token{t1, t2}, nil)
 
-	req, err := http.NewRequest("GET", "/tokens/base", nil)
+	req, err := http.NewRequest("GET", "/api/tokens/base", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -181,7 +181,7 @@ func TestHandleGetToken(t *testing.T) {
 
 	tokenService.On("GetByAddress", addr).Return(&t1, nil)
 
-	url := "/tokens/" + addr.Hex()
+	url := "/api/tokens/" + addr.Hex()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		t.Error(err)

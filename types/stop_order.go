@@ -41,8 +41,6 @@ type StopOrder struct {
 	Amount          *big.Int       `json:"amount" bson:"amount"`
 	FilledAmount    *big.Int       `json:"filledAmount" bson:"filledAmount"`
 	Nonce           *big.Int       `json:"nonce" bson:"nonce"`
-	MakeFee         *big.Int       `json:"makeFee" bson:"makeFee"`
-	TakeFee         *big.Int       `json:"takeFee" bson:"takeFee"`
 	PairName        string         `json:"pairName" bson:"pairName"`
 	CreatedAt       time.Time      `json:"createdAt" bson:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt" bson:"updatedAt"`
@@ -63,8 +61,6 @@ func (so *StopOrder) MarshalJSON() ([]byte, error) {
 		"stopPrice":       so.StopPrice.String(),
 		"limitPrice":      so.LimitPrice.String(),
 		"direction":       strconv.Itoa(so.Direction),
-		"makeFee":         so.MakeFee.String(),
-		"takeFee":         so.TakeFee.String(),
 		"createdAt":       so.CreatedAt.Format(time.RFC3339Nano),
 		"updatedAt":       so.UpdatedAt.Format(time.RFC3339Nano),
 	}
@@ -155,14 +151,6 @@ func (so *StopOrder) UnmarshalJSON(b []byte) error {
 		so.Nonce = math.ToBigInt(order["nonce"].(string))
 	}
 
-	if order["makeFee"] != nil {
-		so.MakeFee = math.ToBigInt(order["makeFee"].(string))
-	}
-
-	if order["takeFee"] != nil {
-		so.TakeFee = math.ToBigInt(order["takeFee"].(string))
-	}
-
 	if order["hash"] != nil {
 		so.Hash = common.HexToHash(order["hash"].(string))
 	}
@@ -217,8 +205,6 @@ func (so *StopOrder) GetBSON() (interface{}, error) {
 		LimitPrice:      so.LimitPrice.String(),
 		Direction:       so.Direction,
 		Nonce:           so.Nonce.String(),
-		MakeFee:         so.MakeFee.String(),
-		TakeFee:         so.TakeFee.String(),
 		CreatedAt:       so.CreatedAt,
 		UpdatedAt:       so.UpdatedAt,
 	}
@@ -262,8 +248,6 @@ func (so *StopOrder) SetBSON(raw bson.Raw) error {
 		Amount          string           `json:"amount" bson:"amount"`
 		FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 		Nonce           string           `json:"nonce" bson:"nonce"`
-		MakeFee         string           `json:"makeFee" bson:"makeFee"`
-		TakeFee         string           `json:"takeFee" bson:"takeFee"`
 		Signature       *SignatureRecord `json:"signature" bson:"signature"`
 		CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
 		UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
@@ -283,8 +267,6 @@ func (so *StopOrder) SetBSON(raw bson.Raw) error {
 	so.QuoteToken = common.HexToAddress(decoded.QuoteToken)
 	so.FilledAmount = math.ToBigInt(decoded.FilledAmount)
 	so.Nonce = math.ToBigInt(decoded.Nonce)
-	so.MakeFee = math.ToBigInt(decoded.MakeFee)
-	so.TakeFee = math.ToBigInt(decoded.TakeFee)
 	so.Status = decoded.Status
 	so.Side = decoded.Side
 	so.Type = decoded.Type
@@ -342,8 +324,6 @@ func (so *StopOrder) ToOrder() (*Order, error) {
 			Amount:          so.Amount,
 			FilledAmount:    big.NewInt(0),
 			Nonce:           so.Nonce,
-			MakeFee:         so.MakeFee,
-			TakeFee:         so.TakeFee,
 			PairName:        so.PairName,
 		}
 
@@ -363,8 +343,6 @@ func (so *StopOrder) ToOrder() (*Order, error) {
 			Amount:          so.Amount,
 			FilledAmount:    big.NewInt(0),
 			Nonce:           so.Nonce,
-			MakeFee:         so.MakeFee,
-			TakeFee:         so.TakeFee,
 			PairName:        so.PairName,
 		}
 
@@ -396,14 +374,6 @@ func (so *StopOrder) Validate() error {
 
 	if (so.QuoteToken == common.Address{}) {
 		return errors.New("Order 'quoteToken' parameter is required")
-	}
-
-	if so.MakeFee == nil {
-		return errors.New("Order 'makeFee' parameter is required")
-	}
-
-	if so.TakeFee == nil {
-		return errors.New("Order 'takeFee' parameter is required")
 	}
 
 	if so.Amount == nil {
@@ -457,8 +427,6 @@ func (so *StopOrder) ComputeHash() common.Hash {
 	sha.Write(common.BigToHash(so.StopPrice).Bytes())
 	sha.Write(common.BigToHash(so.EncodedSide()).Bytes())
 	sha.Write(common.BigToHash(so.Nonce).Bytes())
-	sha.Write(common.BigToHash(so.MakeFee).Bytes())
-	sha.Write(common.BigToHash(so.TakeFee).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 
@@ -491,14 +459,6 @@ func (so *StopOrder) Process(p *Pair) error {
 	// TODO: Handle this in Validate function
 	if so.Type != TypeStopMarketOrder && so.Type != TypeStopLimitOrder {
 		so.Type = TypeStopLimitOrder
-	}
-
-	if !math.IsEqual(so.MakeFee, p.MakeFee) {
-		return errors.New("Invalid MakeFee")
-	}
-
-	if !math.IsEqual(so.TakeFee, p.TakeFee) {
-		return errors.New("Invalid TakeFee")
 	}
 
 	so.PairName = p.Name()
@@ -546,8 +506,6 @@ type StopOrderRecord struct {
 	Amount          string           `json:"amount" bson:"amount"`
 	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 	Nonce           string           `json:"nonce" bson:"nonce"`
-	MakeFee         string           `json:"makeFee" bson:"makeFee"`
-	TakeFee         string           `json:"takeFee" bson:"takeFee"`
 	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
 
 	PairName  string    `json:"pairName" bson:"pairName"`
@@ -576,8 +534,6 @@ func (o StopOrderBSONUpdate) GetBSON() (interface{}, error) {
 		"direction":       o.Direction,
 		"amount":          o.Amount.String(),
 		"nonce":           o.Nonce.String(),
-		"makeFee":         o.MakeFee.String(),
-		"takeFee":         o.TakeFee.String(),
 		"updatedAt":       now,
 	}
 

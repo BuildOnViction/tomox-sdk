@@ -25,8 +25,6 @@ type NewOrderPayload struct {
 	Side            string         `json:"side"`
 	Amount          *big.Int       `json:"amount"`
 	PricePoint      *big.Int       `json:"pricepoint"`
-	TakeFee         *big.Int       `json:"takeFee"`
-	MakeFee         *big.Int       `json:"makeFee"`
 	Nonce           *big.Int       `json:"nonce" bson:"nonce"`
 	Signature       *Signature     `json:"signature"`
 	Hash            common.Hash    `json:"hash"`
@@ -40,8 +38,6 @@ func (p NewOrderPayload) MarshalJSON() ([]byte, error) {
 		"amount":          p.Amount.String(),
 		"pricepoint":      p.PricePoint.String(),
 		"side":            p.Side,
-		"takeFee":         p.TakeFee.String(),
-		"makeFee":         p.MakeFee.String(),
 		"nonce":           p.Nonce.String(),
 		"signature": map[string]interface{}{
 			"v": p.Signature.V,
@@ -86,14 +82,6 @@ func (p *NewOrderPayload) UnmarshalJSON(b []byte) error {
 		p.Nonce = math.ToBigInt(decoded["nonce"].(string))
 	}
 
-	if decoded["makeFee"] != nil {
-		p.MakeFee = math.ToBigInt(decoded["makeFee"].(string))
-	}
-
-	if decoded["takeFee"] != nil {
-		p.TakeFee = math.ToBigInt(decoded["takeFee"].(string))
-	}
-
 	if decoded["side"] != nil {
 		p.Side = decoded["side"].(string)
 	}
@@ -133,8 +121,6 @@ func (p *NewOrderPayload) ToOrder() (o *Order, err error) {
 	}
 
 	o = &Order{
-		MakeFee:     p.MakeFee,
-		TakeFee:     p.TakeFee,
 		UserAddress: p.UserAddress,
 		BaseToken:   p.BaseToken,
 		QuoteToken:  p.QuoteToken,
@@ -168,8 +154,6 @@ func (p *NewOrderPayload) ComputeHash() common.Hash {
 	sha.Write(common.BigToHash(p.PricePoint).Bytes())
 	sha.Write(common.BigToHash(p.EncodedSide()).Bytes())
 	sha.Write(common.BigToHash(p.Nonce).Bytes())
-	sha.Write(common.BigToHash(p.TakeFee).Bytes())
-	sha.Write(common.BigToHash(p.MakeFee).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 

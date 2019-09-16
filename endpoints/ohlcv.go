@@ -23,7 +23,7 @@ func ServeOHLCVResource(
 	ohlcvService interfaces.OHLCVService,
 ) {
 	e := &OHLCVEndpoint{ohlcvService}
-	r.HandleFunc("/ohlcv", e.handleGetOHLCV).Methods("GET")
+	r.HandleFunc("/api/ohlcv", e.handleGetOHLCV).Methods("GET")
 	ws.RegisterChannel(ws.OHLCVChannel, e.ohlcvWebSocket)
 }
 

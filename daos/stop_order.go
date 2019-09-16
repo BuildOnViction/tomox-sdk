@@ -163,8 +163,6 @@ func (dao *StopOrderDao) UpdateByHash(h common.Hash, so *types.StopOrder) error 
 		"amount":       so.Amount.String(),
 		"status":       so.Status,
 		"filledAmount": so.FilledAmount.String(),
-		"makeFee":      so.MakeFee.String(),
-		"takeFee":      so.TakeFee.String(),
 		"updatedAt":    so.UpdatedAt,
 	}}
 
