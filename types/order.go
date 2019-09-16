@@ -303,7 +303,7 @@ func (o *Order) TotalRequiredSellAmount(p *Pair) *big.Int {
 	if o.Side == BUY {
 		sellAmount := math.Div(math.Mul(o.Amount, o.PricePoint), pairMultiplier)
 		fee := math.Max(p.MakeFee, p.TakeFee)
-		requiredSellTokenAmount = sellAmount
+		requiredSellTokenAmount = math.Add(sellAmount, fee)
 	} else {
 		requiredSellTokenAmount = o.Amount
 	}
