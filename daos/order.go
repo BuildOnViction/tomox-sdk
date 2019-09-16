@@ -1171,3 +1171,30 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 
 	return nil
 }
+
+// GetOrderNonce get nonce of order
+func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	var result interface{}
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	err = rpcClient.Call(&result, "tomoX_getOrderNonce", userAddress.Hex())
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+	logger.Info("OrderNonce:", result)
+	return result, nil
+}

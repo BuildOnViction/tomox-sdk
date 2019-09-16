@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -29,6 +30,7 @@ func ServeOrderResource(
 	e := &orderEndpoint{orderService, accountService}
 
 	r.HandleFunc("/orders/count", e.handleGetCountOrder).Methods("GET")
+	r.HandleFunc("/orders/nonce", e.handleGetOrderNonce).Methods("GET")
 	r.HandleFunc("/orders/history", e.handleGetOrderHistory).Methods("GET")
 	r.HandleFunc("/orders/positions", e.handleGetPositions).Methods("GET")
 	r.HandleFunc("/orders", e.handleGetOrders).Methods("GET")
@@ -715,4 +717,38 @@ func (e *orderEndpoint) handleWSCancelStopOrder(ev *types.WebsocketEvent, c *ws.
 		c.SendOrderErrorMessage(orderErr, oc.Hash)
 		return
 	}
+}
+
+func (e *orderEndpoint) handleGetOrderNonce(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	addr := v.Get("address")
+
+	if addr == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "address Parameter Missing")
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+		return
+	}
+
+	a := common.HexToAddress(addr)
+
+	total, err := e.orderService.GetOrderNonceByUserAddress(a)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	s := total.(string)
+	s = strings.TrimLeft(s, "0x")
+	n, err := strconv.ParseUint(s, 16, 32)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, n)
 }
