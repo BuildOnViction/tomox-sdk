@@ -736,14 +736,16 @@ func (e *orderEndpoint) handleGetOrderNonce(w http.ResponseWriter, r *http.Reque
 	a := common.HexToAddress(addr)
 
 	total, err := e.orderService.GetOrderNonceByUserAddress(a)
-
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if total == nil {
+		httputils.WriteError(w, http.StatusInternalServerError, "unknow error")
+	}
 	s := total.(string)
-	s = strings.TrimLeft(s, "0x")
+	s = strings.TrimPrefix(s, "0x")
 	n, err := strconv.ParseUint(s, 16, 32)
 	if err != nil {
 		logger.Error(err)

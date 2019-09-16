@@ -1193,7 +1193,7 @@ func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, err
 
 	if err != nil {
 		logger.Error(err)
-		return 0, err
+		return nil, err
 	}
 	logger.Info("OrderNonce:", result)
 	return result, nil
