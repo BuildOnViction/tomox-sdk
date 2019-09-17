@@ -52,10 +52,6 @@
       "description": "Info endpoints"
     }
   ],
-  "schemes": [
-    "http",
-    "https"
-  ],
   "paths": {
     "/account/{userAddress}": {
       "$ref": "./components/accounts/handleGetAccount.json"
