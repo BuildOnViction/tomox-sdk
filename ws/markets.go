@@ -1,11 +1,15 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
 var marketsSocket *MarketsSocket
+
+var lockMarket = &sync.Mutex{}
 
 // MarketsSocket holds the map of subscriptions subscribed to markets channels
 // corresponding to the key/event they have subscribed to.
@@ -67,10 +71,12 @@ func (s *MarketsSocket) UnsubscribeHandler() func(c *Client) {
 
 // Unsubscribe removes a websocket connection from the markets channel updates
 func (s *MarketsSocket) UnsubscribeChannel(channelID string, c *Client) {
+	lockMarket.Lock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
+	lockMarket.Unlock()
 }
 
 func (s *MarketsSocket) Unsubscribe(c *Client) {

@@ -1,10 +1,13 @@
 package ws
 
 import (
+	"sync"
+
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
+var lockOderbook = &sync.Mutex{}
 var orderbookSocket *OrderBookSocket
 
 // OrderBookSocket holds the map of subscriptions subscribed to orderbook channels
@@ -66,12 +69,14 @@ func (s *OrderBookSocket) UnsubscribeHandler() func(c *Client) {
 	}
 }
 
-// Unsubscribe removes a websocket connection from the orderbook channel updates
+// UnsubscribeChannel removes a websocket connection from the orderbook channel updates
 func (s *OrderBookSocket) UnsubscribeChannel(channelID string, c *Client) {
+	lockOderbook.Lock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
+	lockOderbook.Unlock()
 }
 
 func (s *OrderBookSocket) Unsubscribe(c *Client) {
