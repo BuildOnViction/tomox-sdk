@@ -285,7 +285,7 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 		Recipient: taker,
 		Message: types.Message{
 			MessageType: "ORDER_SUCCESS",
-			Description: m.TakerOrderHash().Hex(),
+			Description: trades[0].Hash.Hex(),
 		},
 		Type:   types.TypeLog,
 		Status: types.StatusUnread,
