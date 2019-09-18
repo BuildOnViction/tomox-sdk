@@ -3,7 +3,6 @@ package daos
 import (
 	"encoding/json"
 	"math/big"
-	"strconv"
 	"strings"
 	"time"
 
@@ -494,8 +493,8 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int6
 		q = bson.M{
 			"userAddress": addr.Hex(),
 			"createdAt": bson.M{
-				"$gte": strconv.FormatInt(from, 10),
-				"$lt":  strconv.FormatInt(to, 10),
+				"$gte": time.Unix(from, 0),
+				"$lt":  time.Unix(to, 0),
 			},
 		}
 	} else {
@@ -504,8 +503,8 @@ func (dao *OrderDao) GetByUserAddress(addr, bt, qt common.Address, from, to int6
 			"baseToken":   bt.Hex(),
 			"quoteToken":  qt.Hex(),
 			"createdAt": bson.M{
-				"$gte": strconv.FormatInt(from, 10),
-				"$lt":  strconv.FormatInt(to, 10),
+				"$gte": time.Unix(from, 0),
+				"$lt":  time.Unix(to, 0),
 			},
 		}
 	}
@@ -537,10 +536,11 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 	if orderSpec.DateFrom != 0 || orderSpec.DateTo != 0 {
 		dateFilter := bson.M{}
 		if orderSpec.DateFrom != 0 {
-			dateFilter["$gte"] = strconv.FormatInt(orderSpec.DateFrom, 10)
+
+			dateFilter["$gte"] = time.Unix(orderSpec.DateFrom, 0)
 		}
 		if orderSpec.DateTo != 0 {
-			dateFilter["$lt"] = strconv.FormatInt(orderSpec.DateTo, 10)
+			dateFilter["$lt"] = time.Unix(orderSpec.DateTo, 0)
 		}
 		q["createdAt"] = dateFilter
 	}
@@ -660,8 +660,8 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 		q = bson.M{
 			"userAddress": addr.Hex(),
 			"createdAt": bson.M{
-				"$gte": strconv.FormatInt(from, 10),
-				"$lt":  strconv.FormatInt(to, 10),
+				"$gte": time.Unix(from, 0),
+				"$lt":  time.Unix(to, 0),
 			},
 			"status": bson.M{"$nin": []string{
 				types.OrderStatusNew,
@@ -682,8 +682,8 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 			},
 			},
 			"createdAt": bson.M{
-				"$gte": strconv.FormatInt(from, 10),
-				"$lt":  strconv.FormatInt(to, 10),
+				"$gte": time.Unix(from, 0),
+				"$lt":  time.Unix(to, 0),
 			},
 		}
 	}
@@ -1026,8 +1026,8 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		FilledAmount: o.FilledAmount,
 		Nonce:        o.Nonce,
 		PairName:     o.PairName,
-		CreatedAt:    uint64(o.CreatedAt.Unix()),
-		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
+		CreatedAt:    o.CreatedAt,
+		UpdatedAt:    o.UpdatedAt,
 	}
 	logger.Info("Order user address:", o.UserAddress.Hex())
 	var result interface{}
@@ -1083,8 +1083,8 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		FilledAmount: o.FilledAmount,
 		Nonce:        o.Nonce,
 		PairName:     o.PairName,
-		CreatedAt:    uint64(o.CreatedAt.Unix()),
-		UpdatedAt:    uint64(o.UpdatedAt.Unix()),
+		CreatedAt:    o.CreatedAt,
+		UpdatedAt:    o.UpdatedAt,
 		OrderID:      o.OrderID,
 		Key:          o.Key,
 	}

@@ -506,6 +506,7 @@ func (o *Order) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// GetBSON return bson
 func (o *Order) GetBSON() (interface{}, error) {
 	or := OrderRecord{
 		PairName:        o.PairName,
@@ -520,8 +521,8 @@ func (o *Order) GetBSON() (interface{}, error) {
 		Quantity:        o.Amount.String(),
 		Price:           o.PricePoint.String(),
 		Nonce:           o.Nonce.String(),
-		CreatedAt:       strconv.FormatInt(o.CreatedAt.Unix(), 10),
-		UpdatedAt:       strconv.FormatInt(o.UpdatedAt.Unix(), 10),
+		CreatedAt:       o.CreatedAt.Format(time.RFC3339Nano),
+		UpdatedAt:       o.UpdatedAt.Format(time.RFC3339Nano),
 		OrderID:         strconv.FormatUint(o.OrderID, 10),
 		NextOrder:       common.Bytes2Hex(o.NextOrder),
 		PrevOrder:       common.Bytes2Hex(o.PrevOrder),
@@ -614,19 +615,18 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 			S: common.HexToHash(decoded.Signature.S),
 		}
 	}
+	o.CreatedAt, err = time.Parse(time.RFC3339Nano, decoded.CreatedAt)
+	if err != nil {
+		logger.Error("parse time error, set time to now", err)
+		o.CreatedAt = time.Now()
+	}
 
-	createdAt, err := strconv.ParseInt(decoded.CreatedAt, 10, 64)
+	o.UpdatedAt, err = time.Parse(time.RFC3339Nano, decoded.UpdatedAt)
 	if err != nil {
 		logger.Error("parse time error, set time to now", err)
-		createdAt = time.Now().Unix()
+		o.UpdatedAt = time.Now()
 	}
-	o.CreatedAt = time.Unix(createdAt, 0)
-	updatedAt, err := strconv.ParseInt(decoded.UpdatedAt, 10, 64)
-	if err != nil {
-		logger.Error("parse time error, set time to now", err)
-		updatedAt = time.Now().Unix()
-	}
-	o.UpdatedAt = time.Unix(updatedAt, 0)
+
 	orderID, err := strconv.ParseInt(decoded.OrderID, 10, 64)
 	if err != nil {
 		logger.Error(err)
