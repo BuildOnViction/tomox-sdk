@@ -30,7 +30,6 @@ require (
 	github.com/streadway/amqp v0.0.0-20180806233856-70e15c650864
 	github.com/stretchr/testify v1.2.2
 	github.com/tidwall/gjson v1.2.1
-	github.com/tomochain/tomochain v1.3.3-0.20190626151604-742f64068ca3
 	github.com/tomochain/tomodex v0.4.0 // indirect
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect

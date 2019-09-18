@@ -10,8 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomochain/tomox"
 	"github.com/tomochain/tomox-sdk/app"
+	"github.com/tomochain/tomox-sdk/tomox"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/math"
 )
