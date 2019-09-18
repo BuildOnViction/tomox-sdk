@@ -3,7 +3,7 @@ package abi
 import (
 	"strings"
 
-	"github.com/tomochain/tomochain/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 const abiJson = `
