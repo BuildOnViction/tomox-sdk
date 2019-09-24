@@ -327,7 +327,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, 
 		pairName := t.Pair.PairName
 		ps := strings.Split(pairName, "/")
 		if len(ps) == 2 {
-			fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(ps[1], t.CloseTime)
+			fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(ps[0], t.CloseTime)
 			if err == nil {
 				pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
 			}
@@ -491,7 +491,7 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 				pairData.Volume = t.Volume
 				pairData.Close = t.Close
 				pairData.Count = t.Count
-				fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(p.QuoteTokenSymbol, t.CloseTime)
+				fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
 				if err == nil {
 					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
 				}
