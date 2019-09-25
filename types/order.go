@@ -617,13 +617,13 @@ func (o *Order) SetBSON(raw bson.Raw) error {
 	}
 	o.CreatedAt, err = time.Parse(time.RFC3339Nano, decoded.CreatedAt)
 	if err != nil {
-		logger.Error("parse time error, set time to now", err)
+		logger.Warning("parse time error, set time to now", err)
 		o.CreatedAt = time.Now()
 	}
 
 	o.UpdatedAt, err = time.Parse(time.RFC3339Nano, decoded.UpdatedAt)
 	if err != nil {
-		logger.Error("parse time error, set time to now", err)
+		logger.Warning("parse time error, set time to now", err)
 		o.UpdatedAt = time.Now()
 	}
 
