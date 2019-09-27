@@ -49,10 +49,6 @@ type appConfig struct {
 
 	CoingeckoAPIUrl string `mapstructure:"coingecko_api_url"`
 
-	CoinmarketcapAPIUrl string `mapstructure:"coinmarketcap_api_url"`
-
-	CoinmarketcapAPIKey string `mapstructure:"coinmarketcap_api_key"`
-
 	SupportedCurrencies string `mapstructure:"supported_currencies"`
 
 	Env string `mapstructure:"env"`

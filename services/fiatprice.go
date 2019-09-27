@@ -74,6 +74,7 @@ func (s *FiatPriceService) UpdateFiatPrice() {
 }
 
 func (s *FiatPriceService) SyncFiatPrice() error {
+	logger.Info("SyncFiatPrice starting...")
 	prices, err := s.FiatPriceDao.GetLatestQuotes()
 	if err != nil {
 		logger.Error(err)

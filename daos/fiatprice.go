@@ -13,7 +13,6 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/tidwall/gjson"
 	"github.com/tomochain/tomox-sdk/app"
-	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/types"
 )
 
@@ -35,11 +34,10 @@ func NewFiatPriceDao() *FiatPriceDao {
 
 func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	client := &http.Client{}
-	url := fmt.Sprintf("%s/cryptocurrency/quotes/latest?symbol=%s&convert=USD", app.Config.CoinmarketcapAPIUrl, app.Config.SupportedCurrencies)
+    url := fmt.Sprintf("%s/simple/price?ids=ethereum,tomochain,bitcoin&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
 
 	req, err := http.NewRequest("GET", url, nil)
 
-	req.Header.Add("X-CMC_PRO_API_KEY", app.Config.CoinmarketcapAPIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalln(err)
@@ -54,21 +52,10 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 		return nil, err
 	}
 
-	status := gjson.Get(string(body), "status")
-	statusErrorCode := status.Get("error_code")
-	statusErrorMessage := status.Get("error_message")
-
-	if statusErrorCode.Int() != 0 {
-		logger.Error(statusErrorMessage.String())
-		return nil, errors.New(statusErrorMessage.String())
-	}
-
-	data := gjson.Get(string(body), "data")
 	result := make(map[string]float64)
-	data.ForEach(func(key, value gjson.Result) bool {
-		result[key.String()] = value.Get("quote.USD.price").Float()
-		return true // keep iterating
-	})
+    result["TOMO"] = gjson.Get(string(body), "tomochain.usd").Float()
+    result["BTC"] = gjson.Get(string(body), "bitcoin.usd").Float()
+    result["ETH"] = gjson.Get(string(body), "ethereum.usd").Float()
 
 	return result, nil
 }
