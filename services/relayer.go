@@ -30,8 +30,9 @@ func NewRelayerService(
 }
 
 func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
-	currentPairs, err := s.pairDao.GetAll()
-	if err != nil {
+    currentPairs, err := s.pairDao.GetAll()
+    logger.Info("UpdatePairRelayer starting...")
+    if err != nil {
 		return err
 	}
 
