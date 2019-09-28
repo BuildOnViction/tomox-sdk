@@ -1,22 +1,22 @@
 package ethereum
 
 import (
-	"context"
-	"math/big"
+    "context"
+    "math/big"
 
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/tomochain/tomox-sdk/errors"
-	"github.com/tomochain/tomox-sdk/swap/storage"
-	"github.com/tomochain/tomox-sdk/utils"
+    "github.com/ethereum/go-ethereum/core/types"
+    "github.com/tomochain/tomox-sdk/errors"
+    "github.com/tomochain/tomox-sdk/swap/storage"
+    "github.com/tomochain/tomox-sdk/utils"
 )
 
 var logger = utils.Logger
 
 var (
-	ten      = big.NewInt(10)
-	eighteen = big.NewInt(18)
-	// weiInEth = 10^18
-	weiInEth = new(big.Rat).SetInt(new(big.Int).Exp(ten, eighteen, nil))
+    ten      = big.NewInt(10)
+    eighteen = big.NewInt(18)
+    // weiInEth = 10^18
+    weiInEth = new(big.Rat).SetInt(new(big.Int).Exp(ten, eighteen, nil))
 )
 
 // Listener listens for transactions using geth RPC. It calls TransactionHandler for each new
@@ -28,42 +28,42 @@ var (
 // Listener ignores contract creation transactions.
 // Listener requires geth 1.7.0.
 type Listener struct {
-	Enabled              bool
-	Client               Client          `inject:""`
-	Storage              storage.Storage `inject:""`
-	NetworkID            string
-	ConfirmedBlockNumber uint64
-	TransactionHandler   TransactionHandler
+    Enabled              bool
+    Client               Client          `inject:""`
+    Storage              storage.Storage `inject:""`
+    NetworkID            string
+    ConfirmedBlockNumber uint64
+    TransactionHandler   TransactionHandler
 }
 
 type Client interface {
-	NetworkID(ctx context.Context) (*big.Int, error)
-	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
+    NetworkID(ctx context.Context) (*big.Int, error)
+    BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
 }
 
 type TransactionHandler func(transaction Transaction) error
 
 type Transaction struct {
-	Hash string
-	// Value in Wei
-	ValueWei *big.Int
-	To       string
+    Hash string
+    // Value in Wei
+    ValueWei *big.Int
+    To       string
 }
 
 func EthToWei(eth string) (*big.Int, error) {
-	valueRat := new(big.Rat)
-	_, ok := valueRat.SetString(eth)
-	if !ok {
-		return nil, errors.New("Could not convert to *big.Rat")
-	}
+    valueRat := new(big.Rat)
+    _, ok := valueRat.SetString(eth)
+    if !ok {
+        return nil, errors.New("Could not convert to *big.Rat")
+    }
 
-	// Calculate value in Wei
-	valueRat.Mul(valueRat, weiInEth)
+    // Calculate value in Wei
+    valueRat.Mul(valueRat, weiInEth)
 
-	// Ensure denominator is equal `1`
-	if valueRat.Denom().Cmp(big.NewInt(1)) != 0 {
-		return nil, errors.New("Invalid precision, is value smaller than 1 Wei?")
-	}
+    // Ensure denominator is equal `1`
+    if valueRat.Denom().Cmp(big.NewInt(1)) != 0 {
+        return nil, errors.New("Invalid precision, is value smaller than 1 Wei?")
+    }
 
-	return valueRat.Num(), nil
+    return valueRat.Num(), nil
 }

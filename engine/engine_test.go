@@ -1,10 +1,10 @@
 package engine
 
 import (
-	"os"
+    "os"
 )
 
 func init() {
-	if os.Args[1] == "live" {
-	}
+    if os.Args[1] == "live" {
+    }
 }

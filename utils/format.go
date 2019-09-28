@@ -1,15 +1,15 @@
 package utils
 
 import (
-	"math/big"
+    "math/big"
 
-	"github.com/tomochain/tomox-sdk/utils/math"
+    "github.com/tomochain/tomox-sdk/utils/math"
 )
 
 func ToDecimal(value *big.Int) float64 {
-	bigFloatValue := math.BigIntToBigFloat(value)
-	result := math.DivFloat(bigFloatValue, big.NewFloat(1e18))
+    bigFloatValue := math.BigIntToBigFloat(value)
+    result := math.DivFloat(bigFloatValue, big.NewFloat(1e18))
 
-	floatValue, _ := result.Float64()
-	return floatValue
+    floatValue, _ := result.Float64()
+    return floatValue
 }

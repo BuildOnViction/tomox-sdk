@@ -1,9 +1,9 @@
 package abi
 
 import (
-	"strings"
+    "strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
+    "github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 const abiJson = `
@@ -435,5 +435,5 @@ const abiJson = `
 
 // GetRelayerAbi return ABI relayer
 func GetRelayerAbi() (abi.ABI, error) {
-	return abi.JSON(strings.NewReader(abiJson))
+    return abi.JSON(strings.NewReader(abiJson))
 }
