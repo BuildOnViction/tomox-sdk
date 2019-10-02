@@ -1,11 +1,11 @@
 package units
 
 import (
-	"math/big"
+    "math/big"
 
-	"github.com/tomochain/tomox-sdk/utils/math"
+    "github.com/tomochain/tomox-sdk/utils/math"
 )
 
 func Ethers(value int64) *big.Int {
-	return math.Mul(big.NewInt(1e18), big.NewInt(value))
+    return math.Mul(big.NewInt(1e18), big.NewInt(value))
 }

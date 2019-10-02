@@ -1,10 +1,10 @@
 package ws
 
 import (
-	"sync"
+    "sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomox-sdk/types"
+    "github.com/ethereum/go-ethereum/common"
+    "github.com/tomochain/tomox-sdk/types"
 )
 
 // OrderConn is websocket order connection struct
@@ -18,77 +18,77 @@ var orderConnections map[string]OrderConnection
 
 // GetOrderConn returns the connection associated with an order ID
 func GetOrderConnections(a common.Address) OrderConnection {
-	c := orderConnections[a.Hex()]
-	if c == nil {
-		logger.Warning("No connection found")
-		return nil
-	}
+    c := orderConnections[a.Hex()]
+    if c == nil {
+        logger.Warning("No connection found")
+        return nil
+    }
 
-	return orderConnections[a.Hex()]
+    return orderConnections[a.Hex()]
 }
 
 // OrderSocketUnsubscribeHandler unsubscrible order
 func OrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
-	return func(client *Client) {
-		logger.Info("In unsubscription handler")
-		orderConnection := orderConnections[a.Hex()]
-		if orderConnection == nil {
-			logger.Info("No subscriptions")
-		}
+    return func(client *Client) {
+        logger.Info("In unsubscription handler")
+        orderConnection := orderConnections[a.Hex()]
+        if orderConnection == nil {
+            logger.Info("No subscriptions")
+        }
 
-		if orderConnection != nil {
-			logger.Info("%v connections before unsubscription", len(orderConnections[a.Hex()]))
-			lockOrder.Lock()
-			for i, c := range orderConnection {
-				if client == c {
-					orderConnection = append(orderConnection[:i], orderConnection[i+1:]...)
-				}
-			}
-			lockOrder.Unlock()
+        if orderConnection != nil {
+            logger.Info("%v connections before unsubscription", len(orderConnections[a.Hex()]))
+            lockOrder.Lock()
+            for i, c := range orderConnection {
+                if client == c {
+                    orderConnection = append(orderConnection[:i], orderConnection[i+1:]...)
+                }
+            }
+            lockOrder.Unlock()
 
-		}
+        }
 
-		orderConnections[a.Hex()] = orderConnection
-		logger.Info("%v connections after unsubscription", len(orderConnections[a.Hex()]))
-	}
+        orderConnections[a.Hex()] = orderConnection
+        logger.Info("%v connections after unsubscription", len(orderConnections[a.Hex()]))
+    }
 }
 
 // RegisterOrderConnection registers a connection with and orderID.
 // It is called whenever a message is recieved over order channel
 func RegisterOrderConnection(a common.Address, c *Client) {
-	logger.Info("Registering new order connection")
+    logger.Info("Registering new order connection")
 
-	if orderConnections == nil {
-		orderConnections = make(map[string]OrderConnection)
-	}
+    if orderConnections == nil {
+        orderConnections = make(map[string]OrderConnection)
+    }
 
-	if orderConnections[a.Hex()] == nil {
-		logger.Info("Registering a new order connection")
-		orderConnections[a.Hex()] = OrderConnection{c}
-		RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
-		logger.Info("Number of connections for this address: %v", len(orderConnections))
-	}
+    if orderConnections[a.Hex()] == nil {
+        logger.Info("Registering a new order connection")
+        orderConnections[a.Hex()] = OrderConnection{c}
+        RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
+        logger.Info("Number of connections for this address: %v", len(orderConnections))
+    }
 
-	if orderConnections[a.Hex()] != nil {
+    if orderConnections[a.Hex()] != nil {
 
-		if !isClientConnected(orderConnections[a.Hex()], c) {
-			logger.Info("Registering a new order connection")
-			lockOrder.Lock()
-			orderConnections[a.Hex()] = append(orderConnections[a.Hex()], c)
-			lockOrder.Unlock()
-			RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
-			logger.Info("Number of connections for this address: %v", len(orderConnections))
-		}
-	}
+        if !isClientConnected(orderConnections[a.Hex()], c) {
+            logger.Info("Registering a new order connection")
+            lockOrder.Lock()
+            orderConnections[a.Hex()] = append(orderConnections[a.Hex()], c)
+            lockOrder.Unlock()
+            RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
+            logger.Info("Number of connections for this address: %v", len(orderConnections))
+        }
+    }
 }
 
 func SendOrderMessage(msgType types.SubscriptionEvent, a common.Address, payload interface{}) {
-	conn := GetOrderConnections(a)
-	if conn == nil {
-		return
-	}
+    conn := GetOrderConnections(a)
+    if conn == nil {
+        return
+    }
 
-	for _, c := range conn {
-		c.SendMessage(OrderChannel, msgType, payload)
-	}
+    for _, c := range conn {
+        c.SendMessage(OrderChannel, msgType, payload)
+    }
 }
