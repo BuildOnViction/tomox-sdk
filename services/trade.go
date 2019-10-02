@@ -276,30 +276,25 @@ func (s *TradeService) HandleOperationUpdate(trade *types.Trade) error {
 // HandleTradeSuccess handle order match success
 func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	trades := m.Trades
-	orders := m.MakerOrders
-
-	// Send ORDER_SUCCESS message to order takers
-	taker := trades[0].Taker
-	ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{Matches: m})
-	s.notificationDao.Create(&types.Notification{
-		Recipient: taker,
-		Message: types.Message{
-			MessageType: "ORDER_SUCCESS",
-			Description: trades[0].Hash.Hex(),
-		},
-		Type:   types.TypeLog,
-		Status: types.StatusUnread,
-	})
-
-	// Send ORDER_SUCCESS message to order makers
-	for _, o := range orders {
-		maker := o.UserAddress
+	for _, t := range trades {
+		maker := t.Maker
+		taker := t.Taker
 		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{Matches: m})
+		ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{Matches: m})
 		s.notificationDao.Create(&types.Notification{
-			Recipient: o.UserAddress,
+			Recipient: taker,
 			Message: types.Message{
 				MessageType: "ORDER_SUCCESS",
-				Description: o.Hash.Hex(),
+				Description: t.Hash.Hex(),
+			},
+			Type:   types.TypeLog,
+			Status: types.StatusUnread,
+		})
+		s.notificationDao.Create(&types.Notification{
+			Recipient: maker,
+			Message: types.Message{
+				MessageType: "ORDER_SUCCESS",
+				Description: t.Hash.Hex(),
 			},
 			Type:   types.TypeLog,
 			Status: types.StatusUnread,
