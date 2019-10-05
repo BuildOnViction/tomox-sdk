@@ -1,26 +1,26 @@
 package daos
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/globalsign/mgo"
-    "github.com/tomochain/tomox-sdk/app"
-    "github.com/tomochain/tomox-sdk/types"
+	"github.com/globalsign/mgo"
+	"github.com/tomochain/tomox-sdk/app"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 func TestConfigIncrementIndex(t *testing.T) {
-    err := app.LoadConfig("../config", "test")
-    if err != nil {
-        panic(err)
-    }
-    session, err := mgo.Dial(app.Config.MongoURL)
-    if err != nil {
-        panic(err)
-    }
+	err := app.LoadConfig("../config", "test")
+	if err != nil {
+		panic(err)
+	}
+	session, err := mgo.Dial(app.Config.MongoURL)
+	if err != nil {
+		panic(err)
+	}
 
-    db = &Database{session}
-    configDao := NewConfigDao()
-    configDao.IncrementAddressIndex(types.ChainEthereum)
-    index, err := configDao.GetAddressIndex(types.ChainEthereum)
-    t.Logf("Current Address Index: %d, err  :%v", index, err)
+	db = &Database{session}
+	configDao := NewConfigDao()
+	configDao.IncrementAddressIndex(types.ChainEthereum)
+	index, err := configDao.GetAddressIndex(types.ChainEthereum)
+	t.Logf("Current Address Index: %d, err  :%v", index, err)
 }

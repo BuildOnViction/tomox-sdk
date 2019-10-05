@@ -1,9 +1,9 @@
 package services
 
 import (
-    "github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/errors"
 
-    "github.com/tomochain/tomox-sdk/utils"
+	"github.com/tomochain/tomox-sdk/utils"
 )
 
 var logger = utils.Logger

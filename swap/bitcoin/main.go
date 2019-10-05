@@ -1,24 +1,24 @@
 package bitcoin
 
 import (
-    "math/big"
+	"math/big"
 
-    "github.com/btcsuite/btcd/chaincfg"
-    "github.com/btcsuite/btcd/chaincfg/chainhash"
-    "github.com/btcsuite/btcd/wire"
-    "github.com/tomochain/tomox-sdk/errors"
-    "github.com/tomochain/tomox-sdk/swap/storage"
-    "github.com/tomochain/tomox-sdk/utils"
-    "github.com/tyler-smith/go-bip32"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/swap/storage"
+	"github.com/tomochain/tomox-sdk/utils"
+	"github.com/tyler-smith/go-bip32"
 )
 
 var logger = utils.Logger
 
 var (
-    eight = big.NewInt(8)
-    ten   = big.NewInt(10)
-    // satInBtc = 10^8
-    satInBtc = new(big.Rat).SetInt(new(big.Int).Exp(ten, eight, nil))
+	eight = big.NewInt(8)
+	ten   = big.NewInt(10)
+	// satInBtc = 10^8
+	satInBtc = new(big.Rat).SetInt(new(big.Int).Exp(ten, eight, nil))
 )
 
 // Listener listens for transactions using bitcoin-core RPC. It calls TransactionHandler for each new
@@ -29,51 +29,51 @@ var (
 // Listener tracks only P2PKH payments.
 // You can run multiple Listeners if Storage is implemented correctly.
 type Listener struct {
-    Enabled              bool
-    Client               Client          `inject:""`
-    Storage              storage.Storage `inject:""`
-    TransactionHandler   TransactionHandler
-    Testnet              bool
-    ConfirmedBlockNumber uint64
-    chainParams          *chaincfg.Params
+	Enabled              bool
+	Client               Client          `inject:""`
+	Storage              storage.Storage `inject:""`
+	TransactionHandler   TransactionHandler
+	Testnet              bool
+	ConfirmedBlockNumber uint64
+	chainParams          *chaincfg.Params
 }
 
 type Client interface {
-    GetBlockCount() (int64, error)
-    GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
-    GetBlock(blockHash *chainhash.Hash) (*wire.MsgBlock, error)
+	GetBlockCount() (int64, error)
+	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
+	GetBlock(blockHash *chainhash.Hash) (*wire.MsgBlock, error)
 }
 
 type TransactionHandler func(transaction Transaction) error
 
 type Transaction struct {
-    Hash       string
-    TxOutIndex int
-    // Value in sats
-    ValueSat int64
-    To       string
+	Hash       string
+	TxOutIndex int
+	// Value in sats
+	ValueSat int64
+	To       string
 }
 
 type AddressGenerator struct {
-    masterPublicKey *bip32.Key
-    chainParams     *chaincfg.Params
+	masterPublicKey *bip32.Key
+	chainParams     *chaincfg.Params
 }
 
 func BtcToSat(btc string) (int64, error) {
 
-    valueRat := new(big.Rat)
-    _, ok := valueRat.SetString(btc)
-    if !ok {
-        return 0, errors.New("Could not convert to *big.Rat")
-    }
+	valueRat := new(big.Rat)
+	_, ok := valueRat.SetString(btc)
+	if !ok {
+		return 0, errors.New("Could not convert to *big.Rat")
+	}
 
-    // Calculate value in satoshi
-    valueRat.Mul(valueRat, satInBtc)
+	// Calculate value in satoshi
+	valueRat.Mul(valueRat, satInBtc)
 
-    // Ensure denominator is equal `1`
-    if valueRat.Denom().Cmp(big.NewInt(1)) != 0 {
-        return 0, errors.New("Invalid precision, is value smaller than 1 satoshi?")
-    }
+	// Ensure denominator is equal `1`
+	if valueRat.Denom().Cmp(big.NewInt(1)) != 0 {
+		return 0, errors.New("Invalid precision, is value smaller than 1 satoshi?")
+	}
 
-    return valueRat.Num().Int64(), nil
+	return valueRat.Num().Int64(), nil
 }

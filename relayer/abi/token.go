@@ -417,5 +417,5 @@ const tokenAbi = `
 
 // GetTokenAbi return token abi
 func GetTokenAbi() (abi.ABI, error) {
-    return abi.JSON(strings.NewReader(tokenAbi))
+	return abi.JSON(strings.NewReader(tokenAbi))
 }

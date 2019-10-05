@@ -1,138 +1,138 @@
 package rabbitmq
 
 import (
-    "encoding/json"
-    "log"
+	"encoding/json"
+	"log"
 
-    "github.com/tomochain/tomox-sdk/errors"
-    "github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/errors"
+	"github.com/tomochain/tomox-sdk/types"
 )
 
 func (c *Connection) SubscribeOrders(fn func(*Message) error) error {
-    ch := c.GetChannel("orderSubscribe")
-    q := c.GetQueue(ch, "order")
+	ch := c.GetChannel("orderSubscribe")
+	q := c.GetQueue(ch, "order")
 
-    go func() {
-        msgs, err := c.Consume(ch, q)
-        if err != nil {
-            logger.Error(err)
-        }
+	go func() {
+		msgs, err := c.Consume(ch, q)
+		if err != nil {
+			logger.Error(err)
+		}
 
-        forever := make(chan bool)
+		forever := make(chan bool)
 
-        go func() {
-            for d := range msgs {
-                msg := &Message{}
-                err := json.Unmarshal(d.Body, msg)
-                if err != nil {
-                    logger.Error(err)
-                    continue
-                }
+		go func() {
+			for d := range msgs {
+				msg := &Message{}
+				err := json.Unmarshal(d.Body, msg)
+				if err != nil {
+					logger.Error(err)
+					continue
+				}
 
-                go fn(msg)
-            }
-        }()
+				go fn(msg)
+			}
+		}()
 
-        <-forever
-    }()
-    return nil
+		<-forever
+	}()
+	return nil
 }
 
 func (c *Connection) PublishNewOrderMessage(o *types.Order) error {
-    b, err := json.Marshal(o)
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	b, err := json.Marshal(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    err = c.PublishOrder(&Message{
-        Type: "NEW_ORDER",
-        Data: b,
-    })
+	err = c.PublishOrder(&Message{
+		Type: "NEW_ORDER",
+		Data: b,
+	})
 
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (c *Connection) PublishNewStopOrderMessage(so *types.StopOrder) error {
-    b, err := json.Marshal(so)
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	b, err := json.Marshal(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    err = c.PublishOrder(&Message{
-        Type: "NEW_STOP_ORDER",
-        Data: b,
-    })
+	err = c.PublishOrder(&Message{
+		Type: "NEW_STOP_ORDER",
+		Data: b,
+	})
 
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (c *Connection) PublishCancelOrderMessage(o *types.Order) error {
-    b, err := json.Marshal(o)
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	b, err := json.Marshal(o)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    err = c.PublishOrder(&Message{
-        Type: "CANCEL_ORDER",
-        Data: b,
-    })
+	err = c.PublishOrder(&Message{
+		Type: "CANCEL_ORDER",
+		Data: b,
+	})
 
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (c *Connection) PublishCancelStopOrderMessage(so *types.StopOrder) error {
-    b, err := json.Marshal(so)
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	b, err := json.Marshal(so)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    err = c.PublishOrder(&Message{
-        Type: "CANCEL_STOP_ORDER",
-        Data: b,
-    })
+	err = c.PublishOrder(&Message{
+		Type: "CANCEL_STOP_ORDER",
+		Data: b,
+	})
 
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (c *Connection) PublishOrder(order *Message) error {
-    ch := c.GetChannel("orderPublish")
-    q := c.GetQueue(ch, "order")
+	ch := c.GetChannel("orderPublish")
+	q := c.GetQueue(ch, "order")
 
-    bytes, err := json.Marshal(order)
-    if err != nil {
-        log.Fatal("Failed to marshal order: ", err)
-        return errors.New("Failed to marshal order: " + err.Error())
-    }
+	bytes, err := json.Marshal(order)
+	if err != nil {
+		log.Fatal("Failed to marshal order: ", err)
+		return errors.New("Failed to marshal order: " + err.Error())
+	}
 
-    err = c.Publish(ch, q, bytes)
-    if err != nil {
-        logger.Error(err)
-        return err
-    }
+	err = c.Publish(ch, q, bytes)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
-    return nil
+	return nil
 }

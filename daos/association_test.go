@@ -1,56 +1,56 @@
 package daos
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/ethereum/go-ethereum/common"
-    "github.com/ethereum/go-ethereum/rlp"
-    "github.com/globalsign/mgo"
-    "github.com/tomochain/tomox-sdk/app"
-    "github.com/tomochain/tomox-sdk/types"
-    "github.com/tomochain/tomox-sdk/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/globalsign/mgo"
+	"github.com/tomochain/tomox-sdk/app"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
 )
 
 func TestDepositHistory(t *testing.T) {
-    err := app.LoadConfig("../config", "test")
-    if err != nil {
-        panic(err)
-    }
-    session, err := mgo.Dial(app.Config.MongoURL)
-    if err != nil {
-        panic(err)
-    }
+	err := app.LoadConfig("../config", "test")
+	if err != nil {
+		panic(err)
+	}
+	session, err := mgo.Dial(app.Config.MongoURL)
+	if err != nil {
+		panic(err)
+	}
 
-    db = &Database{session}
-    associationDao := NewAssociationDao()
+	db = &Database{session}
+	associationDao := NewAssociationDao()
 
-    // test get history
-    chain := types.ChainEthereum
-    associatedAddress := common.HexToAddress("0x59b8515e7ff389df6926cd52a086b0f1f46c630a")
-    addressAssociation, err := associationDao.GetAssociationByChainAssociatedAddress(chain, associatedAddress)
+	// test get history
+	chain := types.ChainEthereum
+	associatedAddress := common.HexToAddress("0x59b8515e7ff389df6926cd52a086b0f1f46c630a")
+	addressAssociation, err := associationDao.GetAssociationByChainAssociatedAddress(chain, associatedAddress)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    associationTransactions := []types.AssociationTransaction{}
+	associationTransactions := []types.AssociationTransaction{}
 
-    if addressAssociation != nil {
-        for _, txEnvelope := range addressAssociation.TxEnvelopes {
-            bytes := common.Hex2Bytes(txEnvelope)
+	if addressAssociation != nil {
+		for _, txEnvelope := range addressAssociation.TxEnvelopes {
+			bytes := common.Hex2Bytes(txEnvelope)
 
-            // t.Logf("Got bytes: %v", bytes)
+			// t.Logf("Got bytes: %v", bytes)
 
-            var associationTransaction types.AssociationTransaction
-            err = rlp.DecodeBytes(bytes, &associationTransaction)
-            if err != nil {
-                continue
-            }
+			var associationTransaction types.AssociationTransaction
+			err = rlp.DecodeBytes(bytes, &associationTransaction)
+			if err != nil {
+				continue
+			}
 
-            associationTransactions = append(associationTransactions, associationTransaction)
-        }
-    }
+			associationTransactions = append(associationTransactions, associationTransaction)
+		}
+	}
 
-    utils.PrintJSON(associationTransactions)
+	utils.PrintJSON(associationTransactions)
 
 }

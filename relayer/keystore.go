@@ -7,10 +7,10 @@ const passParser = "123654789"
 
 // GetKeyStoreReader return reader for keystore
 func GetKeyStoreReader() *strings.Reader {
-    return strings.NewReader(keyString)
+	return strings.NewReader(keyString)
 }
 
 // GetKeyStore return passparser and keystore reader
 func GetKeyStore() (string, *strings.Reader) {
-    return passParser, GetKeyStoreReader()
+	return passParser, GetKeyStoreReader()
 }

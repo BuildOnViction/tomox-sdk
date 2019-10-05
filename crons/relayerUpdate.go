@@ -1,16 +1,16 @@
 package crons
 
 import (
-    "github.com/robfig/cron"
+	"github.com/robfig/cron"
 )
 
 func (s *CronService) startRelayerUpdate(c *cron.Cron) {
-    s.RelayService.UpdateRelayer()
-    c.AddFunc("*/600 * * * * *", s.updateRelayer())
+	s.RelayService.UpdateRelayer()
+	c.AddFunc("*/600 * * * * *", s.updateRelayer())
 }
 
 func (s *CronService) updateRelayer() func() {
-    return func() {
-        s.RelayService.UpdateRelayer()
-    }
+	return func() {
+		s.RelayService.UpdateRelayer()
+	}
 }

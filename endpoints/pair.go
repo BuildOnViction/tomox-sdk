@@ -1,193 +1,193 @@
 package endpoints
 
 import (
-    "encoding/json"
-    "net/http"
+	"encoding/json"
+	"net/http"
 
-    "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 
-    "github.com/gorilla/mux"
-    "github.com/tomochain/tomox-sdk/interfaces"
-    "github.com/tomochain/tomox-sdk/services"
-    "github.com/tomochain/tomox-sdk/types"
-    "github.com/tomochain/tomox-sdk/utils/httputils"
+	"github.com/gorilla/mux"
+	"github.com/tomochain/tomox-sdk/interfaces"
+	"github.com/tomochain/tomox-sdk/services"
+	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils/httputils"
 )
 
 type pairEndpoint struct {
-    pairService interfaces.PairService
+	pairService interfaces.PairService
 }
 
 // ServePairResource sets up the routing of pair endpoints and the corresponding handlers.
 func ServePairResource(
-    r *mux.Router,
-    p interfaces.PairService,
+	r *mux.Router,
+	p interfaces.PairService,
 ) {
-    e := &pairEndpoint{p}
-    r.HandleFunc("/api/pairs", e.HandleGetPairs).Methods("GET")
-    r.HandleFunc("/api/pair", e.HandleGetPair).Methods("GET")
-    r.HandleFunc("/api/pair", e.HandleCreatePair).Methods("POST")
-    r.HandleFunc("/api/pairs/data", e.HandleGetPairsData).Methods("GET")
-    r.HandleFunc("/api/pair/data", e.HandleGetPairData).Methods("GET")
+	e := &pairEndpoint{p}
+	r.HandleFunc("/api/pairs", e.HandleGetPairs).Methods("GET")
+	r.HandleFunc("/api/pair", e.HandleGetPair).Methods("GET")
+	r.HandleFunc("/api/pair", e.HandleCreatePair).Methods("POST")
+	r.HandleFunc("/api/pairs/data", e.HandleGetPairsData).Methods("GET")
+	r.HandleFunc("/api/pair/data", e.HandleGetPairData).Methods("GET")
 }
 
 func (e *pairEndpoint) HandleCreatePair(w http.ResponseWriter, r *http.Request) {
-    p := &types.Pair{}
+	p := &types.Pair{}
 
-    decoder := json.NewDecoder(r.Body)
-    err := decoder.Decode(p)
-    if err != nil {
-        httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
-        return
-    }
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(p)
+	if err != nil {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
 
-    defer r.Body.Close()
+	defer r.Body.Close()
 
-    err = p.Validate()
-    if err != nil {
-        httputils.WriteError(w, http.StatusBadRequest, err.Error())
-        return
-    }
+	err = p.Validate()
+	if err != nil {
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-    err = e.pairService.Create(p)
-    if err != nil {
-        switch err {
-        case services.ErrPairExists:
-            httputils.WriteError(w, http.StatusBadRequest, "Pair exists")
-            return
-        case services.ErrBaseTokenNotFound:
-            httputils.WriteError(w, http.StatusBadRequest, "Base token not found")
-            return
-        case services.ErrQuoteTokenNotFound:
-            httputils.WriteError(w, http.StatusBadRequest, "Quote token not found")
-            return
-        case services.ErrQuoteTokenInvalid:
-            httputils.WriteError(w, http.StatusBadRequest, "Quote token invalid (token is not registered as quote")
-            return
-        default:
-            logger.Error(err)
-            httputils.WriteError(w, http.StatusInternalServerError, "")
-            return
-        }
-    }
+	err = e.pairService.Create(p)
+	if err != nil {
+		switch err {
+		case services.ErrPairExists:
+			httputils.WriteError(w, http.StatusBadRequest, "Pair exists")
+			return
+		case services.ErrBaseTokenNotFound:
+			httputils.WriteError(w, http.StatusBadRequest, "Base token not found")
+			return
+		case services.ErrQuoteTokenNotFound:
+			httputils.WriteError(w, http.StatusBadRequest, "Quote token not found")
+			return
+		case services.ErrQuoteTokenInvalid:
+			httputils.WriteError(w, http.StatusBadRequest, "Quote token invalid (token is not registered as quote")
+			return
+		default:
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, "")
+			return
+		}
+	}
 
-    httputils.WriteJSON(w, http.StatusCreated, p)
+	httputils.WriteJSON(w, http.StatusCreated, p)
 }
 
 func (e *pairEndpoint) HandleGetPairs(w http.ResponseWriter, r *http.Request) {
-    res, err := e.pairService.GetAll()
-    if err != nil {
-        logger.Error(err)
-        httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-        return
-    }
+	res, err := e.pairService.GetAll()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-    if res == nil {
-        httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
-        return
-    }
+	if res == nil {
+		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
+		return
+	}
 
-    httputils.WriteJSON(w, http.StatusOK, res)
+	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
 func (e *pairEndpoint) HandleGetPair(w http.ResponseWriter, r *http.Request) {
-    v := r.URL.Query()
-    baseToken := v.Get("baseToken")
-    quoteToken := v.Get("quoteToken")
+	v := r.URL.Query()
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
 
-    if baseToken == "" {
-        httputils.WriteError(w, http.StatusBadRequest, "baseToken Parameter missing")
-        return
-    }
+	if baseToken == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "baseToken Parameter missing")
+		return
+	}
 
-    if quoteToken == "" {
-        httputils.WriteError(w, http.StatusBadRequest, "quoteToken Parameter missing")
-        return
-    }
+	if quoteToken == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "quoteToken Parameter missing")
+		return
+	}
 
-    if !common.IsHexAddress(baseToken) {
-        httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
-        return
-    }
+	if !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
 
-    if !common.IsHexAddress(quoteToken) {
-        httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
-        return
-    }
+	if !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
 
-    baseTokenAddress := common.HexToAddress(baseToken)
-    quoteTokenAddress := common.HexToAddress(quoteToken)
-    res, err := e.pairService.GetByTokenAddress(baseTokenAddress, quoteTokenAddress)
-    if err != nil {
-        logger.Error(err)
-        httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-        return
-    }
+	baseTokenAddress := common.HexToAddress(baseToken)
+	quoteTokenAddress := common.HexToAddress(quoteToken)
+	res, err := e.pairService.GetByTokenAddress(baseTokenAddress, quoteTokenAddress)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-    if res == nil {
-        httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
-        return
-    }
+	if res == nil {
+		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
+		return
+	}
 
-    httputils.WriteJSON(w, http.StatusOK, res)
+	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
 func (e *pairEndpoint) HandleGetPairsData(w http.ResponseWriter, r *http.Request) {
 
-    res, err := e.pairService.GetAllTokenPairData()
-    if err != nil {
-        logger.Error(err)
-        httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-        return
-    }
+	res, err := e.pairService.GetAllTokenPairData()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-    if res == nil {
-        httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
-        return
-    }
+	if res == nil {
+		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
+		return
+	}
 
-    httputils.WriteJSON(w, http.StatusOK, res)
-    return
+	httputils.WriteJSON(w, http.StatusOK, res)
+	return
 
 }
 
 func (e *pairEndpoint) HandleGetPairData(w http.ResponseWriter, r *http.Request) {
-    v := r.URL.Query()
-    baseToken := v.Get("baseToken")
-    quoteToken := v.Get("quoteToken")
+	v := r.URL.Query()
+	baseToken := v.Get("baseToken")
+	quoteToken := v.Get("quoteToken")
 
-    if quoteToken == "" {
-        httputils.WriteError(w, http.StatusBadRequest, "quoteToken Parameter missing")
-        return
-    }
+	if quoteToken == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "quoteToken Parameter missing")
+		return
+	}
 
-    if baseToken == "" {
-        httputils.WriteError(w, http.StatusBadRequest, "baseToken Parameter missing")
-        return
-    }
+	if baseToken == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "baseToken Parameter missing")
+		return
+	}
 
-    if !common.IsHexAddress(baseToken) {
-        httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
-        return
-    }
+	if !common.IsHexAddress(baseToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
+		return
+	}
 
-    if !common.IsHexAddress(quoteToken) {
-        httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
-        return
-    }
+	if !common.IsHexAddress(quoteToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
 
-    baseTokenAddress := common.HexToAddress(baseToken)
-    quoteTokenAddress := common.HexToAddress(quoteToken)
+	baseTokenAddress := common.HexToAddress(baseToken)
+	quoteTokenAddress := common.HexToAddress(quoteToken)
 
-    res, err := e.pairService.GetTokenPairData(baseTokenAddress, quoteTokenAddress)
-    if err != nil {
-        logger.Error(err)
-        httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-        return
-    }
+	res, err := e.pairService.GetTokenPairData(baseTokenAddress, quoteTokenAddress)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-    if res == nil {
-        httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
-        return
-    }
-    httputils.WriteJSON(w, http.StatusOK, res)
+	if res == nil {
+		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, res)
 }
