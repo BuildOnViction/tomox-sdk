@@ -9,13 +9,16 @@ env:
     - GOPROXY=https://proxy.golang.org
     - GO111MODULE=on
 
+before_script:
+  - go install github.com/golangci/golangci-lint/cmd/golangci-lint
+
 jobs:
   include:          
-    - stage: Lint and test
-      before_script:
-        - go install github.com/golangci/golangci-lint/cmd/golangci-lint
+    - stage: Lint
       script:
         - golangci-lint run
+    - stage: Test
+      script:
         - go test -v -race ./...
     - stage: Release application
       before_install:
@@ -37,7 +40,7 @@ jobs:
           tags: true
 
 stages:
-  - name: Lint and test
-    if: branch =~ ^v AND repo = tomochain/tomox-sdk
+  - name: Lint
+  - name: Test
   - name: Release application
     if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk
