@@ -2,15 +2,21 @@ sudo: required
 language: go
 
 go:
-  - "1.11.x"
   - "1.12.x"  
 
 env:
   global:
     - GOPROXY=https://proxy.golang.org
     - GO111MODULE=on
+
 jobs:
   include:          
+    - stage: Lint and test
+      before_script:
+        - go install github.com/golangci/golangci-lint/cmd/golangci-lint
+      script:
+        - golangci-lint run
+        - go test -v -race ./...
     - stage: Release application
       before_install:
         - sudo apt-get install gcc-multilib gcc-mingw-w64
@@ -31,5 +37,7 @@ jobs:
           tags: true
 
 stages:
+  - name: Lint and test
+    if: branch =~ ^v AND repo = tomochain/tomox-sdk
   - name: Release application
     if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk
