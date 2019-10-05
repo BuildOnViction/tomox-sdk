@@ -60,45 +60,14 @@ func NewTradeDao() *TradeDao {
         Collation: &mgo.Collation{NumericOrdering: true, Locale: "en"},
     }
 
-    err := db.Session.DB(dbName).C(collection).EnsureIndex(i1)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i2)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i3)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i4)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i5)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i6)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i7)
-    if err != nil {
-        panic(err)
-    }
-
-    err = db.Session.DB(dbName).C(collection).EnsureIndex(i8)
-    if err != nil {
-        panic(err)
-    }
+    db.Session.DB(dbName).C(collection).EnsureIndex(i1)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i2)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i3)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i4)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i5)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i6)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i7)
+    db.Session.DB(dbName).C(collection).EnsureIndex(i8)
 
     return &TradeDao{collection, dbName}
 }

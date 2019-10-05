@@ -28,10 +28,8 @@ func NewTokenDao() *TokenDao {
         Unique: true,
     }
 
-    err := db.Session.DB(dbName).C(collection).EnsureIndex(index)
-    if err != nil {
-        panic(err)
-    }
+    db.Session.DB(dbName).C(collection).EnsureIndex(index)
+
     return &TokenDao{collection, dbName}
 }
 
