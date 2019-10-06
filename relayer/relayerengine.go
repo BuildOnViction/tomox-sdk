@@ -121,16 +121,7 @@ func (b *Blockchain) GetTokenInfo(token common.Address, abi *abi.ABI) (*TokenInf
 		Decimals: decimals,
 	}, nil
 }
-func (b *Blockchain) isBaseTokenByInfo(info *TokenInfo) bool {
-	if info.Symbol == "TOMO" {
-		return true
-	}
-	return false
-}
 
-func (b *Blockchain) setBaseAddress() common.Address {
-	return common.HexToAddress("0x0000000000000000000000000000000000000001")
-}
 func (b *Blockchain) setBaseTokenInfo() *TokenInfo {
 	return &TokenInfo{
 		Name:     "TOMO",
@@ -166,9 +157,6 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 		Tokens: make(map[common.Address]*TokenInfo),
 	}
 	if method, ok := abiRelayer.Methods["getRelayerByCoinbase"]; ok {
-		if len(result)%32 != 0 {
-
-		}
 		contractData, err := method.Outputs.UnpackValues(result)
 		if err == nil {
 			if len(contractData) == 5 {

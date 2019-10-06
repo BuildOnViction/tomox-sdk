@@ -13,8 +13,6 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/relayer"
-	swapBitcoin "github.com/tomochain/tomox-sdk/swap/bitcoin"
-	swapEthereum "github.com/tomochain/tomox-sdk/swap/ethereum"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/ws"
 )
@@ -354,44 +352,6 @@ type AccountService interface {
 	AddFavoriteToken(account, token common.Address) error
 	DeleteFavoriteToken(account, token common.Address) error
 	GetTokenBalanceProvidor(owner common.Address, token common.Address) (*types.TokenBalance, error)
-}
-
-type DepositService interface {
-	SignerPublicKey() common.Address
-	GenerateAddress(chain types.Chain) (common.Address, uint64, error)
-	GetSchemaVersion() uint64
-	RecoveryTransaction(chain types.Chain, address common.Address) error
-
-	// one for wallet, one for relayer
-	GetAssociationByChainAddress(chain types.Chain, userAddress common.Address) (*types.AddressAssociationRecord, error)
-	GetAssociationByChainAssociatedAddress(chain types.Chain, associatedAddress common.Address) (*types.AddressAssociationRecord, error)
-
-	SaveAssociationByChainAddress(chain types.Chain, address common.Address, index uint64, associatedAddress common.Address, pairAddreses *types.PairAddresses) error
-	SaveAssociationStatusByChainAddress(addressAssociation *types.AddressAssociationRecord, status string) error
-	SaveDepositTransaction(chain types.Chain, sourceAccount common.Address, txEnvelope string) error
-	// SetDelegate to endpoint
-	MinimumValueWei() *big.Int
-	MinimumValueSat() int64
-
-	SetDelegate(handler SwapEngineHandler)
-
-	// Queue implementation
-	QueueAdd(queueTx *types.DepositTransaction) error
-	QueuePool() (<-chan *types.DepositTransaction, error)
-
-	// help creating token
-	EthereumClient() EthereumClient
-}
-
-type SwapEngineHandler interface {
-	OnNewEthereumTransaction(transaction swapEthereum.Transaction) error
-	OnNewBitcoinTransaction(transaction swapBitcoin.Transaction) error
-	OnSubmitTransaction(chain types.Chain, destination string, transaction *types.AssociationTransaction) error
-	OnTomochainAccountCreated(chain types.Chain, destination string)
-	OnExchanged(chain types.Chain, destination string)
-	OnExchangedTimelocked(chain types.Chain, destination string, transaction *types.AssociationTransaction)
-
-	LoadAccountHandler(chain types.Chain, publicKey string) (*types.AddressAssociation, error)
 }
 
 type ValidatorService interface {
