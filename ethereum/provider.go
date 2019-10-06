@@ -212,14 +212,12 @@ func (e *EthereumProvider) Balance(owner common.Address, token common.Address) (
 			return nil, err
 		}
 		logger.Info("GetBalanceAt:", b)
-		return b, nil
 	} else {
 		b, err := e.BalanceOf(owner, token)
 		if err != nil {
 			return nil, err
 		}
 		logger.Info("BalanceOf:", b)
-		return b, nil
 	}
 	return b, nil
 }
