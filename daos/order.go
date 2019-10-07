@@ -1040,7 +1040,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_createOrder", params)
+	err = rpcClient.Call(&result, "tomox_createOrder", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -1099,7 +1099,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_cancelOrder", params)
+	err = rpcClient.Call(&result, "tomox_cancelOrder", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -1128,7 +1128,7 @@ func (dao *OrderDao) AddTopic(t []string) (string, error) {
 		return "", err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_newTopic", params)
+	err = rpcClient.Call(&result, "tomox_newTopic", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -1156,7 +1156,7 @@ func (dao *OrderDao) DeleteTopic(t string) error {
 		return err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_deleteTopic", params)
+	err = rpcClient.Call(&result, "tomox_deleteTopic", params)
 
 	if err != nil {
 		logger.Error(err)
@@ -1183,7 +1183,7 @@ func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, err
 		return 0, err
 	}
 
-	err = rpcClient.Call(&result, "tomoX_getOrderNonce", userAddress.Hex())
+	err = rpcClient.Call(&result, "tomox_getOrderNonce", userAddress.Hex())
 
 	if err != nil {
 		logger.Error(err)
