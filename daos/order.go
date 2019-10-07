@@ -3,6 +3,7 @@ package daos
 import (
 	"encoding/json"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -992,61 +993,63 @@ func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
 	return orderData, nil
 }
 
+type OrderMsg struct {
+	AccountNonce    uint64         `json:"nonce"    gencodec:"required"`
+	Quantity        *big.Int       `json:"quantity,omitempty"`
+	Price           *big.Int       `json:"price,omitempty"`
+	ExchangeAddress common.Address `json:"exchangeAddress,omitempty"`
+	UserAddress     common.Address `json:"userAddress,omitempty"`
+	BaseToken       common.Address `json:"baseToken,omitempty"`
+	QuoteToken      common.Address `json:"quoteToken,omitempty"`
+	Status          string         `json:"status,omitempty"`
+	Side            string         `json:"side,omitempty"`
+	Type            string         `json:"type,omitempty"`
+	PairName        string         `json:"pairName,omitempty"`
+	// Signature values
+	V *big.Int `json:"v" gencodec:"required"`
+	R *big.Int `json:"r" gencodec:"required"`
+	S *big.Int `json:"s" gencodec:"required"`
+
+	// This is only used when marshaling to JSON.
+	Hash *common.Hash `json:"hash" rlp:"-"`
+}
+
 // AddNewOrder add order
 func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
-
 	defer rpcClient.Close()
-
+	bigstr := o.Nonce.String()
+	n, err := strconv.ParseInt(bigstr, 10, 64)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
+	V := big.NewInt(int64(o.Signature.V))
+	R := o.Signature.R.Big()
+	S := o.Signature.S.Big()
 
-	if o.Status == "" {
-		o.Status = types.OrderStatusNew
-	}
-
-	oi := &tomox.OrderItem{
+	msg := OrderMsg{
+		AccountNonce:    uint64(n),
 		Quantity:        o.Amount,
 		Price:           o.PricePoint,
 		ExchangeAddress: o.ExchangeAddress,
 		UserAddress:     o.UserAddress,
 		BaseToken:       o.BaseToken,
 		QuoteToken:      o.QuoteToken,
-		Status:          o.Status,
+		Status:          "NEW",
 		Side:            o.Side,
 		Type:            o.Type,
-		Hash:            o.Hash,
-		Signature: &tomox.Signature{
-			V: o.Signature.V,
-			R: o.Signature.R,
-			S: o.Signature.S,
-		},
-		FilledAmount: o.FilledAmount,
-		Nonce:        o.Nonce,
-		PairName:     o.PairName,
-		CreatedAt:    o.CreatedAt,
-		UpdatedAt:    o.UpdatedAt,
+		PairName:        o.PairName,
+		V:               V,
+		R:               R,
+		S:               S,
 	}
-	logger.Info("Order user address:", o.UserAddress.Hex())
 	var result interface{}
-	params := make(map[string]interface{})
-	params["topic"] = topic
-	params["payload"], err = json.Marshal(oi)
+	err = rpcClient.Call(&result, "eth_sendOrderTransaction", msg)
 
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
-
-	err = rpcClient.Call(&result, "tomox_createOrder", params)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
 	return nil
 }
 
