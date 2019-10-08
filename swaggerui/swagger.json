@@ -573,6 +573,10 @@
           "type": "string",
           "example": "LO/MO"
         },
+        "status": {
+          "type": "string",
+          "example": "NEW/CANCELLED"
+        },
         "hash": {
           "type": "string"
         },
@@ -606,6 +610,9 @@
       "type": "object",
       "properties": {
         "orderHash": {
+          "type": "string"
+        },
+        "nonce": {
           "type": "string"
         },
         "hash": {
