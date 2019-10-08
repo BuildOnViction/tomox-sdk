@@ -205,19 +205,21 @@ func (e *EthereumProvider) BalanceOf(owner common.Address, token common.Address)
 
 // Balance get balance of tokens or native
 func (e *EthereumProvider) Balance(owner common.Address, token common.Address) (*big.Int, error) {
-	var b = big.NewInt(0)
+	b := big.NewInt(0)
 	if utils.IsNativeTokenByAddress(token) {
 		b, err := e.GetBalanceAt(owner)
 		if err != nil {
 			return nil, err
 		}
 		logger.Info("GetBalanceAt:", b)
+		return b, nil
 	} else {
 		b, err := e.BalanceOf(owner, token)
 		if err != nil {
 			return nil, err
 		}
 		logger.Info("BalanceOf:", b)
+		return b, nil
 	}
 	return b, nil
 }
