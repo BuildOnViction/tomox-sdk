@@ -3,10 +3,12 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/tomochain/tomox-sdk/utils/math"
 
 	"github.com/tomochain/tomox-sdk/errors"
 )
@@ -18,6 +20,7 @@ import (
 // to the OrderHash.
 type OrderCancel struct {
 	OrderHash common.Hash `json:"orderHash"`
+	Nonce     *big.Int    `json:"nonce"`
 	Hash      common.Hash `json:"hash"`
 	Signature *Signature  `json:"signature"`
 }
@@ -26,6 +29,7 @@ type OrderCancel struct {
 func NewOrderCancel() *OrderCancel {
 	return &OrderCancel{
 		Hash:      common.Hash{},
+		Nonce:     big.NewInt(0),
 		OrderHash: common.Hash{},
 		Signature: &Signature{},
 	}
@@ -35,6 +39,7 @@ func NewOrderCancel() *OrderCancel {
 func (oc *OrderCancel) MarshalJSON() ([]byte, error) {
 	orderCancel := map[string]interface{}{
 		"orderHash": oc.OrderHash,
+		"nonce":     oc.Nonce,
 		"hash":      oc.Hash,
 		"signature": map[string]interface{}{
 			"V": oc.Signature.V,
@@ -70,10 +75,13 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 	}
 	oc.Hash = common.HexToHash(parsed["hash"].(string))
 
+	if parsed["nonce"] == nil {
+		return errors.New("Nonce is missing")
+	}
+	oc.Nonce = math.ToBigInt(parsed["nonce"].(string))
+
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{
-		// TODO: Refactor this part to uppercase later
-		// At the moment, client send lowercase of v, r, s
 		V: byte(sig["V"].(float64)),
 		R: common.HexToHash(sig["R"].(string)),
 		S: common.HexToHash(sig["S"].(string)),
@@ -125,6 +133,7 @@ func (oc *OrderCancel) GetSenderAddress() (common.Address, error) {
 func (oc *OrderCancel) ComputeHash() common.Hash {
 	sha := sha3.NewKeccak256()
 	sha.Write(oc.OrderHash.Bytes())
+	sha.Write(common.BigToHash(oc.Nonce).Bytes())
 	return common.BytesToHash(sha.Sum(nil))
 }
 

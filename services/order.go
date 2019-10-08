@@ -253,6 +253,9 @@ func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 		return fmt.Errorf("Cannot cancel order. Status is %v", o.Status)
 	}
 
+	o.Nonce = oc.Nonce
+	o.Signature = oc.Signature
+
 	err = s.broker.PublishCancelOrderMessage(o)
 	if err != nil {
 		logger.Error(err)
