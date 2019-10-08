@@ -1,7 +1,6 @@
 package daos
 
 import (
-	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomox-sdk/app"
-	"github.com/tomochain/tomox-sdk/tomox"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/math"
 )
@@ -1005,13 +1003,14 @@ type OrderMsg struct {
 	Side            string         `json:"side,omitempty"`
 	Type            string         `json:"type,omitempty"`
 	PairName        string         `json:"pairName,omitempty"`
+	OrderID         uint64         `json:"orderid,omitempty"`
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
 	R *big.Int `json:"r" gencodec:"required"`
 	S *big.Int `json:"s" gencodec:"required"`
 
 	// This is only used when marshaling to JSON.
-	Hash *common.Hash `json:"hash" rlp:"-"`
+	Hash common.Hash `json:"hash" rlp:"-"`
 }
 
 // AddNewOrder add order
@@ -1038,6 +1037,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		Status:          "NEW",
 		Side:            o.Side,
 		Type:            o.Type,
+		Hash:            o.Hash,
 		PairName:        o.PairName,
 		V:               V,
 		R:               R,
@@ -1054,20 +1054,24 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 }
 
 func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
+
+	if o.Status != "CANCELLED" {
+		o.Status = "CANCELLED"
+	}
+
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
-
 	defer rpcClient.Close()
-
+	bigstr := o.Nonce.String()
+	n, err := strconv.ParseInt(bigstr, 10, 64)
 	if err != nil {
-		logger.Error(err)
 		return err
 	}
+	V := big.NewInt(int64(o.Signature.V))
+	R := o.Signature.R.Big()
+	S := o.Signature.S.Big()
 
-	if o.Status == "" {
-		o.Status = "CANCELED"
-	}
-
-	oi := &tomox.OrderItem{
+	msg := OrderMsg{
+		AccountNonce:    uint64(n),
 		Quantity:        o.Amount,
 		Price:           o.PricePoint,
 		ExchangeAddress: o.ExchangeAddress,
@@ -1078,38 +1082,19 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		Side:            o.Side,
 		Type:            o.Type,
 		Hash:            o.Hash,
-		Signature: &tomox.Signature{
-			V: o.Signature.V,
-			R: o.Signature.R,
-			S: o.Signature.S,
-		},
-		FilledAmount: o.FilledAmount,
-		Nonce:        o.Nonce,
-		PairName:     o.PairName,
-		CreatedAt:    o.CreatedAt,
-		UpdatedAt:    o.UpdatedAt,
-		OrderID:      o.OrderID,
-		Key:          o.Key,
+		PairName:        o.PairName,
+		OrderID:         o.OrderID,
+		V:               V,
+		R:               R,
+		S:               S,
 	}
-	logger.Info("CancelOrder", oi.Hash.Hex())
 	var result interface{}
-	params := make(map[string]interface{})
-	params["topic"] = topic
-	params["payload"], err = json.Marshal(oi)
+	err = rpcClient.Call(&result, "eth_sendOrderTransaction", msg)
 
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
-
-	// err = rpcClient.Call(&result, "tomox_cancelOrder", params)
-	err = rpcClient.Call(&result, "eth_sendOrderTransaction", params)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
 	return nil
 }
 
