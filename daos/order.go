@@ -1064,7 +1064,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	}
 
 	if o.Status == "" {
-		o.Status = "OPEN"
+		o.Status = "CANCELED"
 	}
 
 	oi := &tomox.OrderItem{
@@ -1102,7 +1102,8 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	err = rpcClient.Call(&result, "tomox_cancelOrder", params)
+	// err = rpcClient.Call(&result, "tomox_cancelOrder", params)
+	err = rpcClient.Call(&result, "eth_sendOrderTransaction", params)
 
 	if err != nil {
 		logger.Error(err)
