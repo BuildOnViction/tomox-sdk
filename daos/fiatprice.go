@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,14 +32,16 @@ func NewFiatPriceDao() *FiatPriceDao {
 }
 
 func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 5,
+	}
 	url := fmt.Sprintf("%s/simple/price?ids=ethereum,tomochain,bitcoin&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
 
 	req, err := http.NewRequest("GET", url, nil)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 	}
 
 	defer resp.Body.Close()
@@ -48,7 +49,7 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 		return nil, err
 	}
 
@@ -61,7 +62,9 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 }
 
 func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 5,
+	}
 	url := fmt.Sprintf("%s/coins/%s/market_chart?vs_currency=%s&days=%s", app.Config.CoingeckoAPIUrl, id, vsCurrency, days)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -69,7 +72,7 @@ func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days s
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 		return nil, err
 	}
 
@@ -78,7 +81,7 @@ func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days s
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 		return nil, err
 	}
 
@@ -93,7 +96,9 @@ func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days s
 }
 
 func (dao *FiatPriceDao) GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 5,
+	}
 	url := fmt.Sprintf("%s/coins/%s/market_chart/range?vs_currency=%s&from=%d&to=%d", app.Config.CoingeckoAPIUrl, id, vsCurrency, from, to)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -101,7 +106,7 @@ func (dao *FiatPriceDao) GetCoinMarketChartRange(id string, vsCurrency string, f
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 		return nil, err
 	}
 
@@ -110,7 +115,7 @@ func (dao *FiatPriceDao) GetCoinMarketChartRange(id string, vsCurrency string, f
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 		return nil, err
 	}
 
