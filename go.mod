@@ -30,7 +30,7 @@ require (
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0
-	github.com/hashicorp/golang-lru v0.5.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.0
 	github.com/huin/goupnp v1.0.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.1 // indirect
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da

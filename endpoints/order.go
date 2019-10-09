@@ -686,7 +686,7 @@ func (e *orderEndpoint) handleWSCancelOrder(ev *types.WebsocketEvent, c *ws.Clie
 
 	orderErr := e.orderService.CancelOrder(oc)
 	if orderErr != nil {
-		logger.Error(err)
+		logger.Error(orderErr)
 		c.SendOrderErrorMessage(orderErr, oc.Hash)
 		return
 	}

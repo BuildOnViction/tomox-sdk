@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/hashicorp/golang-lru"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
@@ -30,6 +31,7 @@ type OrderService struct {
 	engine          interfaces.Engine
 	validator       interfaces.ValidatorService
 	broker          *rabbitmq.Connection
+	orderCache      *lru.Cache
 }
 
 // NewOrderService returns a new instance of orderservice
@@ -46,6 +48,8 @@ func NewOrderService(
 	broker *rabbitmq.Connection,
 ) *OrderService {
 
+	orderCache, _ := lru.New(2000)
+
 	return &OrderService{
 		orderDao,
 		stopOrderDao,
@@ -57,6 +61,7 @@ func NewOrderService(
 		engine,
 		validator,
 		broker,
+		orderCache,
 	}
 }
 
@@ -171,6 +176,8 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 
+	s.orderCache.Add(o.Hash, o)
+
 	err = s.broker.PublishNewOrderMessage(o)
 	if err != nil {
 		logger.Error(err)
@@ -239,10 +246,17 @@ func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled
 func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
-	o, err := s.orderDao.GetByHash(oc.OrderHash)
-	if err != nil {
-		logger.Error(err)
-		return err
+	var o *types.Order
+	var err error
+	order, ok := s.orderCache.Get(oc.OrderHash)
+	if !ok {
+		o, err = s.orderDao.GetByHash(oc.OrderHash)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	} else {
+		o = order.(*types.Order)
 	}
 
 	if o == nil {
