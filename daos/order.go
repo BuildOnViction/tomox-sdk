@@ -1045,7 +1045,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	}
 	var result interface{}
 	logger.Info("eth_sendOrderTransaction", o.Status, o.Hash.Hex())
-	err = rpcClient.Call(&result, "eth_sendOrderTransaction", msg)
+	err = rpcClient.Call(&result, "eth_sendOrder", msg)
 
 	if err != nil {
 		logger.Error(err)
@@ -1091,7 +1091,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	}
 	var result interface{}
 	logger.Info("eth_sendOrderTransaction", o.Status, o.Hash.Hex())
-	err = rpcClient.Call(&result, "eth_sendOrderTransaction", msg)
+	err = rpcClient.Call(&result, "eth_sendOrder", msg)
 
 	if err != nil {
 		logger.Error(err)
