@@ -33,7 +33,7 @@ func NewFiatPriceDao() *FiatPriceDao {
 
 func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	client := &http.Client{
-		Timeout: time.Second * 5,
+		Timeout: time.Second * 10,
 	}
 	url := fmt.Sprintf("%s/simple/price?ids=ethereum,tomochain,bitcoin&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
 
@@ -63,7 +63,7 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 
 func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error) {
 	client := &http.Client{
-		Timeout: time.Second * 5,
+		Timeout: time.Second * 10,
 	}
 	url := fmt.Sprintf("%s/coins/%s/market_chart?vs_currency=%s&days=%s", app.Config.CoingeckoAPIUrl, id, vsCurrency, days)
 
@@ -97,7 +97,7 @@ func (dao *FiatPriceDao) GetCoinMarketChart(id string, vsCurrency string, days s
 
 func (dao *FiatPriceDao) GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error) {
 	client := &http.Client{
-		Timeout: time.Second * 5,
+		Timeout: time.Second * 10,
 	}
 	url := fmt.Sprintf("%s/coins/%s/market_chart/range?vs_currency=%s&from=%d&to=%d", app.Config.CoingeckoAPIUrl, id, vsCurrency, from, to)
 
