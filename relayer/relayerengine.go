@@ -159,11 +159,11 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 	if method, ok := abiRelayer.Methods["getRelayerByCoinbase"]; ok {
 		contractData, err := method.Outputs.UnpackValues(result)
 		if err == nil {
-			if len(contractData) == 5 {
-				relayerInfo.MakeFee = contractData[2].(uint16)
-				relayerInfo.TakeFee = contractData[2].(uint16)
-				fromTokens := contractData[3].([]common.Address)
-				toTokens := contractData[4].([]common.Address)
+			if len(contractData) == 6 {
+				relayerInfo.MakeFee = contractData[3].(uint16)
+				relayerInfo.TakeFee = contractData[3].(uint16)
+				fromTokens := contractData[4].([]common.Address)
+				toTokens := contractData[5].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
 				log.Println("Relayer data:", fromTokens, toTokens)
 				for _, t := range setToken {
