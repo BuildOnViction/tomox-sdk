@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
@@ -248,15 +248,14 @@ func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
 func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 	var o *types.Order
 	var err error
-	order, ok := s.orderCache.Get(oc.OrderHash)
-	if !ok {
-		o, err = s.orderDao.GetByHash(oc.OrderHash)
-		if err != nil {
-			logger.Error(err)
-			return err
+	o, err = s.orderDao.GetByHash(oc.OrderHash)
+	if err != nil || o == nil {
+		order, ok := s.orderCache.Get(oc.OrderHash)
+		if !ok {
+			return errors.New("No order with corresponding hash")
+		} else {
+			o = order.(*types.Order)
 		}
-	} else {
-		o = order.(*types.Order)
 	}
 
 	if o == nil {
@@ -528,9 +527,7 @@ func (s *OrderService) WatchChanges() {
 			if !ok {
 				err := ct.Err()
 				if err != nil {
-					//if err is not nil, it means something bad happened, let's finish our func
 					logger.Error(err)
-					return
 				}
 			}
 
