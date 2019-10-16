@@ -164,19 +164,24 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	offset := 0
 	size := types.DefaultLimit
 	sortDB := []string{}
-	if sortType != "asc" && sortType != "dec" {
-		sortType = "asc"
-	}
-	if sortBy != "" {
-		if val, ok := sortedList[sortBy]; ok {
-			if sortType == "asc" {
-				sortDB = append(sortDB, "+"+val)
-			} else {
-				sortDB = append(sortDB, "-"+val)
-			}
 
-		}
+	if sortType != "asc" && sortType != "desc" {
+		sortType = "desc"
 	}
+
+	if sortBy == "" {
+        sortBy = "time"
+    }
+
+    if val, ok := sortedList[sortBy]; ok {
+        if sortType == "asc" {
+            sortDB = append(sortDB, "+"+val)
+        } else {
+            sortDB = append(sortDB, "-"+val)
+        }
+
+    }
+
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
 		if err != nil {

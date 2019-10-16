@@ -1174,7 +1174,7 @@ func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, err
 		return 0, err
 	}
 
-	err = rpcClient.Call(&result, "tomox_getOrderNonce", userAddress.Hex())
+	err = rpcClient.Call(&result, "tomox_getOrderCount", userAddress)
 
 	if err != nil {
 		logger.Error(err)
