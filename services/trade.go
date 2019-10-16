@@ -158,6 +158,7 @@ func (s *TradeService) WatchChanges() {
 				err := ct.Err()
 				if err != nil {
 					logger.Error(err)
+					return
 				}
 			}
 

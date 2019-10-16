@@ -528,6 +528,7 @@ func (s *OrderService) WatchChanges() {
 				err := ct.Err()
 				if err != nil {
 					logger.Error(err)
+					return
 				}
 			}
 
