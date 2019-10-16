@@ -170,17 +170,17 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if sortBy == "" {
-        sortBy = "time"
-    }
+		sortBy = "time"
+	}
 
-    if val, ok := sortedList[sortBy]; ok {
-        if sortType == "asc" {
-            sortDB = append(sortDB, "+"+val)
-        } else {
-            sortDB = append(sortDB, "-"+val)
-        }
+	if val, ok := sortedList[sortBy]; ok {
+		if sortType == "asc" {
+			sortDB = append(sortDB, "+"+val)
+		} else {
+			sortDB = append(sortDB, "-"+val)
+		}
 
-    }
+	}
 
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
