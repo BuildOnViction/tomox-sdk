@@ -126,7 +126,7 @@ func (e *AccountEndpoint) handleGetAccountTokenBalance(w http.ResponseWriter, r 
 	addr := common.HexToAddress(a)
 	tokenAddr := common.HexToAddress(t)
 
-	b, err := e.AccountService.GetTokenBalance(addr, tokenAddr)
+	b, err := e.AccountService.GetTokenBalanceProvidor(addr, tokenAddr)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusNotFound, err.Error())

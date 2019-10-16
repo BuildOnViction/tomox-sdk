@@ -527,9 +527,7 @@ func (s *OrderService) WatchChanges() {
 			if !ok {
 				err := ct.Err()
 				if err != nil {
-					//if err is not nil, it means something bad happened, let's finish our func
 					logger.Error(err)
-					return
 				}
 			}
 
