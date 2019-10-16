@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/globalsign/mgo"
@@ -280,7 +279,7 @@ func (dao *FiatPriceDao) GetLastPriceCurrentByTime(symbol string, createAt time.
 		},
 		"symbol": symbolName,
 	}
-	a := strconv.FormatInt(createAt.Unix()*1000, 10)
+
 	sort := []string{"-$timestamp"}
 	err := db.GetSortOne(dao.dbName, dao.collectionName, q, sort, &res)
 	return res, err

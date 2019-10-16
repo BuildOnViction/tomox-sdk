@@ -14,6 +14,8 @@ import (
 	"github.com/tomochain/tomox-sdk/utils"
 )
 
+var logger = utils.Logger
+
 // Blockchain struct
 type Blockchain struct {
 	client    *rpc.Client
@@ -176,7 +178,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 							return nil, err
 						}
 						relayerInfo.Tokens[t] = tokenInfo
-						log.Println("Token data:", tokenInfo.Name, tokenInfo.Symbol, tokenInfo.address)
+						logger.Debug("Token data:", tokenInfo.Name, tokenInfo.Symbol, tokenInfo.address)
 					}
 
 				}

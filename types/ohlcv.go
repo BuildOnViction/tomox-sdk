@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -210,7 +209,6 @@ func (t *Tick) SetBSON(raw bson.Raw) error {
 	}
 	m := map[string]interface{}{}
 	raw.Unmarshal(&m)
-	fmt.Printf("RAW DATA: %+v\n", m)
 	decoded := new(struct {
 		Pair      PairIDRecord    `json:"pair,omitempty" bson:"_id"`
 		Count     bson.Decimal128 `json:"count" bson:"count"`
@@ -225,8 +223,6 @@ func (t *Tick) SetBSON(raw bson.Raw) error {
 	})
 
 	err := raw.Unmarshal(decoded)
-	fmt.Println(decoded.OpenTime.String())
-	fmt.Println(decoded.CloseTime.String())
 	if err != nil {
 		return err
 	}
