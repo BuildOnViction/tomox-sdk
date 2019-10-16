@@ -35,7 +35,7 @@ func (s *FiatPriceService) InitFiatPrice() {
 func (s *FiatPriceService) UpdateFiatPrice() {
 	logger.Info("UpdateFiatPrice starting...")
 	// Fix ids with 4 coins
-	symbols := []string{"bitcoin", "ethereum", "ripple", "tomochain"}
+	symbols := []string{"ethereum", "tomochain", "bitcoin", "litecoin", "binancecoin", "cardano", "ripple", "bitcoin-cash", "eos", "ethereum-classic"}
 	// Fix fiat currency with USD
 	vsCurrency := "usd"
 	for _, symbol := range symbols {

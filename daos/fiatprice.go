@@ -34,7 +34,7 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
-	url := fmt.Sprintf("%s/simple/price?ids=ethereum,tomochain,bitcoin&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
+	url := fmt.Sprintf("%s/simple/price?ids=ethereum,tomochain,bitcoin,litecoin,binancecoin,cardano,ripple,bitcoin-cash,eos&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
 
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -56,6 +56,13 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	result["TOMO"] = gjson.Get(string(body), "tomochain.usd").Float()
 	result["BTC"] = gjson.Get(string(body), "bitcoin.usd").Float()
 	result["ETH"] = gjson.Get(string(body), "ethereum.usd").Float()
+	result["EOS"] = gjson.Get(string(body), "eos.usd").Float()
+	result["BCH"] = gjson.Get(string(body), "bitcoin-cash.usd").Float()
+	result["ADA"] = gjson.Get(string(body), "cardano.usd").Float()
+	result["XRP"] = gjson.Get(string(body), "ripple.usd").Float()
+	result["BNB"] = gjson.Get(string(body), "binancecoin.usd").Float()
+	result["LTC"] = gjson.Get(string(body), "litecoin.usd").Float()
+	result["ETC"] = gjson.Get(string(body), "ethereum-classic.usd").Float()
 
 	return result, nil
 }
@@ -266,11 +273,26 @@ func (dao *FiatPriceDao) GetLastPriceCurrentByTime(symbol string, createAt time.
 	case "TOMO":
 		symbolName = "tomochain"
 		break
-	case "TRIIP":
-		symbolName = "triip"
+	case "XRP":
+		symbolName = "ripple"
+		break
+	case "ADA":
+		symbolName = "cardano"
+		break
+	case "LTC":
+		symbolName = "litecoin"
+		break
+	case "ETC":
+		symbolName = "ethereum-classic"
+		break
+	case "EOS":
+		symbolName = "eos"
+		break
+	case "BCH":
+		symbolName = "bitcoin-cash"
 		break
 	case "BNB":
-		symbolName = "binance"
+		symbolName = "binancecoin"
 		break
 	}
 	q := bson.M{
