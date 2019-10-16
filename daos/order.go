@@ -1044,7 +1044,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("eth_sendOrder", o.Status, o.Hash.Hex())
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex())
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
