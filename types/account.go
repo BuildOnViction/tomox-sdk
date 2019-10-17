@@ -36,6 +36,7 @@ func (a *Account) GetBSON() (interface{}, error) {
 		tokenBalances[key.Hex()] = TokenBalanceRecord{
 			Address:          value.Address.Hex(),
 			Symbol:           value.Symbol,
+			Decimals:         value.Decimals,
 			Balance:          value.Balance.String(),
 			InOrderBalance:   value.InOrderBalance.String(),
 			AvailableBalance: value.AvailableBalance.String(),
@@ -83,6 +84,7 @@ func (a *Account) SetBSON(raw bson.Raw) error {
 		a.TokenBalances[common.HexToAddress(key)] = &TokenBalance{
 			Address:          common.HexToAddress(value.Address),
 			Symbol:           value.Symbol,
+			Decimals:         value.Decimals,
 			Balance:          balance,
 			InOrderBalance:   inOrderBalance,
 			AvailableBalance: availableBalance,
@@ -123,6 +125,7 @@ func (a *Account) MarshalJSON() ([]byte, error) {
 		tokenBalance[address.Hex()] = map[string]interface{}{
 			"address":          balance.Address.Hex(),
 			"symbol":           balance.Symbol,
+			"decimals":         balance.Decimals,
 			"balance":          balance.Balance.String(),
 			"inOrderBalance":   balance.InOrderBalance.String(),
 			"availableBalance": balance.AvailableBalance.String(),
@@ -174,6 +177,10 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 
 			if tokenBalance["symbol"] != nil {
 				tb.Symbol = tokenBalance["symbol"].(string)
+			}
+
+			if tokenBalance["decimals"] != nil {
+				tb.Decimals = tokenBalance["decimals"].(int)
 			}
 
 			tb.Balance = new(big.Int)
@@ -241,6 +248,7 @@ func (a *AccountBSONUpdate) GetBSON() (interface{}, error) {
 		tokenBalances[key.Hex()] = TokenBalanceRecord{
 			Address:          value.Address.Hex(),
 			Symbol:           value.Symbol,
+			Decimals:         value.Decimals,
 			Balance:          value.Balance.String(),
 			InOrderBalance:   value.InOrderBalance.String(),
 			AvailableBalance: value.AvailableBalance.String(),
@@ -270,6 +278,7 @@ func (a *AccountBSONUpdate) GetBSON() (interface{}, error) {
 type TokenBalance struct {
 	Address          common.Address `json:"address" bson:"address"`
 	Symbol           string         `json:"symbol" bson:"symbol"`
+	Decimals         int            `json:"decimals" bson:"decimals"`
 	Balance          *big.Int       `json:"balance" bson:"balance"`
 	AvailableBalance *big.Int       `json:"availableBalance" bson:"availableBalance"`
 	InOrderBalance   *big.Int       `json:"inOrderBalance" bson:"inOrderBalance"`
@@ -280,6 +289,7 @@ func (t *TokenBalance) MarshalJSON() ([]byte, error) {
 	tb := map[string]interface{}{
 		"address":          t.Address.Hex(),
 		"symbol":           t.Symbol,
+		"decimals":         t.Decimals,
 		"balance":          t.Balance.String(),
 		"inOrderBalance":   t.InOrderBalance.String(),
 		"availableBalance": t.AvailableBalance.String(),
@@ -301,6 +311,10 @@ func (t *TokenBalance) UnmarshalJSON(b []byte) error {
 
 	if tb["symbol"] != nil {
 		t.Symbol = tb["symbol"].(string)
+	}
+
+	if tb["decimals"] != nil {
+		t.Decimals = tb["decimals"].(int)
 	}
 
 	t.Balance = new(big.Int)
@@ -326,6 +340,7 @@ func (t *TokenBalance) UnmarshalJSON(b []byte) error {
 type TokenBalanceRecord struct {
 	Address          string `json:"address" bson:"address"`
 	Symbol           string `json:"symbol" bson:"symbol"`
+    Decimals         int    `json:"decimals" bson:"decimals"`
 	Balance          string `json:"balance" bson:"balance"`
 	AvailableBalance string `json:"availableBalance" base:"availableBalance"`
 	InOrderBalance   string `json:"inOrderBalance" bson:"inOrderBalance"`
