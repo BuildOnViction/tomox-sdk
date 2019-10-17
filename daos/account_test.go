@@ -41,6 +41,7 @@ func TestAccountDao(t *testing.T) {
 	tokenBalance1 := &types.TokenBalance{
 		Address:       tokenAddress1,
 		Symbol:        "EOS",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -49,6 +50,7 @@ func TestAccountDao(t *testing.T) {
 	tokenBalance2 := &types.TokenBalance{
 		Address:       tokenAddress2,
 		Symbol:        "ZRX",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -88,6 +90,7 @@ func TestAccountGetAllTokenBalances(t *testing.T) {
 	tokenBalance1 := &types.TokenBalance{
 		Address:       tokenAddress1,
 		Symbol:        "EOS",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -96,6 +99,7 @@ func TestAccountGetAllTokenBalances(t *testing.T) {
 	tokenBalance2 := &types.TokenBalance{
 		Address:       tokenAddress2,
 		Symbol:        "ZRX",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -136,6 +140,7 @@ func TestGetTokenBalance(t *testing.T) {
 	tokenBalance1 := &types.TokenBalance{
 		Address:       tokenAddress1,
 		Symbol:        "EOS",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -144,6 +149,7 @@ func TestGetTokenBalance(t *testing.T) {
 	tokenBalance2 := &types.TokenBalance{
 		Address:       tokenAddress2,
 		Symbol:        "ZRX",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -183,6 +189,7 @@ func TestUpdateAccountBalance(t *testing.T) {
 	tokenBalance1 := &types.TokenBalance{
 		Address:       tokenAddress1,
 		Symbol:        "EOS",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -191,6 +198,7 @@ func TestUpdateAccountBalance(t *testing.T) {
 	tokenBalance2 := &types.TokenBalance{
 		Address:       tokenAddress2,
 		Symbol:        "ZRX",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
