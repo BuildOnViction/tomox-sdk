@@ -2,7 +2,6 @@ package relayer
 
 import (
 	"context"
-	"log"
 	"os"
 
 	ether "github.com/ethereum/go-ethereum"
@@ -79,7 +78,7 @@ func (b *Blockchain) RunContract(contractAddr common.Address, abi *abi.ABI, meth
 	msg := ether.CallMsg{To: &contractAddr, Data: input}
 	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 	}
 	var unpackResult interface{}
 	err = abi.Unpack(&unpackResult, method, result)
@@ -150,10 +149,10 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 	msg := ether.CallMsg{To: &contractAddress, Data: input}
 	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 		return nil, err
 	}
-	log.Println("data: ", result)
+	logger.Debug("data: ", result)
 
 	relayerInfo := RInfo{
 		Tokens: make(map[common.Address]*TokenInfo),
@@ -167,7 +166,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 				fromTokens := contractData[4].([]common.Address)
 				toTokens := contractData[5].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
-				log.Println("Relayer data:", fromTokens, toTokens)
+				logger.Debug("Relayer data:", fromTokens, toTokens)
 				for _, t := range setToken {
 					if utils.IsNativeTokenByAddress(t) {
 						tokenInfo := b.setBaseTokenInfo()

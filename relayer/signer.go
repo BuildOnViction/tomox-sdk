@@ -2,7 +2,6 @@ package relayer
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -46,12 +45,12 @@ func NewSignerFile(file string, fileLocation string) *Signer {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("keyio: ", keyio)
+	logger.Debug("keyio: ", keyio)
 	auth, err := bind.NewTransactor(keyio, signer.Passphrase)
 	if err != nil {
 		panic(err)
 	}
-	log.Println("auth: ", auth.From.Hex())
+	logger.Debug("auth: ", auth.From.Hex())
 	signer.opts = auth
 
 	return signer
@@ -66,7 +65,7 @@ func NewSigner() *Signer {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("auth: ", auth.From.Hex())
+	logger.Debug("auth: ", auth.From.Hex())
 	signer.opts = auth
 
 	return signer
