@@ -14,6 +14,16 @@ It will be officially released when the version is v1.0.0**_
 - **rabbitmq** version 3.7.7 or newer
 - **Go Modules** latest
 
+### Install & build
+Get packages
+```
+go mod download
+```
+Build binary file
+```
+go build
+```
+
 ### Deployment guide step by step
 Read [deployment guide](DEPLOY.md)
 
@@ -43,8 +53,8 @@ Orders contain the information that is required to register an order in the orde
 - **sellAmount** is the SELL amount (in SELL_TOKEN units)
 - **expires** is the order expiration timestamp
 - **nonce** is the nonce that corresponds to
-- **feeMake** is the maker fee (not implemented yet)
-- **feeTake** is the taker fee (not implemented yet)
+- **type** Limit order or Maket order LO/MO
+- **status** NEW/CANCELLED
 - **pairID** is a hash of the corresponding
 - **hash** is a hash of the order details (see details below)
 - **signature** is a signature of the order hash. The signer must equal to the maker address for the order to be valid.
@@ -70,6 +80,8 @@ The order hash is a sha-256 hash of the following elements:
 - Amount Sell
 - Expires
 - Nonce
+- Type
+- Status
 - Maker Address
 
 ### Trades
