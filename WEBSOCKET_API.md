@@ -291,8 +291,8 @@ supposes that there are no other existing trades for the currently subscribe pai
 
 where
 
-- \<baseTokenAddress> is the Ethereum address of the base token contract,
-- \<quoteTokenAddress> is the Ethereum address of the quote token contract,
+- \<baseTokenAddress> is the TomoChain address of the base token contract,
+- \<quoteTokenAddress> is the TomoChain address of the quote token contract,
 - \<duration> is the duration (in units, see param below) of each candlestick
 - \<units> is the unit used to represent the above duration: "minute", "hour", "day", "week", "month"
 - \<from> is the beginning timestamp from which ohlcv data has to be queried
@@ -771,7 +771,7 @@ to confirm that this order was indeed been sent to the transaction queue
 
 ## ORDER SUCCESS MESSAGE (server --> client)
 
-The order success message indicates that the order was successful and correctly executed on the Ethereum chain.
+The order success message indicates that the order was successful and correctly executed on the TomoChain.
 
 The general format of the order success message is the following:
 
