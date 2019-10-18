@@ -7,7 +7,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/tomochain/tomox-sdk/errors"
@@ -490,9 +489,7 @@ func (s *OrderService) broadcastRawOrderBookUpdate(orders []*types.Order) {
 }
 
 func (s *OrderService) WatchChanges() {
-	pipeline := []bson.M{}
-
-	ct, err := s.orderDao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+	ct, sc, err := s.orderDao.Watch()
 
 	if err != nil {
 		logger.Error("Failed to open change stream")
@@ -500,6 +497,7 @@ func (s *OrderService) WatchChanges() {
 	}
 
 	defer ct.Close()
+	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
 	defer s.WatchChanges()

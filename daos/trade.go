@@ -76,6 +76,10 @@ func (dao *TradeDao) GetCollection() *mgo.Collection {
 	return db.GetCollection(dao.dbName, dao.collectionName)
 }
 
+func (dao *TradeDao) Watch() (*mgo.ChangeStream, *mgo.Session, error) {
+	return db.Watch(dao.dbName, dao.collectionName, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+}
+
 // Create function performs the DB insertion task for trade collection
 // It accepts 1 or more trades as input.
 // All the trades are inserted in one query itself.

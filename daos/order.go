@@ -135,6 +135,10 @@ func (dao *OrderDao) GetCollection() *mgo.Collection {
 	return db.GetCollection(dao.dbName, dao.collectionName)
 }
 
+func (dao *OrderDao) Watch() (*mgo.ChangeStream, *mgo.Session, error) {
+	return db.Watch(dao.dbName, dao.collectionName, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+}
+
 // Create function performs the DB insertion task for Order collection
 func (dao *OrderDao) Create(o *types.Order) error {
 	o.ID = bson.NewObjectId()

@@ -58,6 +58,16 @@ func (d *Database) Create(dbName, collection string, data ...interface{}) (err e
 	return
 }
 
+func (d *Database) Watch(dbName, collection string, options mgo.ChangeStreamOptions) (*mgo.ChangeStream, *mgo.Session, error) {
+	sc := d.Session.Copy()
+
+	pipeline := []bson.M{}
+
+	ct, err := sc.DB(dbName).C(collection).Watch(pipeline, options)
+
+	return ct, sc, err
+}
+
 func (d *Database) Count(dbName, collection string, query interface{}) (int, error) {
 	sc := d.Session.Copy()
 	defer sc.Close()

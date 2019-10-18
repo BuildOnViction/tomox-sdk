@@ -20,6 +20,7 @@ import (
 type OrderDao interface {
 	GetCollection() *mgo.Collection
 	Create(o *types.Order) error
+	Watch() (*mgo.ChangeStream, *mgo.Session, error)
 	Update(id bson.ObjectId, o *types.Order) error
 	Upsert(id bson.ObjectId, o *types.Order) error
 	Delete(orders ...*types.Order) error
@@ -132,6 +133,7 @@ type PairDao interface {
 type TradeDao interface {
 	GetCollection() *mgo.Collection
 	Create(o ...*types.Trade) error
+	Watch() (*mgo.ChangeStream, *mgo.Session, error)
 	Update(t *types.Trade) error
 	UpdateByHash(h common.Hash, t *types.Trade) error
 	GetAll() ([]types.Trade, error)

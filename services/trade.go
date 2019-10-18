@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
@@ -120,9 +118,8 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 }
 
 func (s *TradeService) WatchChanges() {
-	pipeline := []bson.M{}
 
-	ct, err := s.tradeDao.GetCollection().Watch(pipeline, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+	ct, sc, err := s.tradeDao.Watch()
 
 	if err != nil {
 		logger.Error("Failed to open change stream")
@@ -130,6 +127,7 @@ func (s *TradeService) WatchChanges() {
 	}
 
 	defer ct.Close()
+	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
 	defer s.WatchChanges()
