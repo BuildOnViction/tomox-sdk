@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
@@ -20,6 +21,7 @@ type TradeService struct {
 	accountDao      interfaces.AccountDao
 	notificationDao interfaces.NotificationDao
 	broker          *rabbitmq.Connection
+	OHLCVService    *OHLCVService
 }
 
 // NewTradeService returns a new instance of TradeService
@@ -30,12 +32,14 @@ func NewTradeService(
 	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
 ) *TradeService {
+	ohlcvService := NewOHLCVService(tradeDao)
 	return &TradeService{
 		OrderDao:        orderdao,
 		tradeDao:        tradeDao,
 		accountDao:      accountDao,
 		notificationDao: notificationDao,
 		broker:          broker,
+		OHLCVService:    ohlcvService,
 	}
 }
 
@@ -273,9 +277,11 @@ func (s *TradeService) HandleOperationUpdate(trade *types.Trade) error {
 // HandleTradeSuccess handle order match success
 func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	trades := m.Trades
+	pairs := make([]types.PairAddresses, 0)
 	for _, t := range trades {
 		maker := t.Maker
 		taker := t.Taker
+		pairs = append(pairs, types.PairAddresses{BaseToken: t.BaseToken, QuoteToken: t.QuoteToken})
 		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{Matches: m})
 		ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{Matches: m})
 		s.notificationDao.Create(&types.Notification{
@@ -298,6 +304,27 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 		})
 	}
 	s.broadcastTradeUpdate(trades)
+	s.broadcastTickUpdate(pairs)
+}
+
+func (s *TradeService) broadcastTickUpdate(pairs []types.PairAddresses) {
+	for unit, durations := range app.Config.TickDuration {
+		for _, duration := range durations {
+
+			ticks, err := s.OHLCVService.GetOHLCV(pairs, duration, unit)
+			if err != nil {
+				logger.Error("Get ticks", err)
+				return
+			}
+
+			for _, tick := range ticks {
+				baseTokenAddress := tick.Pair.BaseToken
+				quoteTokenAddress := tick.Pair.QuoteToken
+				id := utils.GetTickChannelID(baseTokenAddress, quoteTokenAddress, unit, duration)
+				ws.GetOHLCVSocket().BroadcastOHLCV(id, tick)
+			}
+		}
+	}
 }
 
 func (s *TradeService) broadcastTradeUpdate(trades []*types.Trade) {
