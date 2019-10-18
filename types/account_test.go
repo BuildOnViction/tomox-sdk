@@ -19,6 +19,7 @@ func TestAccountBSON(t *testing.T) {
 	tokenBalance1 := &TokenBalance{
 		Address:       tokenAddress1,
 		Symbol:        "EOS",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),
@@ -27,6 +28,7 @@ func TestAccountBSON(t *testing.T) {
 	tokenBalance2 := &TokenBalance{
 		Address:       tokenAddress2,
 		Symbol:        "ZRX",
+		Decimals:      18,
 		Balance:       big.NewInt(10000),
 		Allowance:     big.NewInt(10000),
 		LockedBalance: big.NewInt(5000),

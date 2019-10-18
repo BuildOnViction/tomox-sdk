@@ -65,6 +65,7 @@ func (s *AccountService) Create(a *types.Account) error {
 		a.TokenBalances[token.ContractAddress] = &types.TokenBalance{
 			Address:          token.ContractAddress,
 			Symbol:           token.Symbol,
+			Decimals:         token.Decimals,
 			Balance:          math.Mul(big.NewInt(types.DefaultTestBalance()), math.Exp(ten, decimals)),
 			InOrderBalance:   big.NewInt(types.DefaultTestInOrderBalance()),
 			AvailableBalance: big.NewInt(types.DefaultTestAvailableBalance()),
@@ -201,6 +202,7 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 	tokenBalance := &types.TokenBalance{
 		Address:          tokenAddress,
 		Symbol:           token.Symbol,
+		Decimals:         token.Decimals,
 		AvailableBalance: big.NewInt(0),
 		InOrderBalance:   big.NewInt(0),
 		Balance:          big.NewInt(0),
