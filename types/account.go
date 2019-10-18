@@ -340,7 +340,7 @@ func (t *TokenBalance) UnmarshalJSON(b []byte) error {
 type TokenBalanceRecord struct {
 	Address          string `json:"address" bson:"address"`
 	Symbol           string `json:"symbol" bson:"symbol"`
-    Decimals         int    `json:"decimals" bson:"decimals"`
+	Decimals         int    `json:"decimals" bson:"decimals"`
 	Balance          string `json:"balance" bson:"balance"`
 	AvailableBalance string `json:"availableBalance" base:"availableBalance"`
 	InOrderBalance   string `json:"inOrderBalance" bson:"inOrderBalance"`
