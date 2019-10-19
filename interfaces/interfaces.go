@@ -36,8 +36,6 @@ type OrderDao interface {
 	GetOpenOrdersByUserAddress(addr common.Address) ([]*types.Order, error)
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error)
-	GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error)
-	GetMatchingSellOrders(o *types.Order) ([]*types.Order, error)
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
 	UpdateOrderFilledAmounts(h []common.Hash, values []*big.Int) ([]*types.Order, error)
 	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.Order, error)

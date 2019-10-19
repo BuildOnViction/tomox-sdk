@@ -83,6 +83,10 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 		Key: []string{"baseToken", "quoteToken", "side", "status"},
 	}
 
+	i9 := mgo.Index{
+		Key: []string{"createdAt"},
+	}
+
 	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
 	if err != nil {
 		panic(err)
@@ -124,6 +128,11 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	}
 
 	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i8)
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i9)
 	if err != nil {
 		panic(err)
 	}
@@ -895,80 +904,6 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 	}
 
 	return math.ToBigInt(res[0]["amount"]), nil
-}
-
-func (dao *OrderDao) GetMatchingBuyOrders(o *types.Order) ([]*types.Order, error) {
-	var orders []*types.Order
-	decimalPricepoint, _ := bson.ParseDecimal128(o.PricePoint.String())
-
-	q := []bson.M{
-		{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-				"baseToken":  o.BaseToken.Hex(),
-				"quoteToken": o.QuoteToken.Hex(),
-				"side":       types.BUY,
-			},
-		},
-		{
-			"$addFields": bson.M{
-				"priceDecimal": bson.M{"$toDecimal": "$pricepoint"},
-			},
-		},
-		{
-			"$match": bson.M{
-				"priceDecimal": bson.M{"$gte": decimalPricepoint},
-			},
-		},
-		{
-			"$sort": bson.M{"priceDecimal": -1, "createdAt": 1},
-		},
-	}
-
-	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return orders, nil
-}
-
-func (dao *OrderDao) GetMatchingSellOrders(o *types.Order) ([]*types.Order, error) {
-	var orders []*types.Order
-	decimalPricepoint, _ := bson.ParseDecimal128(o.PricePoint.String())
-
-	q := []bson.M{
-		{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-				"baseToken":  o.BaseToken.Hex(),
-				"quoteToken": o.QuoteToken.Hex(),
-				"side":       types.SELL,
-			},
-		},
-		{
-			"$addFields": bson.M{
-				"priceDecimal": bson.M{"$toDecimal": "$pricepoint"},
-			},
-		},
-		{
-			"$match": bson.M{
-				"priceDecimal": bson.M{"$lte": decimalPricepoint},
-			},
-		},
-		{
-			"$sort": bson.M{"priceDecimal": 1, "createdAt": 1},
-		},
-	}
-
-	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return orders, nil
 }
 
 // Drop drops all the order documents in the current database
