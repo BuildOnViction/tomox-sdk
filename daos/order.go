@@ -46,8 +46,7 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	}
 
 	index := mgo.Index{
-		Key:    []string{"hash"},
-		Unique: true,
+		Key: []string{"hash"},
 	}
 
 	i1 := mgo.Index{
