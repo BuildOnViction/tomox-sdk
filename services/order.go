@@ -14,7 +14,6 @@ import (
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils"
-	"github.com/tomochain/tomox-sdk/utils/math"
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
