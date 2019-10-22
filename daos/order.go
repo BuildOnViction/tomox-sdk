@@ -767,28 +767,18 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 
 func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	var orders []*types.Order
-	q := []bson.M{
-		{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-				"baseToken":  p.BaseTokenAddress.Hex(),
-				"quoteToken": p.QuoteTokenAddress.Hex(),
-			},
-		},
-		{
-			"$sort": bson.M{
-				"price": 1,
-			},
-		},
-	}
+	c := dao.GetCollection()
+	err := c.Find(bson.M{
+		"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"baseToken":  p.BaseTokenAddress.Hex(),
+		"quoteToken": p.QuoteTokenAddress.Hex(),
+	}).Sort("-createdAt").Limit(1000).All(&orders)
 
-	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
+	sort.SliceStable(orders, func(i, j int) bool {
+		return orders[i].PricePoint.Cmp(orders[j].PricePoint) == 1
+	})
 
-	return orders, nil
+	return orders, err
 }
 
 func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit ...int) ([]map[string]string, error) {
@@ -798,57 +788,15 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit
 		return sides, nil
 	}
 
-	/*
-		sideQuery := []bson.M{
-			{
-				"$match": bson.M{
-					"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-					"baseToken":  p.BaseTokenAddress.Hex(),
-					"quoteToken": p.QuoteTokenAddress.Hex(),
-					"side":       side,
-				},
-			},
-			{
-				"$group": bson.M{
-					"_id":        bson.M{"$toDecimal": "$price"},
-					"pricepoint": bson.M{"$first": "$price"},
-					"amount": bson.M{
-						"$sum": bson.M{
-							"$subtract": []bson.M{{"$toDecimal": "$quantity"}, {"$toDecimal": "$filledAmount"}},
-						},
-					},
-				},
-			},
-			{
-				"$sort": bson.M{
-					"_id": srt,
-				},
-			},
-			{
-				"$project": bson.M{
-					"_id":        0,
-					"pricepoint": bson.M{"$toString": "$pricepoint"},
-					"amount":     bson.M{"$toString": "$amount"},
-				},
-			},
-		}
-
-		if limit != nil {
-			sideQuery = append(sideQuery, bson.M{
-				"$limit": limit[0],
-			})
-		}
-
-		err := db.Aggregate(dao.dbName, dao.collectionName, sideQuery, &sides)
-	*/
 	var orders []types.Order
 	c := dao.GetCollection()
+
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 		"side":       side,
-	}).Sort("-createdAt").Limit(200).All(&orders)
+	}).Sort("-createdAt").Limit(500).All(&orders)
 
 	pa := make(map[string]*big.Int)
 	for _, order := range orders {
@@ -894,59 +842,16 @@ func (dao *OrderDao) GetOrderBook(p *types.Pair) ([]map[string]string, []map[str
 }
 
 func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side string) (*big.Int, error) {
-	/*
-		q := []bson.M{
-			{
-				"$match": bson.M{
-					"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-					"baseToken":  p.BaseTokenAddress.Hex(),
-					"quoteToken": p.QuoteTokenAddress.Hex(),
-					"price":      pp.String(),
-					"side":       side,
-				},
-			},
-			{
-				"$group": bson.M{
-					"_id":        bson.M{"$toDecimal": "$price"},
-					"pricepoint": bson.M{"$first": "$price"},
-					"amount": bson.M{
-						"$sum": bson.M{
-							"$subtract": []bson.M{{"$toDecimal": "$quantity"}, {"$toDecimal": "$filledAmount"}},
-						},
-					},
-				},
-			},
-			{
-				"$project": bson.M{
-					"_id":        0,
-					"pricepoint": 1,
-					"amount":     bson.M{"$toString": "$amount"},
-				},
-			},
-		}
-
-		res := []map[string]string{}
-		err := db.Aggregate(dao.dbName, dao.collectionName, q, &res)
-		if err != nil {
-			logger.Error(err)
-			return nil, err
-		}
-
-		if len(res) == 0 {
-			return nil, nil
-		}
-
-		return math.ToBigInt(res[0]["amount"]), nil
-	*/
 	var orders []types.Order
 	c := dao.GetCollection()
+
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 		"side":       side,
 		"price":      pp.String(),
-	}).Sort("-createdAt").Limit(200).All(&orders)
+	}).Sort("-createdAt").Limit(500).All(&orders)
 
 	amount := big.NewInt(0)
 
