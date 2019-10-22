@@ -158,9 +158,11 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return errors.New("Pair not found")
 	}
 
-	if math.IsStrictlySmallerThan(o.QuoteAmount(p), p.MinQuoteAmount()) {
-		return errors.New("Order amount too low")
-	}
+	/*
+		if math.IsStrictlySmallerThan(o.QuoteAmount(p), p.MinQuoteAmount()) {
+			return errors.New("Order amount too low")
+		}
+	*/
 
 	// Fill token and pair data
 	err = o.Process(p)
@@ -215,9 +217,11 @@ func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
 		return errors.New("Pair not found")
 	}
 
-	if math.IsStrictlySmallerThan(so.QuoteAmount(p), p.MinQuoteAmount()) {
-		return errors.New("Order amount too low")
-	}
+	/*
+		if math.IsStrictlySmallerThan(so.QuoteAmount(p), p.MinQuoteAmount()) {
+			return errors.New("Order amount too low")
+		}
+	*/
 
 	// Fill token and pair data
 	err = so.Process(p)
