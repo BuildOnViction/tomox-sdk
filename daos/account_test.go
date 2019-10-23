@@ -39,21 +39,19 @@ func TestAccountDao(t *testing.T) {
 	tokenAddress2 := common.HexToAddress("0x7a9f3cd060ab180f36c17fe6bdf9974f577d77aa")
 
 	tokenBalance1 := &types.TokenBalance{
-		Address:       tokenAddress1,
-		Symbol:        "EOS",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress1,
+		Symbol:         "EOS",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	tokenBalance2 := &types.TokenBalance{
-		Address:       tokenAddress2,
-		Symbol:        "ZRX",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress2,
+		Symbol:         "ZRX",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	account := &types.Account{
@@ -88,21 +86,19 @@ func TestAccountGetAllTokenBalances(t *testing.T) {
 	tokenAddress2 := common.HexToAddress("0x7a9f3cd060ab180f36c17fe6bdf9974f577d77aa")
 
 	tokenBalance1 := &types.TokenBalance{
-		Address:       tokenAddress1,
-		Symbol:        "EOS",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress1,
+		Symbol:         "EOS",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	tokenBalance2 := &types.TokenBalance{
-		Address:       tokenAddress2,
-		Symbol:        "ZRX",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress2,
+		Symbol:         "ZRX",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	account := &types.Account{
@@ -138,21 +134,19 @@ func TestGetTokenBalance(t *testing.T) {
 	tokenAddress2 := common.HexToAddress("0xe41d2489571d322189246dafa5ebde1f4699f498")
 
 	tokenBalance1 := &types.TokenBalance{
-		Address:       tokenAddress1,
-		Symbol:        "EOS",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress1,
+		Symbol:         "EOS",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	tokenBalance2 := &types.TokenBalance{
-		Address:       tokenAddress2,
-		Symbol:        "ZRX",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress2,
+		Symbol:         "ZRX",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	account := &types.Account{
@@ -187,21 +181,19 @@ func TestUpdateAccountBalance(t *testing.T) {
 	tokenAddress2 := common.HexToAddress("0x7a9f3cd060ab180f36c17fe6bdf9974f577d77aa")
 
 	tokenBalance1 := &types.TokenBalance{
-		Address:       tokenAddress1,
-		Symbol:        "EOS",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress1,
+		Symbol:         "EOS",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	tokenBalance2 := &types.TokenBalance{
-		Address:       tokenAddress2,
-		Symbol:        "ZRX",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress2,
+		Symbol:         "ZRX",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	account := &types.Account{

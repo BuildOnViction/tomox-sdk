@@ -38,9 +38,7 @@ func TestUpdateOrderByHash(t *testing.T) {
 		Status:          "OPEN",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &types.Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -69,9 +67,7 @@ func TestUpdateOrderByHash(t *testing.T) {
 		Status:       "FILLED",
 		Side:         types.BUY,
 		PairName:     "ZRX/WETH",
-		MakeFee:      big.NewInt(50),
 		Nonce:        big.NewInt(1000),
-		TakeFee:      big.NewInt(50),
 		Signature:    o.Signature,
 		Hash:         o.Hash,
 		CreatedAt:    o.CreatedAt,
@@ -113,9 +109,7 @@ func TestOrderUpdate(t *testing.T) {
 		Status:       "OPEN",
 		Side:         types.BUY,
 		PairName:     "ZRX/WETH",
-		MakeFee:      big.NewInt(50),
 		Nonce:        big.NewInt(1000),
-		TakeFee:      big.NewInt(50),
 		Signature: &types.Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -142,9 +136,7 @@ func TestOrderUpdate(t *testing.T) {
 		Status:       "FILLED",
 		Side:         types.BUY,
 		PairName:     "ZRX/WETH",
-		MakeFee:      big.NewInt(50),
 		Nonce:        big.NewInt(1000),
-		TakeFee:      big.NewInt(50),
 		Signature:    o.Signature,
 		Hash:         o.Hash,
 		CreatedAt:    o.CreatedAt,
@@ -185,9 +177,7 @@ func TestOrderDao1(t *testing.T) {
 		Status:       "OPEN",
 		Side:         types.BUY,
 		PairName:     "ZRX/WETH",
-		MakeFee:      big.NewInt(50),
 		Nonce:        big.NewInt(1000),
-		TakeFee:      big.NewInt(50),
 		Signature: &types.Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -210,7 +200,7 @@ func TestOrderDao1(t *testing.T) {
 
 	testutils.CompareOrder(t, o, o1)
 
-	o2, err := dao.GetByUserAddress(common.HexToAddress("0x7a9f3cd060ab180f36c17fe6bdf9974f577d77aa"))
+	o2, err := dao.GetByUserAddress(common.HexToAddress("0x7a9f3cd060ab180f36c17fe6bdf9974f577d77aa"), common.HexToAddress("0xe41d2489571d322189246dafa5ebde1f4699f498"), common.HexToAddress("0x12459c951127e0c374ff9105dda097662a027093"), 0, 0)
 	if err != nil {
 		t.Errorf("Could not get order by user address")
 	}
@@ -264,9 +254,7 @@ func TestGetHistoryByUserAddress(t *testing.T) {
 		Status:       "OPEN",
 		Side:         types.BUY,
 		PairName:     "ZRX/WETH",
-		MakeFee:      big.NewInt(50),
 		Nonce:        big.NewInt(1000),
-		TakeFee:      big.NewInt(50),
 		Hash:         common.HexToHash("0x12"),
 	}
 
@@ -280,9 +268,7 @@ func TestGetHistoryByUserAddress(t *testing.T) {
 		Status:          "OPEN",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -296,9 +282,7 @@ func TestGetHistoryByUserAddress(t *testing.T) {
 		Status:          "PARTIAL_FILLED",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -313,9 +297,7 @@ func TestGetHistoryByUserAddress(t *testing.T) {
 		Status:          "FILLED",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -354,9 +336,7 @@ func TestGetUserOrderHistory(t *testing.T) {
 		Status:          "FILLED",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -370,9 +350,7 @@ func TestGetUserOrderHistory(t *testing.T) {
 		Status:          "OPEN",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -386,9 +364,7 @@ func TestGetUserOrderHistory(t *testing.T) {
 		Status:          "INVALID",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -403,9 +379,7 @@ func TestGetUserOrderHistory(t *testing.T) {
 		Status:          "PARTIAL_FILLED",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            common.HexToHash("0x12"),
 	}
 
@@ -450,9 +424,7 @@ func TestUpdateOrderFilledAmount1(t *testing.T) {
 		Status:          "OPEN",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            hash,
 	}
 
@@ -499,9 +471,7 @@ func TestUpdateOrderFilledAmount2(t *testing.T) {
 		Status:          "OPEN",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            hash,
 	}
 
@@ -548,9 +518,7 @@ func TestUpdateOrderFilledAmount3(t *testing.T) {
 		Status:          "OPEN",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Hash:            hash,
 	}
 
@@ -598,9 +566,7 @@ func TestUpdateOrderFilledAmounts(t *testing.T) {
 		BaseToken:       baseToken,
 		QuoteToken:      quoteToken,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(0),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(0),
 		Hash:            hash1,
 	}
 
@@ -613,9 +579,7 @@ func TestUpdateOrderFilledAmounts(t *testing.T) {
 		Status:          "FILLED",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(0),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(0),
 		Hash:            hash2,
 	}
 
@@ -666,9 +630,7 @@ func TestOrderStatusesByHashes(t *testing.T) {
 		Status:          "FILLED",
 		Side:            types.BUY,
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(0),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(0),
 		Hash:            hash1,
 	}
 
@@ -682,9 +644,7 @@ func TestOrderStatusesByHashes(t *testing.T) {
 		Status:       "FILLED",
 		Side:         types.BUY,
 		PairName:     "ZRX/WETH",
-		MakeFee:      big.NewInt(0),
 		Nonce:        big.NewInt(1000),
-		TakeFee:      big.NewInt(0),
 		Hash:         hash2,
 	}
 

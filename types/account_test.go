@@ -17,21 +17,19 @@ func TestAccountBSON(t *testing.T) {
 	tokenAddress2 := common.HexToAddress("0x7a9f3cd060ab180f36c17fe6bdf9974f577d77aa")
 
 	tokenBalance1 := &TokenBalance{
-		Address:       tokenAddress1,
-		Symbol:        "EOS",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress1,
+		Symbol:         "EOS",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	tokenBalance2 := &TokenBalance{
-		Address:       tokenAddress2,
-		Symbol:        "ZRX",
-		Decimals:      18,
-		Balance:       big.NewInt(10000),
-		Allowance:     big.NewInt(10000),
-		LockedBalance: big.NewInt(5000),
+		Address:        tokenAddress2,
+		Symbol:         "ZRX",
+		Decimals:       18,
+		Balance:        big.NewInt(10000),
+		InOrderBalance: big.NewInt(5000),
 	}
 
 	account := &Account{

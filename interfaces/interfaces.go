@@ -240,13 +240,9 @@ type OrderService interface {
 	GetCurrentByUserAddress(a common.Address, limit ...int) ([]*types.Order, error)
 	GetHistoryByUserAddress(a, bt, qt common.Address, from, to int64, limit ...int) ([]*types.Order, error)
 	NewOrder(o *types.Order) error
-	NewStopOrder(so *types.StopOrder) error
 	CancelOrder(oc *types.OrderCancel) error
 	CancelAllOrder(a common.Address) error
-	CancelStopOrder(oc *types.OrderCancel) error
 	HandleEngineResponse(res *types.EngineResponse) error
-	GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error)
-	UpdateStopOrder(h common.Hash, so *types.StopOrder) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 	GetOrderNonceByUserAddress(addr common.Address) (interface{}, error)
 }

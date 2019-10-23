@@ -30,8 +30,6 @@ type OrderFactory struct {
 // for the order factory account
 type OrderParams struct {
 	ExchangeAddress common.Address
-	MakeFee         *big.Int
-	TakeFee         *big.Int
 	Nonce           *big.Int
 }
 
@@ -47,8 +45,6 @@ func NewOrderFactory(p *types.Pair, w *types.Wallet, exchangeAddress common.Addr
 	// client := ethclient.NewClient(rpcClient)
 
 	params := &OrderParams{
-		MakeFee:         big.NewInt(0),
-		TakeFee:         big.NewInt(0),
 		Nonce:           big.NewInt(0),
 		ExchangeAddress: exchangeAddress,
 	}
@@ -120,8 +116,6 @@ func (f *OrderFactory) NewOrder(baseToken common.Address, quoteToken common.Addr
 	o.PricePoint = big.NewInt(pricepoint)
 	o.Amount = big.NewInt(amount)
 	o.Status = "OPEN"
-	o.MakeFee = f.Params.MakeFee
-	o.TakeFee = f.Params.TakeFee
 	o.Nonce = big.NewInt(int64(f.NonceGenerator.Intn(1e18)))
 	o.Sign(f.Wallet)
 
@@ -138,8 +132,6 @@ func (f *OrderFactory) NewLargeOrder(baseToken common.Address, quoteToken common
 	o.Amount = amount
 	o.PricePoint = pricepoint
 	o.Status = "OPEN"
-	o.MakeFee = f.Params.MakeFee
-	o.TakeFee = f.Params.TakeFee
 	o.Nonce = big.NewInt(int64(f.NonceGenerator.Intn(1e18)))
 	o.Sign(f.Wallet)
 
@@ -189,8 +181,6 @@ func (f *OrderFactory) NewBuyOrder(pricepoint int64, value float64, filled ...fl
 	o.ExchangeAddress = f.Params.ExchangeAddress
 	o.BaseToken = f.Pair.BaseTokenAddress
 	o.QuoteToken = f.Pair.QuoteTokenAddress
-	o.MakeFee = f.Params.MakeFee
-	o.TakeFee = f.Params.TakeFee
 	o.Nonce = big.NewInt(int64(f.NonceGenerator.Intn(1e8)))
 	o.Side = "BUY"
 
@@ -231,8 +221,6 @@ func (f *OrderFactory) NewSellOrder(pricepoint int64, value float64, filled ...f
 	o.ExchangeAddress = f.Params.ExchangeAddress
 	o.BaseToken = f.Pair.BaseTokenAddress
 	o.QuoteToken = f.Pair.QuoteTokenAddress
-	o.MakeFee = f.Params.MakeFee
-	o.TakeFee = f.Params.TakeFee
 	o.Nonce = big.NewInt(int64(f.NonceGenerator.Intn(1e8)))
 	o.Side = "SELL"
 
