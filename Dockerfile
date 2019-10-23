@@ -24,7 +24,7 @@ COPY . .
 
 RUN cp config/config.yaml.example config/config.yaml
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o backend
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o tomox-sdk
 
 FROM ubuntu AS final
 
@@ -36,7 +36,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 COPY --from=builder /user/group /user/passwd /etc/
 
-COPY --from=builder /app/backend /tomox/
+COPY --from=builder /app/tomox-sdk /tomox/
 
 WORKDIR /tomox
 
@@ -44,6 +44,6 @@ USER nobody:nobody
 
 RUN mkdir logs
 
-ENTRYPOINT ["/tomox/backend"]
+ENTRYPOINT ["/tomox/tomox-sdk"]
 
 EXPOSE 8080
