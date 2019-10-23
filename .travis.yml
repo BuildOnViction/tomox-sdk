@@ -40,7 +40,6 @@ jobs:
           tags: true
 
 stages:
-  - name: Lint
   - name: Test
   - name: Release application
     if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk
