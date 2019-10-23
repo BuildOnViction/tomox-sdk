@@ -548,7 +548,7 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 
 	switch ev.OperationType {
 	case types.OPERATION_TYPE_INSERT:
-		if ev.FullDocument.Status == types.OrderStatusOpen || ev.FullDocument.Status == types.OrderStatusNew {
+		if ev.FullDocument.Status == types.OrderStatusOpen {
 			res.Status = types.ORDER_ADDED
 			res.Order = ev.FullDocument
 		}

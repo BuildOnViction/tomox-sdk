@@ -229,7 +229,7 @@ func (s *PairService) GetMarketStats(bt, qt common.Address) (*types.PairData, er
 	bidsQuery := []bson.M{
 		{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":       "BUY",
 				"baseToken":  bt.Hex(),
 				"quoteToken": qt.Hex(),
@@ -256,7 +256,7 @@ func (s *PairService) GetMarketStats(bt, qt common.Address) (*types.PairData, er
 	asksQuery := []bson.M{
 		{
 			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":       "SELL",
 				"baseToken":  bt.Hex(),
 				"quoteToken": qt.Hex(),
@@ -571,7 +571,7 @@ func (s *PairService) GetAllMarketStats() ([]*types.PairData, error) {
 	bidsQuery := []bson.M{
 		{
 			"$match": bson.M{
-				"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status": bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":   "BUY",
 			},
 		},
@@ -596,7 +596,7 @@ func (s *PairService) GetAllMarketStats() ([]*types.PairData, error) {
 	asksQuery := []bson.M{
 		{
 			"$match": bson.M{
-				"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status": bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"side":   "SELL",
 			},
 		},

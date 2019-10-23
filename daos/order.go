@@ -595,7 +595,7 @@ func (dao *OrderDao) GetOpenOrdersByUserAddress(addr common.Address) ([]*types.O
 
 	q = bson.M{
 		"userAddress": addr.Hex(),
-		"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"status":      bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 	}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &res)
@@ -623,7 +623,6 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 	q := bson.M{
 		"userAddress": addr.Hex(),
 		"status": bson.M{"$in": []string{
-			types.OrderStatusNew,
 			types.OrderStatusOpen,
 			types.OrderStatusPartialFilled,
 		},
@@ -676,7 +675,6 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 				"$lt":  time.Unix(to, 0),
 			},
 			"status": bson.M{"$nin": []string{
-				types.OrderStatusNew,
 				types.OrderStatusOpen,
 				types.OrderStatusPartialFilled,
 			},
@@ -688,7 +686,6 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 			"baseToken":   bt.Hex(),
 			"quoteToken":  qt.Hex(),
 			"status": bson.M{"$nin": []string{
-				types.OrderStatusNew,
 				types.OrderStatusOpen,
 				types.OrderStatusPartialFilled,
 			},
@@ -722,13 +719,13 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 		"$or": []bson.M{
 			{
 				"userAddress": account.Hex(),
-				"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status":      bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"quoteToken":  token.Hex(),
 				"side":        "BUY",
 			},
 			{
 				"userAddress": account.Hex(),
-				"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status":      bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":   token.Hex(),
 				"side":        "SELL",
 			},
@@ -769,7 +766,7 @@ func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	var orders []*types.Order
 	c := dao.GetCollection()
 	err := c.Find(bson.M{
-		"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 	}).Sort("-createdAt").Limit(1000).All(&orders)
@@ -792,7 +789,7 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit
 	c := dao.GetCollection()
 
 	err := c.Find(bson.M{
-		"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 		"side":       side,
@@ -846,7 +843,7 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 	c := dao.GetCollection()
 
 	err := c.Find(bson.M{
-		"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 		"side":       side,
