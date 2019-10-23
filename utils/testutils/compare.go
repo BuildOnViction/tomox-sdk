@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"ioutil"
 	"testing"
 
 	"github.com/globalsign/mgo/dbtest"
