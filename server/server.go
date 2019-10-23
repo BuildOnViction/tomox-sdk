@@ -111,7 +111,7 @@ func NewRouter(
 	endpoints.ServeOrderResource(r, orderService, accountService)
 
 	endpoints.ServePriceBoardResource(r, priceBoardService)
-	endpoints.ServeMarketsResource(r, marketsService)
+	endpoints.ServeMarketsResource(r, marketsService, pairService)
 	endpoints.ServeNotificationResource(r, notificationService)
 
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])

@@ -188,8 +188,8 @@ func (s *PairService) GetUnlistedPairs() ([]types.Pair, error) {
 	return s.pairDao.GetUnlistedPairs()
 }
 
-// GetTokenPairData get tick of a token pair
-func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, error) {
+// GetMarketStats 24 h a token pair
+func (s *PairService) GetMarketStats(bt, qt common.Address) (*types.PairData, error) {
 	now := time.Now()
 	end := time.Unix(now.Unix(), 0)
 	start := time.Unix(now.AddDate(0, 0, -1).Unix(), 0)
@@ -356,8 +356,179 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, 
 	return pairData, nil
 }
 
+// GetTokenPairData get tick of a token pair
+func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, error) {
+	now := time.Now()
+	end := time.Unix(now.Unix(), 0)
+	start := time.Unix(now.AddDate(0, 0, -1).Unix(), 0)
+	one, _ := bson.ParseDecimal128("1")
+
+	tradeDataQuery := []bson.M{
+		{
+			"$match": bson.M{
+				"createdAt": bson.M{
+					"$gte": start,
+					"$lt":  end,
+				},
+				"status":     bson.M{"$in": []string{types.SUCCESS}},
+				"baseToken":  bt.Hex(),
+				"quoteToken": qt.Hex(),
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"pairName":   "$pairName",
+					"baseToken":  "$baseToken",
+					"quoteToken": "$quoteToken",
+				},
+				"count":     bson.M{"$sum": one},
+				"open":      bson.M{"$first": "$pricepoint"},
+				"openTime":  bson.M{"$first": "$createdAt"},
+				"high":      bson.M{"$max": "$pricepoint"},
+				"low":       bson.M{"$min": "$pricepoint"},
+				"close":     bson.M{"$last": "$pricepoint"},
+				"closeTime": bson.M{"$last": "$createdAt"},
+				"volume":    bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
+			},
+		},
+	}
+
+	tradeData, err := s.tradeDao.Aggregate(tradeDataQuery)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if tradeData == nil {
+		return nil, nil
+	}
+	pairData := &types.PairData{
+		Pair:         types.PairID{BaseToken: bt, QuoteToken: qt},
+		Open:         big.NewInt(0),
+		High:         big.NewInt(0),
+		Low:          big.NewInt(0),
+		Volume:       big.NewInt(0),
+		Close:        big.NewInt(0),
+		CloseBaseUsd: big.NewFloat(0),
+		Count:        big.NewInt(0),
+		OrderVolume:  big.NewInt(0),
+		OrderCount:   big.NewInt(0),
+		BidPrice:     big.NewInt(0),
+		AskPrice:     big.NewInt(0),
+		Price:        big.NewInt(0),
+	}
+	if len(tradeData) > 0 {
+		t := tradeData[0]
+		pairData.Open = t.Open
+		pairData.High = t.High
+		pairData.Low = t.Low
+		pairData.Volume = t.Volume
+		pairData.Close = t.Close
+		pairData.Count = t.Count
+		pairName := t.Pair.PairName
+		ps := strings.Split(pairName, "/")
+		if len(ps) == 2 {
+			fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(ps[0], t.CloseTime)
+			if err == nil {
+				pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
+			}
+		}
+
+	}
+
+	return pairData, nil
+}
+
 // GetAllTokenPairData get tick of all tokens
 func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
+	now := time.Now()
+	end := time.Unix(now.Unix(), 0)
+	start := time.Unix(now.AddDate(0, 0, -1).Unix(), 0)
+	one, _ := bson.ParseDecimal128("1")
+
+	pairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		return nil, err
+	}
+
+	tradeDataQuery := []bson.M{
+		{
+			"$match": bson.M{
+				"createdAt": bson.M{
+					"$gte": start,
+					"$lt":  end,
+				},
+				"status": bson.M{"$in": []string{types.SUCCESS}},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"pairName":   "$pairName",
+					"baseToken":  "$baseToken",
+					"quoteToken": "$quoteToken",
+				},
+				"count":     bson.M{"$sum": one},
+				"open":      bson.M{"$first": "$pricepoint"},
+				"openTime":  bson.M{"$first": "$createdAt"},
+				"high":      bson.M{"$max": "$pricepoint"},
+				"low":       bson.M{"$min": "$pricepoint"},
+				"close":     bson.M{"$last": "$pricepoint"},
+				"closeTime": bson.M{"$last": "$createdAt"},
+				"volume":    bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
+			},
+		},
+	}
+
+	tradeData, err := s.tradeDao.Aggregate(tradeDataQuery)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	pairsData := make([]*types.PairData, 0)
+	for _, p := range pairs {
+		pairData := &types.PairData{
+			Pair:         types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
+			Open:         big.NewInt(0),
+			High:         big.NewInt(0),
+			Low:          big.NewInt(0),
+			Volume:       big.NewInt(0),
+			Close:        big.NewInt(0),
+			CloseBaseUsd: big.NewFloat(0),
+			Count:        big.NewInt(0),
+			OrderVolume:  big.NewInt(0),
+			OrderCount:   big.NewInt(0),
+			BidPrice:     big.NewInt(0),
+			AskPrice:     big.NewInt(0),
+			Price:        big.NewInt(0),
+		}
+
+		for _, t := range tradeData {
+			if t.AddressCode() == p.AddressCode() {
+				pairData.Open = t.Open
+				pairData.High = t.High
+				pairData.Low = t.Low
+				pairData.Volume = t.Volume
+				pairData.Close = t.Close
+				pairData.Count = t.Count
+				fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
+				if err == nil {
+					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
+				}
+
+			}
+		}
+
+		pairsData = append(pairsData, pairData)
+	}
+
+	return pairsData, nil
+}
+
+// GetAllMarketStats 24h all tokens
+func (s *PairService) GetAllMarketStats() ([]*types.PairData, error) {
 	now := time.Now()
 	end := time.Unix(now.Unix(), 0)
 	start := time.Unix(now.AddDate(0, 0, -1).Unix(), 0)
