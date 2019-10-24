@@ -113,7 +113,7 @@ func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, durat
 
 	currentTimestamp := time.Now().Unix()
 
-	_, intervalInSeconds := getModTime(currentTimestamp, duration, unit)
+	_, intervalInSeconds := utils.GetModTime(currentTimestamp, duration, unit)
 
 	start := time.Unix(currentTimestamp-intervalInSeconds, 0)
 	end := time.Unix(currentTimestamp, 0)

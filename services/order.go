@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
@@ -19,17 +20,21 @@ import (
 
 // OrderService
 type OrderService struct {
-	orderDao        interfaces.OrderDao
-	stopOrderDao    interfaces.StopOrderDao
-	tokenDao        interfaces.TokenDao
-	pairDao         interfaces.PairDao
-	accountDao      interfaces.AccountDao
-	tradeDao        interfaces.TradeDao
-	notificationDao interfaces.NotificationDao
-	engine          interfaces.Engine
-	validator       interfaces.ValidatorService
-	broker          *rabbitmq.Connection
-	orderCache      *lru.Cache
+	orderDao          interfaces.OrderDao
+	stopOrderDao      interfaces.StopOrderDao
+	tokenDao          interfaces.TokenDao
+	pairDao           interfaces.PairDao
+	accountDao        interfaces.AccountDao
+	tradeDao          interfaces.TradeDao
+	notificationDao   interfaces.NotificationDao
+	engine            interfaces.Engine
+	validator         interfaces.ValidatorService
+	broker            *rabbitmq.Connection
+	orderCache        *lru.Cache
+	orderbyPricepoint map[string]map[common.Hash]*big.Int
+	mutext            sync.RWMutex
+	orderPending      []*types.Order
+	isFinishCache     bool
 }
 
 // NewOrderService returns a new instance of orderservice
@@ -45,9 +50,8 @@ func NewOrderService(
 	validator interfaces.ValidatorService,
 	broker *rabbitmq.Connection,
 ) *OrderService {
-
 	orderCache, _ := lru.New(2000)
-
+	orderbyPricepoint := make(map[string]map[common.Hash]*big.Int)
 	return &OrderService{
 		orderDao,
 		stopOrderDao,
@@ -60,7 +64,66 @@ func NewOrderService(
 		validator,
 		broker,
 		orderCache,
+		orderbyPricepoint,
+		sync.RWMutex{},
+		[]*types.Order{},
+		false,
 	}
+}
+
+func (s *OrderService) getOrderPricepointKey(baseToken, quoteToken common.Address, pricepoint *big.Int, side string) string {
+	return fmt.Sprintf("%s::%s::%s::%s", baseToken.Hex(), quoteToken.Hex(), pricepoint.String(), side)
+}
+func (s *OrderService) updateOrderPricepoint(o *types.Order) {
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+	if !s.isFinishCache {
+		s.orderPending = append(s.orderPending, o)
+	} else {
+		s.orderPending = append(s.orderPending, o)
+		for _, order := range s.orderPending {
+			key := s.getOrderPricepointKey(order.BaseToken, order.QuoteToken, order.PricePoint, order.Side)
+			remain := big.NewInt(0)
+			remain = remain.Sub(order.Amount, order.FilledAmount)
+			if o, ok := s.orderbyPricepoint[key]; ok {
+				o[order.Hash] = remain
+			} else {
+				s.orderbyPricepoint[key] = make(map[common.Hash]*big.Int)
+				s.orderbyPricepoint[key][order.Hash] = remain
+			}
+		}
+		s.orderPending = s.orderPending[:0]
+	}
+
+}
+
+// GetOrderBookPricePoint return amount remain for pricepoint
+func (s *OrderService) GetOrderBookPricePoint(baseToken, quoteToken common.Address, pricepoint *big.Int, side string) (*big.Int, error) {
+	key := s.getOrderPricepointKey(baseToken, quoteToken, pricepoint, side)
+	s.mutext.RLock()
+	defer s.mutext.RUnlock()
+	if o, ok := s.orderbyPricepoint[key]; ok {
+		amount := big.NewInt(0)
+		for _, am := range o {
+			amount = amount.Add(amount, am)
+		}
+
+		return amount, nil
+	}
+	return nil, errors.New("Cound not found pricepoint key")
+}
+
+// LoadCache init order data for caching
+func (s *OrderService) LoadCache() {
+	logger.Info("Order cache starting ...")
+	orders, err := s.orderDao.GetOpenOrders()
+	if err == nil {
+		for _, order := range orders {
+			s.updateOrderPricepoint(order)
+		}
+	}
+	s.isFinishCache = true
+	logger.Info("Order cache finish")
 }
 
 // GetOrdersLockedBalanceByUserAddress get the total number of orders amount created by a user
@@ -382,6 +445,7 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_ADDED", o.UserAddress, notifications)
+	s.updateOrderPricepoint(o)
 	logger.Info("BroadcastOrderBookUpdate add")
 	s.broadcastOrderBookUpdate([]*types.Order{o})
 	s.broadcastRawOrderBookUpdate([]*types.Order{o})
@@ -389,12 +453,14 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 
 func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate PartialFilled")
+	s.updateOrderPricepoint(res.Order)
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate Filled")
+	s.updateOrderPricepoint(res.Order)
 	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
@@ -449,8 +515,7 @@ func (s *OrderService) broadcastOrderBookUpdate(orders []*types.Order) {
 	for _, o := range orders {
 		pp := o.PricePoint
 		side := o.Side
-
-		amount, err := s.orderDao.GetOrderBookPricePoint(p, pp, side)
+		amount, err := s.GetOrderBookPricePoint(o.BaseToken, o.QuoteToken, pp, side)
 		if err != nil {
 			logger.Error(err)
 		}

@@ -19,7 +19,7 @@ func (s *CronService) startMarketsCron(c *cron.Cron) {
 // and broadcasts the tick to the client subscribed to pair's respective channel
 func (s *CronService) getMarketsData() func() {
 	return func() {
-		pairData, err := s.PairService.GetAllTokenPairData()
+		pairData, err := s.OHLCVService.GetAllTokenPairData()
 
 		if err != nil {
 			log.Printf("%s", err)

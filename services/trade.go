@@ -21,25 +21,25 @@ type TradeService struct {
 	accountDao      interfaces.AccountDao
 	notificationDao interfaces.NotificationDao
 	broker          *rabbitmq.Connection
-	OHLCVService    *OHLCVService
+	ohlcvService    *OHLCVService
 }
 
 // NewTradeService returns a new instance of TradeService
 func NewTradeService(
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
+	ohlcvService *OHLCVService,
 	accountDao interfaces.AccountDao,
 	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
 ) *TradeService {
-	ohlcvService := NewOHLCVService(tradeDao)
 	return &TradeService{
 		OrderDao:        orderdao,
 		tradeDao:        tradeDao,
 		accountDao:      accountDao,
 		notificationDao: notificationDao,
 		broker:          broker,
-		OHLCVService:    ohlcvService,
+		ohlcvService:    ohlcvService,
 	}
 }
 
@@ -303,6 +303,7 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 			Status: types.StatusUnread,
 		})
 	}
+	s.ohlcvService.NotifyTrade(trades[0])
 	s.broadcastTradeUpdate(trades)
 	s.broadcastTickUpdate(pairs)
 }
@@ -311,7 +312,7 @@ func (s *TradeService) broadcastTickUpdate(pairs []types.PairAddresses) {
 	for unit, durations := range app.Config.TickDuration {
 		for _, duration := range durations {
 
-			ticks, err := s.OHLCVService.GetOHLCV(pairs, duration, unit)
+			ticks, err := s.ohlcvService.GetOHLCV(pairs, duration, unit)
 			if err != nil {
 				logger.Error("Get ticks", err)
 				return

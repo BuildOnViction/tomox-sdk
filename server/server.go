@@ -85,13 +85,16 @@ func NewRouter(
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
-	ohlcvService := services.NewOHLCVService(tradeDao)
+	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, fiatPriceDao)
+	ohlcvService.Init()
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider)
+
 	orderService := services.NewOrderService(orderDao, stopOrderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
+	orderService.LoadCache()
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
-	tradeService := services.NewTradeService(orderDao, tradeDao, accountDao, notificationDao, rabbitConn)
+	tradeService := services.NewTradeService(orderDao, tradeDao, ohlcvService, accountDao, notificationDao, rabbitConn)
 
 	walletService := services.NewWalletService(walletDao)
 

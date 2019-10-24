@@ -54,6 +54,7 @@ type OrderDao interface {
 	DeleteTopic(t string) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 	GetOrderNonce(addr common.Address) (interface{}, error)
+	GetOpenOrders() ([]*types.Order, error)
 }
 
 type StopOrderDao interface {
