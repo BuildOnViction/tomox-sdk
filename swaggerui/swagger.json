@@ -128,6 +128,82 @@
     "/notifications/{id}": {
       "$ref": "./components/notifications/handleUpdateNotification.json"
     },
+    "/market/stats": {
+      "get": {
+        "tags": [
+          "market"
+        ],
+        "summary": "Retrieve market stats 24h corresponding to a baseToken and a quoteToken",
+        "description": "Multiple status values can be provided with comma separated strings",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "baseToken",
+            "in": "query",
+            "description": "Base token address",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quoteToken",
+            "in": "query",
+            "description": "Quote token address",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "$ref": "../../swagger.json#/definitions/Pair"
+            }
+          },
+          "400": {
+            "description": "baseToken Parameter missing"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+        ]
+      }
+    },
+    "/market/stats/all": {
+        "get": {
+          "tags": [
+            "market"
+          ],
+          "summary": "Retrieve all market stats",
+          "description": "Multiple status values can be provided with comma separated strings",
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+          ],
+          "responses": {
+            "200": {
+              "description": "successful operation",
+              "schema": {
+                "type": "array",
+                "$ref": "../../swagger.json#/definitions/PairData"
+              }
+            },
+            "400": {
+              "description": "baseToken Parameter missing"
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          },
+          "security": [
+          ]
+        }
+    },
     "/info": {
       "get": {
         "tags": [

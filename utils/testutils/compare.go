@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"ioutil"
 	"testing"
 
 	"github.com/globalsign/mgo/dbtest"
@@ -52,9 +53,7 @@ func ComparePublicOrder(t *testing.T, a, b *types.Order) {
 	assert.Equal(t, a.Status, b.Status)
 	assert.Equal(t, a.Side, b.Side)
 	assert.Equal(t, a.PairName, b.PairName)
-	assert.Equal(t, a.MakeFee, b.MakeFee)
 	assert.Equal(t, a.Nonce, b.Nonce)
-	assert.Equal(t, a.TakeFee, b.TakeFee)
 	assert.Equal(t, a.Signature, b.Signature)
 	assert.Equal(t, a.Hash, b.Hash)
 }
@@ -69,9 +68,7 @@ func CompareOrder(t *testing.T, a, b *types.Order) {
 	assert.Equal(t, a.Status, b.Status)
 	assert.Equal(t, a.Side, b.Side)
 	assert.Equal(t, a.PairName, b.PairName)
-	assert.Equal(t, a.MakeFee, b.MakeFee)
 	assert.Equal(t, a.Nonce, b.Nonce)
-	assert.Equal(t, a.TakeFee, b.TakeFee)
 	assert.Equal(t, a.Signature, b.Signature)
 	assert.Equal(t, a.Hash, b.Hash)
 }
@@ -83,8 +80,6 @@ func ComparePair(t *testing.T, a, b *types.Pair) {
 	assert.Equal(t, a.QuoteTokenSymbol, b.QuoteTokenSymbol)
 	assert.Equal(t, a.QuoteTokenAddress, b.QuoteTokenAddress)
 	assert.Equal(t, a.Active, b.Active)
-	assert.Equal(t, a.MakeFee, b.MakeFee)
-	assert.Equal(t, a.TakeFee, b.TakeFee)
 }
 
 func CompareToken(t *testing.T, a, b *types.Token) {

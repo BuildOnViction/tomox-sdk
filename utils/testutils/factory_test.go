@@ -20,7 +20,7 @@ func TestNewOrderFromFactory(t *testing.T) {
 		t.Errorf("Error creating order factory client: %v", err)
 	}
 
-	order, err := f.NewOrder(ZRX, 1, WETH, 1)
+	order, err := f.NewOrder(ZRX, WETH, 1, 1)
 	if err != nil {
 		t.Errorf("Error creating new order: %v", err)
 	}
@@ -32,8 +32,6 @@ func TestNewOrderFromFactory(t *testing.T) {
 		QuoteToken:      WETH,
 		Amount:          big.NewInt(1),
 		Nonce:           order.Nonce,
-		MakeFee:         big.NewInt(0),
-		TakeFee:         big.NewInt(0),
 		Signature:       order.Signature,
 		Hash:            order.Hash,
 		Status:          "OPEN",
@@ -65,8 +63,6 @@ func TestNewFactoryBuyOrder(t *testing.T) {
 		BaseToken:       ZRX,
 		QuoteToken:      WETH,
 		FilledAmount:    big.NewInt(0),
-		MakeFee:         big.NewInt(0),
-		TakeFee:         big.NewInt(0),
 		PricePoint:      big.NewInt(50),
 		Amount:          units.Ethers(2),
 		Side:            "BUY",
@@ -103,8 +99,6 @@ func TestNewFactorySellOrder1(t *testing.T) {
 		BaseToken:       ZRX,
 		QuoteToken:      WETH,
 		FilledAmount:    big.NewInt(0),
-		MakeFee:         big.NewInt(0),
-		TakeFee:         big.NewInt(0),
 		Side:            "SELL",
 		Status:          "OPEN",
 		PairName:        "ZRX/WETH",
@@ -142,8 +136,6 @@ func TestNewFactorySellOrder2(t *testing.T) {
 		QuoteToken:      WETH,
 		FilledAmount:    big.NewInt(0),
 		Nonce:           order.Nonce,
-		MakeFee:         big.NewInt(0),
-		TakeFee:         big.NewInt(0),
 		Signature:       order.Signature,
 		Side:            "SELL",
 		Status:          "OPEN",
@@ -179,8 +171,6 @@ func TestNewWebSocketMessage(t *testing.T) {
 		BaseToken:       ZRX,
 		QuoteToken:      WETH,
 		Amount:          big.NewInt(1),
-		MakeFee:         big.NewInt(0),
-		TakeFee:         big.NewInt(0),
 		Status:          "OPEN",
 		Nonce:           order.Nonce,
 		Signature:       order.Signature,

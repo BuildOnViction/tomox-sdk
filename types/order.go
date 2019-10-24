@@ -23,7 +23,6 @@ const (
 	TypeMarketOrder = "MO"
 	TypeLimitOrder  = "LO"
 
-	OrderStatusNew           = "NEW"
 	OrderStatusOpen          = "OPEN"
 	OrderStatusPartialFilled = "PARTIAL_FILLED"
 	OrderStatusFilled        = "FILLED"

@@ -22,9 +22,7 @@ func GetTestOrder1() types.Order {
 		Status:          "OPEN",
 		Side:            "BUY",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &types.Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -49,9 +47,7 @@ func GetTestOrder2() types.Order {
 		Status:          "OPEN",
 		Side:            "SELL",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &types.Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -76,9 +72,7 @@ func GetTestOrder3() types.Order {
 		Status:          "OPEN",
 		Side:            "SELL",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &types.Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),

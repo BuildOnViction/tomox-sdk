@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	OrderStatusNew           = "NEW"
 	OrderStatusOpen          = "OPEN"
 	OrderStatusPartialFilled = "PARTIAL_FILLED"
 	OrderStatusFilled        = "FILLED"

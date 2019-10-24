@@ -1,10 +1,6 @@
 # DEX backend
  
-Official decentralized exchange backend, forked from the Proof project.  
-The matching-engine will be soon moved to blockchain services.
-
-_**Note: This project is under active development. We are using Github Issues to keep track of milestones, tasks, bugs, ....
-It will be officially released when the version is v1.0.0**_
+Official decentralized exchange backend base on TomoX Protocol
 
 # Getting Started
 
@@ -29,7 +25,7 @@ Read [deployment guide](DEPLOY.md)
 
 ## REST API
 ```
-https://dex.devnet.tomochain.com/api/swaggerui/#
+https://dex.devnet.tomochain.com/swaggerui/#
 ```
 
 ## Websocket API

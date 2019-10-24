@@ -24,9 +24,7 @@ func TestToOrder(t *testing.T) {
 		Status:          "OPEN",
 		Side:            "BUY",
 		PairName:        "ETH/TOMO",
-		MakeFee:         big.NewInt(1),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(1),
 		Signature: &Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),

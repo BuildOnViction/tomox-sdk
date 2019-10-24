@@ -2,6 +2,7 @@ package daos
 
 import (
 	"math/big"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -66,12 +67,12 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	}
 
 	i5 := mgo.Index{
-		Key:       []string{"pricepoint"},
+		Key:       []string{"price"},
 		Collation: &mgo.Collation{NumericOrdering: true, Locale: "en"},
 	}
 
 	i6 := mgo.Index{
-		Key: []string{"baseToken", "quoteToken", "pricepoint"},
+		Key: []string{"baseToken", "quoteToken", "price"},
 	}
 
 	i7 := mgo.Index{
@@ -594,7 +595,7 @@ func (dao *OrderDao) GetOpenOrdersByUserAddress(addr common.Address) ([]*types.O
 
 	q = bson.M{
 		"userAddress": addr.Hex(),
-		"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"status":      bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 	}
 
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &res)
@@ -617,7 +618,7 @@ func (dao *OrderDao) GetOpenOrders() ([]*types.Order, error) {
 	var q bson.M
 
 	q = bson.M{
-		"status": bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"status": bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 	}
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &res)
 	if err != nil {
@@ -641,7 +642,6 @@ func (dao *OrderDao) GetCurrentByUserAddress(addr common.Address, limit ...int) 
 	q := bson.M{
 		"userAddress": addr.Hex(),
 		"status": bson.M{"$in": []string{
-			types.OrderStatusNew,
 			types.OrderStatusOpen,
 			types.OrderStatusPartialFilled,
 		},
@@ -694,7 +694,6 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 				"$lt":  time.Unix(to, 0),
 			},
 			"status": bson.M{"$nin": []string{
-				types.OrderStatusNew,
 				types.OrderStatusOpen,
 				types.OrderStatusPartialFilled,
 			},
@@ -706,7 +705,6 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 			"baseToken":   bt.Hex(),
 			"quoteToken":  qt.Hex(),
 			"status": bson.M{"$nin": []string{
-				types.OrderStatusNew,
 				types.OrderStatusOpen,
 				types.OrderStatusPartialFilled,
 			},
@@ -740,13 +738,13 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 		"$or": []bson.M{
 			{
 				"userAddress": account.Hex(),
-				"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status":      bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"quoteToken":  token.Hex(),
 				"side":        "BUY",
 			},
 			{
 				"userAddress": account.Hex(),
-				"status":      bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"status":      bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 				"baseToken":   token.Hex(),
 				"side":        "SELL",
 			},
@@ -785,78 +783,58 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 
 func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	var orders []*types.Order
-	q := []bson.M{
-		{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-				"baseToken":  p.BaseTokenAddress.Hex(),
-				"quoteToken": p.QuoteTokenAddress.Hex(),
-			},
-		},
-		{
-			"$sort": bson.M{
-				"price": 1,
-			},
-		},
-	}
+	c := dao.GetCollection()
+	err := c.Find(bson.M{
+		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"baseToken":  p.BaseTokenAddress.Hex(),
+		"quoteToken": p.QuoteTokenAddress.Hex(),
+	}).Sort("-createdAt").Limit(1000).All(&orders)
 
-	err := db.Aggregate(dao.dbName, dao.collectionName, q, &orders)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
+	sort.SliceStable(orders, func(i, j int) bool {
+		return orders[i].PricePoint.Cmp(orders[j].PricePoint) == 1
+	})
 
-	return orders, nil
+	return orders, err
 }
 
-func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, sort int, limit ...int) ([]map[string]string, error) {
+func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit ...int) ([]map[string]string, error) {
 
 	sides := []map[string]string{}
 	if p == nil {
 		return sides, nil
 	}
 
-	sideQuery := []bson.M{
-		{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-				"baseToken":  p.BaseTokenAddress.Hex(),
-				"quoteToken": p.QuoteTokenAddress.Hex(),
-				"side":       side,
-			},
-		},
-		{
-			"$group": bson.M{
-				"_id":        bson.M{"$toDecimal": "$price"},
-				"pricepoint": bson.M{"$first": "$price"},
-				"amount": bson.M{
-					"$sum": bson.M{
-						"$subtract": []bson.M{{"$toDecimal": "$quantity"}, {"$toDecimal": "$filledAmount"}},
-					},
-				},
-			},
-		},
-		{
-			"$sort": bson.M{
-				"_id": sort,
-			},
-		},
-		{
-			"$project": bson.M{
-				"_id":        0,
-				"pricepoint": bson.M{"$toString": "$pricepoint"},
-				"amount":     bson.M{"$toString": "$amount"},
-			},
-		},
+	var orders []types.Order
+	c := dao.GetCollection()
+
+	err := c.Find(bson.M{
+		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"baseToken":  p.BaseTokenAddress.Hex(),
+		"quoteToken": p.QuoteTokenAddress.Hex(),
+		"side":       side,
+	}).Sort("-createdAt").Limit(500).All(&orders)
+
+	pa := make(map[string]*big.Int)
+	for _, order := range orders {
+		if val, ok := pa[order.PricePoint.String()]; ok {
+			pa[order.PricePoint.String()] = math.Sub(math.Add(val, order.Amount), order.FilledAmount)
+		} else {
+			pa[order.PricePoint.String()] = order.Amount
+		}
 	}
 
-	if limit != nil {
-		sideQuery = append(sideQuery, bson.M{
-			"$limit": limit[0],
-		})
+	for p, a := range pa {
+		s := map[string]string{
+			"pricepoint": p,
+			"amount":     a.String(),
+		}
+
+		sides = append(sides, s)
 	}
 
-	err := db.Aggregate(dao.dbName, dao.collectionName, sideQuery, &sides)
+	sort.SliceStable(sides, func(i, j int) bool {
+		return math.ToBigInt(sides[i]["pricepoint"]).Cmp(math.ToBigInt(sides[j]["pricepoint"])) == (0 - srt)
+	})
 
 	return sides, err
 }
@@ -880,48 +858,24 @@ func (dao *OrderDao) GetOrderBook(p *types.Pair) ([]map[string]string, []map[str
 }
 
 func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side string) (*big.Int, error) {
-	q := []bson.M{
-		{
-			"$match": bson.M{
-				"status":     bson.M{"$in": []string{types.OrderStatusNew, types.OrderStatusOpen, types.OrderStatusPartialFilled}},
-				"baseToken":  p.BaseTokenAddress.Hex(),
-				"quoteToken": p.QuoteTokenAddress.Hex(),
-				"price":      pp.String(),
-				"side":       side,
-			},
-		},
-		{
-			"$group": bson.M{
-				"_id":        bson.M{"$toDecimal": "$price"},
-				"pricepoint": bson.M{"$first": "$price"},
-				"amount": bson.M{
-					"$sum": bson.M{
-						"$subtract": []bson.M{{"$toDecimal": "$quantity"}, {"$toDecimal": "$filledAmount"}},
-					},
-				},
-			},
-		},
-		{
-			"$project": bson.M{
-				"_id":        0,
-				"pricepoint": 1,
-				"amount":     bson.M{"$toString": "$amount"},
-			},
-		},
+	var orders []types.Order
+	c := dao.GetCollection()
+
+	err := c.Find(bson.M{
+		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"baseToken":  p.BaseTokenAddress.Hex(),
+		"quoteToken": p.QuoteTokenAddress.Hex(),
+		"side":       side,
+		"price":      pp.String(),
+	}).Sort("-createdAt").Limit(500).All(&orders)
+
+	amount := big.NewInt(0)
+
+	for _, order := range orders {
+		amount = math.Sub(math.Add(amount, order.Amount), order.FilledAmount)
 	}
 
-	res := []map[string]string{}
-	err := db.Aggregate(dao.dbName, dao.collectionName, q, &res)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	if len(res) == 0 {
-		return nil, nil
-	}
-
-	return math.ToBigInt(res[0]["amount"]), nil
+	return amount, err
 }
 
 // Drop drops all the order documents in the current database

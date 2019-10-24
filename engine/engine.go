@@ -16,7 +16,6 @@ type Engine struct {
 	orderbooks   map[string]*OrderBook
 	rabbitMQConn *rabbitmq.Connection
 	orderDao     interfaces.OrderDao
-	stopOrderDao interfaces.StopOrderDao
 	tradeDao     interfaces.TradeDao
 	pairDao      interfaces.PairDao
 	provider     *ethereum.EthereumProvider
@@ -28,7 +27,6 @@ var logger = utils.Logger
 func NewEngine(
 	rabbitMQConn *rabbitmq.Connection,
 	orderDao interfaces.OrderDao,
-	stopOrderDao interfaces.StopOrderDao,
 	tradeDao interfaces.TradeDao,
 	pairDao interfaces.PairDao,
 	provider *ethereum.EthereumProvider,
@@ -41,12 +39,12 @@ func NewEngine(
 
 	obs := map[string]*OrderBook{}
 	for _, p := range pairs {
-		ob := NewOrderBook(rabbitMQConn, orderDao, stopOrderDao, tradeDao, p)
+		ob := NewOrderBook(rabbitMQConn, orderDao, tradeDao, p)
 
 		obs[p.Code()] = ob
 	}
 
-	engine := &Engine{obs, rabbitMQConn, orderDao, stopOrderDao, tradeDao, pairDao, provider}
+	engine := &Engine{obs, rabbitMQConn, orderDao, tradeDao, pairDao, provider}
 	return engine
 }
 
@@ -63,7 +61,7 @@ func (e *Engine) getObs() (map[string]*OrderBook, error) {
 	}
 	obs := map[string]*OrderBook{}
 	for _, p := range pairs {
-		ob := NewOrderBook(e.rabbitMQConn, e.orderDao, e.stopOrderDao, e.tradeDao, p)
+		ob := NewOrderBook(e.rabbitMQConn, e.orderDao, e.tradeDao, p)
 
 		obs[p.Code()] = ob
 	}
@@ -80,20 +78,8 @@ func (e *Engine) HandleOrders(msg *rabbitmq.Message) error {
 			logger.Error(err)
 			return err
 		}
-	case "NEW_STOP_ORDER":
-		err := e.handleNewStopOrder(msg.Data)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
 	case "CANCEL_ORDER":
 		err := e.handleCancelOrder(msg.Data)
-		if err != nil {
-			logger.Error(err)
-			return err
-		}
-	case "CANCEL_STOP_ORDER":
-		err := e.handleCancelStopOrder(msg.Data)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -136,39 +122,6 @@ func (e *Engine) handleNewOrder(bytes []byte) error {
 	return nil
 }
 
-func (e *Engine) handleNewStopOrder(bytes []byte) error {
-	so := &types.StopOrder{}
-	err := json.Unmarshal(bytes, so)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	code, err := so.PairCode()
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	obs, err := e.getObs()
-	if err != nil {
-		return errors.New("Orderbook error")
-	}
-	ob := obs[code]
-
-	if ob == nil {
-		return errors.New("Orderbook error")
-	}
-
-	err = ob.newStopOrder(so)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
 func (e *Engine) handleCancelOrder(bytes []byte) error {
 	o := &types.Order{}
 	err := json.Unmarshal(bytes, o)
@@ -194,39 +147,6 @@ func (e *Engine) handleCancelOrder(bytes []byte) error {
 	}
 
 	err = ob.cancelOrder(o)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (e *Engine) handleCancelStopOrder(bytes []byte) error {
-	so := &types.StopOrder{}
-	err := json.Unmarshal(bytes, so)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	code, err := so.PairCode()
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	obs, err := e.getObs()
-	if err != nil {
-		return errors.New("Orderbook error")
-	}
-	ob := obs[code]
-
-	if ob == nil {
-		return errors.New("Orderbook error")
-	}
-
-	err = ob.cancelStopOrder(so)
 	if err != nil {
 		logger.Error(err)
 		return err

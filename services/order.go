@@ -21,7 +21,6 @@ import (
 // OrderService
 type OrderService struct {
 	orderDao          interfaces.OrderDao
-	stopOrderDao      interfaces.StopOrderDao
 	tokenDao          interfaces.TokenDao
 	pairDao           interfaces.PairDao
 	accountDao        interfaces.AccountDao
@@ -40,7 +39,6 @@ type OrderService struct {
 // NewOrderService returns a new instance of orderservice
 func NewOrderService(
 	orderDao interfaces.OrderDao,
-	stopOrderDao interfaces.StopOrderDao,
 	tokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
 	accountDao interfaces.AccountDao,
@@ -54,7 +52,6 @@ func NewOrderService(
 	orderbyPricepoint := make(map[string]map[common.Hash]*big.Int)
 	return &OrderService{
 		orderDao,
-		stopOrderDao,
 		tokenDao,
 		pairDao,
 		accountDao,
@@ -250,63 +247,6 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 	return nil
 }
 
-// NewOrder validates if the passed order is valid or not based on user's available
-// funds and order data.
-// If valid: Order is inserted in DB with order status as new and order is publiched
-// on rabbitmq queue for matching engine to process the order
-func (s *OrderService) NewStopOrder(so *types.StopOrder) error {
-	if err := so.Validate(); err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	ok, err := so.VerifySignature()
-	if err != nil {
-		logger.Error(err)
-	}
-
-	if !ok {
-		return errors.New("Invalid Signature")
-	}
-
-	p, err := s.pairDao.GetByTokenAddress(so.BaseToken, so.QuoteToken)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	if p == nil {
-		return errors.New("Pair not found")
-	}
-
-	/*
-		if math.IsStrictlySmallerThan(so.QuoteAmount(p), p.MinQuoteAmount()) {
-			return errors.New("Order amount too low")
-		}
-	*/
-
-	// Fill token and pair data
-	err = so.Process(p)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	//err = s.validator.ValidateAvailableBalance(so)
-	//if err != nil {
-	//	logger.Error(err)
-	//	return err
-	//}
-
-	err = s.broker.PublishNewStopOrderMessage(so)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
 // CancelOrder handles the cancellation order requests.
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled
@@ -365,33 +305,6 @@ func (s *OrderService) CancelAllOrder(a common.Address) error {
 			logger.Error(err)
 			continue
 		}
-	}
-
-	return nil
-}
-
-// CancelStopOrder handles the cancellation stop order requests.
-// Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
-// can be cancelled
-func (s *OrderService) CancelStopOrder(oc *types.OrderCancel) error {
-	o, err := s.stopOrderDao.GetByHash(oc.OrderHash)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	if o == nil {
-		return errors.New("No stop order with corresponding hash")
-	}
-
-	if o.Status == types.ORDER_FILLED || o.Status == types.ERROR_STATUS || o.Status == types.ORDER_CANCELLED {
-		return fmt.Errorf("cannot cancel order. Status is %v", o.Status)
-	}
-
-	err = s.broker.PublishCancelStopOrderMessage(o)
-	if err != nil {
-		logger.Error(err)
-		return err
 	}
 
 	return nil
@@ -613,7 +526,7 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 
 	switch ev.OperationType {
 	case types.OPERATION_TYPE_INSERT:
-		if ev.FullDocument.Status == types.OrderStatusOpen || ev.FullDocument.Status == types.OrderStatusNew {
+		if ev.FullDocument.Status == types.OrderStatusOpen {
 			res.Status = types.ORDER_ADDED
 			res.Order = ev.FullDocument
 		}
@@ -641,59 +554,6 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 			logger.Error(err)
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (s *OrderService) GetTriggeredStopOrders(baseToken, quoteToken common.Address, lastPrice *big.Int) ([]*types.StopOrder, error) {
-	return s.stopOrderDao.GetTriggeredStopOrders(baseToken, quoteToken, lastPrice)
-}
-
-func (s *OrderService) UpdateStopOrder(h common.Hash, so *types.StopOrder) error {
-	return s.stopOrderDao.UpdateByHash(h, so)
-}
-
-func (s *OrderService) triggerStopOrders(trades []*types.Trade) {
-	for _, trade := range trades {
-		stopOrders, err := s.GetTriggeredStopOrders(trade.BaseToken, trade.QuoteToken, trade.PricePoint)
-
-		if err != nil {
-			logger.Error(err)
-			continue
-		}
-
-		for _, stopOrder := range stopOrders {
-			err := s.handleStopOrder(stopOrder)
-
-			if err != nil {
-				logger.Error(err)
-				continue
-			}
-		}
-	}
-}
-
-func (s *OrderService) handleStopOrder(so *types.StopOrder) error {
-	o, err := so.ToOrder()
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = s.NewOrder(o)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	so.Status = types.StopOrderStatusDone
-	err = s.UpdateStopOrder(so.Hash, so)
-
-	if err != nil {
-		logger.Error(err)
-		return err
 	}
 
 	return nil

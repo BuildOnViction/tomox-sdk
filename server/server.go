@@ -71,7 +71,6 @@ func NewRouter(
 
 	// get daos for dependency injection
 	orderDao := daos.NewOrderDao()
-	stopOrderDao := daos.NewStopOrderDao()
 	tokenDao := daos.NewTokenDao()
 	pairDao := daos.NewPairDao()
 	tradeDao := daos.NewTradeDao()
@@ -81,7 +80,7 @@ func NewRouter(
 	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
-	eng := engine.NewEngine(rabbitConn, orderDao, stopOrderDao, tradeDao, pairDao, provider)
+	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
@@ -91,7 +90,7 @@ func NewRouter(
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider)
 
-	orderService := services.NewOrderService(orderDao, stopOrderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
+	orderService := services.NewOrderService(orderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderService.LoadCache()
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
 	tradeService := services.NewTradeService(orderDao, tradeDao, ohlcvService, accountDao, notificationDao, rabbitConn)
@@ -114,7 +113,7 @@ func NewRouter(
 	endpoints.ServeOrderResource(r, orderService, accountService)
 
 	endpoints.ServePriceBoardResource(r, priceBoardService)
-	endpoints.ServeMarketsResource(r, marketsService)
+	endpoints.ServeMarketsResource(r, marketsService, pairService)
 	endpoints.ServeNotificationResource(r, notificationService)
 
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])

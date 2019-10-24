@@ -19,8 +19,6 @@ func TestNewOrderPayload(t *testing.T) {
 		QuoteToken:      common.HexToAddress("0x12459c951127e0c374ff9105dda097662a027093"),
 		Amount:          big.NewInt(1000),
 		PricePoint:      big.NewInt(100),
-		MakeFee:         big.NewInt(50),
-		TakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
 		Signature: &Signature{
 			V: 28,

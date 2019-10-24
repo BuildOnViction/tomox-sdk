@@ -26,9 +26,7 @@ func TestBaseTokenSymbol(t *testing.T) {
 		Status:          "OPEN",
 		Side:            "BUY",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -55,9 +53,7 @@ func TestQuoteTokenSymbol(t *testing.T) {
 		Status:          "OPEN",
 		Side:            "BUY",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -85,9 +81,7 @@ func TestOrderMarshal(t *testing.T) {
 		Status:          "OPEN",
 		Side:            "BUY",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -152,8 +146,6 @@ func TestOrderUnmarshal(t *testing.T) {
 		Status:          "OPEN",
 		Side:            "BUY",
 		Nonce:           big.NewInt(1000),
-		MakeFee:         big.NewInt(50),
-		TakeFee:         big.NewInt(50),
 		Signature: &Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
@@ -211,9 +203,7 @@ func TestOrderBSON(t *testing.T) {
 		Status:          "OPEN",
 		Side:            "BUY",
 		PairName:        "ZRX/WETH",
-		MakeFee:         big.NewInt(50),
 		Nonce:           big.NewInt(1000),
-		TakeFee:         big.NewInt(50),
 		Signature: &Signature{
 			V: 28,
 			R: common.HexToHash("0x10b30eb0072a4f0a38b6fca0b731cba15eb2e1702845d97c1230b53a839bcb85"),
