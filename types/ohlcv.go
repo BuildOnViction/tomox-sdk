@@ -22,6 +22,8 @@ type Tick struct {
 	Timestamp int64     `json:"timestamp,omitempty" bson:"timestamp"`
 	OpenTime  time.Time `json:"openTime" bson:"openTime"`
 	CloseTime time.Time `json:"closeTime" bson:"closeTime"`
+	Duration  int64     `json:"duration" bson:"duration"`
+	Unit      string    `json:"unit" bson:"unit"`
 }
 
 // PairID is the subdocument for aggregate grouping for OHLCV data
@@ -88,6 +90,10 @@ func (t *Tick) MarshalJSON() ([]byte, error) {
 	if t.Count != nil {
 		tick["count"] = t.Count.String()
 	}
+
+	tick["duration"] = t.Duration
+	tick["unit"] = t.Unit
+
 	//tick["openTime"] = t.OpenTime
 	//tick["closeTime"] = t.CloseTime
 
@@ -144,6 +150,13 @@ func (t *Tick) UnmarshalJSON(b []byte) error {
 	t.OpenTime = tick["openTime"].(time.Time)
 	t.CloseTime = tick["closeTime"].(time.Time)
 
+	if tick["unit"] != nil {
+		t.Unit = tick["unit"].(string)
+	}
+	if tick["duration"] != nil {
+		t.Duration = tick["duration"].(int64)
+	}
+
 	return nil
 }
 
@@ -181,6 +194,8 @@ func (t *Tick) GetBSON() (interface{}, error) {
 		Timestamp int64           `json:"timestamp" bson:"timestamp"`
 		OpenTime  time.Time       `json:"openTime" bson:"openTime"`
 		CloseTime time.Time       `json:"closeTime" bson:"closeTime"`
+		Duration  int64           `json:"duration" bson:"duration"`
+		Unit      string          `json:"unit" bson:"unit"`
 	}{
 		ID: PairID{
 			t.Pair.PairName,
@@ -197,6 +212,8 @@ func (t *Tick) GetBSON() (interface{}, error) {
 		Timestamp: t.Timestamp,
 		OpenTime:  t.OpenTime,
 		CloseTime: t.CloseTime,
+		Duration:  t.Duration,
+		Unit:      t.Unit,
 	}, nil
 }
 
@@ -220,6 +237,8 @@ func (t *Tick) SetBSON(raw bson.Raw) error {
 		Timestamp int64           `json:"timestamp" bson:"timestamp"`
 		OpenTime  time.Time       `json:"openTime" bson:"openTime"`
 		CloseTime time.Time       `json:"closeTime" bson:"closeTime"`
+		Duration  int64           `json:"duration" bson:"duration"`
+		Unit      string          `json:"unit" bson:"unit"`
 	})
 
 	err := raw.Unmarshal(decoded)
@@ -250,6 +269,9 @@ func (t *Tick) SetBSON(raw bson.Raw) error {
 	t.Timestamp = decoded.Timestamp
 	t.OpenTime = decoded.OpenTime
 	t.CloseTime = decoded.CloseTime
+
+	t.Unit = decoded.Unit
+	t.Duration = decoded.Duration
 	return nil
 }
 

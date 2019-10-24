@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -127,4 +128,69 @@ func Union(a, b []common.Address) []common.Address {
 
 func IsNativeTokenByAddress(address common.Address) bool {
 	return (address.Hex() == "0x0000000000000000000000000000000000000001")
+}
+
+// GetModTime get round time by step
+func GetModTime(ts, interval int64, unit string) (int64, int64) {
+	var modTime, intervalInSeconds int64
+	switch unit {
+	case "sec":
+		intervalInSeconds = interval
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
+	case "min":
+		intervalInSeconds = interval * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
+	case "hour":
+		intervalInSeconds = interval * 60 * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
+	case "day":
+		intervalInSeconds = interval * 24 * 60 * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
+	case "week":
+		intervalInSeconds = interval * 7 * 24 * 60 * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
+	case "month":
+		d := time.Date(time.Now().Year(), time.Now().Month()+1, 1, 0, 0, 0, 0, time.UTC).Day()
+		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+
+	case "year":
+		// Number of days in current year
+		d := time.Date(time.Now().Year()+1, 1, 1, 0, 0, 0, 0, time.UTC).Sub(time.Date(time.Now().Year(), 0, 0, 0, 0, 0, 0, time.UTC)).Hours() / 24
+		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
+		modTime = ts - int64(math.Mod(float64(ts), float64(intervalInSeconds)))
+	}
+
+	return modTime, intervalInSeconds
+}
+
+// UnitToSecond time uint to second
+func UnitToSecond(interval int64, unit string) int64 {
+	var intervalInSeconds int64
+	switch unit {
+	case "sec":
+		intervalInSeconds = interval
+	case "min":
+		intervalInSeconds = interval * 60
+	case "hour":
+		intervalInSeconds = interval * 60 * 60
+	case "day":
+		intervalInSeconds = interval * 24 * 60 * 60
+	case "week":
+		intervalInSeconds = interval * 7 * 24 * 60 * 60
+	case "month":
+		d := time.Date(time.Now().Year(), time.Now().Month()+1, 1, 0, 0, 0, 0, time.UTC).Day()
+		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
+	case "year":
+		d := time.Date(time.Now().Year()+1, 1, 1, 0, 0, 0, 0, time.UTC).Sub(time.Date(time.Now().Year(), 0, 0, 0, 0, 0, 0, time.UTC)).Hours() / 24
+		intervalInSeconds = interval * int64(d) * 24 * 60 * 60
+
+	}
+
+	return intervalInSeconds
 }
