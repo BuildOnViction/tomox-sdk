@@ -145,7 +145,10 @@ func (dao *OrderDao) GetCollection() *mgo.Collection {
 }
 
 func (dao *OrderDao) Watch() (*mgo.ChangeStream, *mgo.Session, error) {
-	return db.Watch(dao.dbName, dao.collectionName, mgo.ChangeStreamOptions{FullDocument: mgo.UpdateLookup})
+	return db.Watch(dao.dbName, dao.collectionName, mgo.ChangeStreamOptions{
+        MaxAwaitTimeMS: 500,
+        BatchSize: 1000,
+    })
 }
 
 // Create function performs the DB insertion task for Order collection
