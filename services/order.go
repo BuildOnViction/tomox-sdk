@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
@@ -30,10 +31,11 @@ type OrderService struct {
 	validator         interfaces.ValidatorService
 	broker            *rabbitmq.Connection
 	orderCache        *lru.Cache
-	orderbyPricepoint map[string]map[common.Hash]*amountByTime
+	orderByPricepoint map[string]map[common.Hash]*amountByTime
 	mutext            sync.RWMutex
 	orderPending      []*types.Order
 	isFinishCache     bool
+	bulkOrders        map[*types.PairAddresses]map[common.Hash]*types.Order
 }
 
 type amountByTime struct {
@@ -54,7 +56,8 @@ func NewOrderService(
 	broker *rabbitmq.Connection,
 ) *OrderService {
 	orderCache, _ := lru.New(2000)
-	orderbyPricepoint := make(map[string]map[common.Hash]*amountByTime)
+	bulkOrders := make(map[*types.PairAddresses]map[common.Hash]*types.Order)
+	orderByPricepoint := make(map[string]map[common.Hash]*amountByTime)
 	return &OrderService{
 		orderDao,
 		tokenDao,
@@ -66,10 +69,11 @@ func NewOrderService(
 		validator,
 		broker,
 		orderCache,
-		orderbyPricepoint,
+		orderByPricepoint,
 		sync.RWMutex{},
 		[]*types.Order{},
 		false,
+		bulkOrders,
 	}
 }
 
@@ -81,7 +85,7 @@ func (s *OrderService) update(order *types.Order) {
 	key := s.getOrderPricepointKey(order.BaseToken, order.QuoteToken, order.PricePoint, order.Side)
 	remain := big.NewInt(0)
 	remain = remain.Sub(order.Amount, order.FilledAmount)
-	if obyHash, ok := s.orderbyPricepoint[key]; ok {
+	if obyHash, ok := s.orderByPricepoint[key]; ok {
 		if amountbytime, ok := obyHash[order.Hash]; ok {
 			if order.FilledAmount.Cmp(amountbytime.filledAmount) > 0 {
 				amountbytime.amount = remain
@@ -95,8 +99,8 @@ func (s *OrderService) update(order *types.Order) {
 			}
 		}
 	} else {
-		s.orderbyPricepoint[key] = make(map[common.Hash]*amountByTime)
-		s.orderbyPricepoint[key][order.Hash] = &amountByTime{
+		s.orderByPricepoint[key] = make(map[common.Hash]*amountByTime)
+		s.orderByPricepoint[key][order.Hash] = &amountByTime{
 			filledAmount: order.FilledAmount,
 			amount:       remain,
 		}
@@ -121,7 +125,7 @@ func (s *OrderService) GetOrderBookPricePoint(baseToken, quoteToken common.Addre
 	key := s.getOrderPricepointKey(baseToken, quoteToken, pricepoint, side)
 	s.mutext.RLock()
 	defer s.mutext.RUnlock()
-	if o, ok := s.orderbyPricepoint[key]; ok {
+	if o, ok := s.orderByPricepoint[key]; ok {
 		amount := big.NewInt(0)
 		for _, am := range o {
 			amount = amount.Add(amount, am.amount)
@@ -355,6 +359,35 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 		s.handleEngineUnknownMessage(res)
 	}
 
+	if res.Status != types.ERROR_STATUS {
+		err := s.saveBulkOrders(res)
+		if err != nil {
+			logger.Error("Save bulk order", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *OrderService) saveBulkOrders(res *types.EngineResponse) error {
+	p, err := res.Order.Pair()
+	if err != nil {
+		return err
+	}
+	pa := types.PairAddresses{
+		BaseToken:  p.BaseTokenAddress,
+		QuoteToken: p.QuoteTokenAddress,
+	}
+
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+
+	if _, ok := s.bulkOrders[&pa]; ok {
+		s.bulkOrders[&pa][res.Order.Hash] = res.Order
+	} else {
+		s.bulkOrders[&pa] = make(map[common.Hash]*types.Order)
+		s.bulkOrders[&pa][res.Order.Hash] = res.Order
+	}
 	return nil
 }
 
@@ -381,22 +414,22 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_ADDED", o.UserAddress, notifications)
 	s.updateOrderPricepoint(o)
-	logger.Info("BroadcastOrderBookUpdate add")
-	s.broadcastOrderBookUpdate([]*types.Order{o})
+	// logger.Info("BroadcastOrderBookUpdate add")
+	// s.broadcastOrderBookUpdate([]*types.Order{o})
 	s.broadcastRawOrderBookUpdate([]*types.Order{o})
 }
 
 func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate PartialFilled")
 	s.updateOrderPricepoint(res.Order)
-	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate Filled")
 	s.updateOrderPricepoint(res.Order)
-	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
@@ -421,7 +454,7 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
 	logger.Info("BroadcastOrderBookUpdate Cancelled")
-	s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
 	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
@@ -515,6 +548,59 @@ func (s *OrderService) WatchChanges() {
 	defer s.WatchChanges()
 
 	ctx := context.Background()
+	go func() {
+		for {
+			<-time.After(1 * time.Second)
+			for p, orders := range s.bulkOrders {
+				bids := []map[string]string{}
+				asks := []map[string]string{}
+
+				if err != nil || len(orders) <= 0 {
+					logger.Error(err)
+					return
+				}
+
+				var pairName string
+				for _, o := range orders {
+					pp := o.PricePoint
+					side := o.Side
+					// amount, err := s.GetOrderBookPricePoint(o.BaseToken, o.QuoteToken, pp, side)
+					pair, _ := o.Pair()
+					pairName = o.PairName
+
+					amount, err := s.orderDao.GetOrderBookPricePoint(pair, pp, side)
+					if err != nil {
+						logger.Error(err)
+					}
+
+					// case where the amount at the pricepoint is equal to 0
+					if amount == nil {
+						amount = big.NewInt(0)
+					}
+
+					update := map[string]string{
+						"pricepoint": pp.String(),
+						"amount":     amount.String(),
+					}
+
+					if side == "BUY" {
+						bids = append(bids, update)
+					} else {
+						asks = append(asks, update)
+					}
+				}
+				logger.Debug("send orderbook", len(s.bulkOrders), p.BaseToken.Hex(), p.QuoteToken.Hex(), pairName)
+
+				id := utils.GetOrderBookChannelID(p.BaseToken, p.QuoteToken)
+				ws.GetOrderBookSocket().BroadcastMessage(id, &types.OrderBook{
+					PairName: pairName,
+					Bids:     bids,
+					Asks:     asks,
+				})
+			}
+			s.bulkOrders = make(map[*types.PairAddresses]map[common.Hash]*types.Order)
+		}
+	}()
 
 	//Handling change stream in a cycle
 	for {
@@ -555,28 +641,18 @@ func (s *OrderService) WatchChanges() {
 func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 	res := &types.EngineResponse{}
 
-	switch ev.OperationType {
-	case types.OPERATION_TYPE_INSERT:
-		if ev.FullDocument.Status == types.OrderStatusOpen {
-			res.Status = types.ORDER_ADDED
-			res.Order = ev.FullDocument
-		}
-		break
-	case types.OPERATION_TYPE_UPDATE:
-	case types.OPERATION_TYPE_REPLACE:
-		if ev.FullDocument.Status == types.OrderStatusCancelled {
-			res.Status = types.ORDER_CANCELLED
-			res.Order = ev.FullDocument
-		} else if ev.FullDocument.Status == types.OrderStatusFilled {
-			res.Status = types.ORDER_FILLED
-			res.Order = ev.FullDocument
-		} else if ev.FullDocument.Status == types.OrderStatusPartialFilled {
-			res.Status = types.ORDER_PARTIALLY_FILLED
-			res.Order = ev.FullDocument
-		}
-		break
-	default:
-		break
+	if ev.FullDocument.Status == types.OrderStatusOpen {
+		res.Status = types.ORDER_ADDED
+		res.Order = ev.FullDocument
+	} else if ev.FullDocument.Status == types.OrderStatusCancelled {
+		res.Status = types.ORDER_CANCELLED
+		res.Order = ev.FullDocument
+	} else if ev.FullDocument.Status == types.OrderStatusFilled {
+		res.Status = types.ORDER_FILLED
+		res.Order = ev.FullDocument
+	} else if ev.FullDocument.Status == types.OrderStatusPartialFilled {
+		res.Status = types.ORDER_PARTIALLY_FILLED
+		res.Order = ev.FullDocument
 	}
 
 	if res.Status != "" {

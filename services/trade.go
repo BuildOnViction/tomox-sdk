@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/tomox-sdk/app"
@@ -22,6 +24,8 @@ type TradeService struct {
 	notificationDao interfaces.NotificationDao
 	broker          *rabbitmq.Connection
 	ohlcvService    *OHLCVService
+	bulkTrades      map[types.PairAddresses][]*types.Trade
+	mutext          sync.RWMutex
 }
 
 // NewTradeService returns a new instance of TradeService
@@ -33,6 +37,7 @@ func NewTradeService(
 	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
 ) *TradeService {
+	bulkTrades := make(map[types.PairAddresses][]*types.Trade)
 	return &TradeService{
 		OrderDao:        orderdao,
 		tradeDao:        tradeDao,
@@ -40,6 +45,8 @@ func NewTradeService(
 		notificationDao: notificationDao,
 		broker:          broker,
 		ohlcvService:    ohlcvService,
+		bulkTrades:      bulkTrades,
+		mutext:          sync.RWMutex{},
 	}
 }
 
@@ -138,6 +145,32 @@ func (s *TradeService) WatchChanges() {
 
 	ctx := context.Background()
 
+	go func() {
+		for {
+			<-time.After(1 * time.Second)
+
+			bulkPairs := make(map[types.PairAddresses]bool)
+			for pair, trades := range s.bulkTrades {
+				bulkPairs[pair] = true
+				if len(trades) > 0 {
+					id := utils.GetTradeChannelID(pair.BaseToken, pair.QuoteToken)
+					logger.Debug("===============", "send trades", len(trades), pair.BaseToken.Hex(), pair.QuoteToken.Hex())
+					ws.GetTradeSocket().BroadcastMessage(id, trades)
+				}
+			}
+			s.bulkTrades = make(map[types.PairAddresses][]*types.Trade)
+			pairs := make([]types.PairAddresses, 0)
+			for p, val := range bulkPairs {
+				if val {
+					pairs = append(pairs, p)
+				}
+			}
+			if len(pairs) > 0 {
+				s.broadcastTickUpdate(pairs)
+			}
+		}
+	}()
+
 	//Handling change stream in a cycle
 	for {
 		select {
@@ -177,18 +210,13 @@ func (s *TradeService) WatchChanges() {
 func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) error {
 	res := &types.EngineResponse{}
 
-	switch ev.OperationType {
-	case types.OPERATION_TYPE_INSERT:
+	if ev.OperationType == types.OPERATION_TYPE_INSERT {
 		res.Status = types.TradeAdded
 		res.Trade = ev.FullDocument
-		break
-	case types.OPERATION_TYPE_UPDATE:
-	case types.OPERATION_TYPE_REPLACE:
+	}
+	if ev.OperationType == types.OPERATION_TYPE_UPDATE || ev.OperationType == types.OPERATION_TYPE_REPLACE {
 		res.Status = types.TradeUpdated
 		res.Trade = ev.FullDocument
-		break
-	default:
-		break
 	}
 
 	if res.Status != "" {
@@ -281,7 +309,12 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	for _, t := range trades {
 		maker := t.Maker
 		taker := t.Taker
-		pairs = append(pairs, types.PairAddresses{BaseToken: t.BaseToken, QuoteToken: t.QuoteToken})
+		pair := types.PairAddresses{BaseToken: t.BaseToken, QuoteToken: t.QuoteToken}
+		pairs = append(pairs, pair)
+
+		// s.bulkTrades[pair] = append(s.bulkTrades[pair], t)
+		s.saveBulkTrades(t)
+
 		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{Matches: m})
 		ws.SendOrderMessage("ORDER_SUCCESS", taker, types.OrderSuccessPayload{Matches: m})
 		s.notificationDao.Create(&types.Notification{
@@ -303,9 +336,17 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 			Status: types.StatusUnread,
 		})
 	}
+
 	s.ohlcvService.NotifyTrade(trades[0])
-	s.broadcastTradeUpdate(trades)
-	s.broadcastTickUpdate(pairs)
+	// s.broadcastTradeUpdate(trades)
+	// s.broadcastTickUpdate(pairs)
+}
+
+func (s *TradeService) saveBulkTrades(t *types.Trade) {
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+	pair := types.PairAddresses{BaseToken: t.BaseToken, QuoteToken: t.QuoteToken}
+	s.bulkTrades[pair] = append(s.bulkTrades[pair], t)
 }
 
 func (s *TradeService) broadcastTickUpdate(pairs []types.PairAddresses) {
