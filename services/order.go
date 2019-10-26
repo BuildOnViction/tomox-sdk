@@ -31,11 +31,16 @@ type OrderService struct {
 	validator         interfaces.ValidatorService
 	broker            *rabbitmq.Connection
 	orderCache        *lru.Cache
-	orderbyPricepoint map[string]map[common.Hash]*big.Int
+	orderByPricepoint map[string]map[common.Hash]*amountByTime
 	mutext            sync.RWMutex
 	orderPending      []*types.Order
 	isFinishCache     bool
 	bulkOrders        map[*types.PairAddresses]map[common.Hash]*types.Order
+}
+
+type amountByTime struct {
+	filledAmount *big.Int
+	amount       *big.Int
 }
 
 // NewOrderService returns a new instance of orderservice
@@ -51,8 +56,8 @@ func NewOrderService(
 	broker *rabbitmq.Connection,
 ) *OrderService {
 	orderCache, _ := lru.New(2000)
-	orderbyPricepoint := make(map[string]map[common.Hash]*big.Int)
 	bulkOrders := make(map[*types.PairAddresses]map[common.Hash]*types.Order)
+	orderByPricepoint := make(map[string]map[common.Hash]*amountByTime)
 	return &OrderService{
 		orderDao,
 		tokenDao,
@@ -64,7 +69,7 @@ func NewOrderService(
 		validator,
 		broker,
 		orderCache,
-		orderbyPricepoint,
+		orderByPricepoint,
 		sync.RWMutex{},
 		[]*types.Order{},
 		false,
@@ -75,6 +80,32 @@ func NewOrderService(
 func (s *OrderService) getOrderPricepointKey(baseToken, quoteToken common.Address, pricepoint *big.Int, side string) string {
 	return fmt.Sprintf("%s::%s::%s::%s", baseToken.Hex(), quoteToken.Hex(), pricepoint.String(), side)
 }
+
+func (s *OrderService) update(order *types.Order) {
+	key := s.getOrderPricepointKey(order.BaseToken, order.QuoteToken, order.PricePoint, order.Side)
+	remain := big.NewInt(0)
+	remain = remain.Sub(order.Amount, order.FilledAmount)
+	if obyHash, ok := s.orderByPricepoint[key]; ok {
+		if amountbytime, ok := obyHash[order.Hash]; ok {
+			if order.FilledAmount.Cmp(amountbytime.filledAmount) > 0 {
+				amountbytime.amount = remain
+			} else {
+				logger.Info("update not in order")
+			}
+		} else {
+			obyHash[order.Hash] = &amountByTime{
+				filledAmount: order.FilledAmount,
+				amount:       remain,
+			}
+		}
+	} else {
+		s.orderByPricepoint[key] = make(map[common.Hash]*amountByTime)
+		s.orderByPricepoint[key][order.Hash] = &amountByTime{
+			filledAmount: order.FilledAmount,
+			amount:       remain,
+		}
+	}
+}
 func (s *OrderService) updateOrderPricepoint(o *types.Order) {
 	s.mutext.Lock()
 	defer s.mutext.Unlock()
@@ -83,19 +114,10 @@ func (s *OrderService) updateOrderPricepoint(o *types.Order) {
 	} else {
 		s.orderPending = append(s.orderPending, o)
 		for _, order := range s.orderPending {
-			key := s.getOrderPricepointKey(order.BaseToken, order.QuoteToken, order.PricePoint, order.Side)
-			remain := big.NewInt(0)
-			remain = remain.Sub(order.Amount, order.FilledAmount)
-			if o, ok := s.orderbyPricepoint[key]; ok {
-				o[order.Hash] = remain
-			} else {
-				s.orderbyPricepoint[key] = make(map[common.Hash]*big.Int)
-				s.orderbyPricepoint[key][order.Hash] = remain
-			}
+			s.update(order)
 		}
 		s.orderPending = s.orderPending[:0]
 	}
-
 }
 
 // GetOrderBookPricePoint return amount remain for pricepoint
@@ -103,10 +125,10 @@ func (s *OrderService) GetOrderBookPricePoint(baseToken, quoteToken common.Addre
 	key := s.getOrderPricepointKey(baseToken, quoteToken, pricepoint, side)
 	s.mutext.RLock()
 	defer s.mutext.RUnlock()
-	if o, ok := s.orderbyPricepoint[key]; ok {
+	if o, ok := s.orderByPricepoint[key]; ok {
 		amount := big.NewInt(0)
 		for _, am := range o {
-			amount = amount.Add(amount, am)
+			amount = amount.Add(amount, am.amount)
 		}
 
 		return amount, nil
@@ -120,7 +142,7 @@ func (s *OrderService) LoadCache() {
 	orders, err := s.orderDao.GetOpenOrders()
 	if err == nil {
 		for _, order := range orders {
-			s.updateOrderPricepoint(order)
+			s.update(order)
 		}
 	}
 	s.isFinishCache = true

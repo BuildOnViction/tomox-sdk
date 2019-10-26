@@ -231,7 +231,6 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 		}
 		if tickByTime, ok := s.ticks[key]; ok {
 			if last, ok := tickByTime[modTime]; ok {
-				logger.Info("updateTick", key, modTime)
 				last.Timestamp = modTime
 				last.Close = trade.PricePoint
 				if last.High.Cmp(trade.PricePoint) < 0 {
@@ -244,7 +243,6 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 				last.Count = last.Count.Add(last.Count, big.NewInt(1))
 				last.CloseTime = trade.CreatedAt
 			} else {
-				logger.Info("updateTick not found", key, modTime)
 				tick := &types.Tick{
 					Pair: types.PairID{
 						PairName:   trade.PairName,
@@ -271,7 +269,6 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 }
 
 func (s *OHLCVService) addTick(key string, tick *types.Tick) {
-	logger.Info("addTick", key, tick.Timestamp)
 	if _, ok := s.ticks[key]; ok {
 
 		s.ticks[key][tick.Timestamp] = tick
@@ -348,7 +345,6 @@ func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 	}
 }
 func (s *OHLCVService) getOHLCV(pairs []types.PairAddresses, duration int64, unit string, start, end time.Time) ([]*types.Tick, error) {
-	logger.Info("Get OHLCV", pairs[0].Name, duration, unit, start, end)
 	res := make([]*types.Tick, 0)
 	match := make(bson.M)
 	match = getMatchQuery(start, end, pairs...)
@@ -394,16 +390,7 @@ func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, uni
 	cacheKey := s.getTickKey(p.BaseToken, p.QuoteToken, duration, unit)
 	ticks := s.filterTick(cacheKey, start.Unix(), end.Unix())
 	if ticks == nil {
-		logger.Info("getOHLCV", start, end, "key", cacheKey)
-		ts, err := s.getOHLCV(pairs, duration, unit, start, end)
-		if err == nil {
-			for _, t := range ts {
-				logger.Info("getOHLCV result", "key", cacheKey, time.Unix(t.Timestamp/1000, 0))
-			}
-		}
-	}
-	for _, t := range ticks {
-		logger.Info("result", cacheKey, t.Timestamp, t.Open, t.Close, t.Low, t.High, t.Pair.PairName)
+		return s.getOHLCV(pairs, duration, unit, start, end)
 	}
 	return ticks, nil
 }
