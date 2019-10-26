@@ -113,14 +113,13 @@ func (m *Matches) Validate() error {
 
 // EngineResponse engine message
 type EngineResponse struct {
-	Status            string     `json:"fillStatus,omitempty"`
-	Order             *Order     `json:"order,omitempty"`
-	StopOrder         *StopOrder `json:"stopOrder,omitempty"`
-	Trade             *Trade     `json: "trade, omitenpty"`
-	Matches           *Matches   `json:"matches,omitempty"`
-	RecoveredOrders   *[]*Order  `json:"recoveredOrders,omitempty"`
-	InvalidatedOrders *[]*Order  `json:"invalidatedOrders,omitempty"`
-	CancelledTrades   *[]*Trade  `json:"cancelledTrades,omitempty"`
+	Status            string    `json:"fillStatus,omitempty"`
+	Order             *Order    `json:"order,omitempty"`
+	Trade             *Trade    `json: "trade, omitenpty"`
+	Matches           *Matches  `json:"matches,omitempty"`
+	RecoveredOrders   *[]*Order `json:"recoveredOrders,omitempty"`
+	InvalidatedOrders *[]*Order `json:"invalidatedOrders,omitempty"`
+	CancelledTrades   *[]*Trade `json:"cancelledTrades,omitempty"`
 }
 
 func (r *EngineResponse) AppendMatch(mo *Order, t *Trade) {
