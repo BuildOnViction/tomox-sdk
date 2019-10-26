@@ -222,6 +222,7 @@ type OHLCVService interface {
 	UnsubscribeChannel(c *ws.Client, p *types.SubscriptionPayload)
 	Subscribe(c *ws.Client, p *types.SubscriptionPayload)
 	GetOHLCV(p []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error)
+	Get24hTick(baseToken, quoteToken common.Address) *types.Tick
 }
 
 type EthereumService interface {

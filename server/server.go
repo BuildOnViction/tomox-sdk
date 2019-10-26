@@ -97,7 +97,7 @@ func NewRouter(
 
 	walletService := services.NewWalletService(walletDao)
 
-	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao)
+	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, ohlcvService)
 	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
