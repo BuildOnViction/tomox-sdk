@@ -541,55 +541,8 @@ func (s *OrderService) WatchChanges() {
 	ctx := context.Background()
 	go func() {
 		for {
-			<-time.After(1 * time.Second)
-			for p, orders := range s.bulkOrders {
-				bids := []map[string]string{}
-				asks := []map[string]string{}
-
-				if err != nil || len(orders) <= 0 {
-					logger.Error(err)
-					return
-				}
-
-				var pairName string
-				for _, o := range orders {
-					pp := o.PricePoint
-					side := o.Side
-					// amount, err := s.GetOrderBookPricePoint(o.BaseToken, o.QuoteToken, pp, side)
-					pair, _ := o.Pair()
-					pairName = o.PairName
-
-					amount, err := s.orderDao.GetOrderBookPricePoint(pair, pp, side)
-					if err != nil {
-						logger.Error(err)
-					}
-
-					// case where the amount at the pricepoint is equal to 0
-					if amount == nil {
-						amount = big.NewInt(0)
-					}
-
-					update := map[string]string{
-						"pricepoint": pp.String(),
-						"amount":     amount.String(),
-					}
-
-					if side == "BUY" {
-						bids = append(bids, update)
-					} else {
-						asks = append(asks, update)
-					}
-				}
-				logger.Debug("send orderbook", len(s.bulkOrders), p.BaseToken.Hex(), p.QuoteToken.Hex(), pairName)
-
-				id := utils.GetOrderBookChannelID(p.BaseToken, p.QuoteToken)
-				ws.GetOrderBookSocket().BroadcastMessage(id, &types.OrderBook{
-					PairName: pairName,
-					Bids:     bids,
-					Asks:     asks,
-				})
-			}
-			s.bulkOrders = make(map[*types.PairAddresses]map[common.Hash]*types.Order)
+			<-time.After(500 * time.Millisecond)
+			s.processBulkOrders()
 		}
 	}()
 
@@ -626,6 +579,57 @@ func (s *OrderService) WatchChanges() {
 			}
 		}
 	}
+}
+
+func (s *OrderService) processBulkOrders() {
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+	for p, orders := range s.bulkOrders {
+		bids := []map[string]string{}
+		asks := []map[string]string{}
+
+		if len(orders) <= 0 {
+			continue
+		}
+
+		var pairName string
+		for _, o := range orders {
+			pp := o.PricePoint
+			side := o.Side
+			pairName = o.PairName
+
+			pair, _ := o.Pair()
+			amount, err := s.orderDao.GetOrderBookPricePoint(pair, pp, side)
+			// amount, err := s.GetOrderBookPricePoint(o.BaseToken, o.QuoteToken, pp, side)
+			if err != nil {
+				logger.Error(err)
+			}
+
+			// case where the amount at the pricepoint is equal to 0
+			if amount == nil {
+				amount = big.NewInt(0)
+			}
+
+			update := map[string]string{
+				"pricepoint": pp.String(),
+				"amount":     amount.String(),
+			}
+
+			if side == "BUY" {
+				bids = append(bids, update)
+			} else {
+				asks = append(asks, update)
+			}
+		}
+
+		id := utils.GetOrderBookChannelID(p.BaseToken, p.QuoteToken)
+		ws.GetOrderBookSocket().BroadcastMessage(id, &types.OrderBook{
+			PairName: pairName,
+			Bids:     bids,
+			Asks:     asks,
+		})
+	}
+	s.bulkOrders = make(map[*types.PairAddresses]map[common.Hash]*types.Order)
 }
 
 // HandleDocumentType handle order frome changing db

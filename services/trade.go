@@ -147,27 +147,8 @@ func (s *TradeService) WatchChanges() {
 
 	go func() {
 		for {
-			<-time.After(1 * time.Second)
-
-			bulkPairs := make(map[types.PairAddresses]bool)
-			for pair, trades := range s.bulkTrades {
-				bulkPairs[pair] = true
-				if len(trades) > 0 {
-					id := utils.GetTradeChannelID(pair.BaseToken, pair.QuoteToken)
-					logger.Debug("===============", "send trades", len(trades), pair.BaseToken.Hex(), pair.QuoteToken.Hex())
-					ws.GetTradeSocket().BroadcastMessage(id, trades)
-				}
-			}
-			s.bulkTrades = make(map[types.PairAddresses][]*types.Trade)
-			pairs := make([]types.PairAddresses, 0)
-			for p, val := range bulkPairs {
-				if val {
-					pairs = append(pairs, p)
-				}
-			}
-			if len(pairs) > 0 {
-				s.broadcastTickUpdate(pairs)
-			}
+			<-time.After(500 * time.Millisecond)
+			s.processBulkTrades()
 		}
 	}()
 
@@ -203,6 +184,29 @@ func (s *TradeService) WatchChanges() {
 				s.HandleDocumentType(ev)
 			}
 		}
+	}
+}
+
+func (s *TradeService) processBulkTrades() {
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+	bulkPairs := make(map[types.PairAddresses]bool)
+	for pair, trades := range s.bulkTrades {
+		bulkPairs[pair] = true
+		if len(trades) > 0 {
+			id := utils.GetTradeChannelID(pair.BaseToken, pair.QuoteToken)
+			ws.GetTradeSocket().BroadcastMessage(id, trades)
+		}
+	}
+	s.bulkTrades = make(map[types.PairAddresses][]*types.Trade)
+	pairs := make([]types.PairAddresses, 0)
+	for p, val := range bulkPairs {
+		if val {
+			pairs = append(pairs, p)
+		}
+	}
+	if len(pairs) > 0 {
+		s.broadcastTickUpdate(pairs)
 	}
 }
 
