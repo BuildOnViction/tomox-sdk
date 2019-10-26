@@ -84,77 +84,77 @@ func (s *OHLCVService) Subscribe(conn *ws.Client, p *types.SubscriptionPayload) 
 
 func (s *OHLCVService) getConfig() []Duration {
 	return []Duration{
-		Duration{
+		{
 			duration: 1,
 			unit:     "min",
 			interval: 24 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 5,
 			unit:     "min",
 			interval: 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 15,
 			unit:     "min",
 			interval: 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 30,
 			unit:     "min",
 			interval: 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 1,
 			unit:     "hour",
 			interval: 7 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 2,
 			unit:     "hour",
 			interval: 7 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 4,
 			unit:     "hour",
 			interval: 7 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 12,
 			unit:     "hour",
 			interval: 7 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 1,
 			unit:     "day",
 			interval: 30 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 1,
 			unit:     "week",
 			interval: 30 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 1,
 			unit:     "month",
 			interval: 30 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 3,
 			unit:     "month",
 			interval: 30 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 6,
 			unit:     "month",
 			interval: 30 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 9,
 			unit:     "month",
 			interval: 30 * 1 * 60 * 60,
 		},
-		Duration{
+		{
 			duration: 1,
 			unit:     "year",
 			interval: 30 * 1 * 60 * 60,
@@ -344,7 +344,7 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	for key, _ := range s.ticks {
+	for key := range s.ticks {
 		s.updateTick(key, trade)
 	}
 }

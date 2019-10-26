@@ -47,7 +47,8 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	}
 
 	index := mgo.Index{
-		Key: []string{"hash"},
+		Key:    []string{"hash"},
+		Unique: true,
 	}
 
 	i1 := mgo.Index{
@@ -788,7 +789,7 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	var orders []*types.Order
 	c := dao.GetCollection()
-    // TODO: need to have limit
+	// TODO: need to have limit
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
@@ -812,7 +813,7 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit
 	var orders []types.Order
 	c := dao.GetCollection()
 
-    // TODO: need to have limit
+	// TODO: need to have limit
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
@@ -867,7 +868,7 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 	var orders []types.Order
 	c := dao.GetCollection()
 
-    //TODO: need to have limit
+	//TODO: need to have limit
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
