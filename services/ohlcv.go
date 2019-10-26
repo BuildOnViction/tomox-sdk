@@ -87,7 +87,7 @@ func (s *OHLCVService) getConfig() []Duration {
 		Duration{
 			duration: 1,
 			unit:     "min",
-			interval: 1 * 60 * 60,
+			interval: 24 * 60 * 60,
 		},
 		Duration{
 			duration: 5,
@@ -164,7 +164,7 @@ func (s *OHLCVService) getConfig() []Duration {
 
 // Init init data cache
 func (s *OHLCVService) Init() {
-	logger.Info("OHLCV init...")
+	logger.Info("OHLCV init starting...")
 	durations := s.getConfig()
 	pairs, err := s.pairDao.GetAll()
 	now := time.Now().Unix()
@@ -191,7 +191,7 @@ func (s *OHLCVService) Init() {
 
 		}
 	}
-	logger.Info("OHLCV finish")
+	logger.Info("OHLCV finished")
 }
 
 func (s *OHLCVService) getTickKey(baseToken, quoteToken common.Address, duration int64, unit string) string {
@@ -299,6 +299,10 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 	return res
 }
 
+// Get24hTick get 24h tick of token
+func (s *OHLCVService) Get24hTick(baseToken, quoteToken common.Address) *types.Tick {
+	return s.get24hTick(baseToken, quoteToken)
+}
 func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.Tick {
 	var res []*types.Tick
 	now := time.Now()

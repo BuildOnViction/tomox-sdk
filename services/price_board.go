@@ -14,18 +14,21 @@ import (
 // TradeService struct with daos required, responsible for communicating with daos.
 // TradeService functions are responsible for interacting with daos and implements business logics.
 type PriceBoardService struct {
-	TokenDao interfaces.TokenDao
-	TradeDao interfaces.TradeDao
+	TokenDao     interfaces.TokenDao
+	TradeDao     interfaces.TradeDao
+	OHLCVService interfaces.OHLCVService
 }
 
-// NewTradeService returns a new instance of TradeService
+// NewPriceBoardService returns a new instance of TradeService
 func NewPriceBoardService(
 	tokenDao interfaces.TokenDao,
 	tradeDao interfaces.TradeDao,
+	ohlcvService interfaces.OHLCVService,
 ) *PriceBoardService {
 	return &PriceBoardService{
-		TokenDao: tokenDao,
-		TradeDao: tradeDao,
+		TokenDao:     tokenDao,
+		TradeDao:     tradeDao,
+		OHLCVService: ohlcvService,
 	}
 }
 
@@ -94,7 +97,7 @@ func (s *PriceBoardService) Subscribe(c *ws.Client, bt, qt common.Address) {
 	socket.SendInitMessage(c, result)
 }
 
-// Unsubscribe
+// UnsubscribeChannel
 func (s *PriceBoardService) UnsubscribeChannel(c *ws.Client, bt, qt common.Address) {
 	socket := ws.GetPriceBoardSocket()
 
@@ -102,13 +105,24 @@ func (s *PriceBoardService) UnsubscribeChannel(c *ws.Client, bt, qt common.Addre
 	socket.UnsubscribeChannel(id, c)
 }
 
-// Unsubscribe
+// Unsubscribe unsubscribe registered socket
 func (s *PriceBoardService) Unsubscribe(c *ws.Client) {
 	socket := ws.GetPriceBoardSocket()
 	socket.Unsubscribe(c)
 }
 
+// GetPriceBoardData get data of 24h change tokens
 func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {
+	p := pairs[0]
+	tick := s.OHLCVService.Get24hTick(p.BaseToken, p.QuoteToken)
+	if tick != nil {
+		return []*types.Tick{tick}, nil
+	} else {
+		return s.getPriceBoardData(pairs, duration, unit, timeInterval...)
+	}
+}
+
+func (s *PriceBoardService) getPriceBoardData(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {
 	res := make([]*types.Tick, 0)
 
 	currentTimestamp := time.Now().Unix()
