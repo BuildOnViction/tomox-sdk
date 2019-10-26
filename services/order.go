@@ -488,15 +488,6 @@ func (s *OrderService) broadcastOrderBookUpdate(orders []*types.Order) {
 			logger.Error(err)
 		}
 
-		amount2, err2 := s.orderDao.GetOrderBookPricePoint(p, pp, side)
-		if err2 != nil {
-			logger.Error(err2)
-		}
-
-		if amount.Cmp(amount2) != 0 {
-			logger.Info("Cache database diff", amount, amount2, o.PairName, pp, side, o.Amount, o.FilledAmount, o.Hash.Hex())
-		}
-
 		// case where the amount at the pricepoint is equal to 0
 		if amount == nil {
 			amount = big.NewInt(0)
