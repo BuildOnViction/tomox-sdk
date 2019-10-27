@@ -7,7 +7,6 @@ There are 8 channels on the matching engine websocket API:
 - orders
 - ohlcv
 - orderbook
-- raw_orderbook
 - trades
 - price_board
 - markets
@@ -27,7 +26,7 @@ To send a message to a specific channel, the channel the general format of a mes
 
 where
 
-- \<channel_name> is either 'orders', 'ohlcv', 'orderbook', 'raw_orderbook', 'trades'
+- \<channel_name> is either 'orders', 'ohlcv', 'orderbook', 'trades'
 - \<event_type> is a string describing what type of message is being sent
 - \<payload> is a JSON object
 
@@ -832,94 +831,6 @@ The ORDER_ERROR message indicates that a trade transaction was sent to the block
 
 It is identical to the order successs message except that order statuses are different.
 The client should usually not receive this message and it can be interpreted as an 'internal server error' (bug in the system rather than a malformed payload or client error)
-
-# Raw Orderbook Channel
-
-## Message:
-
-- SUBSCRIBE (client --> server)
-- UNSUBSCRIBE (client --> server)
-- INIT (server --> client)
-- UPDATE (server --> client)
-
-## SUBSCRIBE_RAW_ORDERBOOK MESSAGE (client --> server)
-
-```json
-{
-  "channel": "raw_orderbook",
-  "event": {
-    "type": "SUBSCRIBE",
-    "payload": {
-      "baseToken": <address>,
-      "quoteToken": <address>,
-      "name": <baseTokenSymbol>/<quoteTokenSymbol>,
-    }
-  }
-}
-```
-
-### Example:
-
-```json
-{
-  "channel": "raw_orderbook",
-  "event": {
-    "type": "SUBSCRIBE",
-    "payload": {
-      "baseToken": "0x546d3B3d69E30859f4F3bA15F81809a2efCE6e67",
-      "quoteToken": "0x17b4E8B709ca82ABF89E172366b151c72DF9C62E"
-      "name": "FUN/WETH",
-    }
-  }
-}
-```
-
-## UNSUBSCRIBE MESSAGE (client --> server)
-
-```json
-{
-  "channel": "raw_orderbook",
-  "event": {
-    "type": "UNSUBSCRIBE"
-  }
-}
-```
-
-## INIT MESSAGE (server --> client)
-
-The general format of the INIT message is the following:
-
-```json
-{
-  "channel": "raw_orderbook",
-  "event": {
-    "type": "INIT",
-    "payload": [
-      <order>,
-      <order>,
-      <order>
-    ]
-  }
-}
-```
-
-## UPDATE MESSAGE (server --> client)
-
-The general format of the update message is the following:
-
-```json
-{
-  "channel": "raw_orderbook",
-  "event": {
-    "type": "INIT",
-    "payload": [
-      <order>,
-      <order>,
-      <order>
-    ]
-  }
-}
-```
 
 # Price Board Channel
 
