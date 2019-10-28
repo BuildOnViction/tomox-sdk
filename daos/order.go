@@ -14,7 +14,7 @@ import (
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/math"
-    "github.com/tomochain/tomox-sdk/ws"
+	"github.com/tomochain/tomox-sdk/ws"
 )
 
 // OrderDao contains:
@@ -971,7 +971,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		logger.Error(err)
 		return err
 	}
-    ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
+	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
 

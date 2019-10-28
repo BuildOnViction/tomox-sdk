@@ -425,15 +425,11 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate PartialFilled")
 	s.updateOrderPricepoint(res.Order)
-	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	// s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate Filled")
 	s.updateOrderPricepoint(res.Order)
-	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	// s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
@@ -457,8 +453,6 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
 	logger.Info("BroadcastOrderBookUpdate Cancelled")
-	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	// s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderRejected(res *types.EngineResponse) {
@@ -468,7 +462,7 @@ func (s *OrderService) handleOrderRejected(res *types.EngineResponse) {
 	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
 		Message: types.Message{
-			MessageType: "ORDER_CANCELLED",
+			MessageType: "ORDER_REJECTED",
 			Description: o.Hash.Hex(),
 		},
 		Type:   types.TypeLog,
@@ -479,11 +473,9 @@ func (s *OrderService) handleOrderRejected(res *types.EngineResponse) {
 		logger.Error(err)
 	}
 
-	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
-	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
-	logger.Info("BroadcastOrderBookUpdate Cancelled")
-	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+	ws.SendOrderMessage("ORDER_REJECTED", o.UserAddress, o)
+	ws.SendNotificationMessage("ORDER_REJECTED", o.UserAddress, notifications)
+	logger.Info("BroadcastOrderBookUpdate rejected")
 }
 
 // handleEngineError returns an websocket error message to the client and recovers orders on the

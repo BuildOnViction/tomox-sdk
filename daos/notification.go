@@ -17,13 +17,27 @@ type NotificationDao struct {
 }
 
 func NewNotificationDao() *NotificationDao {
-	dbName := app.Config.DBName
-	collection := "notifications"
+	dao := &NotificationDao{}
+	dao.collectionName = "notifications"
+	dao.dbName = app.Config.DBName
 
-	return &NotificationDao{
-		collectionName: collection,
-		dbName:         dbName,
+	i1 := mgo.Index{
+		Key: []string{"recipient"},
 	}
+
+	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
+
+	i2 := mgo.Index{
+		Key:         []string{"createdAt"},
+		Background:  true,
+		ExpireAfter: time.Duration(30*24*60*60) * time.Second, // 30 days
+	}
+
+	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i2)
+
+	logger.Warning("Index failed", err)
+
+	return dao
 }
 
 // Create function performs the DB insertion task for notification collection
