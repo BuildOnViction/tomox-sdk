@@ -346,6 +346,9 @@ func (s *OrderService) HandleEngineResponse(res *types.EngineResponse) error {
 	case types.ORDER_CANCELLED:
 		s.handleOrderCancelled(res)
 		break
+	case types.ORDER_REJECTED:
+		s.handleOrderRejected(res)
+		break
 	case types.ORDER_PARTIALLY_FILLED:
 		s.handleOrderPartialFilled(res)
 		break
@@ -434,6 +437,31 @@ func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
 }
 
 func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
+	o := res.Order
+
+	// Save notification
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: "ORDER_CANCELLED",
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
+	logger.Info("BroadcastOrderBookUpdate Cancelled")
+	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
+	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+}
+
+func (s *OrderService) handleOrderRejected(res *types.EngineResponse) {
 	o := res.Order
 
 	// Save notification
@@ -641,6 +669,9 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 		res.Order = ev.FullDocument
 	} else if ev.FullDocument.Status == types.OrderStatusCancelled {
 		res.Status = types.ORDER_CANCELLED
+		res.Order = ev.FullDocument
+	} else if ev.FullDocument.Status == types.OrderStatusRejected {
+		res.Status = types.ORDER_REJECTED
 		res.Order = ev.FullDocument
 	} else if ev.FullDocument.Status == types.OrderStatusFilled {
 		res.Status = types.ORDER_FILLED
