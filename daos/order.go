@@ -827,7 +827,7 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit
 		if val, ok := pa[order.PricePoint.String()]; ok {
 			pa[order.PricePoint.String()] = math.Sub(math.Add(val, order.Amount), order.FilledAmount)
 		} else {
-			pa[order.PricePoint.String()] = order.Amount
+			pa[order.PricePoint.String()] = math.Sub(order.Amount, order.FilledAmount)
 		}
 	}
 
@@ -1011,7 +1011,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex())
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID)
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
