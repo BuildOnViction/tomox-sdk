@@ -14,6 +14,7 @@ import (
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/math"
+    "github.com/tomochain/tomox-sdk/ws"
 )
 
 // OrderDao contains:
@@ -47,7 +48,8 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	}
 
 	index := mgo.Index{
-		Key: []string{"hash"},
+		Key:    []string{"hash"},
+		Unique: true,
 	}
 
 	i1 := mgo.Index{
@@ -788,11 +790,12 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 func (dao *OrderDao) GetRawOrderBook(p *types.Pair) ([]*types.Order, error) {
 	var orders []*types.Order
 	c := dao.GetCollection()
+	// TODO: need to have limit
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
-	}).Sort("-createdAt").Limit(1000).All(&orders)
+	}).Sort("-createdAt").All(&orders)
 
 	sort.SliceStable(orders, func(i, j int) bool {
 		return orders[i].PricePoint.Cmp(orders[j].PricePoint) == 1
@@ -811,12 +814,13 @@ func (dao *OrderDao) GetSideOrderBook(p *types.Pair, side string, srt int, limit
 	var orders []types.Order
 	c := dao.GetCollection()
 
+	// TODO: need to have limit
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 		"side":       side,
-	}).Sort("-createdAt").Limit(500).All(&orders)
+	}).Sort("-createdAt").All(&orders)
 
 	pa := make(map[string]*big.Int)
 	for _, order := range orders {
@@ -865,13 +869,14 @@ func (dao *OrderDao) GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side str
 	var orders []types.Order
 	c := dao.GetCollection()
 
+	//TODO: need to have limit
 	err := c.Find(bson.M{
 		"status":     bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
 		"baseToken":  p.BaseTokenAddress.Hex(),
 		"quoteToken": p.QuoteTokenAddress.Hex(),
 		"side":       side,
 		"price":      pp.String(),
-	}).Sort("-createdAt").Limit(500).All(&orders)
+	}).Sort("-createdAt").All(&orders)
 
 	amount := big.NewInt(0)
 
@@ -966,6 +971,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		logger.Error(err)
 		return err
 	}
+    ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
 

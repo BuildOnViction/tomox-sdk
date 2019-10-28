@@ -419,21 +419,21 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 	s.updateOrderPricepoint(o)
 	// logger.Info("BroadcastOrderBookUpdate add")
 	// s.broadcastOrderBookUpdate([]*types.Order{o})
-	s.broadcastRawOrderBookUpdate([]*types.Order{o})
+	// s.broadcastRawOrderBookUpdate([]*types.Order{o})
 }
 
 func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate PartialFilled")
 	s.updateOrderPricepoint(res.Order)
 	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+	// s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderFilled(res *types.EngineResponse) {
 	logger.Info("BroadcastOrderBookUpdate Filled")
 	s.updateOrderPricepoint(res.Order)
 	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+	// s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
@@ -458,7 +458,7 @@ func (s *OrderService) handleOrderCancelled(res *types.EngineResponse) {
 	ws.SendNotificationMessage("ORDER_CANCELLED", o.UserAddress, notifications)
 	logger.Info("BroadcastOrderBookUpdate Cancelled")
 	// s.broadcastOrderBookUpdate([]*types.Order{res.Order})
-	s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
+	// s.broadcastRawOrderBookUpdate([]*types.Order{res.Order})
 }
 
 func (s *OrderService) handleOrderRejected(res *types.EngineResponse) {

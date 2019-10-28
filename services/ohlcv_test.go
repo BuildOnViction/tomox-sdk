@@ -99,7 +99,9 @@ func TestOHLCV(t *testing.T) {
 	}
 	app.Config.DBName = "tomodex"
 	tradeDao := daos.NewTradeDao()
-	ohlcvService := NewOHLCVService(tradeDao)
+	pairDao := daos.NewPairDao()
+	fiatPriceDao := daos.NewFiatPriceDao()
+	ohlcvService := NewOHLCVService(tradeDao, pairDao, fiatPriceDao)
 
 	for _, t := range testTimes {
 		tTime, err := time.Parse(timeLayoutString, t)
