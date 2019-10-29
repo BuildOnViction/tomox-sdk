@@ -34,7 +34,7 @@ func (dao *FiatPriceDao) GetLatestQuotes() (map[string]float64, error) {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
-	url := fmt.Sprintf("%s/simple/price?ids=ethereum,tomochain,bitcoin,litecoin,binancecoin,cardano,ripple,bitcoin-cash,eos&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
+	url := fmt.Sprintf("%s/simple/price?ids=ethereum-classic,ethereum,tomochain,bitcoin,litecoin,binancecoin,cardano,ripple,bitcoin-cash,eos&vs_currencies=usd", app.Config.CoingeckoAPIUrl)
 
 	req, err := http.NewRequest("GET", url, nil)
 
