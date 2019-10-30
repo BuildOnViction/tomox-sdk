@@ -205,13 +205,17 @@ func (s *OHLCVService) Init() {
 		}
 		pageOffset = pageOffset + 1
 	}
+	s.commitCache()
 	ticker := time.NewTicker(60 * time.Second)
 	quit := make(chan struct{})
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				s.commitCache()
+				err := s.commitCache()
+				if err != nil {
+					logger.Error("")
+				}
 			case <-quit:
 				ticker.Stop()
 				return
@@ -247,8 +251,10 @@ func (s *OHLCVService) commitCache() error {
 	file, err := os.Create("ohlcv.cache")
 	defer file.Close()
 	if err == nil {
-		file.Write(data)
-
+		_, err = file.Write(data)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -268,6 +274,9 @@ func (s *OHLCVService) loadCache() error {
 	bytes := make([]byte, size)
 	bufr := bufio.NewReader(file)
 	_, err = bufr.Read(bytes)
+	if len(bytes) <= 10 {
+		return errors.New("Invalid buffer cache")
+	}
 	lastTime := bytes[:10]
 	tickData := bytes[10:]
 	n, err := strconv.ParseInt(string(lastTime), 10, 64)
@@ -434,7 +443,8 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	for key, _ := range s.tickCache.ticks {
+	for _, d := range s.getConfig() {
+		key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
 		s.updateTick(key, trade)
 		s.tickCache.lastCacheTime = trade.CreatedAt.Unix()
 	}
