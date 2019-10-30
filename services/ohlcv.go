@@ -233,6 +233,8 @@ func (s *OHLCVService) flatten() []*types.Tick {
 }
 
 func (s *OHLCVService) commitCache() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	logger.Info("commit ohlcv cache")
 	ticks := s.flatten()
 	tickData, err := json.Marshal(ticks)
