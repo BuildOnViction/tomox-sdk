@@ -68,3 +68,5 @@ ethereum/client.go
 /tomox-sdk
 .*.sw*
 config/config.yml
+
+ohlcv.cache
