@@ -156,6 +156,7 @@ type TradeDao interface {
 	Drop()
 	GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error)
 	GetTradesUserHistory(a common.Address, tradeSpec *types.TradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.TradeRes, error)
+	GetTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.Trade, error)
 }
 
 type TokenDao interface {

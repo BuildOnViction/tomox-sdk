@@ -586,10 +586,10 @@ func (dao *TradeDao) GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pa
 	if tradeSpec.DateFrom != 0 || tradeSpec.DateTo != 0 {
 		dateFilter := bson.M{}
 		if tradeSpec.DateFrom != 0 {
-			dateFilter["$gte"] = strconv.FormatInt(tradeSpec.DateFrom, 10)
+			dateFilter["$gte"] = time.Unix(tradeSpec.DateFrom, 0)
 		}
 		if tradeSpec.DateTo != 0 {
-			dateFilter["$lt"] = strconv.FormatInt(tradeSpec.DateTo, 10)
+			dateFilter["$lt"] = time.Unix(tradeSpec.DateTo, 0)
 		}
 		q["createdAt"] = dateFilter
 	}
@@ -610,6 +610,24 @@ func (dao *TradeDao) GetTrades(tradeSpec *types.TradeSpec, sortedBy []string, pa
 	res.Total = c
 	res.Trades = trades
 	return &res, nil
+}
+
+// GetTradeByTime get range trade
+func (dao *TradeDao) GetTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.Trade, error) {
+	q := bson.M{}
+
+	dateFilter := bson.M{}
+	dateFilter["$gte"] = time.Unix(dateFrom, 0)
+	dateFilter["$lt"] = time.Unix(dateTo, 0)
+	q["createdAt"] = dateFilter
+
+	trades := []*types.Trade{}
+	err := db.Get(dao.dbName, dao.collectionName, q, pageOffset, pageSize, &trades)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	return trades, nil
 }
 
 // GetTradesUserHistory get trade by user address

@@ -190,6 +190,7 @@ func (s *TradeService) WatchChanges() {
 func (s *TradeService) processBulkTrades() {
 	s.mutext.Lock()
 	defer s.mutext.Unlock()
+
 	bulkPairs := make(map[types.PairAddresses]bool)
 	for pair, trades := range s.bulkTrades {
 		bulkPairs[pair] = true
@@ -206,6 +207,7 @@ func (s *TradeService) processBulkTrades() {
 		}
 	}
 	if len(pairs) > 0 {
+
 		s.broadcastTickUpdate(pairs)
 	}
 }

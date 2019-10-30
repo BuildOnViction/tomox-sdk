@@ -32,6 +32,7 @@ type PairID struct {
 	BaseToken  common.Address `json:"baseToken" bson:"baseToken"`
 	QuoteToken common.Address `json:"quoteToken" bson:"quoteToken"`
 }
+type Ticks []*Tick
 
 // OHLCVParams struct
 type OHLCVParams struct {
@@ -147,14 +148,11 @@ func (t *Tick) UnmarshalJSON(b []byte) error {
 		t.Count = math.ToBigInt(tick["count"].(string))
 	}
 
-	t.OpenTime = tick["openTime"].(time.Time)
-	t.CloseTime = tick["closeTime"].(time.Time)
-
 	if tick["unit"] != nil {
 		t.Unit = tick["unit"].(string)
 	}
 	if tick["duration"] != nil {
-		t.Duration = tick["duration"].(int64)
+		t.Duration = int64(tick["duration"].(float64))
 	}
 
 	return nil

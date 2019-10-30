@@ -1,8 +1,11 @@
 package services
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,13 +21,22 @@ import (
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
+const (
+	INTERVAL = 30 * 24 * 60 * 60
+)
+
 type OHLCVService struct {
 	tradeDao     interfaces.TradeDao
 	pairDao      interfaces.PairDao
 	fiatPriceDao interfaces.FiatPriceDao
-	ticks        map[string]map[int64]*types.Tick
+	tickCache    *tickCache
 	mutex        sync.Mutex
 }
+type tickCache struct {
+	lastCacheTime int64
+	ticks         map[string]map[int64]*types.Tick
+}
+
 type Duration struct {
 	duration int64
 	unit     string
@@ -32,11 +44,16 @@ type Duration struct {
 }
 
 func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, fiatDao interfaces.FiatPriceDao) *OHLCVService {
+	now := time.Now().Unix()
+	cache := &tickCache{
+		ticks:         make(map[string]map[int64]*types.Tick),
+		lastCacheTime: now - INTERVAL,
+	}
 	return &OHLCVService{
 		tradeDao:     TradeDao,
 		pairDao:      pairDao,
 		fiatPriceDao: fiatDao,
-		ticks:        make(map[string]map[int64]*types.Tick),
+		tickCache:    cache,
 	}
 }
 
@@ -92,32 +109,32 @@ func (s *OHLCVService) getConfig() []Duration {
 		{
 			duration: 5,
 			unit:     "min",
-			interval: 1 * 60 * 60,
+			interval: 24 * 60 * 60,
 		},
 		{
 			duration: 15,
 			unit:     "min",
-			interval: 1 * 60 * 60,
+			interval: 24 * 60 * 60,
 		},
 		{
 			duration: 30,
 			unit:     "min",
-			interval: 1 * 60 * 60,
+			interval: 24 * 60 * 60,
 		},
 		{
 			duration: 1,
 			unit:     "hour",
-			interval: 7 * 1 * 60 * 60,
+			interval: 7 * 24 * 60 * 60,
 		},
 		{
 			duration: 2,
 			unit:     "hour",
-			interval: 7 * 1 * 60 * 60,
+			interval: 7 * 24 * 60 * 60,
 		},
 		{
 			duration: 4,
 			unit:     "hour",
-			interval: 7 * 1 * 60 * 60,
+			interval: 7 * 24 * 60 * 60,
 		},
 		{
 			duration: 12,
@@ -127,71 +144,144 @@ func (s *OHLCVService) getConfig() []Duration {
 		{
 			duration: 1,
 			unit:     "day",
-			interval: 30 * 1 * 60 * 60,
+			interval: 30 * 24 * 60 * 60,
 		},
 		{
 			duration: 1,
 			unit:     "week",
-			interval: 30 * 1 * 60 * 60,
+			interval: 30 * 24 * 60 * 60,
 		},
 		{
 			duration: 1,
 			unit:     "month",
-			interval: 30 * 1 * 60 * 60,
+			interval: 12 * 30 * 24 * 60 * 60,
 		},
 		{
 			duration: 3,
 			unit:     "month",
-			interval: 30 * 1 * 60 * 60,
+			interval: 12 * 30 * 24 * 60 * 60,
 		},
 		{
 			duration: 6,
 			unit:     "month",
-			interval: 30 * 1 * 60 * 60,
+			interval: 2 * 12 * 30 * 24 * 60 * 60,
 		},
 		{
 			duration: 9,
 			unit:     "month",
-			interval: 30 * 1 * 60 * 60,
+			interval: 2 * 12 * 30 * 24 * 60 * 60,
 		},
 		{
 			duration: 1,
 			unit:     "year",
-			interval: 30 * 1 * 60 * 60,
+			interval: 2 * 12 * 30 * 24 * 60 * 60,
 		},
 	}
 }
 
-// Init init data cache
+// Init init cache
 func (s *OHLCVService) Init() {
 	logger.Info("OHLCV init starting...")
 	durations := s.getConfig()
-	pairs, err := s.pairDao.GetAll()
 	now := time.Now().Unix()
-	if err == nil {
-		for _, pair := range pairs {
-			p := types.PairAddresses{
-				Name:       pair.Name(),
-				BaseToken:  pair.BaseTokenAddress,
-				QuoteToken: pair.QuoteTokenAddress,
-			}
-			ps := []types.PairAddresses{p}
+	s.loadCache()
+	tradeSpec := &types.TradeSpec{
+		DateFrom: s.tickCache.lastCacheTime,
+		DateTo:   now,
+	}
+
+	pageOffset := 0
+	size := 1000
+	for {
+		trades, err := s.tradeDao.GetTradeByTime(tradeSpec.DateFrom, tradeSpec.DateTo, pageOffset*size, size)
+		if err != nil || len(trades) == 0 {
+			break
+		}
+		for _, trade := range trades {
 			for _, d := range durations {
-				yes := now - d.interval
-				ticks, err := s.getOHLCV(ps, d.duration, d.unit, time.Unix(yes, 0), time.Unix(now, 0))
-				if err == nil {
-					key := s.getTickKey(p.BaseToken, p.QuoteToken, d.duration, d.unit)
-					for _, t := range ticks {
-						t.Timestamp = t.Timestamp / 1000
-						s.addTick(key, t)
-					}
-
-				}
+				key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
+				s.updateTick(key, trade)
 			}
+		}
+		pageOffset = pageOffset + 1
+	}
+	ticker := time.NewTicker(60 * time.Second)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				s.commitCache()
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 
+	logger.Info("OHLCV finished")
+}
+
+func (s *OHLCVService) flatten() []*types.Tick {
+	var ticks []*types.Tick
+	for _, tickbytime := range s.tickCache.ticks {
+		for _, tick := range tickbytime {
+			ticks = append(ticks, tick)
 		}
 	}
-	logger.Info("OHLCV finished")
+	return ticks
+}
+
+func (s *OHLCVService) commitCache() error {
+	logger.Info("commit ohlcv cache")
+	ticks := s.flatten()
+	tickData, err := json.Marshal(ticks)
+	if err != nil {
+		return err
+	}
+
+	lasttimeData := []byte(strconv.FormatInt(s.tickCache.lastCacheTime, 10))
+	data := append(lasttimeData, tickData...)
+	file, err := os.Create("ohlcv.cache")
+	defer file.Close()
+	if err == nil {
+		file.Write(data)
+
+	}
+	return nil
+}
+
+func (s *OHLCVService) loadCache() error {
+	file, err := os.Open("ohlcv.cache")
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	stats, statsErr := file.Stat()
+	if statsErr != nil {
+		return statsErr
+	}
+
+	size := stats.Size()
+	bytes := make([]byte, size)
+	bufr := bufio.NewReader(file)
+	_, err = bufr.Read(bytes)
+	lastTime := bytes[:10]
+	tickData := bytes[10:]
+	n, err := strconv.ParseInt(string(lastTime), 10, 64)
+	if err != nil {
+		return err
+	}
+	s.tickCache.lastCacheTime = n
+	var ts []*types.Tick
+	err = json.Unmarshal(tickData, &ts)
+	if err != nil {
+		return err
+	}
+	for _, t := range ts {
+		s.addTick(t)
+	}
+	return nil
 }
 
 func (s *OHLCVService) getTickKey(baseToken, quoteToken common.Address, duration int64, unit string) string {
@@ -213,10 +303,6 @@ func (s *OHLCVService) parseTickKey(key string) (common.Address, common.Address,
 	return baseToken, quoteToken, duration, unit, nil
 }
 
-func (s *OHLCVService) commitCache(tick *types.Tick) {
-
-}
-
 // updateTick update lastest tick
 func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 	tradeTime := trade.CreatedAt.Unix()
@@ -226,11 +312,11 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 	}
 	if baseToken.Hex() == trade.BaseToken.Hex() && quoteToken.Hex() == trade.QuoteToken.Hex() {
 		modTime, _ := utils.GetModTime(tradeTime, duration, unit)
-		if _, ok := s.ticks[key]; !ok {
-			s.ticks[key] = make(map[int64]*types.Tick)
+		if _, ok := s.tickCache.ticks[key]; !ok {
+			s.tickCache.ticks[key] = make(map[int64]*types.Tick)
 		}
-		if tickByTime, ok := s.ticks[key]; ok {
-			if last, ok := tickByTime[modTime]; ok {
+		if tickByTime, ok1 := s.tickCache.ticks[key]; ok1 {
+			if last, ok2 := tickByTime[modTime]; ok2 {
 				last.Timestamp = modTime
 				last.Close = trade.PricePoint
 				if last.High.Cmp(trade.PricePoint) < 0 {
@@ -239,7 +325,7 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 				if last.Low.Cmp(trade.PricePoint) > 0 {
 					last.Low = trade.PricePoint
 				}
-				last.Volume = last.Volume.Add(last.Volume, trade.Amount)
+				last.Volume = big.NewInt(0).Add(last.Volume, trade.Amount)
 				last.Count = last.Count.Add(last.Count, big.NewInt(1))
 				last.CloseTime = trade.CreatedAt
 			} else {
@@ -261,6 +347,7 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 					Unit:      unit,
 				}
 				tickByTime[modTime] = tick
+
 			}
 		}
 	}
@@ -268,21 +355,22 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 	return nil
 }
 
-func (s *OHLCVService) addTick(key string, tick *types.Tick) {
-	if _, ok := s.ticks[key]; ok {
+func (s *OHLCVService) addTick(tick *types.Tick) {
+	key := s.getTickKey(tick.Pair.BaseToken, tick.Pair.QuoteToken, tick.Duration, tick.Unit)
+	if _, ok := s.tickCache.ticks[key]; ok {
 
-		s.ticks[key][tick.Timestamp] = tick
+		s.tickCache.ticks[key][tick.Timestamp] = tick
 	} else {
-		s.ticks[key] = make(map[int64]*types.Tick)
-		s.ticks[key][tick.Timestamp] = tick
+		s.tickCache.ticks[key] = make(map[int64]*types.Tick)
+		s.tickCache.ticks[key][tick.Timestamp] = tick
 	}
 
 }
 
 func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 	var res []*types.Tick
-	if _, ok := s.ticks[key]; ok {
-		for _, t := range s.ticks[key] {
+	if _, ok := s.tickCache.ticks[key]; ok {
+		for _, t := range s.tickCache.ticks[key] {
 			if t.Timestamp >= start && (t.Timestamp <= end || end == 0) {
 				c := *t
 				c.Timestamp = t.Timestamp * 1000
@@ -344,8 +432,9 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	for key := range s.ticks {
+	for key, _ := range s.tickCache.ticks {
 		s.updateTick(key, trade)
+		s.tickCache.lastCacheTime = trade.CreatedAt.Unix()
 	}
 }
 func (s *OHLCVService) getOHLCV(pairs []types.PairAddresses, duration int64, unit string, start, end time.Time) ([]*types.Tick, error) {
