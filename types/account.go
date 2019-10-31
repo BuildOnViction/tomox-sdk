@@ -109,8 +109,6 @@ func (a *Account) SetBSON(raw bson.Raw) error {
 
 // MarshalJSON implements the json.Marshal interface
 func (a *Account) MarshalJSON() ([]byte, error) {
-	logger.Debug(a.FavoriteTokens)
-
 	account := map[string]interface{}{
 		"id":        a.ID,
 		"address":   a.Address,
