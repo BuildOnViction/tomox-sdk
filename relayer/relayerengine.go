@@ -2,6 +2,7 @@ package relayer
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	ether "github.com/ethereum/go-ethereum"
@@ -196,6 +197,8 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 
 			}
 		}
+	} else {
+		return &relayerInfo, errors.New("Can not get relayer information")
 	}
 
 	return &relayerInfo, nil
