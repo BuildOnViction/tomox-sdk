@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	intervalMin = 30 * 24 * 60 * 60
+	intervalMin = 60 * 60
 	intervalMax = 12 * 30 * 24 * 60 * 60
 )
 
@@ -220,7 +220,7 @@ func (s *OHLCVService) Init() {
 
 	s.fetch(datefrom, now)
 	s.commitCache()
-	//go s.continueCache()
+	go s.continueCache()
 	ticker := time.NewTicker(60 * time.Second)
 	quit := make(chan struct{})
 	go func() {
@@ -229,7 +229,7 @@ func (s *OHLCVService) Init() {
 			case <-ticker.C:
 				err := s.commitCache()
 				if err != nil {
-					logger.Error("")
+					logger.Error(err)
 				}
 			case <-quit:
 				ticker.Stop()
@@ -239,6 +239,34 @@ func (s *OHLCVService) Init() {
 	}()
 
 	logger.Info("OHLCV finished")
+}
+
+func (s *OHLCVService) getIntervelByUint(d int64, unit string) (int64, error) {
+	durations := s.getConfig()
+	for _, duration := range durations {
+		if duration.duration == d && duration.unit == unit {
+			return duration.interval, nil
+		}
+	}
+	return 0, errors.New("unit not found")
+}
+
+// cache need to be locked
+func (s *OHLCVService) truncate() {
+	now := time.Now().Unix()
+	for key, tickby := range s.tickCache.ticks {
+		_, _, d, unit, err := s.parseTickKey(key)
+		if err == nil {
+			interval, e := s.getIntervelByUint(d, unit)
+			if e == nil {
+				for timeby := range tickby {
+					if timeby < now-interval {
+						delete(tickby, timeby)
+					}
+				}
+			}
+		}
+	}
 }
 func (s *OHLCVService) fetch(fromdate int64, todate int64) {
 	durations := s.getConfig()
@@ -258,7 +286,6 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64) {
 				key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
 				if trade.CreatedAt.Unix() > now-d.interval {
 					s.updateTick(key, trade)
-
 				}
 			}
 			if i == 0 {
@@ -316,6 +343,7 @@ func (s *OHLCVService) commitCache() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	logger.Info("commit ohlcv cache")
+	s.truncate()
 	ticks := s.flatten()
 	tickfile := &tickfile{
 		Frame: s.tickCache.tframes,
@@ -571,8 +599,7 @@ func getMatchQuery(start, end time.Time, pairs ...types.PairAddresses) bson.M {
 	match := bson.M{
 		"createdAt": bson.M{
 			"$gte": start,
-
-			"$lt": end,
+			"$lt":  end,
 		},
 		"status": bson.M{"$in": []string{types.SUCCESS}},
 	}
