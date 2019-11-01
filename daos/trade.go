@@ -59,7 +59,10 @@ func NewTradeDao() *TradeDao {
 		Key:       []string{"pricepoint"},
 		Collation: &mgo.Collation{NumericOrdering: true, Locale: "en"},
 	}
-
+	i9 := mgo.Index{
+		Key:    []string{"createdAt"},
+		Sparse: true,
+	}
 	db.Session.DB(dbName).C(collection).EnsureIndex(i1)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i2)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i3)
@@ -68,6 +71,7 @@ func NewTradeDao() *TradeDao {
 	db.Session.DB(dbName).C(collection).EnsureIndex(i6)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i7)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i8)
+	db.Session.DB(dbName).C(collection).EnsureIndex(i9)
 
 	return &TradeDao{collection, dbName}
 }
@@ -622,7 +626,7 @@ func (dao *TradeDao) GetTradeByTime(dateFrom, dateTo int64, pageOffset int, page
 	q["createdAt"] = dateFilter
 
 	trades := []*types.Trade{}
-	err := db.Get(dao.dbName, dao.collectionName, q, pageOffset, pageSize, &trades)
+	_, err := db.GetEx(dao.dbName, dao.collectionName, q, []string{"-createdAt"}, pageOffset, pageSize, &trades)
 	if err != nil {
 		logger.Error(err)
 		return nil, err

@@ -130,7 +130,6 @@ func (s *OrderService) GetOrderBookPricePoint(baseToken, quoteToken common.Addre
 		for _, am := range o {
 			amount = amount.Add(amount, am.amount)
 		}
-
 		return amount, nil
 	}
 	return nil, errors.New("Cound not found pricepoint key")

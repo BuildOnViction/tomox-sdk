@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	INTERVAL = 30 * 24 * 60 * 60
+	intervalMin = 60 * 60
+	intervalMax = 12 * 30 * 24 * 60 * 60
 )
 
 type OHLCVService struct {
@@ -32,22 +33,32 @@ type OHLCVService struct {
 	tickCache    *tickCache
 	mutex        sync.Mutex
 }
+
+type timeframe struct {
+	FirstTime int64 `json:"firstTime" bson:"firstTime"`
+	LastTime  int64 `json:"lastTime" bson:"lastTime"`
+}
+type timeframes []*timeframe
+
 type tickCache struct {
-	lastCacheTime int64
-	ticks         map[string]map[int64]*types.Tick
+	tframes timeframes
+	ticks   map[string]map[int64]*types.Tick
 }
 
-type Duration struct {
+type tickfile struct {
+	Frame timeframes  `json:"frame" bson:"frame"`
+	Ticks types.Ticks `json:"ticks" bson:"ticks"`
+}
+type durationtick struct {
 	duration int64
 	unit     string
 	interval int64
 }
 
+// NewOHLCVService init new ohlcv service
 func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, fiatDao interfaces.FiatPriceDao) *OHLCVService {
-	now := time.Now().Unix()
 	cache := &tickCache{
-		ticks:         make(map[string]map[int64]*types.Tick),
-		lastCacheTime: now - INTERVAL,
+		ticks: make(map[string]map[int64]*types.Tick),
 	}
 	return &OHLCVService{
 		tradeDao:     TradeDao,
@@ -99,8 +110,8 @@ func (s *OHLCVService) Subscribe(conn *ws.Client, p *types.SubscriptionPayload) 
 	socket.SendInitMessage(conn, ohlcv)
 }
 
-func (s *OHLCVService) getConfig() []Duration {
-	return []Duration{
+func (s *OHLCVService) getConfig() []durationtick {
+	return []durationtick{
 		{
 			duration: 1,
 			unit:     "min",
@@ -180,32 +191,36 @@ func (s *OHLCVService) getConfig() []Duration {
 }
 
 // Init init cache
+// ensure add current time frame before trade notify come
 func (s *OHLCVService) Init() {
 	logger.Info("OHLCV init starting...")
-	durations := s.getConfig()
 	now := time.Now().Unix()
+	datefrom := now - intervalMin
 	s.loadCache()
-	tradeSpec := &types.TradeSpec{
-		DateFrom: s.tickCache.lastCacheTime,
-		DateTo:   now,
+	lastFrame := s.lastTimeFrame()
+	if lastFrame != nil {
+		if now-lastFrame.LastTime < intervalMin {
+			datefrom = lastFrame.LastTime
+		}
+	} else {
+
+		// add start frame to list
+		s.tickCache.tframes = append(s.tickCache.tframes, &timeframe{
+			FirstTime: now - intervalMax,
+			LastTime:  now - intervalMax,
+		})
+
+		// add current frame to list
+		s.tickCache.tframes = append(s.tickCache.tframes, &timeframe{
+			FirstTime: now,
+			LastTime:  now,
+		})
+
 	}
 
-	pageOffset := 0
-	size := 1000
-	for {
-		trades, err := s.tradeDao.GetTradeByTime(tradeSpec.DateFrom, tradeSpec.DateTo, pageOffset*size, size)
-		if err != nil || len(trades) == 0 {
-			break
-		}
-		for _, trade := range trades {
-			for _, d := range durations {
-				key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
-				s.updateTick(key, trade)
-			}
-		}
-		pageOffset = pageOffset + 1
-	}
+	s.fetch(datefrom, now)
 	s.commitCache()
+	go s.continueCache()
 	ticker := time.NewTicker(60 * time.Second)
 	quit := make(chan struct{})
 	go func() {
@@ -214,7 +229,7 @@ func (s *OHLCVService) Init() {
 			case <-ticker.C:
 				err := s.commitCache()
 				if err != nil {
-					logger.Error("")
+					logger.Error(err)
 				}
 			case <-quit:
 				ticker.Stop()
@@ -224,6 +239,94 @@ func (s *OHLCVService) Init() {
 	}()
 
 	logger.Info("OHLCV finished")
+}
+
+func (s *OHLCVService) getIntervelByUint(d int64, unit string) (int64, error) {
+	durations := s.getConfig()
+	for _, duration := range durations {
+		if duration.duration == d && duration.unit == unit {
+			return duration.interval, nil
+		}
+	}
+	return 0, errors.New("unit not found")
+}
+
+// cache need to be locked
+func (s *OHLCVService) truncate() {
+	now := time.Now().Unix()
+	for key, tickby := range s.tickCache.ticks {
+		_, _, d, unit, err := s.parseTickKey(key)
+		if err == nil {
+			interval, e := s.getIntervelByUint(d, unit)
+			if e == nil {
+				for timeby := range tickby {
+					if timeby < now-interval {
+						delete(tickby, timeby)
+					}
+				}
+			}
+		}
+	}
+}
+func (s *OHLCVService) fetch(fromdate int64, todate int64) {
+	durations := s.getConfig()
+	pageOffset := 0
+	size := 1000
+	now := time.Now().Unix()
+	for {
+		trades, err := s.tradeDao.GetTradeByTime(fromdate, todate, pageOffset*size, size)
+		if err != nil || len(trades) == 0 {
+			break
+		}
+		sort.Slice(trades, func(i, j int) bool {
+			return trades[i].CreatedAt.Unix() < trades[j].CreatedAt.Unix()
+		})
+		for i, trade := range trades {
+			for _, d := range durations {
+				key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
+				if trade.CreatedAt.Unix() > now-d.interval {
+					s.updateTick(key, trade)
+				}
+			}
+			if i == 0 {
+				s.updatefisttimeframe(trade.CreatedAt.Unix())
+			}
+
+		}
+		pageOffset = pageOffset + 1
+	}
+}
+
+// ensure init cache finished before invoke
+func (s *OHLCVService) continueCache() {
+	if len(s.tickCache.tframes) > 1 {
+		for i := len(s.tickCache.tframes) - 1; i > 0; i-- {
+			currentframe := s.tickCache.tframes[i]
+			preframe := s.tickCache.tframes[i-1]
+			if currentframe.FirstTime > preframe.LastTime {
+				s.fetch(preframe.LastTime, currentframe.FirstTime)
+			}
+
+		}
+	}
+}
+func (s *OHLCVService) lastTimeFrame() *timeframe {
+	if len(s.tickCache.tframes) > 0 {
+		return s.tickCache.tframes[len(s.tickCache.tframes)-1]
+	}
+	return nil
+}
+func (s *OHLCVService) updatefisttimeframe(firsttime int64) {
+	if len(s.tickCache.tframes) > 0 {
+		s.tickCache.tframes[len(s.tickCache.tframes)-1].FirstTime = firsttime
+	}
+}
+
+func (s *OHLCVService) updatelasttimeframe(lasttime int64) {
+	if len(s.tickCache.tframes) > 0 {
+		s.tickCache.tframes[len(s.tickCache.tframes)-1].LastTime = lasttime
+	}
+
 }
 
 func (s *OHLCVService) flatten() []*types.Tick {
@@ -240,18 +343,20 @@ func (s *OHLCVService) commitCache() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	logger.Info("commit ohlcv cache")
+	s.truncate()
 	ticks := s.flatten()
-	tickData, err := json.Marshal(ticks)
+	tickfile := &tickfile{
+		Frame: s.tickCache.tframes,
+		Ticks: ticks,
+	}
+	tickData, err := json.Marshal(tickfile)
 	if err != nil {
 		return err
 	}
-
-	lasttimeData := []byte(strconv.FormatInt(s.tickCache.lastCacheTime, 10))
-	data := append(lasttimeData, tickData...)
 	file, err := os.Create("ohlcv.cache")
 	defer file.Close()
 	if err == nil {
-		_, err = file.Write(data)
+		_, err = file.Write(tickData)
 		if err != nil {
 			return err
 		}
@@ -274,24 +379,15 @@ func (s *OHLCVService) loadCache() error {
 	bytes := make([]byte, size)
 	bufr := bufio.NewReader(file)
 	_, err = bufr.Read(bytes)
-	if len(bytes) <= 10 {
-		return errors.New("Invalid buffer cache")
-	}
-	lastTime := bytes[:10]
-	tickData := bytes[10:]
-	n, err := strconv.ParseInt(string(lastTime), 10, 64)
+	var tickf tickfile
+	err = json.Unmarshal(bytes, &tickf)
 	if err != nil {
 		return err
 	}
-	s.tickCache.lastCacheTime = n
-	var ts []*types.Tick
-	err = json.Unmarshal(tickData, &ts)
-	if err != nil {
-		return err
-	}
-	for _, t := range ts {
+	for _, t := range tickf.Ticks {
 		s.addTick(t)
 	}
+	s.tickCache.tframes = tickf.Frame
 	return nil
 }
 
@@ -358,7 +454,6 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 					Unit:      unit,
 				}
 				tickByTime[modTime] = tick
-
 			}
 		}
 	}
@@ -446,8 +541,8 @@ func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 	for _, d := range s.getConfig() {
 		key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
 		s.updateTick(key, trade)
-		s.tickCache.lastCacheTime = trade.CreatedAt.Unix()
 	}
+	s.updatelasttimeframe(trade.CreatedAt.Unix())
 }
 func (s *OHLCVService) getOHLCV(pairs []types.PairAddresses, duration int64, unit string, start, end time.Time) ([]*types.Tick, error) {
 	res := make([]*types.Tick, 0)
@@ -504,8 +599,7 @@ func getMatchQuery(start, end time.Time, pairs ...types.PairAddresses) bson.M {
 	match := bson.M{
 		"createdAt": bson.M{
 			"$gte": start,
-
-			"$lt": end,
+			"$lt":  end,
 		},
 		"status": bson.M{"$in": []string{types.SUCCESS}},
 	}
