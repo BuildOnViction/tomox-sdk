@@ -137,8 +137,8 @@ func (dao *TokenDao) UpdateByToken(addr common.Address, token *types.Token) erro
 
 	update := bson.M{
         "$set": bson.M{
-            "makeFee": fmt.Sprintf("%f", token.MakeFee),
-            "takeFee": fmt.Sprintf("%f", token.TakeFee),
+            "makeFee": token.MakeFee.String(),
+            "takeFee": token.TakeFee.String(),
         },
     }
 	err := db.Update(dao.dbName, dao.collectionName, q, update)
