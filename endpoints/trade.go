@@ -77,7 +77,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 	size := types.DefaultLimit
 	sortDB := []string{}
 	if sortType != "asc" && sortType != "dec" {
-		sortType = "asc"
+		sortType = "dec"
 	}
 	if sortBy != "" {
 		if val, ok := sortedList[sortBy]; ok {
