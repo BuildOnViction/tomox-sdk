@@ -135,7 +135,13 @@ func (dao *TokenDao) UpdateFiatPriceBySymbol(symbol string, price float64) error
 func (dao *TokenDao) UpdateByToken(addr common.Address, token *types.Token) error {
 	q := bson.M{"contractAddress": addr.Hex()}
 
-	err := db.Update(dao.dbName, dao.collectionName, q, token)
+	update := bson.M{
+        "$set": bson.M{
+            "makeFee": fmt.Sprintf("%f", token.MakeFee),
+            "takeFee": fmt.Sprintf("%f", token.TakeFee),
+        },
+    }
+	err := db.Update(dao.dbName, dao.collectionName, q, update)
 	if err != nil {
 		logger.Error(err)
 		return err
