@@ -132,6 +132,18 @@ func (dao *TokenDao) UpdateFiatPriceBySymbol(symbol string, price float64) error
 	return nil
 }
 
+func (dao *TokenDao) UpdateByToken(addr common.Address, token *types.Token) error {
+	q := bson.M{"contractAddress": addr.Hex()}
+
+	err := db.Update(dao.dbName, dao.collectionName, q, token)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // Drop drops all the order documents in the current database
 func (dao *TokenDao) Drop() error {
 	err := db.DropCollection(dao.dbName, dao.collectionName)
