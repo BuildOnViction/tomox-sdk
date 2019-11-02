@@ -44,7 +44,7 @@ func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 
 	res := map[string]interface{}{
 		"exchangeAddress": ex.Hex(),
-		"fee":             fee, // This value will be divided by 10000 on TomoX
+		"fee":             fee, // This value will be divided by 1000 on TomoX
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
@@ -73,5 +73,5 @@ func (e *infoEndpoint) handleGetFeeInfo(w http.ResponseWriter, r *http.Request) 
 
 	res := map[string]string{"fee": fee}
 
-	httputils.WriteJSON(w, http.StatusOK, res) // This value will be divided by 10000 on TomoX
+	httputils.WriteJSON(w, http.StatusOK, res) // This value will be divided by 1000 on TomoX
 }
