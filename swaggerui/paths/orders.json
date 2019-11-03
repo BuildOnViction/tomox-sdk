@@ -1,8 +1,0 @@
-{
-  "get": {
-    "$ref": "../components/orders/handleGetOrders.json"
-  },
-  "post": {
-    "$ref": "../components/orders/handleNewOrder.json"
-  }
-}

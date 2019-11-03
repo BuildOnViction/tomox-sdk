@@ -1,5 +1,0 @@
-{
-  "get": {
-    "$ref": "../components/ohlcv/handleGetOHLCV.json"
-  }
-}

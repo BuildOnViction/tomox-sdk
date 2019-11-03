@@ -1,5 +1,0 @@
-{
-  "get": {
-    "$ref": "../components/notifications/handleGetNotifications.json"
-  }
-}

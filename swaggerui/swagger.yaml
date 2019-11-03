@@ -1,0 +1,1488 @@
+swagger: '2.0'
+info:
+  description: TomoDEX API Document
+  version: 1.0.0
+  title: Swagger Document for TomoDEX
+schemes:
+  - https
+tags:
+  - name: accounts
+    description: Account endpoints
+  - name: tokens
+    description: Token endpoints
+  - name: pairs
+    description: Pair endpoints
+  - name: orders
+    description: Order endpoints
+  - name: orderbook
+    description: Order book endpoints
+  - name: trades
+    description: Trade endpoints
+  - name: ohlcv
+    description: OHLCV endpoints
+  - name: notifications
+    description: Notification endpoints
+  - name: info
+    description: Info endpoints
+paths:
+  '/account/{userAddress}':
+    get:
+      tags:
+        - accounts
+      summary: Find account by user address
+      description: Returns a single account
+      operationId: handleGetAccount
+      produces:
+        - application/json
+      parameters:
+        - name: userAddress
+          in: path
+          description: Address of user to return
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Account'
+        '400':
+          description: Invalid Address
+        '404':
+          description: Account not found
+      security:
+        - api_key: []
+  '/account/{userAddress}/{tokenAddress}':
+    get:
+      tags:
+        - accounts
+      summary: '[Deprecated] Find account''s token balance by user address and token address'
+      description: Returns an object contains token balance of user
+      operationId: handleGetAccountTokenBalance
+      deprecated: true
+      produces:
+        - application/json
+      parameters:
+        - name: userAddress
+          in: path
+          description: Address of user to find token balance
+          required: true
+          type: string
+        - name: tokenAddress
+          in: path
+          description: Address of token
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/TokenBalance'
+        '400':
+          description: Invalid Address
+        '404':
+          description: Account not found
+      security:
+        - api_key: []
+  /account/create:
+    post:
+      tags:
+        - accounts
+      summary: Add a new account by user address
+      description: Returns newly created account
+      operationId: handleCreateAccount
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: newAddress
+          in: path
+          description: Address of user
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Account already exists
+        '201':
+          description: Account created
+          schema:
+            $ref: '#/definitions/Account'
+        '404':
+          description: Invalid Address
+        '500':
+          description: Internal Server Error
+      security: []
+  /tokens:
+    get:
+      tags:
+        - tokens
+      summary: Finds all tokens
+      description: Return all tokens in an array
+      operationId: HandleGetTokens
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Token'
+        '500':
+          description: Internal Server Error
+      security: []
+    post:
+      tags:
+        - tokens
+      summary: Create new token
+      description: Returns newly created token
+      operationId: HandleCreateToken
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Token object that needs to be added
+          required: true
+          schema:
+            $ref: '#/definitions/Token'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Token'
+        '400':
+          description: Invalid payload
+        '500':
+          description: Internal Server Error
+      security: []
+  /tokens/base:
+    get:
+      tags:
+        - tokens
+      summary: Finds all base tokens
+      description: Return all base tokens in an array
+      operationId: HandleGetBaseTokens
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Token'
+        '500':
+          description: Internal Server Error
+      security: []
+  /tokens/quote:
+    get:
+      tags:
+        - tokens
+      summary: Finds all quote tokens
+      description: Return all quote tokens in an array
+      operationId: HandleGetQuoteTokens
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Token'
+        '500':
+          description: Internal Server Error
+      security: []
+  '/tokens/{address}':
+    get:
+      tags:
+        - tokens
+      summary: Retrieve the token information corresponding to an address
+      description: Return token object
+      operationId: HandleGetToken
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: path
+          description: Token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Token'
+        '400':
+          description: Invalid Address
+        '500':
+          description: Internal Server Error
+      security: []
+  /pairs:
+    get:
+      tags:
+        - pairs
+      summary: Finds all pairs
+      description: Return all pairs in an array
+      operationId: HandleGetPairs
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pair'
+        '500':
+          description: Internal Server Error
+      security: []
+    post:
+      tags:
+        - pairs
+      summary: Create new pair
+      description: Returns newly created pair
+      operationId: HandleCreatePair
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Pair object that needs to be added
+          required: true
+          schema:
+            $ref: '#/definitions/Pair'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Pair'
+        '400':
+          description: '*** Parameter missing'
+        '500':
+          description: Internal Server Error
+      security: []
+  /pair:
+    get:
+      tags:
+        - pairs
+      summary: Retrieve the pair information corresponding to a baseToken and a quoteToken
+      description: Multiple status values can be provided with comma separated strings
+      operationId: HandleGetPair
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Pair'
+        '400':
+          description: baseToken Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /pair/data:
+    get:
+      tags:
+        - pairs
+      summary: Retrieve pair data corresponding to a baseToken and quoteToken
+      description: Multiple status values can be provided with comma separated strings
+      operationId: HandleGetPairData
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/PairData'
+        '400':
+          description: baseToken Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /pairs/data:
+    get:
+      tags:
+        - pairs
+      summary: Retrieve all pair data
+      description: Multiple status values can be provided with comma separated strings
+      operationId: HandleGetPairsData
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            $ref: '#/definitions/PairData'
+        '400':
+          description: baseToken Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /market/stats:
+    get:
+      tags:
+        - market
+      summary: Retrieve market stats 24h corresponding to a baseToken and a quoteToken
+      description: Multiple status values can be provided with comma separated strings
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Pair'
+        '400':
+          description: baseToken Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /market/stats/all:
+    get:
+      tags:
+      - market
+      summary: Retrieve all market stats 2
+      description: Multiple status values can be provided with comma separated strings
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            $ref: '#/definitions/PairData'
+        '400':
+          description: baseToken Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders:
+    get:
+      tags:
+        - orders
+      summary: Retrieve the sorted list of orders for an Ethereum address
+      description: Return all orders in an array
+      operationId: handleGetOrders
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          type: string
+        - name: pageOffset
+          in: query
+          description: Page offset
+          type: string
+        - name: pageSize
+          in: query
+          description: Number of items per a page
+          type: string
+        - name: sortBy
+          in: query
+          description: 'Sort for query (time, orderStatus, orderType, orderSide)'
+          type: string
+        - name: sortType
+          in: query
+          description: asc/dec
+          type: string
+        - name: orderStatus
+          in: query
+          description: OPEN/CANCELLED/FILLED/PARTIAL_FILLED
+          type: string
+        - name: orderSide
+          in: query
+          description: SELL/BUY
+          type: string
+        - name: orderType
+          in: query
+          description: LO/MO
+          type: string
+        - name: baseToken
+          in: query
+          description: Base token address
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          type: string
+        - name: from
+          in: query
+          description: the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried
+          type: string
+        - name: to
+          in: query
+          description: the ending timestamp ((number of seconds from 1970/01/01)) until which order data has to be queried
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+              orders:
+                type: array
+                items:
+                  $ref: '#/definitions/Order'
+        '400':
+          description: address Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+    post:
+      tags:
+        - orders
+      summary: Create new order
+      description: Returns newly created order
+      operationId: HandleNewOrder
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Order object that needs to be added
+          required: true
+          schema:
+            $ref: '#/definitions/OrderCreate'
+      responses:
+        '201':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Order'
+        '400':
+          description: Invalid payload
+        '403':
+          description: Account is blocked
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders/positions:
+    get:
+      tags:
+        - orders
+      summary: '[Deprecated] Retrieve the list of positions for an Ethereum address. Positions are order that have been sent to the matching engine and that are waiting to be matched'
+      description: Return all orders in an array
+      operationId: handleGetPositions
+      deprecated: true
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          required: true
+          type: string
+        - name: limit
+          in: query
+          description: Number of orders returned in query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Order'
+        '400':
+          description: address Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders/history:
+    get:
+      tags:
+        - orders
+      summary: Retrieve the list of filled order for an Ethereum address
+      description: Return all orders in an array
+      operationId: handleGetOrderHistory
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          type: string
+          required: true
+        - name: pageOffset
+          in: query
+          description: 'Page offset, default 0'
+          type: string
+        - name: pageSize
+          in: query
+          description: 'Number of items per a page, defaul 50'
+          type: string
+        - name: sortBy
+          in: query
+          description: 'Sort for query (time(default), orderStatus, orderType, orderSide)'
+          type: string
+        - name: sortType
+          in: query
+          description: 'asc/dec, default asc'
+          type: string
+        - name: orderStatus
+          in: query
+          description: OPEN/CANCELLED/FILLED/PARTIAL_FILLED
+          type: string
+        - name: orderSide
+          in: query
+          description: SELL/BUY
+          type: string
+        - name: orderType
+          in: query
+          description: LO/MO
+          type: string
+        - name: baseToken
+          in: query
+          description: Base token address
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          type: string
+        - name: from
+          in: query
+          description: the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried
+          type: string
+        - name: to
+          in: query
+          description: the ending timestamp ((number of seconds from 1970/01/01)) until which order data has to be queried
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+              orders:
+                type: array
+                items:
+                  $ref: '#/definitions/Order'
+        '400':
+          description: address Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders/count:
+    get:
+      tags:
+        - orders
+      summary: Retrieve the total number of orders for an Ethereum address
+      description: Return a positive integer
+      operationId: handleGetCountOrder
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: integer
+            format: int32
+        '400':
+          description: address Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders/nonce:
+    get:
+      tags:
+        - orders
+      summary: Retrieve order nonce for an Ethereum address
+      description: Return a positive integer
+      operationId: handleGetOrderNonce
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: integer
+            format: int32
+        '400':
+          description: address Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders/cancel:
+    post:
+      tags:
+        - orders
+      summary: Cancel order
+      description: Returns the hash of cancelled order
+      operationId: HandleCancelOrder
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Cancel order object
+          required: true
+          schema:
+            $ref: '#/definitions/OrderCancel'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: string
+        '400':
+          description: Invalid payload
+        '500':
+          description: Internal Server Error
+      security: []
+  /orders/cancelAll:
+    post:
+      tags:
+        - orders
+      summary: '[Deprecated] Cancel all orders'
+      description: This endpoint should implements signature authentication
+      operationId: handleCancelAllOrders
+      deprecated: true
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: string
+        '400':
+          description: Invalid payload
+        '500':
+          description: Internal Server Error
+      security: []
+  /orderbook:
+    get:
+      tags:
+        - orderbook
+      summary: Retrieve the orderbook (amount and pricepoint) corresponding to a a baseToken and a quoteToken
+      description: Multiple status values can be provided with comma separated strings
+      operationId: HandleGetOrderBook
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/OrderBook'
+        '400':
+          description: '*** Parameter missing'
+        '500':
+          description: Internal Server Error
+      security: []
+  /orderbook/raw:
+    get:
+      tags:
+        - orderbook
+      summary: |-
+        Retrieve the orderbook (full raw orders, including fields such as hashes, maker, taker addresses, signatures, etc.)
+        corresponding to a baseToken and a quoteToken
+      description: Multiple status values can be provided with comma separated strings
+      operationId: HandleGetRawOrderBook
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/RawOrderBook'
+        '400':
+          description: '*** Parameter missing'
+        '500':
+          description: Internal Server Error
+      security: []
+  /trades:
+    get:
+      tags:
+        - trades
+      summary: Retrieve all trades corresponding to a baseToken or/and a quoteToken
+      description: Return all trades in an array with total match
+      operationId: HandleGetTrades
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          type: string
+        - name: pageOffset
+          in: query
+          description: ''
+          type: string
+        - name: pageSize
+          in: query
+          description: 'number of trade item per page, default 50'
+          type: string
+        - name: sortBy
+          in: query
+          description: Sort for query (suported sort by time)
+          type: string
+        - name: sortType
+          in: query
+          description: asc/dec
+          type: string
+        - name: from
+          in: query
+          description: the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried
+          type: string
+        - name: to
+          in: query
+          description: the ending timestamp ((number of seconds from 1970/01/01)) until which order data has to be queried
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+              trades:
+                type: array
+                items:
+                  $ref: '#/definitions/Trade'
+        '400':
+          description: '*** Parameter missing'
+        '500':
+          description: Internal Server Error
+      security: []
+  /trades/history:
+    get:
+      tags:
+        - trades
+      summary: Retrieve the sorted list of trades for an Ethereum address in which the given address is either maker or taker
+      description: Return trades array
+      operationId: HandleGetTradesHistory
+      produces:
+        - application/json
+      parameters:
+        - name: address
+          in: query
+          description: User address
+          required: true
+          type: string
+        - name: pageOffset
+          in: query
+          description: ''
+          type: string
+        - name: pageSize
+          in: query
+          description: 'number of trade item per page, default 50'
+          type: string
+        - name: sortBy
+          in: query
+          description: Sort for query (suported sort by time)
+          type: string
+        - name: sortType
+          in: query
+          description: asc/dec
+          type: string
+        - name: baseToken
+          in: query
+          description: Base token address
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          type: string
+        - name: from
+          in: query
+          description: the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried
+          type: string
+        - name: to
+          in: query
+          description: the ending timestamp ((number of seconds from 1970/01/01)) until which order data has to be queried
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+              trades:
+                type: array
+                items:
+                  $ref: '#/definitions/Trade'
+        '400':
+          description: address Parameter missing
+        '500':
+          description: Internal Server Error
+      security: []
+  /ohlcv:
+    get:
+      tags:
+        - ohlcv
+      summary: Retrieve OHLCV data corresponding to a baseToken and a quoteToken
+      description: Return all ticks in an array
+      operationId: HandleGetOHLCV
+      produces:
+        - application/json
+      parameters:
+        - name: baseToken
+          in: query
+          description: Base token address
+          required: true
+          type: string
+        - name: quoteToken
+          in: query
+          description: Quote token address
+          required: true
+          type: string
+        - name: timeInterval
+          in: query
+          description: 'Time interval, candle size. Valid values: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 1w, 1mo (1 month)'
+          required: true
+          type: string
+        - name: from
+          in: query
+          description: the beginning timestamp (number of seconds from 1970/01/01) from which ohlcv data has to be queried
+          required: true
+          type: string
+        - name: to
+          in: query
+          description: the ending timestamp ((number of seconds from 1970/01/01)) until which ohlcv data has to be queried
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Tick'
+        '400':
+          description: '*** Parameter missing'
+        '500':
+          description: Internal Server Error
+      security: []
+  /notifications:
+    get:
+      tags:
+        - notifications
+      summary: Retrieve the list of notifications for an address with pagination
+      description: Return notifications in an array
+      operationId: HandleGetNotifications
+      produces:
+        - application/json
+      parameters:
+        - name: userAddress
+          in: query
+          description: User address
+          required: true
+          type: string
+        - name: page
+          in: query
+          description: Page number
+          required: true
+          type: string
+        - name: perPage
+          in: query
+          description: 'the number of records returned per page. Valid values are 10, 20, 30, 40, 50'
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Notification'
+        '400':
+          description: Invalid user address
+        '500':
+          description: Internal Server Error
+      security: []
+  '/notifications/{id}':
+    put:
+      tags:
+        - notifications
+      summary: Update status of a notification from UNREAD to READ
+      description: Returns newly updated notification
+      operationId: HandleNewOrder
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Notification object that needs to be updated
+          required: true
+          schema:
+            $ref: '#/definitions/Notification'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Notification'
+        '400':
+          description: Invalid payload
+        '500':
+          description: Internal Server Error
+      security: []
+  /info:
+    get:
+      tags:
+        - info
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              exchangeAddress:
+                type: string
+              fee:
+                type: string
+        '500':
+          description: Internal server error
+  /info/exchange:
+    get:
+      tags:
+        - info
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              exchangeAddress:
+                type: string
+  /info/fees:
+    get:
+      tags:
+        - info
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              fee:
+                type: string
+definitions:
+  Account:
+    example:
+      address: '0xF7349C253FF7747Df661296E0859c44e974fb52E'
+    type: object
+    properties:
+      id:
+        type: string
+        readOnly: true
+      address:
+        type: string
+      tokenBalances:
+        type: object
+        properties:
+          address:
+            type: string
+          symbol:
+            type: string
+          balance:
+            type: string
+          availableBalance:
+            type: string
+          inOrderBalance:
+            type: string
+      isBlocked:
+        type: boolean
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+  TokenBalance:
+    type: object
+    properties:
+      address:
+        type: string
+      symbol:
+        type: string
+      balance:
+        type: string
+      availableBalance:
+        type: string
+      inOrderBalance:
+        type: string
+  Token:
+    type: object
+    properties:
+      id:
+        type: string
+        readOnly: true
+      name:
+        type: string
+      symbol:
+        type: string
+      address:
+        type: string
+      image:
+        $ref: '#/definitions/Image'
+        readOnly: true
+      contractAddress:
+        type: string
+      decimals:
+        type: integer
+        format: int32
+        readOnly: true
+      active:
+        type: boolean
+      listed:
+        type: boolean
+        readOnly: true
+      quote:
+        type: boolean
+      makeFee:
+        type: string
+      takeFee:
+        type: string
+      usd:
+        type: string
+        readOnly: true
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+  Pair:
+    type: object
+    properties:
+      id:
+        type: string
+        readOnly: true
+      baseTokenSymbol:
+        type: string
+      baseTokenAddress:
+        type: string
+      baseTokenDecimals:
+        type: integer
+        format: int32
+        readOnly: true
+      quoteTokenSymbol:
+        type: string
+      quoteTokenAddress:
+        type: string
+      quoteTokenDecimals:
+        type: integer
+        format: int32
+        readOnly: true
+      listed:
+        type: boolean
+        readOnly: true
+      active:
+        type: boolean
+      rank:
+        type: integer
+        format: int32
+        readOnly: true
+      makeFee:
+        type: string
+        readOnly: true
+      takeFee:
+        type: string
+        readOnly: true
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+  PairID:
+    type: object
+    properties:
+      pairName:
+        type: string
+      baseToken:
+        type: string
+      quoteToken:
+        type: string
+  PairData:
+    type: object
+    properties:
+      pair:
+        $ref: '#/definitions/PairID'
+      open:
+        type: string
+      high:
+        type: string
+      low:
+        type: integer
+        format: int32
+      close:
+        type: string
+      volume:
+        type: string
+      count:
+        type: string
+      timestamp:
+        type: string
+      orderVolume:
+        type: string
+      orderCount:
+        type: string
+      averageOrderAmount:
+        type: string
+      averageTradeAmount:
+        type: string
+      askPrice:
+        type: string
+      bidPrice:
+        type: string
+      price:
+        type: string
+      rank:
+        type: integer
+        format: int32
+  Image:
+    type: object
+    properties:
+      url:
+        type: string
+      meta:
+        type: object
+        additionalProperties: true
+  Order:
+    type: object
+    properties:
+      id:
+        type: string
+        readOnly: true
+      userAddress:
+        type: string
+      exchangeAddress:
+        type: string
+      baseToken:
+        type: string
+      quoteToken:
+        type: string
+      status:
+        type: string
+      side:
+        type: string
+      type:
+        type: string
+      hash:
+        type: string
+      signature:
+        $ref: '#/definitions/Signature'
+      pricepoint:
+        type: string
+      amount:
+        type: string
+      filledAmount:
+        type: string
+      nonce:
+        type: string
+      makeFee:
+        type: string
+      takeFee:
+        type: string
+      pairName:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+  OrderCreate:
+    properties:
+      userAddress:
+        type: string
+        example: '0x15e08dE16f534c890828F2a0D935433aF5B3CE0C'
+      exchangeAddress:
+        type: string
+        example: '0x0D3ab14BBaD3D99F4203bd7a11aCB94882050E7e'
+      baseToken:
+        type: string
+        example: '0x4d7eA2cE949216D6b120f3AA10164173615A2b6C'
+      quoteToken:
+        type: string
+        example: '0x0000000000000000000000000000000000000001'
+      side:
+        type: string
+        example: SELL/BUY
+      type:
+        type: string
+        example: LO/MO
+      status:
+        type: string
+        example: NEW/CANCELLED
+      hash:
+        type: string
+      signature:
+        $ref: '#/definitions/Signature'
+      pricepoint:
+        type: string
+        example: '21207020000000000000000'
+      amount:
+        type: string
+        example: '4693386710283129'
+      nonce:
+        type: string
+        example: '1'
+      makeFee:
+        type: string
+        example: '1'
+      takeFee:
+        type: string
+        example: '1'
+  OrderCancel:
+    type: object
+    properties:
+      orderHash:
+        type: string
+      nonce:
+        type: string
+      hash:
+        type: string
+      signature:
+        $ref: '#/definitions/Signature'
+  Signature:
+    type: object
+    properties:
+      V:
+        type: string
+      R:
+        type: string
+      S:
+        type: string
+  OrderBook:
+    type: object
+    properties:
+      pairName:
+        type: string
+      asks:
+        type: array
+        items:
+          type: object
+          properties:
+            amount:
+              type: string
+            pricepoint:
+              type: string
+      bids:
+        type: array
+        items:
+          type: object
+          properties:
+            amount:
+              type: string
+            pricepoint:
+              type: string
+  RawOrderBook:
+    type: object
+    properties:
+      pairName:
+        type: string
+      orders:
+        type: array
+        items:
+          $ref: '#/definitions/Order'
+  Trade:
+    type: object
+    properties:
+      id:
+        type: string
+        readOnly: true
+      taker:
+        type: string
+      maker:
+        type: string
+      baseToken:
+        type: string
+      quoteToken:
+        type: string
+      makerOrderHash:
+        type: string
+      takerOrderHash:
+        type: string
+      hash:
+        type: string
+      txHash:
+        type: string
+      pairName:
+        type: string
+      pricepoint:
+        type: string
+      amount:
+        type: string
+      status:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+  Tick:
+    type: object
+    properties:
+      pair:
+        $ref: '#/definitions/PairID'
+      open:
+        type: string
+      high:
+        type: string
+      low:
+        type: integer
+        format: int32
+      close:
+        type: string
+      volume:
+        type: string
+      count:
+        type: string
+      timestamp:
+        type: string
+  Notification:
+    type: object
+    properties:
+      id:
+        type: string
+        readOnly: true
+      recipient:
+        type: string
+      message:
+        type: string
+      type:
+        type: string
+      status:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+      updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+  ApiResponse:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      type:
+        type: string
+      message:
+        type: string
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
