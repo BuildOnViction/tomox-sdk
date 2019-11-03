@@ -1,5 +1,5 @@
 ---
-title: Swagger Document for TomoDEX
+title: TomoDex APIs
 language_tabs:
   - shell: cURL
   - node: request
@@ -15,13 +15,13 @@ headingLevel: 2
 
 ---
 
-<h1 id="swagger-document-for-tomodex">Swagger Document for TomoDEX v1.0.0</h1>
+<h1 id="tomodex-apis">TomoDex APIs v1.0.0</h1>
 
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
-TomoDEX API Document
+TomoDex API Document
 
-<h1 id="swagger-document-for-tomodex-accounts">accounts</h1>
+<h1 id="tomodex-apis-accounts">accounts</h1>
 
 Account endpoints
 
@@ -387,7 +387,7 @@ Returns newly created account
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-tokens">tokens</h1>
+<h1 id="tomodex-apis-tokens">tokens</h1>
 
 Token endpoints
 
@@ -504,8 +504,8 @@ Return all tokens in an array
     "makeFee": "string",
     "takeFee": "string",
     "usd": "string",
-    "createdAt": "2019-11-03T15:35:48Z",
-    "updatedAt": "2019-11-03T15:35:48Z"
+    "createdAt": "2019-11-03T15:42:56Z",
+    "updatedAt": "2019-11-03T15:42:56Z"
   }
 ]
 ```
@@ -687,8 +687,8 @@ Returns newly created token
   "makeFee": "string",
   "takeFee": "string",
   "usd": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -817,8 +817,8 @@ Return all base tokens in an array
     "makeFee": "string",
     "takeFee": "string",
     "usd": "string",
-    "createdAt": "2019-11-03T15:35:48Z",
-    "updatedAt": "2019-11-03T15:35:48Z"
+    "createdAt": "2019-11-03T15:42:56Z",
+    "updatedAt": "2019-11-03T15:42:56Z"
   }
 ]
 ```
@@ -972,8 +972,8 @@ Return all quote tokens in an array
     "makeFee": "string",
     "takeFee": "string",
     "usd": "string",
-    "createdAt": "2019-11-03T15:35:48Z",
-    "updatedAt": "2019-11-03T15:35:48Z"
+    "createdAt": "2019-11-03T15:42:56Z",
+    "updatedAt": "2019-11-03T15:42:56Z"
   }
 ]
 ```
@@ -1132,8 +1132,8 @@ Return token object
   "makeFee": "string",
   "takeFee": "string",
   "usd": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -1149,7 +1149,7 @@ Return token object
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-pairs">pairs</h1>
+<h1 id="tomodex-apis-pairs">pairs</h1>
 
 Pair endpoints
 
@@ -1271,8 +1271,8 @@ Return all pairs in an array
     "rank": 0,
     "makeFee": "string",
     "takeFee": "string",
-    "createdAt": "2019-11-03T15:35:48Z",
-    "updatedAt": "2019-11-03T15:35:48Z"
+    "createdAt": "2019-11-03T15:42:56Z",
+    "updatedAt": "2019-11-03T15:42:56Z"
   }
 ]
 ```
@@ -1440,8 +1440,8 @@ Returns newly created pair
   "rank": 0,
   "makeFee": "string",
   "takeFee": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -1574,8 +1574,8 @@ Multiple status values can be provided with comma separated strings
   "rank": 0,
   "makeFee": "string",
   "takeFee": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -1862,7 +1862,7 @@ Multiple status values can be provided with comma separated strings
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-orders">orders</h1>
+<h1 id="tomodex-apis-orders">orders</h1>
 
 Order endpoints
 
@@ -2003,8 +2003,8 @@ Return all orders in an array
       "makeFee": "string",
       "takeFee": "string",
       "pairName": "string",
-      "createdAt": "2019-11-03T15:35:48Z",
-      "updatedAt": "2019-11-03T15:35:48Z"
+      "createdAt": "2019-11-03T15:42:56Z",
+      "updatedAt": "2019-11-03T15:42:56Z"
     }
   ]
 }
@@ -2205,8 +2205,8 @@ Returns newly created order
   "makeFee": "string",
   "takeFee": "string",
   "pairName": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -2350,8 +2350,8 @@ Return all orders in an array
     "makeFee": "string",
     "takeFee": "string",
     "pairName": "string",
-    "createdAt": "2019-11-03T15:35:48Z",
-    "updatedAt": "2019-11-03T15:35:48Z"
+    "createdAt": "2019-11-03T15:42:56Z",
+    "updatedAt": "2019-11-03T15:42:56Z"
   }
 ]
 ```
@@ -2536,8 +2536,8 @@ Return all orders in an array
       "makeFee": "string",
       "takeFee": "string",
       "pairName": "string",
-      "createdAt": "2019-11-03T15:35:48Z",
-      "updatedAt": "2019-11-03T15:35:48Z"
+      "createdAt": "2019-11-03T15:42:56Z",
+      "updatedAt": "2019-11-03T15:42:56Z"
     }
   ]
 }
@@ -3072,7 +3072,7 @@ This endpoint should implements signature authentication
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-orderbook">orderbook</h1>
+<h1 id="tomodex-apis-orderbook">orderbook</h1>
 
 Order book endpoints
 
@@ -3340,8 +3340,8 @@ corresponding-to-a-basetoken-and-a-quotetoken-parameters">Parameters</h3>
       "makeFee": "string",
       "takeFee": "string",
       "pairName": "string",
-      "createdAt": "2019-11-03T15:35:48Z",
-      "updatedAt": "2019-11-03T15:35:48Z"
+      "createdAt": "2019-11-03T15:42:56Z",
+      "updatedAt": "2019-11-03T15:42:56Z"
     }
   ]
 }
@@ -3360,7 +3360,7 @@ corresponding-to-a-basetoken-and-a-quotetoken-responses">Responses</h3>
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-trades">trades</h1>
+<h1 id="tomodex-apis-trades">trades</h1>
 
 Trade endpoints
 
@@ -3489,8 +3489,8 @@ Return all trades in an array with total match
       "pricepoint": "string",
       "amount": "string",
       "status": "string",
-      "createdAt": "2019-11-03T15:35:48Z",
-      "updatedAt": "2019-11-03T15:35:48Z"
+      "createdAt": "2019-11-03T15:42:56Z",
+      "updatedAt": "2019-11-03T15:42:56Z"
     }
   ]
 }
@@ -3659,8 +3659,8 @@ Return trades array
       "pricepoint": "string",
       "amount": "string",
       "status": "string",
-      "createdAt": "2019-11-03T15:35:48Z",
-      "updatedAt": "2019-11-03T15:35:48Z"
+      "createdAt": "2019-11-03T15:42:56Z",
+      "updatedAt": "2019-11-03T15:42:56Z"
     }
   ]
 }
@@ -3702,7 +3702,7 @@ Status Code **200**
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-ohlcv">ohlcv</h1>
+<h1 id="tomodex-apis-ohlcv">ohlcv</h1>
 
 OHLCV endpoints
 
@@ -3865,7 +3865,7 @@ Status Code **200**
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-notifications">notifications</h1>
+<h1 id="tomodex-apis-notifications">notifications</h1>
 
 Notification endpoints
 
@@ -3982,8 +3982,8 @@ Return notifications in an array
     "message": "string",
     "type": "string",
     "status": "string",
-    "createdAt": "2019-11-03T15:35:48Z",
-    "updatedAt": "2019-11-03T15:35:48Z"
+    "createdAt": "2019-11-03T15:42:56Z",
+    "updatedAt": "2019-11-03T15:42:56Z"
   }
 ]
 ```
@@ -4137,8 +4137,8 @@ Returns newly updated notification
   "message": "string",
   "type": "string",
   "status": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -4154,7 +4154,7 @@ Returns newly updated notification
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-info">info</h1>
+<h1 id="tomodex-apis-info">info</h1>
 
 Info endpoints
 
@@ -4484,7 +4484,7 @@ Status Code **200**
 This operation does not require authentication
 </aside>
 
-<h1 id="swagger-document-for-tomodex-market">market</h1>
+<h1 id="tomodex-apis-market">market</h1>
 
 ## Retrieve market stats 24h corresponding to a baseToken and a quoteToken
 
@@ -4601,8 +4601,8 @@ Multiple status values can be provided with comma separated strings
   "rank": 0,
   "makeFee": "string",
   "takeFee": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 ```
 
@@ -4823,8 +4823,8 @@ This operation does not require authentication
   "makeFee": "string",
   "takeFee": "string",
   "usd": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 
 ```
@@ -4867,8 +4867,8 @@ This operation does not require authentication
   "rank": 0,
   "makeFee": "string",
   "takeFee": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 
 ```
@@ -5010,8 +5010,8 @@ This operation does not require authentication
   "makeFee": "string",
   "takeFee": "string",
   "pairName": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 
 ```
@@ -5200,8 +5200,8 @@ This operation does not require authentication
       "makeFee": "string",
       "takeFee": "string",
       "pairName": "string",
-      "createdAt": "2019-11-03T15:35:48Z",
-      "updatedAt": "2019-11-03T15:35:48Z"
+      "createdAt": "2019-11-03T15:42:56Z",
+      "updatedAt": "2019-11-03T15:42:56Z"
     }
   ]
 }
@@ -5234,8 +5234,8 @@ This operation does not require authentication
   "pricepoint": "string",
   "amount": "string",
   "status": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 
 ```
@@ -5306,8 +5306,8 @@ This operation does not require authentication
   "message": "string",
   "type": "string",
   "status": "string",
-  "createdAt": "2019-11-03T15:35:48Z",
-  "updatedAt": "2019-11-03T15:35:48Z"
+  "createdAt": "2019-11-03T15:42:56Z",
+  "updatedAt": "2019-11-03T15:42:56Z"
 }
 
 ```

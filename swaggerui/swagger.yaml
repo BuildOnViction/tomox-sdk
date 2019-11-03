@@ -1,8 +1,8 @@
 swagger: '2.0'
 info:
-  description: TomoDEX API Document
+  description: TomoDex API Document
   version: 1.0.0
-  title: Swagger Document for TomoDEX
+  title: TomoDex APIs
 schemes:
   - https
 tags:
