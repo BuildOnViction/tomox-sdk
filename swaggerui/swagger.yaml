@@ -1483,6 +1483,3 @@ definitions:
         type: string
       message:
         type: string
-externalDocs:
-  description: Find out more about Swagger
-  url: 'http://swagger.io'
