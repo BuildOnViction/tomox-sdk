@@ -76,7 +76,6 @@ func NewRouter(
 	tradeDao := daos.NewTradeDao()
 	accountDao := daos.NewAccountDao()
 	walletDao := daos.NewWalletDao()
-	fiatPriceDao := daos.NewFiatPriceDao()
 	notificationDao := daos.NewNotificationDao()
 
 	// instantiate engine
@@ -84,11 +83,11 @@ func NewRouter(
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
-	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, fiatPriceDao)
+	ohlcvService := services.NewOHLCVService(tradeDao, pairDao)
 	ohlcvService.Init()
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
-	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider)
+	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
 
 	orderService := services.NewOrderService(orderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderService.LoadCache()
@@ -98,8 +97,7 @@ func NewRouter(
 	walletService := services.NewWalletService(walletDao)
 
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, ohlcvService)
-	fiatPriceService := services.NewFiatPriceService(tokenDao, fiatPriceDao)
-	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, fiatPriceDao, fiatPriceService, pairService)
+	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// deploy http and ws endpoints
@@ -133,11 +131,8 @@ func NewRouter(
 	rabbitConn.SubscribeOrderResponses(orderService.HandleEngineResponse)
 	rabbitConn.SubscribeTradeResponses(tradeService.HandleTradeResponse)
 
-	// Initialize fiat price
-	fiatPriceService.InitFiatPrice()
-
 	// start cron service
-	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, fiatPriceService, relayerService, eng)
+	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, relayerService, eng)
 	// initialize MongoDB Change Streams
 	go orderService.WatchChanges()
 	go tradeService.WatchChanges()

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"os"
 	"sort"
@@ -22,16 +23,17 @@ import (
 )
 
 const (
-	intervalMin = 60 * 60
-	intervalMax = 12 * 30 * 24 * 60 * 60
+	intervalMin  = 60 * 60
+	intervalMax  = 12 * 30 * 24 * 60 * 60
+	yesterdaySec = 24 * 60 * 60
+	baseFiat     = "TOMO"
 )
 
 type OHLCVService struct {
-	tradeDao     interfaces.TradeDao
-	pairDao      interfaces.PairDao
-	fiatPriceDao interfaces.FiatPriceDao
-	tickCache    *tickCache
-	mutex        sync.Mutex
+	tradeDao  interfaces.TradeDao
+	pairDao   interfaces.PairDao
+	tickCache *tickCache
+	mutex     sync.Mutex
 }
 
 type timeframe struct {
@@ -56,15 +58,14 @@ type durationtick struct {
 }
 
 // NewOHLCVService init new ohlcv service
-func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, fiatDao interfaces.FiatPriceDao) *OHLCVService {
+func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao) *OHLCVService {
 	cache := &tickCache{
 		ticks: make(map[string]map[int64]*types.Tick),
 	}
 	return &OHLCVService{
-		tradeDao:     TradeDao,
-		pairDao:      pairDao,
-		fiatPriceDao: fiatDao,
-		tickCache:    cache,
+		tradeDao:  TradeDao,
+		pairDao:   pairDao,
+		tickCache: cache,
 	}
 }
 
@@ -199,26 +200,26 @@ func (s *OHLCVService) Init() {
 	s.loadCache()
 	lastFrame := s.lastTimeFrame()
 	if lastFrame != nil {
+		logger.Info("last frame first time", time.Unix(lastFrame.FirstTime, 0))
 		if now-lastFrame.LastTime < intervalMin {
 			datefrom = lastFrame.LastTime
 		}
 	} else {
-
 		// add start frame to list
 		s.tickCache.tframes = append(s.tickCache.tframes, &timeframe{
 			FirstTime: now - intervalMax,
 			LastTime:  now - intervalMax,
 		})
-
-		// add current frame to list
-		s.tickCache.tframes = append(s.tickCache.tframes, &timeframe{
-			FirstTime: now,
-			LastTime:  now,
-		})
-
 	}
+	// add current frame to list
+	s.tickCache.tframes = append(s.tickCache.tframes, &timeframe{
+		FirstTime: now,
+		LastTime:  now,
+	})
 
-	s.fetch(datefrom, now)
+	lastFrame = s.lastTimeFrame()
+	logger.Info("init fetch", time.Unix(datefrom, 0), time.Unix(now, 0))
+	s.fetch(datefrom, now, lastFrame)
 	s.commitCache()
 	go s.continueCache()
 	ticker := time.NewTicker(60 * time.Second)
@@ -268,7 +269,7 @@ func (s *OHLCVService) truncate() {
 		}
 	}
 }
-func (s *OHLCVService) fetch(fromdate int64, todate int64) {
+func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 	durations := s.getConfig()
 	pageOffset := 0
 	size := 1000
@@ -289,7 +290,7 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64) {
 				}
 			}
 			if i == 0 {
-				s.updatefisttimeframe(trade.CreatedAt.Unix())
+				s.updatefisttimeframe(trade.CreatedAt.Unix(), frame)
 			}
 
 		}
@@ -304,7 +305,7 @@ func (s *OHLCVService) continueCache() {
 			currentframe := s.tickCache.tframes[i]
 			preframe := s.tickCache.tframes[i-1]
 			if currentframe.FirstTime > preframe.LastTime {
-				s.fetch(preframe.LastTime, currentframe.FirstTime)
+				s.fetch(preframe.LastTime, currentframe.FirstTime, currentframe)
 			}
 
 		}
@@ -316,15 +317,16 @@ func (s *OHLCVService) lastTimeFrame() *timeframe {
 	}
 	return nil
 }
-func (s *OHLCVService) updatefisttimeframe(firsttime int64) {
-	if len(s.tickCache.tframes) > 0 {
-		s.tickCache.tframes[len(s.tickCache.tframes)-1].FirstTime = firsttime
+func (s *OHLCVService) updatefisttimeframe(firsttime int64, frame *timeframe) {
+	logger.Info("updatefisttimeframe", time.Unix(firsttime, 0))
+	if frame != nil {
+		frame.FirstTime = firsttime
 	}
 }
 
-func (s *OHLCVService) updatelasttimeframe(lasttime int64) {
-	if len(s.tickCache.tframes) > 0 {
-		s.tickCache.tframes[len(s.tickCache.tframes)-1].LastTime = lasttime
+func (s *OHLCVService) updatelasttimeframe(lasttime int64, frame *timeframe) {
+	if frame != nil {
+		frame.LastTime = lasttime
 	}
 
 }
@@ -477,7 +479,7 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 	var res []*types.Tick
 	if _, ok := s.tickCache.ticks[key]; ok {
 		for _, t := range s.tickCache.ticks[key] {
-			if t.Timestamp >= start && (t.Timestamp <= end || end == 0) {
+			if t.Timestamp >= start || start == 0 && (t.Timestamp <= end || end == 0) {
 				c := *t
 				c.Timestamp = t.Timestamp * 1000
 				res = append(res, &c)
@@ -542,7 +544,8 @@ func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 		key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
 		s.updateTick(key, trade)
 	}
-	s.updatelasttimeframe(trade.CreatedAt.Unix())
+	lastFrame := s.lastTimeFrame()
+	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
 }
 func (s *OHLCVService) getOHLCV(pairs []types.PairAddresses, duration int64, unit string, start, end time.Time) ([]*types.Tick, error) {
 	res := make([]*types.Tick, 0)
@@ -809,9 +812,9 @@ func (s *OHLCVService) GetTokenPairData(pairName string, baseTokenSymbol string,
 		pairData.Volume = tick.Volume
 		pairData.Close = tick.Close
 		pairData.Count = tick.Count
-		fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(baseTokenSymbol, tick.CloseTime)
+		price, err := s.GetLastPriceCurrentByTime(baseTokenSymbol, tick.CloseTime)
 		if err == nil {
-			pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
+			pairData.CloseBaseUsd = price
 		}
 		return pairData
 	}
@@ -834,4 +837,75 @@ func (s *OHLCVService) GetAllTokenPairData() ([]*types.PairData, error) {
 	}
 
 	return pairsData, nil
+}
+
+// GetPairPrice get lastest price by time
+func (s *OHLCVService) GetPairPrice(pairName string, timestamp int64) (int64, error) {
+	pair, err := s.pairDao.GetByName(pairName)
+	if err == nil && pair != nil {
+
+	}
+	return 0, nil
+}
+
+//GetFiatPriceChart get fiat chart
+func (s *OHLCVService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error) {
+	symbols := []string{"BTC", "ETH", "BNB"}
+	now := time.Now().Unix()
+	yesterday := now - yesterdaySec
+	res := make(map[string][]*types.FiatPriceItem)
+	for _, symbol := range symbols {
+		symbol = symbol + "/" + baseFiat
+		pair, err := s.pairDao.GetByName(symbol)
+		if err == nil && pair != nil {
+			pairAddress := types.PairAddresses{
+				Name:       pair.Name(),
+				BaseToken:  pair.BaseTokenAddress,
+				QuoteToken: pair.QuoteTokenAddress,
+			}
+			var fiats []*types.FiatPriceItem
+			ticks, err := s.GetOHLCV([]types.PairAddresses{pairAddress}, 1, "hour", yesterday, now)
+			if err == nil {
+				totalVolume := big.NewInt(0)
+				for _, tick := range ticks {
+					baseTokenDecimal := int64(math.Pow10(pair.BaseTokenDecimals))
+					quoteTokenDecimal := int64(math.Pow10(pair.QuoteTokenDecimals))
+					volume := big.NewInt(0).Div(tick.Volume, big.NewInt(baseTokenDecimal))
+					fiat := &types.FiatPriceItem{
+						Symbol:       pair.BaseTokenSymbol,
+						Price:        big.NewInt(0).Div(tick.Close, big.NewInt(quoteTokenDecimal)).String(),
+						Timestamp:    tick.Timestamp,
+						FiatCurrency: pair.QuoteTokenSymbol,
+						TotalVolume:  totalVolume.Add(totalVolume, volume).String(),
+					}
+					fiats = append(fiats, fiat)
+				}
+			}
+			sort.Slice(fiats, func(i, j int) bool {
+				return fiats[i].Timestamp > fiats[j].Timestamp
+			})
+			res[pair.BaseTokenSymbol] = fiats
+		}
+	}
+	return res, nil
+}
+
+// GetLastPriceCurrentByTime get last trade price
+func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error) {
+	USD := symbol + "/" + baseFiat
+	pair, err := s.pairDao.GetByName(USD)
+	if err == nil && pair != nil {
+		durations := s.getConfig()
+		for _, d := range durations {
+			mod, _ := utils.GetModTime(createAt.Unix(), d.duration, d.unit)
+			key := s.getTickKey(pair.BaseTokenAddress, pair.QuoteTokenAddress, d.duration, d.unit)
+			if tradeTick, ok := s.tickCache.ticks[key]; ok {
+				if tick, ok := tradeTick[mod]; ok {
+					quoteTokenDecimal := int64(math.Pow10(pair.QuoteTokenDecimals))
+					return big.NewFloat(0).Quo(new(big.Float).SetInt(tick.Close), big.NewFloat(float64(quoteTokenDecimal))), nil
+				}
+			}
+		}
+	}
+	return nil, errors.New("Price not found")
 }

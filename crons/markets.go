@@ -26,7 +26,7 @@ func (s *CronService) getMarketsData() func() {
 			return
 		}
 
-		smallChartsDataResult, err := s.FiatPriceService.GetFiatPriceChart()
+		smallChartsDataResult, err := s.OHLCVService.GetFiatPriceChart()
 
 		res := &types.MarketData{
 			PairData:        pairData,

@@ -10,8 +10,13 @@ import (
 
 func (c *Connection) SubscribeOrders(fn func(*Message) error) error {
 	ch := c.GetChannel("orderSubscribe")
+	if ch == nil {
+		return errors.New("Fail to open orderSubscribe chanel")
+	}
 	q := c.GetQueue(ch, "order")
-
+	if q == nil {
+		return errors.New("Fail to open order queue")
+	}
 	go func() {
 		msgs, err := c.Consume(ch, q)
 		if err != nil {
