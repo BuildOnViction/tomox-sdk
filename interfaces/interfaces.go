@@ -161,6 +161,7 @@ type TradeDao interface {
 
 type TokenDao interface {
 	Create(token *types.Token) error
+	UpdateByToken(contractAddress common.Address, token *types.Token) error
 	GetAll() ([]types.Token, error)
 	GetByID(id bson.ObjectId) (*types.Token, error)
 	GetByAddress(addr common.Address) (*types.Token, error)

@@ -95,20 +95,23 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 				found = true
 			}
 		}
+        token := &types.Token{
+            Symbol:          v.Symbol,
+            ContractAddress: ntoken,
+            Decimals:        int(v.Decimals),
+            MakeFee:         big.NewInt(int64(relayerInfo.MakeFee)),
+            TakeFee:         big.NewInt(int64(relayerInfo.TakeFee)),
+        }
 		if !found {
-			token := &types.Token{
-				Symbol:          v.Symbol,
-				ContractAddress: ntoken,
-				Decimals:        int(v.Decimals),
-				MakeFee:         big.NewInt(int64(relayerInfo.MakeFee)),
-				TakeFee:         big.NewInt(int64(relayerInfo.TakeFee)),
-			}
 			logger.Info("Create Token:", token.ContractAddress.Hex())
 			err = s.tokenDao.Create(token)
 			if err != nil {
 				logger.Error(err)
 			}
-		}
+		} else {
+			logger.Info("Update Token:", token.ContractAddress.Hex())
+			err = s.tokenDao.UpdateByToken(ntoken, token)
+        }
 		for _, ctoken := range currentTokens {
 			found = false
 			for ntoken, v = range relayerInfo.Tokens {

@@ -163,8 +163,8 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	size := types.DefaultLimit
 	sortDB := []string{}
 
-	if sortType != "asc" && sortType != "desc" {
-		sortType = "desc"
+	if sortType != "asc" && sortType != "dec" {
+		sortType = "dec"
 	}
 
 	if sortBy == "" {
