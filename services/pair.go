@@ -15,12 +15,12 @@ import (
 // PairService struct with daos required, responsible for communicating with daos.
 // PairService functions are responsible for interacting with daos and implements business logics.
 type PairService struct {
-	pairDao      interfaces.PairDao
-	tokenDao     interfaces.TokenDao
-	tradeDao     interfaces.TradeDao
-	orderDao     interfaces.OrderDao
-	fiatPriceDao interfaces.FiatPriceDao
-	eng          interfaces.Engine
+	pairDao  interfaces.PairDao
+	tokenDao interfaces.TokenDao
+	tradeDao interfaces.TradeDao
+	orderDao interfaces.OrderDao
+	ohlcv    interfaces.OHLCVService
+	eng      interfaces.Engine
 
 	provider interfaces.EthereumProvider
 }
@@ -31,12 +31,12 @@ func NewPairService(
 	tokenDao interfaces.TokenDao,
 	tradeDao interfaces.TradeDao,
 	orderDao interfaces.OrderDao,
-	fiatPriceDao interfaces.FiatPriceDao,
+	ohlcv interfaces.OHLCVService,
 	eng interfaces.Engine,
 	provider interfaces.EthereumProvider,
 ) *PairService {
 
-	return &PairService{pairDao, tokenDao, tradeDao, orderDao, fiatPriceDao, eng, provider}
+	return &PairService{pairDao, tokenDao, tradeDao, orderDao, ohlcv, eng, provider}
 }
 
 func (s *PairService) CreatePairs(addr common.Address) ([]*types.Pair, error) {
@@ -327,10 +327,7 @@ func (s *PairService) GetMarketStats(bt, qt common.Address) (*types.PairData, er
 		pairName := t.Pair.PairName
 		ps := strings.Split(pairName, "/")
 		if len(ps) == 2 {
-			fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(ps[0], t.CloseTime)
-			if err == nil {
-				pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
-			}
+
 		}
 
 	}
@@ -429,10 +426,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, 
 		pairName := t.Pair.PairName
 		ps := strings.Split(pairName, "/")
 		if len(ps) == 2 {
-			fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(ps[0], t.CloseTime)
-			if err == nil {
-				pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
-			}
+
 		}
 
 	}
@@ -513,10 +507,7 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 				pairData.Volume = t.Volume
 				pairData.Close = t.Close
 				pairData.Count = t.Count
-				fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
-				if err == nil {
-					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
-				}
+				pairData.CloseBaseUsd, _ = s.ohlcv.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
 
 			}
 		}
@@ -662,10 +653,6 @@ func (s *PairService) GetAllMarketStats() ([]*types.PairData, error) {
 				pairData.Volume = t.Volume
 				pairData.Close = t.Close
 				pairData.Count = t.Count
-				fiatItem, err := s.fiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
-				if err == nil {
-					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
-				}
 
 			}
 		}
