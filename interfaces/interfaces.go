@@ -172,18 +172,6 @@ type TokenDao interface {
 	DeleteByToken(contractAddress common.Address) error
 }
 
-type FiatPriceDao interface {
-	GetLatestQuotes() (map[string]float64, error)
-	GetCoinMarketChart(id string, vsCurrency string, days string) (*types.CoinsIDMarketChart, error)
-	GetCoinMarketChartRange(id string, vsCurrency string, from int64, to int64) (*types.CoinsIDMarketChart, error)
-	Get24hChart(symbol, fiatCurrency string) ([]*types.FiatPriceItem, error)
-	Create(items ...*types.FiatPriceItem) error
-	FindAndModify(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
-	FindAndUpdate(symbol string, fiatCurrency string, timestamp int64, i *types.FiatPriceItem) (*types.FiatPriceItem, error)
-	Upsert(symbol, fiatCurrency, timestamp string, i *types.FiatPriceItem) error
-	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*types.FiatPriceItem, error)
-}
-
 type NotificationDao interface {
 	Create(notifications ...*types.Notification) ([]*types.Notification, error)
 	GetAll() ([]types.Notification, error)
@@ -225,6 +213,8 @@ type OHLCVService interface {
 	Subscribe(c *ws.Client, p *types.SubscriptionPayload)
 	GetOHLCV(p []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error)
 	Get24hTick(baseToken, quoteToken common.Address) *types.Tick
+	GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error)
+	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error)
 }
 
 type EthereumService interface {
@@ -312,13 +302,6 @@ type MarketsService interface {
 	Subscribe(c *ws.Client)
 	UnsubscribeChannel(c *ws.Client)
 	Unsubscribe(c *ws.Client)
-}
-
-type FiatPriceService interface {
-	InitFiatPrice()
-	UpdateFiatPrice()
-	SyncFiatPrice() error
-	GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error)
 }
 
 type NotificationService interface {

@@ -15,13 +15,11 @@ import (
 // MarketsService struct with daos required, responsible for communicating with daos.
 // MarketsService functions are responsible for interacting with daos and implements business logics.
 type MarketsService struct {
-	PairDao          interfaces.PairDao
-	OrderDao         interfaces.OrderDao
-	TradeDao         interfaces.TradeDao
-	FiatPriceDao     interfaces.FiatPriceDao
-	OHLCVService     interfaces.OHLCVService
-	FiatPriceService interfaces.FiatPriceService
-	PairService      interfaces.PairService
+	PairDao      interfaces.PairDao
+	OrderDao     interfaces.OrderDao
+	TradeDao     interfaces.TradeDao
+	OHLCVService interfaces.OHLCVService
+	PairService  interfaces.PairService
 }
 
 // NewMarketsService returns a new instance of TradeService
@@ -30,18 +28,14 @@ func NewMarketsService(
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
 	ohlcvService interfaces.OHLCVService,
-	fiatPriceDao interfaces.FiatPriceDao,
-	fiatPriceService interfaces.FiatPriceService,
 	pairService interfaces.PairService,
 ) *MarketsService {
 	return &MarketsService{
-		PairDao:          pairDao,
-		OrderDao:         orderdao,
-		TradeDao:         tradeDao,
-		FiatPriceDao:     fiatPriceDao,
-		OHLCVService:     ohlcvService,
-		FiatPriceService: fiatPriceService,
-		PairService:      pairService,
+		PairDao:      pairDao,
+		OrderDao:     orderdao,
+		TradeDao:     tradeDao,
+		OHLCVService: ohlcvService,
+		PairService:  pairService,
 	}
 }
 
@@ -65,7 +59,7 @@ func (s *MarketsService) Subscribe(c *ws.Client) {
 		return
 	}
 
-	smallChartsDataResult, err := s.FiatPriceService.GetFiatPriceChart()
+	smallChartsDataResult, err := s.OHLCVService.GetFiatPriceChart()
 
 	data := &types.MarketData{
 		PairData:        pairData,
@@ -76,7 +70,7 @@ func (s *MarketsService) Subscribe(c *ws.Client) {
 	socket.SendInitMessage(c, data)
 }
 
-// Unsubscribe
+// UnsubscribeChannel
 func (s *MarketsService) UnsubscribeChannel(c *ws.Client) {
 	socket := ws.GetMarketSocket()
 
@@ -224,9 +218,9 @@ func (s *MarketsService) GetPairData() ([]*types.PairData, error) {
 				pairData.Volume = t.Volume
 				pairData.Close = t.Close
 				pairData.Count = t.Count
-				fiatItem, err := s.FiatPriceDao.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
+				price, err := s.OHLCVService.GetLastPriceCurrentByTime(p.BaseTokenSymbol, t.CloseTime)
 				if err == nil {
-					pairData.CloseBaseUsd, _ = pairData.CloseBaseUsd.SetString(fiatItem.Price)
+					pairData.CloseBaseUsd = price
 				}
 
 			}

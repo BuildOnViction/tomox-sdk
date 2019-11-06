@@ -49,8 +49,7 @@ paths:
           description: Invalid Address
         '404':
           description: Account not found
-      security:
-        - api_key: []
+
   '/account/{userAddress}/{tokenAddress}':
     get:
       tags:
@@ -81,8 +80,7 @@ paths:
           description: Invalid Address
         '404':
           description: Account not found
-      security:
-        - api_key: []
+
   /account/create:
     post:
       tags:
@@ -111,7 +109,7 @@ paths:
           description: Invalid Address
         '500':
           description: Internal Server Error
-      security: []
+
   /tokens:
     get:
       tags:
@@ -130,7 +128,6 @@ paths:
               $ref: '#/definitions/Token'
         '500':
           description: Internal Server Error
-      security: []
     post:
       tags:
         - tokens
@@ -156,7 +153,6 @@ paths:
           description: Invalid payload
         '500':
           description: Internal Server Error
-      security: []
   /tokens/base:
     get:
       tags:
@@ -175,7 +171,7 @@ paths:
               $ref: '#/definitions/Token'
         '500':
           description: Internal Server Error
-      security: []
+
   /tokens/quote:
     get:
       tags:
@@ -194,7 +190,7 @@ paths:
               $ref: '#/definitions/Token'
         '500':
           description: Internal Server Error
-      security: []
+
   '/tokens/{address}':
     get:
       tags:
@@ -220,7 +216,7 @@ paths:
           description: Invalid Address
         '500':
           description: Internal Server Error
-      security: []
+
   /pairs:
     get:
       tags:
@@ -250,7 +246,7 @@ paths:
               $ref: '#/definitions/Pair'
         '500':
           description: Internal Server Error
-      security: []
+
     post:
       tags:
         - pairs
@@ -276,7 +272,7 @@ paths:
           description: '*** Parameter missing'
         '500':
           description: Internal Server Error
-      security: []
+
   /pair:
     get:
       tags:
@@ -307,7 +303,7 @@ paths:
           description: baseToken Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /pair/data:
     get:
       tags:
@@ -338,7 +334,7 @@ paths:
           description: baseToken Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /pairs/data:
     get:
       tags:
@@ -359,7 +355,7 @@ paths:
           description: baseToken Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /market/stats:
     get:
       tags:
@@ -389,7 +385,7 @@ paths:
           description: baseToken Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /market/stats/all:
     get:
       tags:
@@ -409,7 +405,7 @@ paths:
           description: baseToken Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /orders:
     get:
       tags:
@@ -484,7 +480,7 @@ paths:
           description: address Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
     post:
       tags:
         - orders
@@ -512,7 +508,7 @@ paths:
           description: Account is blocked
         '500':
           description: Internal Server Error
-      security: []
+
   /orders/positions:
     get:
       tags:
@@ -545,7 +541,7 @@ paths:
           description: address Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /orders/history:
     get:
       tags:
@@ -621,7 +617,7 @@ paths:
           description: address Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /orders/count:
     get:
       tags:
@@ -647,7 +643,7 @@ paths:
           description: address Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /orders/nonce:
     get:
       tags:
@@ -673,7 +669,7 @@ paths:
           description: address Parameter missing
         '500':
           description: Internal Server Error
-      security: []
+
   /orders/cancel:
     post:
       tags:
@@ -699,7 +695,7 @@ paths:
           description: Invalid payload
         '500':
           description: Internal Server Error
-      security: []
+
   /orders/cancelAll:
     post:
       tags:
@@ -725,7 +721,7 @@ paths:
           description: Invalid payload
         '500':
           description: Internal Server Error
-      security: []
+
   /orderbook:
     get:
       tags:
@@ -757,6 +753,7 @@ paths:
         '500':
           description: Internal Server Error
       security: []
+      
   /orderbook/raw:
     get:
       tags:
@@ -790,6 +787,7 @@ paths:
         '500':
           description: Internal Server Error
       security: []
+
   /trades:
     get:
       tags:
@@ -849,6 +847,7 @@ paths:
         '500':
           description: Internal Server Error
       security: []
+
   /trades/history:
     get:
       tags:
@@ -913,6 +912,7 @@ paths:
         '500':
           description: Internal Server Error
       security: []
+
   /ohlcv:
     get:
       tags:
@@ -960,6 +960,7 @@ paths:
         '500':
           description: Internal Server Error
       security: []
+
   /notifications:
     get:
       tags:
@@ -997,6 +998,7 @@ paths:
         '500':
           description: Internal Server Error
       security: []
+
   '/notifications/{id}':
     put:
       tags:
@@ -1023,7 +1025,7 @@ paths:
           description: Invalid payload
         '500':
           description: Internal Server Error
-      security: []
+
   /info:
     get:
       tags:

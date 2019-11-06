@@ -1,8 +1,6 @@
 package rabbitmq
 
 import (
-	"log"
-
 	"github.com/streadway/amqp"
 	"github.com/tomochain/tomox-sdk/utils"
 )
@@ -48,7 +46,8 @@ func (c *Connection) GetQueue(ch *amqp.Channel, queue string) *amqp.Queue {
 	if queues[queue] == nil {
 		q, err := ch.QueueDeclare(queue, false, false, false, false, nil)
 		if err != nil {
-			log.Fatalf("Failed to declare a queue: %s", err)
+			logger.Error("Failed to declare a queue:", err)
+			return nil
 		}
 
 		queues[queue] = &q
@@ -91,8 +90,8 @@ func (c *Connection) GetChannel(id string) *amqp.Channel {
 	if channels[id] == nil {
 		ch, err := c.Conn.Channel()
 		if err != nil {
-			log.Fatalf("Failed to open a channel: %s", err)
-			panic(err)
+			logger.Error("Failed to open a channel:", err)
+			return nil
 		}
 
 		channels[id] = ch
