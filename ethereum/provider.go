@@ -147,7 +147,7 @@ func (e *EthereumProvider) Decimals(token common.Address) (uint8, error) {
 		return 0, err
 	}
 
-	opts := &bind.CallOpts{Pending: true}
+	opts := &bind.CallOpts{Pending: false}
 	decimals, err := tokenInterface.Decimals(opts)
 	if err != nil {
 		logger.Error(err)
@@ -176,7 +176,7 @@ func (e *EthereumProvider) Symbol(token common.Address) (string, error) {
 		return "", err
 	}
 
-	opts := &bind.CallOpts{Pending: true}
+	opts := &bind.CallOpts{Pending: false}
 	symbol, err := tokenInterface.Symbol(opts)
 	if err != nil {
 		logger.Error(err)
@@ -193,7 +193,7 @@ func (e *EthereumProvider) BalanceOf(owner common.Address, token common.Address)
 		return nil, err
 	}
 
-	opts := &bind.CallOpts{Pending: true}
+	opts := &bind.CallOpts{Pending: false}
 	b, err := tokenInterface.BalanceOf(opts, owner)
 	if err != nil {
 		logger.Error(err)
