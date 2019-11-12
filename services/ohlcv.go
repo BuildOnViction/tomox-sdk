@@ -282,6 +282,8 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 		sort.Slice(trades, func(i, j int) bool {
 			return trades[i].CreatedAt.Unix() < trades[j].CreatedAt.Unix()
 		})
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
 		for i, trade := range trades {
 			for _, d := range durations {
 				key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
@@ -412,7 +414,7 @@ func (s *OHLCVService) parseTickKey(key string) (common.Address, common.Address,
 	return baseToken, quoteToken, duration, unit, nil
 }
 
-// updateTick update lastest tick
+// updateTick update lastest tick, need to be lock
 func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 	tradeTime := trade.CreatedAt.Unix()
 	baseToken, quoteToken, duration, unit, err := s.parseTickKey(key)
@@ -884,7 +886,10 @@ func (s *OHLCVService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, e
 			sort.Slice(fiats, func(i, j int) bool {
 				return fiats[i].Timestamp > fiats[j].Timestamp
 			})
-			res[pair.BaseTokenSymbol] = fiats
+			if len(fiats) > 0 {
+				res[pair.BaseTokenSymbol] = fiats
+			}
+
 		}
 	}
 	return res, nil
