@@ -5,19 +5,15 @@ import (
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/spf13/viper"
-	"github.com/tomochain/tomox-sdk/utils"
 )
 
 // Config stores the application-wide configurations
 var Config appConfig
 
-var logger = utils.Logger
-
-// var logger = utils.NoopLogger
-
 type appConfig struct {
 	// the path to the error message file. Defaults to "config/errors.yaml"
 	ErrorFile string `mapstructure:"error_file"`
+	LogLevel  string `mapstructure:"log_level"`
 	// the server port. Defaults to 8080
 	ServerPort int `mapstructure:"server_port"`
 	// the data source name (MongoURL) for connecting to the database. required.
@@ -42,8 +38,6 @@ type appConfig struct {
 	JWTVerificationKey string `mapstructure:"jwt_verification_key"`
 	// TickDuration is user by tick streaming cron
 	TickDuration map[string][]int64 `mapstructure:"tick_duration"`
-
-	Logs map[string]string `mapstructure:"logs"`
 
 	Tomochain map[string]string `mapstructure:"tomochain"`
 
@@ -85,16 +79,6 @@ func LoadConfig(configPath string, env string) error {
 	if err != nil {
 		return err
 	}
-	// // update config, if yaml does not presented this config, we can still apply from env
-	// Config.Simulated = v.GetBool("simulated")
 
-	// log information
-	logger.Infof("Server port: %v", Config.ServerPort)
-	logger.Infof("Tomochain node HTTP url: %v", Config.Tomochain["http_url"])
-	logger.Infof("Tomochain node WS url: %v", Config.Tomochain["ws_url"])
-	logger.Infof("MongoDB url: %v", Config.MongoURL)
-	logger.Infof("RabbitMQ url: %v", Config.RabbitMQURL)
-	logger.Infof("Exchange contract address: %v", Config.Tomochain["exchange_address"])
-	logger.Infof("Env: %v", Config.Env)
 	return Config.Validate()
 }

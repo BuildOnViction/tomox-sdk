@@ -19,12 +19,15 @@ import (
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/relayer"
 	"github.com/tomochain/tomox-sdk/services"
+	"github.com/tomochain/tomox-sdk/utils"
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
 const (
 	swaggerUIDir = "/swaggerui/"
 )
+
+var logger = utils.Logger
 
 func Start() {
 	env := os.Getenv("GO_ENV")
@@ -33,11 +36,20 @@ func Start() {
 		panic(err)
 	}
 
+	utils.InitLogger(app.Config.LogLevel)
+
 	if err := errors.LoadMessages(app.Config.ErrorFile); err != nil {
 		panic(err)
 	}
 
-	// connect to the database
+	logger.Infof("Server port: %v", app.Config.ServerPort)
+	logger.Infof("Tomochain node HTTP url: %v", app.Config.Tomochain["http_url"])
+	logger.Infof("Tomochain node WS url: %v", app.Config.Tomochain["ws_url"])
+	logger.Infof("MongoDB url: %v", app.Config.MongoURL)
+	logger.Infof("RabbitMQ url: %v", app.Config.RabbitMQURL)
+	logger.Infof("Exchange contract address: %v", app.Config.Tomochain["exchange_address"])
+	logger.Infof("Env: %v", app.Config.Env)
+
 	_, err := daos.InitSession(nil)
 	if err != nil {
 		panic(err)
