@@ -72,6 +72,7 @@ type OrderSpec struct {
 	OrderType   string
 	DateFrom    int64
 	DateTo      int64
+	OrderHash   string
 }
 
 func (o *Order) String() string {

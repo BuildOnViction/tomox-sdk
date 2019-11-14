@@ -109,6 +109,7 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	side := v.Get("orderSide")
 	status := v.Get("orderStatus")
 	orderType := v.Get("orderType")
+	orderhash := v.Get("hash")
 
 	sortedList := make(map[string]string)
 	sortedList["time"] = "createdAt"
@@ -201,6 +202,9 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 	if status != "" {
 		orderSpec.Status = status
+	}
+	if orderhash != "" {
+		orderSpec.OrderHash = orderhash
 	}
 	if orderType != "" {
 		orderSpec.OrderType = orderType

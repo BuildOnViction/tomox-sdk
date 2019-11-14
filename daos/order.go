@@ -578,6 +578,9 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 	if orderSpec.OrderType != "" {
 		q["type"] = strings.ToUpper(orderSpec.OrderType)
 	}
+	if orderSpec.OrderHash != "" {
+		q["hash"] = orderSpec.OrderHash
+	}
 	var res types.OrderRes
 	orders := []*types.Order{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sort, offset, size, &orders)

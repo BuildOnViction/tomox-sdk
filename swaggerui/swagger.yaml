@@ -456,6 +456,10 @@ paths:
           in: query
           description: Quote token address
           type: string
+        - name: hash
+          in: query
+          description: hash of order
+          type: string
         - name: from
           in: query
           description: the beginning timestamp (number of seconds from 1970/01/01) from which order data has to be queried
