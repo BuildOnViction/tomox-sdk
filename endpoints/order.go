@@ -453,13 +453,6 @@ func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, err = oc.GetSenderAddress()
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
 	err = e.orderService.CancelOrder(oc)
 	if err != nil {
 		logger.Error(err)

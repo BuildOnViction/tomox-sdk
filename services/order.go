@@ -278,27 +278,11 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 func (s *OrderService) CancelOrder(oc *types.OrderCancel) error {
 	var o *types.Order
 	var err error
-	o, err = s.orderDao.GetByHash(oc.OrderHash)
-	if err != nil || o == nil {
-		order, ok := s.orderCache.Get(oc.OrderHash)
-		if !ok {
-			return errors.New("No order with corresponding hash")
-		} else {
-			o = order.(*types.Order)
-		}
-	}
-
-	if o == nil {
-		return errors.New("No order with corresponding hash")
-	}
-
-	if o.Status == types.ORDER_FILLED || o.Status == types.ERROR_STATUS || o.Status == types.ORDER_CANCELLED {
-		return fmt.Errorf("Cannot cancel order. Status is %v", o.Status)
-	}
 
 	o.Nonce = oc.Nonce
 	o.Signature = oc.Signature
-
+	o.OrderID = oc.OrderID
+	o.Status = oc.Status
 	err = s.broker.PublishCancelOrderMessage(o)
 	if err != nil {
 		logger.Error(err)

@@ -22,6 +22,8 @@ type OrderCancel struct {
 	OrderHash common.Hash `json:"orderHash"`
 	Nonce     *big.Int    `json:"nonce"`
 	Hash      common.Hash `json:"hash"`
+	OrderID   uint64      `json:"orderid"`
+	Status    string      `json:"status"`
 	Signature *Signature  `json:"signature"`
 }
 

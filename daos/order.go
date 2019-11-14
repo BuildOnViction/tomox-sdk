@@ -978,11 +978,8 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	return nil
 }
 
+// CancelOrder cancel order
 func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
-
-	if o.Status != "CANCELLED" {
-		o.Status = "CANCELLED"
-	}
 
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 	defer rpcClient.Close()
@@ -996,22 +993,13 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	S := o.Signature.S.Big()
 
 	msg := OrderMsg{
-		AccountNonce:    uint64(n),
-		Quantity:        o.Amount,
-		Price:           o.PricePoint,
-		ExchangeAddress: o.ExchangeAddress,
-		UserAddress:     o.UserAddress,
-		BaseToken:       o.BaseToken,
-		QuoteToken:      o.QuoteToken,
-		Status:          o.Status,
-		Side:            o.Side,
-		Type:            o.Type,
-		Hash:            o.Hash,
-		PairName:        o.PairName,
-		OrderID:         o.OrderID,
-		V:               V,
-		R:               R,
-		S:               S,
+		AccountNonce: uint64(n),
+		Status:       o.Status,
+		Hash:         o.Hash,
+		OrderID:      o.OrderID,
+		V:            V,
+		R:            R,
+		S:            S,
 	}
 	var result interface{}
 	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID)
