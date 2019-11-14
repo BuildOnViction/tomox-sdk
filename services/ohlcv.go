@@ -27,13 +27,14 @@ const (
 	intervalMax  = 12 * 30 * 24 * 60 * 60
 	yesterdaySec = 24 * 60 * 60
 	baseFiat     = "TOMO"
+	tomo         = "TOMO"
 )
 
 type OHLCVService struct {
 	tradeDao  interfaces.TradeDao
 	pairDao   interfaces.PairDao
 	tickCache *tickCache
-	mutex     sync.Mutex
+	mutex     sync.RWMutex
 }
 
 type timeframe struct {
@@ -276,6 +277,7 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 	now := time.Now().Unix()
 	for {
 		trades, err := s.tradeDao.GetTradeByTime(fromdate, todate, pageOffset*size, size)
+		logger.Debug("FETCH DATA", pageOffset*size)
 		if err != nil || len(trades) == 0 {
 			break
 		}
@@ -283,7 +285,6 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 			return trades[i].CreatedAt.Unix() < trades[j].CreatedAt.Unix()
 		})
 		s.mutex.Lock()
-		defer s.mutex.Unlock()
 		for i, trade := range trades {
 			for _, d := range durations {
 				key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
@@ -296,6 +297,7 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 			}
 
 		}
+		s.mutex.Unlock()
 		pageOffset = pageOffset + 1
 	}
 }
@@ -307,11 +309,13 @@ func (s *OHLCVService) continueCache() {
 			currentframe := s.tickCache.tframes[i]
 			preframe := s.tickCache.tframes[i-1]
 			if currentframe.FirstTime > preframe.LastTime {
+				logger.Debug("continue cache", time.Unix(preframe.LastTime, 0), time.Unix(currentframe.FirstTime, 0))
 				s.fetch(preframe.LastTime, currentframe.FirstTime, currentframe)
 			}
 
 		}
 	}
+	logger.Debug("continueCache finished")
 }
 func (s *OHLCVService) lastTimeFrame() *timeframe {
 	if len(s.tickCache.tframes) > 0 {
@@ -581,8 +585,8 @@ func (s *OHLCVService) getOHLCV(pairs []types.PairAddresses, duration int64, uni
 // unit: sec,min,hour,day,week,month,yr
 // timeInterval: 0-2 entries (0 argument: latest data,1st argument: from timestamp, 2nd argument: to timestamp)
 func (s *OHLCVService) GetOHLCV(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	currentTimestamp := time.Now().Unix()
 	modTime, intervalInSeconds := utils.GetModTime(currentTimestamp, duration, unit)
 	start := time.Unix(modTime-intervalInSeconds, 0)
@@ -895,10 +899,15 @@ func (s *OHLCVService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, e
 	return res, nil
 }
 
-// GetLastPriceCurrentByTime get last trade price
-func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error) {
-	USD := symbol + "/" + baseFiat
-	pair, err := s.pairDao.GetByName(USD)
+func (s *OHLCVService) getLastPricePairAtTime(pairName string, createAt time.Time) (*big.Float, error) {
+	pairs := strings.Split(pairName, "/")
+	if len(pairs) != 2 {
+		return nil, errors.New("Invalid pair name")
+	}
+	if pairs[0] == pairs[1] {
+		return big.NewFloat(1), nil
+	}
+	pair, err := s.pairDao.GetByName(pairName)
 	if err == nil && pair != nil {
 		durations := s.getConfig()
 		for _, d := range durations {
@@ -913,4 +922,22 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 		}
 	}
 	return nil, errors.New("Price not found")
+}
+
+// GetLastPriceCurrentByTime get last trade price
+func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error) {
+	USD := symbol + "/" + baseFiat
+	price, err := s.getLastPricePairAtTime(USD, createAt)
+	if err != nil {
+		symbolpricebytomo, err := s.getLastPricePairAtTime(symbol+"/"+tomo, createAt)
+		if err != nil {
+			return nil, errors.New("Price not found")
+		}
+		tomopricebybase, err := s.getLastPricePairAtTime(tomo+"/"+baseFiat, createAt)
+		if err != nil {
+			return nil, errors.New("Price not found")
+		}
+		return big.NewFloat(0).Mul(symbolpricebytomo, tomopricebybase), nil
+	}
+	return price, err
 }
