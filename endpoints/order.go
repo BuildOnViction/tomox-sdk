@@ -38,7 +38,21 @@ func ServeOrderResource(
 	r.HandleFunc("/api/orders/cancel", e.handleCancelOrder).Methods("POST")
 	r.HandleFunc("/api/orders/cancelAll", e.handleCancelAllOrders).Methods("POST")
 	r.HandleFunc("/api/orders/balance/lock", e.handleGetLockedBalanceInOrder).Methods("GET")
+	r.HandleFunc("/api/orders/{hash}", e.handleGetOrderByHash).Methods("GET")
 	ws.RegisterChannel(ws.OrderChannel, e.ws)
+}
+
+func (e *orderEndpoint) handleGetOrderByHash(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderHash := vars["hash"]
+	res, err := e.orderService.GetByHash(common.HexToHash(orderHash))
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, res)
 }
 
 func (e *orderEndpoint) handleGetLockedBalanceInOrder(w http.ResponseWriter, r *http.Request) {
@@ -452,7 +466,7 @@ func (e *orderEndpoint) handleCancelOrder(w http.ResponseWriter, r *http.Request
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
 		return
 	}
-
+	logger.Info("handle cancel order nonce", oc.Nonce)
 	err = e.orderService.CancelOrder(oc)
 	if err != nil {
 		logger.Error(err)

@@ -725,7 +725,33 @@ paths:
           description: Invalid payload
         '500':
           description: Internal Server Error
-
+  
+  '/orders/{hash}':
+    get:
+      tags:
+        - orders
+      summary: Retrieve the order information corresponding to an order hash
+      description: Return order object
+      operationId: HandleOrderByHash
+      produces:
+        - application/json
+      parameters:
+        - name: hash
+          in: path
+          description: order hash
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            $ref: '#/definitions/Order'
+        '400':
+          description: Invalid order hash
+        '500':
+          description: Internal Server Error
+      
   /orderbook:
     get:
       tags:
@@ -1305,6 +1331,8 @@ definitions:
         type: string
         format: date-time
         readOnly: true
+      orderID:
+        type: string
   OrderCreate:
     properties:
       userAddress:

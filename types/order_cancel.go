@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -19,12 +20,14 @@ import (
 // the OrderCancel must include a signature by the Maker of the order corresponding
 // to the OrderHash.
 type OrderCancel struct {
-	OrderHash common.Hash `json:"orderHash"`
-	Nonce     *big.Int    `json:"nonce"`
-	Hash      common.Hash `json:"hash"`
-	OrderID   uint64      `json:"orderid"`
-	Status    string      `json:"status"`
-	Signature *Signature  `json:"signature"`
+	OrderHash       common.Hash    `json:"orderHash"`
+	Nonce           *big.Int       `json:"nonce"`
+	Hash            common.Hash    `json:"hash"`
+	OrderID         uint64         `json:"orderID"`
+	Status          string         `json:"status"`
+	UserAddress     common.Address `json:"userAddress"`
+	ExchangeAddress common.Address `json:"exchangeAddress"`
+	Signature       *Signature     `json:"signature"`
 }
 
 // NewOrderCancel returns a new empty OrderCancel object
@@ -48,6 +51,10 @@ func (oc *OrderCancel) MarshalJSON() ([]byte, error) {
 			"R": oc.Signature.R,
 			"S": oc.Signature.S,
 		},
+		"orderID":         oc.OrderID,
+		"userAddress":     oc.UserAddress,
+		"exchangeAddress": oc.ExchangeAddress,
+		"status":          oc.Status,
 	}
 
 	return json.Marshal(orderCancel)
@@ -81,6 +88,30 @@ func (oc *OrderCancel) UnmarshalJSON(b []byte) error {
 		return errors.New("Nonce is missing")
 	}
 	oc.Nonce = math.ToBigInt(parsed["nonce"].(string))
+
+	if parsed["status"] == nil {
+		return errors.New("Status is missing")
+	}
+	oc.Status = parsed["status"].(string)
+
+	if parsed["orderID"] == nil {
+		return errors.New("orderID is missing")
+	}
+	orderID, err := strconv.ParseInt(parsed["orderID"].(string), 10, 64)
+	if err != nil {
+		return err
+	}
+	oc.OrderID = uint64(orderID)
+
+	if parsed["userAddress"] == nil {
+		return errors.New("userAddress is missing")
+	}
+	oc.UserAddress = common.HexToAddress(parsed["userAddress"].(string))
+
+	if parsed["exchangeAddress"] == nil {
+		return errors.New("exchangeAddress is missing")
+	}
+	oc.ExchangeAddress = common.HexToAddress(parsed["exchangeAddress"].(string))
 
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{

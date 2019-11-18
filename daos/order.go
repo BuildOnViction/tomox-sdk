@@ -993,16 +993,18 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	S := o.Signature.S.Big()
 
 	msg := OrderMsg{
-		AccountNonce: uint64(n),
-		Status:       o.Status,
-		Hash:         o.Hash,
-		OrderID:      o.OrderID,
-		V:            V,
-		R:            R,
-		S:            S,
+		AccountNonce:    uint64(n),
+		Status:          o.Status,
+		Hash:            o.Hash,
+		OrderID:         o.OrderID,
+		UserAddress:     o.UserAddress,
+		ExchangeAddress: o.ExchangeAddress,
+		V:               V,
+		R:               R,
+		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID)
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress, n)
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
