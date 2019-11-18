@@ -38,6 +38,7 @@ func NewTradeDao() *TradeDao {
 
 	i4 := mgo.Index{
 		Key:    []string{"hash"},
+		Unique: true,
 		Sparse: true,
 	}
 
@@ -63,10 +64,17 @@ func NewTradeDao() *TradeDao {
 		Key:    []string{"createdAt"},
 		Sparse: true,
 	}
+	indexes, err := db.Session.DB(dbName).C(collection).Indexes()
+	if err != nil {
+		panic(err)
+	}
+
 	db.Session.DB(dbName).C(collection).EnsureIndex(i1)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i2)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i3)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i4)
+	if !existedIndex("index_trade_hash", indexes) {
+		db.Session.DB(dbName).C(collection).EnsureIndex(i4)
+	}
 	db.Session.DB(dbName).C(collection).EnsureIndex(i5)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i6)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i7)
