@@ -584,6 +584,9 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 	if orderSpec.OrderType != "" {
 		q["type"] = strings.ToUpper(orderSpec.OrderType)
 	}
+	if orderSpec.OrderHash != "" {
+		q["hash"] = orderSpec.OrderHash
+	}
 	var res types.OrderRes
 	orders := []*types.Order{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sort, offset, size, &orders)
@@ -981,11 +984,8 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	return nil
 }
 
+// CancelOrder cancel order
 func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
-
-	if o.Status != "CANCELLED" {
-		o.Status = "CANCELLED"
-	}
 
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 	defer rpcClient.Close()
@@ -1000,24 +1000,17 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 
 	msg := OrderMsg{
 		AccountNonce:    uint64(n),
-		Quantity:        o.Amount,
-		Price:           o.PricePoint,
-		ExchangeAddress: o.ExchangeAddress,
-		UserAddress:     o.UserAddress,
-		BaseToken:       o.BaseToken,
-		QuoteToken:      o.QuoteToken,
 		Status:          o.Status,
-		Side:            o.Side,
-		Type:            o.Type,
 		Hash:            o.Hash,
-		PairName:        o.PairName,
 		OrderID:         o.OrderID,
+		UserAddress:     o.UserAddress,
+		ExchangeAddress: o.ExchangeAddress,
 		V:               V,
 		R:               R,
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID)
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress, n)
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
