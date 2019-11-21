@@ -104,11 +104,14 @@ func (o *Order) Validate() error {
 	if o.Amount == nil {
 		return errors.New("Order 'amount' parameter is required")
 	}
-
-	if o.PricePoint == nil {
-		return errors.New("Order 'pricepoint' parameter is required")
+	if o.Type == TypeLimitOrder {
+		if o.PricePoint == nil {
+			return errors.New("Order 'pricepoint' parameter is required")
+		}
+		if math.IsEqualOrSmallerThan(o.PricePoint, big.NewInt(0)) {
+			return errors.New("Order 'pricepoint' parameter should be strictly positive")
+		}
 	}
-
 	if o.Side != BUY && o.Side != SELL {
 		return errors.New("Order 'side' should be 'SELL' or 'BUY', but got: '" + o.Side + "'")
 	}
@@ -123,10 +126,6 @@ func (o *Order) Validate() error {
 
 	if math.IsEqualOrSmallerThan(o.Amount, big.NewInt(0)) {
 		return errors.New("Order 'amount' parameter should be strictly positive")
-	}
-
-	if math.IsEqualOrSmallerThan(o.PricePoint, big.NewInt(0)) {
-		return errors.New("Order 'pricepoint' parameter should be strictly positive")
 	}
 
 	valid, err := o.VerifySignature()
