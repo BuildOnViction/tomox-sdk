@@ -15,23 +15,32 @@ Get packages
 ```
 go mod download
 ```
+
+Create config file
+```
+cp config/config.yaml.example config/config.yaml
+```
+Then you update `config.yaml` to be correct with your enviroment.
+
 Build binary file
 ```
 go build
 ```
 
-### Deployment guide step by step
-Read [deployment guide](DEPLOY.md)
+Run
+```
+./tomox-sdk
+```
+
+You also can follow [TomoX Testnet Guide](https://docs.tomochain.com/masternode/tomox-sdk/) to know how to run a DEX on Testnet
 
 ## REST API
-```
-https://dex.devnet.tomochain.com/swaggerui/#
-```
+TomoX API Document [https://apidocs.tomochain.com/#tomodex-apis](https://apidocs.tomochain.com/#tomodex-apis)
 
 ## Websocket API
-
 See [WEBSOCKET_API.md](WEBSOCKET_API.md)
 
+You also can test create/cancel order by using [TomoXJS SDK](https://github.com/tomochain/tomoxjs) and [TomoX Market Maker](https://github.com/tomochain/tomox-market-maker)
 
 ## Types
 

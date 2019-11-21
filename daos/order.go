@@ -89,9 +89,15 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 		Key: []string{"createdAt"},
 	}
 
-	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
+	indexes, err := db.Session.DB(dao.dbName).C(dao.collectionName).Indexes()
 	if err != nil {
 		panic(err)
+	}
+	if !existedIndex("index_order_hash", indexes) {
+		err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
