@@ -149,7 +149,9 @@ func (o *Order) ComputeHash() common.Hash {
 	sha.Write(o.BaseToken.Bytes())
 	sha.Write(o.QuoteToken.Bytes())
 	sha.Write(common.BigToHash(o.Amount).Bytes())
-	sha.Write(common.BigToHash(o.PricePoint).Bytes())
+	if o.Type == TypeLimitOrder {
+		sha.Write(common.BigToHash(o.PricePoint).Bytes())
+	}
 	sha.Write(common.BigToHash(o.EncodedSide()).Bytes())
 	sha.Write([]byte(o.Status))
 	sha.Write([]byte(o.Type))
