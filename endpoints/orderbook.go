@@ -149,17 +149,20 @@ func (e *OrderBookEndpoint) rawOrderBookWebSocket(input interface{}, c *ws.Clien
 func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
 	err := json.Unmarshal(b, &ev)
 	if err != nil {
 		logger.Error(err)
+		return
 	}
-
 	socket := ws.GetOrderBookSocket()
-
+	if ev == nil {
+		socket.SendErrorMessage(c, errInvalidPayload)
+		return
+	}
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
-		err := map[string]string{"Message": "Invalid payload"}
-		socket.SendErrorMessage(c, err)
+		socket.SendErrorMessage(c, errInvalidPayload)
 		return
 	}
 
@@ -174,7 +177,10 @@ func (e *OrderBookEndpoint) orderBookWebSocket(input interface{}, c *ws.Client) 
 	}
 
 	if ev.Type == types.SUBSCRIBE {
-
+		if p == nil {
+			socket.SendErrorMessage(c, errInvalidPayload)
+			return
+		}
 		if (p.BaseToken == common.Address{}) {
 			msg := map[string]string{"Message": "Invalid base token"}
 			socket.SendErrorMessage(c, msg)

@@ -104,11 +104,14 @@ func (o *Order) Validate() error {
 	if o.Amount == nil {
 		return errors.New("Order 'amount' parameter is required")
 	}
-
-	if o.PricePoint == nil {
-		return errors.New("Order 'pricepoint' parameter is required")
+	if o.Type == TypeLimitOrder {
+		if o.PricePoint == nil {
+			return errors.New("Order 'pricepoint' parameter is required")
+		}
+		if math.IsEqualOrSmallerThan(o.PricePoint, big.NewInt(0)) {
+			return errors.New("Order 'pricepoint' parameter should be strictly positive")
+		}
 	}
-
 	if o.Side != BUY && o.Side != SELL {
 		return errors.New("Order 'side' should be 'SELL' or 'BUY', but got: '" + o.Side + "'")
 	}
@@ -123,10 +126,6 @@ func (o *Order) Validate() error {
 
 	if math.IsEqualOrSmallerThan(o.Amount, big.NewInt(0)) {
 		return errors.New("Order 'amount' parameter should be strictly positive")
-	}
-
-	if math.IsEqualOrSmallerThan(o.PricePoint, big.NewInt(0)) {
-		return errors.New("Order 'pricepoint' parameter should be strictly positive")
 	}
 
 	valid, err := o.VerifySignature()
@@ -149,7 +148,9 @@ func (o *Order) ComputeHash() common.Hash {
 	sha.Write(o.BaseToken.Bytes())
 	sha.Write(o.QuoteToken.Bytes())
 	sha.Write(common.BigToHash(o.Amount).Bytes())
-	sha.Write(common.BigToHash(o.PricePoint).Bytes())
+	if o.Type == TypeLimitOrder {
+		sha.Write(common.BigToHash(o.PricePoint).Bytes())
+	}
 	sha.Write(common.BigToHash(o.EncodedSide()).Bytes())
 	sha.Write([]byte(o.Status))
 	sha.Write([]byte(o.Type))

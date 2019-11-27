@@ -528,7 +528,7 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 // handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
 func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	o := &types.Order{}
-
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
 	bytes, err := json.Marshal(ev.Payload)
 	if err != nil {
 		logger.Error(err)
@@ -541,7 +541,15 @@ func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client)
 	err = json.Unmarshal(bytes, &o)
 	if err != nil {
 		logger.Error(err)
-		c.SendOrderErrorMessage(err, o.Hash)
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
+		return
+	}
+	if o == nil {
+		c.SendMessage(ws.OrderChannel, types.ERROR, errInvalidPayload)
+		return
+	}
+	if err := o.Validate(); err != nil {
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
 		return
 	}
 

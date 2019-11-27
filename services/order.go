@@ -254,11 +254,12 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		logger.Error(err)
 		return err
 	}
-
-	err = s.validator.ValidateAvailableBalance(o)
-	if err != nil {
-		logger.Error(err)
-		return err
+	if o.Type == types.TypeLimitOrder {
+		err = s.validator.ValidateAvailableBalance(o)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
 	}
 
 	s.orderCache.Add(o.Hash, o)
