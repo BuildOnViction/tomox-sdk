@@ -14,7 +14,7 @@ type PriceBoardEndpoint struct {
 	priceBoardService interfaces.PriceBoardService
 }
 
-// ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
+// ServePriceBoardResource sets up the routing of token endpoints and the corresponding handlers.
 func ServePriceBoardResource(
 	r *mux.Router,
 	priceBoardService interfaces.PriceBoardService,
@@ -26,9 +26,9 @@ func ServePriceBoardResource(
 
 func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.Client) {
 	socket := ws.GetPriceBoardSocket()
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
 	if input == nil {
-		err := map[string]string{"Message": "Invalid payload"}
-		socket.SendErrorMessage(c, err)
+		socket.SendErrorMessage(c, errInvalidPayload)
 		return
 	}
 	b, _ := json.Marshal(input)
@@ -39,11 +39,14 @@ func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.
 		logger.Error(err)
 		return
 	}
+	if ev == nil {
+		socket.SendErrorMessage(c, errInvalidPayload)
+		return
+	}
 
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
-		err := map[string]string{"Message": "Invalid payload"}
-		socket.SendErrorMessage(c, err)
+		socket.SendErrorMessage(c, errInvalidPayload)
 		return
 	}
 
@@ -60,8 +63,7 @@ func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.
 
 	if ev.Type == types.SUBSCRIBE {
 		if p == nil {
-			err := map[string]string{"Message": "Invalid payload"}
-			socket.SendErrorMessage(c, err)
+			socket.SendErrorMessage(c, errInvalidPayload)
 			return
 		}
 		if (p.BaseToken == common.Address{}) {
