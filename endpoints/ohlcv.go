@@ -181,9 +181,11 @@ func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 	err := json.Unmarshal(b, &ev)
 	if err != nil {
 		logger.Error(err)
+		return
 	}
 	if ev == nil {
 		socket.SendErrorMessage(c, errInvalidPayload)
+		return
 	}
 
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
@@ -198,6 +200,7 @@ func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 		err = json.Unmarshal(b, &p)
 		if err != nil {
 			logger.Error(err)
+			return
 		}
 		if p == nil {
 			socket.SendErrorMessage(c, errInvalidPayload)

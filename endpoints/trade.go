@@ -232,13 +232,16 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
 	if err := json.Unmarshal(b, &ev); err != nil {
 		logger.Error(err)
 		return
 	}
-
 	socket := ws.GetTradeSocket()
-
+	if ev == nil {
+		socket.SendErrorMessage(c, errInvalidPayload)
+		return
+	}
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
 		err := map[string]string{"Message": "Invalid payload"}
@@ -255,6 +258,10 @@ func (e *tradeEndpoint) tradeWebsocket(input interface{}, c *ws.Client) {
 	}
 
 	if ev.Type == types.SUBSCRIBE {
+		if p == nil {
+			socket.SendErrorMessage(c, errInvalidPayload)
+			return
+		}
 		if (p.BaseToken == common.Address{}) {
 			err := map[string]string{"Message": "Invalid base token"}
 			socket.SendErrorMessage(c, err)
