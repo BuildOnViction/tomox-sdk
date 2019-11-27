@@ -541,7 +541,11 @@ func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client)
 	err = json.Unmarshal(bytes, &o)
 	if err != nil {
 		logger.Error(err)
-		c.SendOrderErrorMessage(err, o.Hash)
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
+		return
+	}
+	if err := o.Validate(); err != nil {
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
 		return
 	}
 

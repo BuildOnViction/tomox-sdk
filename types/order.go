@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/utils/math"
 )
@@ -81,9 +80,9 @@ func (o *Order) String() string {
 
 // Validate Verify userAddress, baseToken, quoteToken, etc. conditions are working
 func (o *Order) Validate() error {
-	if o.ExchangeAddress != common.HexToAddress(app.Config.Tomochain["exchange_address"]) {
-		return errors.New("Order 'exchangeAddress' parameter is incorrect")
-	}
+	// if o.ExchangeAddress != common.HexToAddress(app.Config.Tomochain["exchange_address"]) {
+	// 	return errors.New("Order 'exchangeAddress' parameter is incorrect")
+	// }
 
 	if (o.UserAddress == common.Address{}) {
 		return errors.New("Order 'userAddress' parameter is required")
