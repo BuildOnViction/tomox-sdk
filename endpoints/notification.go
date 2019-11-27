@@ -27,7 +27,6 @@ func ServeNotificationResource(
 	e := &NotificationEndpoint{notificationService}
 
 	r.HandleFunc("/api/notifications", e.HandleGetNotifications).Methods("GET")
-	r.HandleFunc("/api/notifications/{id}", e.HandleUpdateNotification).Methods("PUT")
 
 	r.HandleFunc("/api/notification/mark/read", e.HandleMarkReadNotification).Methods("PUT")
 	r.HandleFunc("/api/notification/mark/unread", e.HandleMarkUnReadNotification).Methods("PUT")
