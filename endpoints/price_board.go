@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomox-sdk/interfaces"
@@ -24,15 +25,20 @@ func ServePriceBoardResource(
 }
 
 func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.Client) {
+	socket := ws.GetPriceBoardSocket()
+	if input == nil {
+		err := map[string]string{"Message": "Invalid payload"}
+		socket.SendErrorMessage(c, err)
+		return
+	}
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
 
 	err := json.Unmarshal(b, &ev)
 	if err != nil {
 		logger.Error(err)
+		return
 	}
-
-	socket := ws.GetPriceBoardSocket()
 
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
@@ -49,10 +55,15 @@ func (e *PriceBoardEndpoint) handlePriceBoardWebSocket(input interface{}, c *ws.
 		logger.Error(err)
 		msg := map[string]string{"Message": "Internal server error"}
 		socket.SendErrorMessage(c, msg)
+		return
 	}
 
 	if ev.Type == types.SUBSCRIBE {
-
+		if p == nil {
+			err := map[string]string{"Message": "Invalid payload"}
+			socket.SendErrorMessage(c, err)
+			return
+		}
 		if (p.BaseToken == common.Address{}) {
 			msg := map[string]string{"Message": "Invalid base token"}
 			socket.SendErrorMessage(c, msg)
