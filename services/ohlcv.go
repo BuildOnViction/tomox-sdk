@@ -26,7 +26,7 @@ const (
 	intervalMin  = 60 * 60
 	intervalMax  = 12 * 30 * 24 * 60 * 60
 	yesterdaySec = 24 * 60 * 60
-	baseFiat     = "TOMO"
+	baseFiat     = "USD"
 	tomo         = "TOMO"
 )
 
