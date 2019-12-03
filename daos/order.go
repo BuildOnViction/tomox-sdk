@@ -979,6 +979,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		logger.Error(err)
 		return err
 	}
+	o.Status = "ADDED"
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
