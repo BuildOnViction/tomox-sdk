@@ -977,8 +977,10 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 
 	if err != nil {
 		logger.Error(err)
+		ws.SendOrderMessage("ERROR", o.UserAddress, o)
 		return err
 	}
+	o.Status = "ADDED"
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
@@ -1014,8 +1016,11 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 
 	if err != nil {
 		logger.Error(err)
+		ws.SendOrderMessage("ERROR", o.UserAddress, o)
 		return err
 	}
+
+	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
 	return nil
 }
 
