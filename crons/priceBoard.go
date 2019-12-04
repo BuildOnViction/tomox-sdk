@@ -2,6 +2,7 @@ package crons
 
 import (
 	"log"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/robfig/cron"
@@ -65,10 +66,10 @@ func (s *CronService) getPriceBoardData(bt, qt common.Address) func() {
 		}
 
 		id := utils.GetPriceBoardChannelID(bt, qt)
-
+		usd, _ := s.OHLCVService.GetLastPriceCurrentByTime(quoteToken.Symbol, time.Now())
 		result := types.PriceBoardData{
 			Ticks:          ticks,
-			PriceUSD:       quoteToken.USD,
+			PriceUSD:       usd.String(),
 			LastTradePrice: lastTradePrice,
 		}
 
