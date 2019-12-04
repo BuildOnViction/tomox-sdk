@@ -2,6 +2,7 @@ package crons
 
 import (
 	"log"
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -66,7 +67,11 @@ func (s *CronService) getPriceBoardData(bt, qt common.Address) func() {
 		}
 
 		id := utils.GetPriceBoardChannelID(bt, qt)
-		usd, _ := s.OHLCVService.GetLastPriceCurrentByTime(quoteToken.Symbol, time.Now())
+		var usd *big.Float
+		usd, e := s.OHLCVService.GetLastPriceCurrentByTime(quoteToken.Symbol, time.Now())
+		if e != nil || usd == nil {
+			usd = big.NewFloat(0)
+		}
 		result := types.PriceBoardData{
 			Ticks:          ticks,
 			PriceUSD:       usd.String(),
