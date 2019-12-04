@@ -176,16 +176,20 @@ func (e *OHLCVEndpoint) handleGetOHLCV(w http.ResponseWriter, r *http.Request) {
 func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
-
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
+	socket := ws.GetOHLCVSocket()
 	err := json.Unmarshal(b, &ev)
 	if err != nil {
 		logger.Error(err)
+		return
+	}
+	if ev == nil {
+		socket.SendErrorMessage(c, errInvalidPayload)
+		return
 	}
 
-	socket := ws.GetOHLCVSocket()
-
 	if ev.Type != types.SUBSCRIBE && ev.Type != types.UNSUBSCRIBE {
-		socket.SendErrorMessage(c, "Invalid payload")
+		socket.SendErrorMessage(c, errInvalidPayload)
 		return
 	}
 
@@ -196,8 +200,12 @@ func (e *OHLCVEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 		err = json.Unmarshal(b, &p)
 		if err != nil {
 			logger.Error(err)
+			return
 		}
-
+		if p == nil {
+			socket.SendErrorMessage(c, errInvalidPayload)
+			return
+		}
 		if (p.BaseToken == common.Address{}) {
 			socket.SendErrorMessage(c, "Invalid base token")
 			return

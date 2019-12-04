@@ -26,7 +26,8 @@ const (
 	intervalMin  = 60 * 60
 	intervalMax  = 12 * 30 * 24 * 60 * 60
 	yesterdaySec = 24 * 60 * 60
-	baseFiat     = "TOMO"
+	hourSec      = 60 * 60
+	baseFiat     = "USD"
 	tomo         = "TOMO"
 )
 
@@ -856,46 +857,49 @@ func (s *OHLCVService) GetPairPrice(pairName string, timestamp int64) (int64, er
 
 //GetFiatPriceChart get fiat chart
 func (s *OHLCVService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error) {
-	symbols := []string{"BTC", "ETH", "BNB"}
+	symbols := []string{"BTC", "ETH", "BNB", "TOMO"}
 	now := time.Now().Unix()
 	yesterday := now - yesterdaySec
 	res := make(map[string][]*types.FiatPriceItem)
+	totalVolume := make(map[string]*big.Int)
 	for _, symbol := range symbols {
-		symbol = symbol + "/" + baseFiat
-		pair, err := s.pairDao.GetByName(symbol)
-		if err == nil && pair != nil {
-			pairAddress := types.PairAddresses{
-				Name:       pair.Name(),
-				BaseToken:  pair.BaseTokenAddress,
-				QuoteToken: pair.QuoteTokenAddress,
-			}
-			var fiats []*types.FiatPriceItem
-			ticks, err := s.GetOHLCV([]types.PairAddresses{pairAddress}, 1, "hour", yesterday, now)
-			if err == nil {
-				totalVolume := big.NewInt(0)
-				for _, tick := range ticks {
+		var fiats []*types.FiatPriceItem
+		totalVolume[symbol] = big.NewInt(0)
+		pairs, err := s.pairDao.GetActivePairs()
+		if err != nil {
+			continue
+		}
+		for _, pair := range pairs {
+			if pair.BaseTokenSymbol == symbol {
+				tick := s.get24hTick(pair.BaseTokenAddress, pair.QuoteTokenAddress)
+				if tick != nil {
 					baseTokenDecimal := int64(math.Pow10(pair.BaseTokenDecimals))
-					quoteTokenDecimal := int64(math.Pow10(pair.QuoteTokenDecimals))
 					volume := big.NewInt(0).Div(tick.Volume, big.NewInt(baseTokenDecimal))
-					fiat := &types.FiatPriceItem{
-						Symbol:       pair.BaseTokenSymbol,
-						Price:        big.NewInt(0).Div(tick.Close, big.NewInt(quoteTokenDecimal)).String(),
-						Timestamp:    tick.Timestamp,
-						FiatCurrency: pair.QuoteTokenSymbol,
-						TotalVolume:  totalVolume.Add(totalVolume, volume).String(),
-					}
-					fiats = append(fiats, fiat)
+					totalVolume[symbol].Add(totalVolume[symbol], volume)
 				}
 			}
-			sort.Slice(fiats, func(i, j int) bool {
-				return fiats[i].Timestamp > fiats[j].Timestamp
-			})
-			if len(fiats) > 0 {
-				res[pair.BaseTokenSymbol] = fiats
+		}
+		for step := yesterday; step <= now; step = step + hourSec {
+			price, err := s.GetLastPriceCurrentByTime(symbol, time.Unix(step, 0))
+			if err == nil {
+				fiat := &types.FiatPriceItem{
+					Symbol:       symbol,
+					Price:        price.String(),
+					Timestamp:    step,
+					FiatCurrency: baseFiat,
+					TotalVolume:  totalVolume[symbol].String(),
+				}
+				fiats = append(fiats, fiat)
 			}
-
+		}
+		sort.Slice(fiats, func(i, j int) bool {
+			return fiats[i].Timestamp > fiats[j].Timestamp
+		})
+		if len(fiats) > 0 {
+			res[symbol] = fiats
 		}
 	}
+
 	return res, nil
 }
 
@@ -929,14 +933,22 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 	USD := symbol + "/" + baseFiat
 	price, err := s.getLastPricePairAtTime(USD, createAt)
 	if err != nil {
-		symbolpricebytomo, err := s.getLastPricePairAtTime(symbol+"/"+tomo, createAt)
+
+		var symbolpricebytomo *big.Float
+		var err error
+		symbolpricebytomo, err = s.getLastPricePairAtTime(symbol+"/"+tomo, createAt)
 		if err != nil {
-			return nil, errors.New("Price not found")
+			symbolpricebytomo, err = s.getLastPricePairAtTime(tomo+"/"+symbol, createAt)
+			if err != nil {
+				return nil, errors.New("Price not found")
+			}
+			symbolpricebytomo = new(big.Float).Quo(big.NewFloat(1), symbolpricebytomo)
 		}
 		tomopricebybase, err := s.getLastPricePairAtTime(tomo+"/"+baseFiat, createAt)
 		if err != nil {
 			return nil, errors.New("Price not found")
 		}
+
 		return big.NewFloat(0).Mul(symbolpricebytomo, tomopricebybase), nil
 	}
 	return price, err

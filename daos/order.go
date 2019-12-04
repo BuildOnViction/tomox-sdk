@@ -88,10 +88,15 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	i9 := mgo.Index{
 		Key: []string{"createdAt"},
 	}
-
-	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
-	if err != nil {
-		panic(err)
+	indexes := []mgo.Index{}
+	indexes, err := db.Session.DB(dao.dbName).C(dao.collectionName).Indexes()
+	if err == nil {
+		if !existedIndex("index_order_hash", indexes) {
+			err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
+			if err != nil {
+				panic(err)
+			}
+		}
 	}
 
 	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
@@ -578,6 +583,9 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 	if orderSpec.OrderType != "" {
 		q["type"] = strings.ToUpper(orderSpec.OrderType)
 	}
+	if orderSpec.OrderHash != "" {
+		q["hash"] = orderSpec.OrderHash
+	}
 	var res types.OrderRes
 	orders := []*types.Order{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sort, offset, size, &orders)
@@ -969,17 +977,16 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 
 	if err != nil {
 		logger.Error(err)
+		ws.SendOrderMessage("ERROR", o.UserAddress, o)
 		return err
 	}
+	o.Status = "ADDED"
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
 
+// CancelOrder cancel order
 func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
-
-	if o.Status != "CANCELLED" {
-		o.Status = "CANCELLED"
-	}
 
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 	defer rpcClient.Close()
@@ -994,30 +1001,26 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 
 	msg := OrderMsg{
 		AccountNonce:    uint64(n),
-		Quantity:        o.Amount,
-		Price:           o.PricePoint,
-		ExchangeAddress: o.ExchangeAddress,
-		UserAddress:     o.UserAddress,
-		BaseToken:       o.BaseToken,
-		QuoteToken:      o.QuoteToken,
 		Status:          o.Status,
-		Side:            o.Side,
-		Type:            o.Type,
 		Hash:            o.Hash,
-		PairName:        o.PairName,
 		OrderID:         o.OrderID,
+		UserAddress:     o.UserAddress,
+		ExchangeAddress: o.ExchangeAddress,
 		V:               V,
 		R:               R,
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID)
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress, n)
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
 		logger.Error(err)
+		ws.SendOrderMessage("ERROR", o.UserAddress, o)
 		return err
 	}
+
+	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
 	return nil
 }
 

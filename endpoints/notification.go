@@ -27,7 +27,6 @@ func ServeNotificationResource(
 	e := &NotificationEndpoint{notificationService}
 
 	r.HandleFunc("/api/notifications", e.HandleGetNotifications).Methods("GET")
-	r.HandleFunc("/api/notifications/{id}", e.HandleUpdateNotification).Methods("PUT")
 
 	r.HandleFunc("/api/notification/mark/read", e.HandleMarkReadNotification).Methods("PUT")
 	r.HandleFunc("/api/notification/mark/unread", e.HandleMarkUnReadNotification).Methods("PUT")
@@ -181,16 +180,18 @@ func (e *NotificationEndpoint) HandleUpdateNotification(w http.ResponseWriter, r
 func (e *NotificationEndpoint) handleNotificationWebSocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
-
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
 	err := json.Unmarshal(b, &ev)
 	if err != nil {
 		logger.Error(err)
 	}
-
+	if ev == nil {
+		ws.SendNotificationErrorMessage(c, errInvalidPayload)
+		return
+	}
 	if ev.Type != types.SUBSCRIBE {
 		logger.Info("Event Type", ev.Type)
-		err := map[string]string{"Message": "Invalid payload"}
-		ws.SendNotificationErrorMessage(c, err)
+		ws.SendNotificationErrorMessage(c, errInvalidPayload)
 		return
 	}
 
