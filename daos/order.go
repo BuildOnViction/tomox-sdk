@@ -571,7 +571,7 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 		q["baseToken"] = orderSpec.BaseToken
 	}
 	if orderSpec.QuoteToken != "" {
-		q["quoteToken"] = orderSpec.BaseToken
+		q["quoteToken"] = orderSpec.QuoteToken
 	}
 
 	if orderSpec.Side != "" {
