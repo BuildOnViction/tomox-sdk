@@ -1005,13 +1005,15 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		Hash:            o.Hash,
 		OrderID:         o.OrderID,
 		UserAddress:     o.UserAddress,
+		QuoteToken:      o.QuoteToken,
+		BaseToken:       o.BaseToken,
 		ExchangeAddress: o.ExchangeAddress,
 		V:               V,
 		R:               R,
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress, n)
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress.Hex(), n)
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
