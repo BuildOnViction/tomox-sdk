@@ -941,6 +941,10 @@ type OrderMsg struct {
 	Hash common.Hash `json:"hash" rlp:"-"`
 }
 
+type OrderErrorMsg struct {
+	Message string `json:"message,omitempty"`
+}
+
 // AddNewOrder add order
 func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
@@ -977,7 +981,9 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 
 	if err != nil {
 		logger.Error(err)
-		ws.SendOrderMessage("ERROR", o.UserAddress, err.Error())
+		ws.SendOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+			Message: err.Error(),
+		})
 		return err
 	}
 	o.Status = "ADDED"
@@ -1018,7 +1024,9 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 
 	if err != nil {
 		logger.Error(err)
-		ws.SendOrderMessage("ERROR", o.UserAddress, err.Error())
+		ws.SendOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+			Message: err.Error(),
+		})
 		return err
 	}
 
