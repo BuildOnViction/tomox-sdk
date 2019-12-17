@@ -43,7 +43,7 @@ func NewMarketsService(
 func (s *MarketsService) Subscribe(c *ws.Client) {
 	socket := ws.GetMarketSocket()
 
-	pairData, err := s.PairService.GetAllTokenPairData()
+	pairData, err := s.OHLCVService.GetAllTokenPairData()
 
 	if err != nil {
 		logger.Error(err)

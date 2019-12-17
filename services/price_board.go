@@ -116,6 +116,7 @@ func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, durat
 	p := pairs[0]
 	tick := s.OHLCVService.Get24hTick(p.BaseToken, p.QuoteToken)
 	if tick != nil {
+		tick.Volume = tick.VolumeByQuote
 		return []*types.Tick{tick}, nil
 	} else {
 		return s.getPriceBoardData(pairs, duration, unit, timeInterval...)

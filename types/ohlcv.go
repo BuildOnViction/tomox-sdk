@@ -12,18 +12,19 @@ import (
 
 // Tick is the format in which mongo aggregate pipeline returns data when queried for OHLCV data
 type Tick struct {
-	Pair      PairID    `json:"id,omitempty" bson:"_id"`
-	Open      *big.Int  `json:"open,omitempty" bson:"open"`
-	Close     *big.Int  `json:"close,omitempty" bson:"close"`
-	High      *big.Int  `json:"high,omitempty" bson:"high"`
-	Low       *big.Int  `json:"low,omitempty" bson:"low"`
-	Volume    *big.Int  `json:"volume,omitempty" bson:"volume"`
-	Count     *big.Int  `json:"count,omitempty" bson:"count"`
-	Timestamp int64     `json:"timestamp,omitempty" bson:"timestamp"`
-	OpenTime  time.Time `json:"openTime" bson:"openTime"`
-	CloseTime time.Time `json:"closeTime" bson:"closeTime"`
-	Duration  int64     `json:"duration" bson:"duration"`
-	Unit      string    `json:"unit" bson:"unit"`
+	Pair          PairID    `json:"id,omitempty" bson:"_id"`
+	Open          *big.Int  `json:"open,omitempty" bson:"open"`
+	Close         *big.Int  `json:"close,omitempty" bson:"close"`
+	High          *big.Int  `json:"high,omitempty" bson:"high"`
+	Low           *big.Int  `json:"low,omitempty" bson:"low"`
+	Volume        *big.Int  `json:"volume,omitempty" bson:"volume"`
+	VolumeByQuote *big.Int  `json:"volumebyquote,omitempty" bson:"volumebyquote"`
+	Count         *big.Int  `json:"count,omitempty" bson:"count"`
+	Timestamp     int64     `json:"timestamp,omitempty" bson:"timestamp"`
+	OpenTime      time.Time `json:"openTime" bson:"openTime"`
+	CloseTime     time.Time `json:"closeTime" bson:"closeTime"`
+	Duration      int64     `json:"duration" bson:"duration"`
+	Unit          string    `json:"unit" bson:"unit"`
 }
 
 // PairID is the subdocument for aggregate grouping for OHLCV data
@@ -46,15 +47,6 @@ type OHLCVParams struct {
 // AveragePrice get price averge
 func (t *Tick) AveragePrice() *big.Int {
 	return math.Avg(t.Open, t.Close)
-}
-
-// ConvertedVolume returns the value exchanged during this tick in the currency for which the 'exchangeRate' param
-// was provided.
-func (t *Tick) ConvertedVolume(p *Pair, exchangeRate float64) float64 {
-	valueAsToken := math.DivideToFloat(t.Volume, p.BaseTokenMultiplier())
-	value := valueAsToken / exchangeRate
-
-	return value
 }
 
 // MarshalJSON returns the json encoded byte array representing the trade struct
@@ -82,6 +74,10 @@ func (t *Tick) MarshalJSON() ([]byte, error) {
 
 	if t.Volume != nil {
 		tick["volume"] = t.Volume.String()
+	}
+
+	if t.VolumeByQuote != nil {
+		tick["volumebyquote"] = t.VolumeByQuote.String()
 	}
 
 	if t.Close != nil {
@@ -142,6 +138,10 @@ func (t *Tick) UnmarshalJSON(b []byte) error {
 
 	if tick["volume"] != nil {
 		t.Volume = math.ToBigInt(tick["volume"].(string))
+	}
+
+	if tick["volumebyquote"] != nil {
+		t.VolumeByQuote = math.ToBigInt(tick["volumebyquote"].(string))
 	}
 
 	if tick["count"] != nil {
