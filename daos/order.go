@@ -571,7 +571,7 @@ func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset 
 		q["baseToken"] = orderSpec.BaseToken
 	}
 	if orderSpec.QuoteToken != "" {
-		q["quoteToken"] = orderSpec.BaseToken
+		q["quoteToken"] = orderSpec.QuoteToken
 	}
 
 	if orderSpec.Side != "" {
@@ -941,6 +941,10 @@ type OrderMsg struct {
 	Hash common.Hash `json:"hash" rlp:"-"`
 }
 
+type OrderErrorMsg struct {
+	Message string `json:"message,omitempty"`
+}
+
 // AddNewOrder add order
 func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
@@ -977,7 +981,9 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 
 	if err != nil {
 		logger.Error(err)
-		ws.SendOrderMessage("ERROR", o.UserAddress, o)
+		ws.SendOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+			Message: err.Error(),
+		})
 		return err
 	}
 	o.Status = "ADDED"
@@ -1005,18 +1011,22 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		Hash:            o.Hash,
 		OrderID:         o.OrderID,
 		UserAddress:     o.UserAddress,
+		QuoteToken:      o.QuoteToken,
+		BaseToken:       o.BaseToken,
 		ExchangeAddress: o.ExchangeAddress,
 		V:               V,
 		R:               R,
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress, n)
+	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress.Hex(), n)
 	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
 
 	if err != nil {
 		logger.Error(err)
-		ws.SendOrderMessage("ERROR", o.UserAddress, o)
+		ws.SendOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+			Message: err.Error(),
+		})
 		return err
 	}
 
