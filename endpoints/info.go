@@ -9,7 +9,6 @@ import (
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
-	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
 type infoEndpoint struct {
@@ -41,7 +40,8 @@ func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	if len(quotes) == 0 {
 		fee = "0"
 	} else {
-		fee = math.Div(quotes[0].MakeFee, big.NewInt(10000)).String() // This value will be divided by 10000 on TomoX
+		f, _, _ := big.ParseFloat(quotes[0].MakeFee.String(), int(10), uint(10), big.ToZero)
+		fee = big.NewFloat(0).Mul(f, big.NewFloat(0.0001)).String()
 	}
 
 	res := map[string]interface{}{
@@ -70,7 +70,8 @@ func (e *infoEndpoint) handleGetFeeInfo(w http.ResponseWriter, r *http.Request) 
 	if len(quotes) == 0 {
 		fee = "0"
 	} else {
-		fee = math.Div(quotes[0].MakeFee, big.NewInt(10000)).String()
+		f, _, _ := big.ParseFloat(quotes[0].MakeFee.String(), int(10), uint(10), big.ToZero)
+		fee = big.NewFloat(0).Mul(f, big.NewFloat(0.0001)).String()
 	}
 
 	res := map[string]string{"fee": fee}
