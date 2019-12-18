@@ -70,7 +70,7 @@ func (e *infoEndpoint) handleGetFeeInfo(w http.ResponseWriter, r *http.Request) 
 	if len(quotes) == 0 {
 		fee = "0"
 	} else {
-		fee = quotes[0].MakeFee.String()
+		fee = math.Div(quotes[0].MakeFee, big.NewInt(10000)).String()
 	}
 
 	res := map[string]string{"fee": fee}
