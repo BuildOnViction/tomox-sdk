@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"math/big"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -8,6 +9,7 @@ import (
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
+	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
 type infoEndpoint struct {
@@ -39,12 +41,12 @@ func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	if len(quotes) == 0 {
 		fee = "0"
 	} else {
-		fee = quotes[0].MakeFee.String()
+		fee = math.Div(quotes[0].MakeFee, big.NewInt(10000)).String() // This value will be divided by 10000 on TomoX
 	}
 
 	res := map[string]interface{}{
 		"exchangeAddress": ex.Hex(),
-		"fee":             fee, // This value will be divided by 1000 on TomoX
+		"fee":             fee,
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, res)
