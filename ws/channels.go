@@ -17,6 +17,12 @@ const (
 	DepositChannel      = "deposit"
 	MarketsChannel      = "markets"
 	NotificationChannel = "notification"
+
+	// Lending channel
+	LendingOrderChannel = "lending_order"
+	LendingTradeChannel = "lending_trade"
+
+	LendingOrderBookChannel = "lending_orderbook"
 )
 
 var socketChannels map[string]func(interface{}, *Client)

@@ -38,6 +38,13 @@ const (
 	OrderbookChannel = "orderbook"
 	OrderChannel     = "orders"
 	OHLCVChannel     = "ohlcv"
+
+	// Lending
+	LENDING_ORDER_ADDED            = "LENDING_ORDER_ADDED"
+	LENDING_ORDER_FILLED           = "LENDING_ORDER_FILLED"
+	LENDING_ORDER_PARTIALLY_FILLED = "LENDING_ORDER_PARTIALLY_FILLED"
+	LENDING_ORDER_CANCELLED        = "LENDING_ORDER_CANCELLED"
+	LENDING_ORDER_REJECTED         = "LENDING_ORDER_REJECTED"
 )
 
 type WebsocketMessage struct {

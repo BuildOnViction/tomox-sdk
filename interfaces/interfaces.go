@@ -384,3 +384,19 @@ type RelayerService interface {
 type Relayer interface {
 	GetRelayer() (*relayer.RInfo, error)
 }
+
+// LendingOrderService for lending
+type LendingOrderService interface {
+	NewLendingOrder(o *types.LendingOrder) error
+	CancelLendingOrder(oc *types.LendingOrderCancel) error
+	GetLendingNonceByUserAddress(addr common.Address) (uint64, error)
+}
+
+// LendingOrderDao dao
+type LendingOrderDao interface {
+	GetByHash(h common.Hash) (*types.LendingOrder, error)
+	Watch() (*mgo.ChangeStream, *mgo.Session, error)
+	GetLendingNonce(addr common.Address) (uint64, error)
+	AddNewLendingOrder(o *types.LendingOrder) error
+	CancelLendingOrder(o *types.LendingOrder) error
+}

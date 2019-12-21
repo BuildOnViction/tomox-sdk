@@ -126,6 +126,11 @@ func NewRouter(
 	endpoints.ServeMarketsResource(r, marketsService, pairService)
 	endpoints.ServeNotificationResource(r, notificationService)
 
+	// Endpoint for lending
+	lendingOrderDao := daos.NewLendingOrderDao()
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
+	endpoints.ServeLendingOrderResource(r, lendingOrderService)
+
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 	contractAddress := common.HexToAddress(app.Config.Tomochain["contract_address"])
 	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress)
@@ -142,6 +147,9 @@ func NewRouter(
 
 	rabbitConn.SubscribeOrderResponses(orderService.HandleEngineResponse)
 	rabbitConn.SubscribeTradeResponses(tradeService.HandleTradeResponse)
+
+	// Subscribe lending
+	rabbitConn.SubscribeLendingOrders(lendingOrderService.HandleLendingOrders)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, relayerService, eng)
