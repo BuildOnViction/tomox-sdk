@@ -390,6 +390,7 @@ type LendingOrderService interface {
 	NewLendingOrder(o *types.LendingOrder) error
 	CancelLendingOrder(oc *types.LendingOrderCancel) error
 	GetLendingNonceByUserAddress(addr common.Address) (uint64, error)
+	GetByHash(h common.Hash) (*types.LendingOrder, error)
 }
 
 // LendingOrderDao dao

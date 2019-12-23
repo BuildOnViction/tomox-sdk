@@ -49,7 +49,7 @@ type LendingOrder struct {
 	Nonce           *big.Int       `bson:"nonce" json:"nonce"`
 	CreatedAt       time.Time      `bson:"createdAt" json:"createdAt"`
 	UpdatedAt       time.Time      `bson:"updatedAt" json:"updatedAt"`
-	LendingID       uint64         `bson:"lendingId" json:"lendingId"`
+	LendingID       uint64         `bson:"lendingID" json:"lendingID"`
 	ExtraData       string         `bson:"extraData" json:"extraData"`
 	Key             string         `json:"key" bson:"key"`
 }
@@ -354,12 +354,13 @@ func (o *LendingOrder) GetBSON() (interface{}, error) {
 		Type:            o.Type,
 		Hash:            o.Hash.Hex(),
 		Quantity:        o.Quantity.String(),
-
-		Nonce:     o.Nonce.String(),
-		CreatedAt: o.CreatedAt,
-		UpdatedAt: o.UpdatedAt,
-		LendingID: strconv.FormatUint(o.LendingID, 10),
-		Key:       o.Key,
+		Term:            strconv.FormatUint(o.Term, 10),
+		Interest:        strconv.FormatUint(o.Interest, 10),
+		Nonce:           o.Nonce.String(),
+		CreatedAt:       o.CreatedAt,
+		UpdatedAt:       o.UpdatedAt,
+		LendingID:       strconv.FormatUint(o.LendingID, 10),
+		Key:             o.Key,
 	}
 
 	if o.ID.Hex() == "" {
@@ -387,13 +388,12 @@ func (o *LendingOrder) GetBSON() (interface{}, error) {
 func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID              bson.ObjectId    `json:"id,omitempty" bson:"_id"`
-		PairName        string           `json:"pairName" bson:"pairName"`
 		RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
 		UserAddress     string           `json:"userAddress" bson:"userAddress"`
 		CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 		LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
-		Term            uint64           `json:"term" bson:"term"`
-		Interest        uint64           `json:"interest" bson:"interest"`
+		Term            string           `json:"term" bson:"term"`
+		Interest        string           `json:"interest" bson:"interest"`
 		Status          string           `json:"status" bson:"status"`
 		Side            string           `json:"side" bson:"side"`
 		Type            string           `json:"type" bson:"type"`
@@ -425,7 +425,14 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 	o.Side = decoded.Side
 	o.Type = decoded.Type
 	o.Hash = common.HexToHash(decoded.Hash)
-
+	term, err := strconv.ParseUint(decoded.Term, 10, 64)
+	if err == nil {
+		o.Term = term
+	}
+	interest, err := strconv.ParseUint(decoded.Interest, 10, 64)
+	if err == nil {
+		o.Interest = interest
+	}
 	if decoded.Quantity != "" {
 		o.Quantity = math.ToBigInt(decoded.Quantity)
 	}
@@ -465,16 +472,16 @@ type LendingRecord struct {
 	RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
 	CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 	LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
+	Term            string           `json:"term" bson:"term"`
+	Interest        string           `json:"interest" bson:"interest"`
 	Status          string           `json:"status" bson:"status"`
 	Side            string           `json:"side" bson:"side"`
 	Type            string           `json:"type" bson:"type"`
 	Hash            string           `json:"hash" bson:"hash"`
-	Price           string           `json:"price" bson:"price"`
 	Quantity        string           `json:"quantity" bson:"quantity"`
 	FilledAmount    string           `json:"filledAmount" bson:"filledAmount"`
 	Nonce           string           `json:"nonce" bson:"nonce"`
 	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
-	PairName        string           `json:"pairName" bson:"pairName"`
 	CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
 	UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
 	LendingID       string           `json:"lendingID,omitempty" bson:"lendingID"`
@@ -503,6 +510,8 @@ type LendingOrderCancel struct {
 	Status         string         `json:"status"`
 	UserAddress    common.Address `json:"userAddress"`
 	RelayerAddress common.Address `json:"relayerAddress"`
+	Term           uint64         `json:"term"`
+	Interest       uint64         `json:"interest"`
 	Signature      *Signature     `json:"signature"`
 }
 
@@ -536,7 +545,7 @@ func (oc *LendingOrderCancel) UnmarshalJSON(b []byte) error {
 	}
 
 	if parsed["lendingHash"] == nil {
-		return errors.New("Order Hash is missing")
+		return errors.New("Lending Hash is missing")
 	}
 	oc.LendingHash = common.HexToHash(parsed["lendingHash"].(string))
 
@@ -558,11 +567,11 @@ func (oc *LendingOrderCancel) UnmarshalJSON(b []byte) error {
 	if parsed["lendingID"] == nil {
 		return errors.New("lendingID is missing")
 	}
-	lendingID, err := strconv.ParseInt(parsed["orderID"].(string), 10, 64)
+	lendingID, err := strconv.ParseUint(parsed["lendingID"].(string), 10, 64)
 	if err != nil {
 		return err
 	}
-	oc.LendingID = uint64(lendingID)
+	oc.LendingID = lendingID
 
 	if parsed["userAddress"] == nil {
 		return errors.New("userAddress is missing")

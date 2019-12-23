@@ -517,7 +517,6 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 			}
 		}
 	} else {
-		logger.Debug("keynull", key)
 		return nil
 	}
 	sort.Slice(res, func(i, j int) bool {

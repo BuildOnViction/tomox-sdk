@@ -10,6 +10,7 @@ import (
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/ws"
 )
 
 // LendingOrderService struct
@@ -28,6 +29,11 @@ func NewLendingOrderService(lendingDao interfaces.LendingOrderDao, engine interf
 		broker,
 		sync.RWMutex{},
 	}
+}
+
+// GetByHash get lending by hash
+func (s *LendingOrderService) GetByHash(hash common.Hash) (*types.LendingOrder, error) {
+	return s.lendingDao.GetByHash(hash)
 }
 
 // NewLendingOrder validates if the passed order is valid or not based on user's available
@@ -63,12 +69,17 @@ func (s *LendingOrderService) NewLendingOrder(o *types.LendingOrder) error {
 func (s *LendingOrderService) CancelLendingOrder(oc *types.LendingOrderCancel) error {
 	var err error
 	var o *types.LendingOrder
+	o, err = s.lendingDao.GetByHash(oc.LendingHash)
+	if err != nil || o == nil {
+		return errors.New("No lending with corresponding hash")
+	}
 	o.Nonce = oc.Nonce
 	o.Signature = oc.Signature
 	o.Status = oc.Status
 	o.UserAddress = oc.UserAddress
 	o.RelayerAddress = oc.RelayerAddress
-
+	o.Term = oc.Term
+	o.Interest = oc.Interest
 	err = s.broker.PublishCancelLendingOrderMessage(o)
 	if err != nil {
 		logger.Error(err)
@@ -78,9 +89,9 @@ func (s *LendingOrderService) CancelLendingOrder(oc *types.LendingOrderCancel) e
 	return nil
 }
 
-// HandleEngineResponse listens to messages incoming from the engine and handles websocket
+// HandleLendingOrderResponse listens to messages incoming from the engine and handles websocket
 // responses and database updates accordingly
-func (s *LendingOrderService) HandleEngineResponse(res *types.EngineResponse) error {
+func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineResponse) error {
 	switch res.Status {
 	case types.LENDING_ORDER_ADDED:
 		s.handleLendingOrderAdded(res)
@@ -113,6 +124,8 @@ func (s *LendingOrderService) HandleEngineResponse(res *types.EngineResponse) er
 // handleLendingOrderAdded returns a websocket message informing the client that his order has been added
 // to the orderbook (but currently not matched)
 func (s *LendingOrderService) handleLendingOrderAdded(res *types.EngineResponse) {
+	o := res.LendingOrder
+	ws.SendLendingOrderMessage("LENDINNG_ORDER_ADDED", o.UserAddress, o)
 }
 
 func (s *LendingOrderService) handleLendingOrderPartialFilled(res *types.EngineResponse) {
@@ -180,7 +193,7 @@ func (s *LendingOrderService) WatchChanges() {
 
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
-				logger.Debugf("Operation Type: %s", ev.OperationType)
+				logger.Debugf("Lending Operation Type: %s", ev.OperationType)
 				s.HandleDocumentType(ev)
 			}
 		}
@@ -209,7 +222,7 @@ func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEven
 	}
 
 	if res.Status != "" {
-		err := s.broker.PublishOrderResponse(res)
+		err := s.broker.PublishLendingOrderResponse(res)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -221,8 +234,8 @@ func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEven
 
 // process for lending form rabbitmq
 
-// HandleLendingOrders handle lending order
-func (s *LendingOrderService) HandleLendingOrders(msg *rabbitmq.Message) error {
+// HandleLendingOrdersCreateCancel handle lending order api
+func (s *LendingOrderService) HandleLendingOrdersCreateCancel(msg *rabbitmq.Message) error {
 	switch msg.Type {
 	case "NEW_LENDING_ORDER":
 		err := s.handleNewLendingOrder(msg.Data)

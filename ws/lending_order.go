@@ -88,6 +88,6 @@ func SendLendingOrderMessage(msgType types.SubscriptionEvent, a common.Address, 
 	}
 
 	for _, c := range conn {
-		c.SendMessage(OrderChannel, msgType, payload)
+		c.SendMessage(LendingOrderChannel, msgType, payload)
 	}
 }

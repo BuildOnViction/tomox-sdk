@@ -28,7 +28,7 @@ type LendingOrderDaoOption = func(*LendingOrderDao) error
 // NewLendingOrderDao returns a new instance of LendingOrderDao
 func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	dao := &LendingOrderDao{}
-	dao.collectionName = "orders"
+	dao.collectionName = "lending_orders"
 	dao.dbName = app.Config.DBName
 
 	for _, op := range opts {
@@ -199,7 +199,7 @@ type LendingOrderMsg struct {
 	Status          string         `json:"status,omitempty"`
 	Side            string         `json:"side,omitempty"`
 	Type            string         `json:"type,omitempty"`
-	LendingID       uint64         `json:"lendingId,omitempty"`
+	LendingID       uint64         `json:"lendingID,omitempty"`
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
 	R *big.Int `json:"r" gencodec:"required"`
@@ -245,13 +245,15 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 
 	if err != nil {
 		logger.Error(err)
-		ws.SendOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+		ws.SendLendingOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
 			Message: err.Error(),
 		})
 		return err
 	}
+	o.Status = "OPEN"
+	dao.Create(o)
 	o.Status = "ADDED"
-	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
+	ws.SendLendingOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
 
@@ -277,24 +279,27 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 		UserAddress:     o.UserAddress,
 		CollateralToken: o.CollateralToken,
 		LendingToken:    o.LendingToken,
+		Term:            o.Term,
+		Interest:        o.Interest,
 		RelayerAddress:  o.RelayerAddress,
 		V:               V,
 		R:               R,
 		S:               S,
 	}
 	var result interface{}
-	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.LendingID, o.UserAddress.Hex(), n)
-	err = rpcClient.Call(&result, "tomox_sendOrder", msg)
+	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex(), o.LendingID, o.UserAddress.Hex(), n)
+	err = rpcClient.Call(&result, "tomox_sendLending", msg)
 
 	if err != nil {
 		logger.Error(err)
-		ws.SendOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+		ws.SendLendingOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
 			Message: err.Error(),
 		})
 		return err
 	}
 
-	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendLendingOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
+	dao.Create(o)
 	return nil
 }
 

@@ -149,13 +149,19 @@ func NewRouter(
 	rabbitConn.SubscribeTradeResponses(tradeService.HandleTradeResponse)
 
 	// Subscribe lending
-	rabbitConn.SubscribeLendingOrders(lendingOrderService.HandleLendingOrders)
+	// for create/cancel order
+	rabbitConn.SubscribeLendingOrders(lendingOrderService.HandleLendingOrdersCreateCancel)
+	// for database changing response
+	rabbitConn.SubscribeLendingOrderResponses(lendingOrderService.HandleLendingOrderResponse)
 
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, relayerService, eng)
 	// initialize MongoDB Change Streams
 	go orderService.WatchChanges()
 	go tradeService.WatchChanges()
+
+	// lending mongo watch change
+	go lendingOrderService.WatchChanges()
 
 	cronService.InitCrons()
 	return r

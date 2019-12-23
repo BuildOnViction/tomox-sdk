@@ -67,13 +67,14 @@ func (c *Connection) PublishLendingOrderMessage(o *types.LendingOrder) error {
 
 // PublishCancelLendingOrderMessage publish cancel message to queue
 func (c *Connection) PublishCancelLendingOrderMessage(o *types.LendingOrder) error {
+
 	b, err := json.Marshal(o)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	err = c.PublishOrder(&Message{
+	err = c.PublishLendingOrder(&Message{
 		Type: "CANCEL_LENDING_ORDER",
 		Data: b,
 	})
@@ -82,7 +83,6 @@ func (c *Connection) PublishCancelLendingOrderMessage(o *types.LendingOrder) err
 		logger.Error(err)
 		return err
 	}
-
 	return nil
 }
 

@@ -24,9 +24,21 @@ func ServeLendingOrderResource(r *mux.Router, lendingorderService interfaces.Len
 	r.HandleFunc("/api/lending/nonce", e.handleGetLendingOrderNonce).Methods("GET")
 	r.HandleFunc("/api/lending", e.handleNewLendingOrder).Methods("POST")
 	r.HandleFunc("/api/lending/cancel", e.handleCancelLendingOrder).Methods("POST")
+	r.HandleFunc("/api/lending/{hash}", e.handleLendingByHash).Methods("GET")
 	ws.RegisterChannel(ws.LendingOrderChannel, e.ws)
 }
+func (e *lendingorderEndpoint) handleLendingByHash(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	lendingHash := vars["hash"]
+	res, err := e.lendingorderService.GetByHash(common.HexToHash(lendingHash))
 
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, res)
+}
 func (e *lendingorderEndpoint) handleNewLendingOrder(w http.ResponseWriter, r *http.Request) {
 	var o *types.LendingOrder
 	decoder := json.NewDecoder(r.Body)
@@ -62,7 +74,6 @@ func (e *lendingorderEndpoint) handleCancelLendingOrder(w http.ResponseWriter, r
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
 		return
 	}
-	logger.Info("handle cancel order nonce", oc.Nonce)
 	err = e.lendingorderService.CancelLendingOrder(oc)
 	if err != nil {
 		logger.Error(err)
