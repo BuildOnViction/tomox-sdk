@@ -131,6 +131,13 @@ func NewRouter(
 	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
 
+	lendingTradeDao := daos.NewLendingTradeDao()
+	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
+	endpoints.ServeLendingTradeResource(r, lendingTradeService)
+
+	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
+	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
+
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 	contractAddress := common.HexToAddress(app.Config.Tomochain["contract_address"])
 	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress)
@@ -153,7 +160,7 @@ func NewRouter(
 	rabbitConn.SubscribeLendingOrders(lendingOrderService.HandleLendingOrdersCreateCancel)
 	// for database changing response
 	rabbitConn.SubscribeLendingOrderResponses(lendingOrderService.HandleLendingOrderResponse)
-
+	rabbitConn.SubscribeLendingTradeResponses(lendingTradeService.HandleLendingTradeResponse)
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, relayerService, eng)
 	// initialize MongoDB Change Streams
@@ -162,7 +169,7 @@ func NewRouter(
 
 	// lending mongo watch change
 	go lendingOrderService.WatchChanges()
-
+	go lendingTradeService.WatchChanges()
 	cronService.InitCrons()
 	return r
 }

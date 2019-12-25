@@ -2,6 +2,7 @@ package daos
 
 import (
 	"math/big"
+	"sort"
 	"strconv"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils/math"
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
@@ -184,6 +186,65 @@ func (dao *LendingOrderDao) Drop() error {
 	}
 
 	return nil
+}
+
+func (dao *LendingOrderDao) getSideLendingOrderBook(term uint64, lendingToken common.Address, side string, srt int, limit ...int) ([]map[string]string, error) {
+
+	sides := []map[string]string{}
+
+	var lendingOrders []types.LendingOrder
+	c := dao.GetCollection()
+
+	// TODO: need to have limit
+	err := c.Find(bson.M{
+		"status":       bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"term":         strconv.FormatUint(term, 10),
+		"lendingToken": lendingToken.Hex(),
+		"side":         side,
+	}).Sort("-createdAt").All(&lendingOrders)
+
+	pa := make(map[string]*big.Int)
+	for _, lendingOrder := range lendingOrders {
+		interest := strconv.FormatUint(lendingOrder.Interest, 10)
+		if val, ok := pa[interest]; ok {
+			pa[interest] = math.Sub(math.Add(val, lendingOrder.Quantity), lendingOrder.FilledAmount)
+		} else {
+			pa[interest] = math.Sub(lendingOrder.Quantity, lendingOrder.FilledAmount)
+		}
+	}
+
+	for p, a := range pa {
+		s := map[string]string{
+			"interest": p,
+			"amount":   a.String(),
+		}
+
+		sides = append(sides, s)
+	}
+
+	sort.SliceStable(sides, func(i, j int) bool {
+		return math.ToBigInt(sides[i]["interest"]).Cmp(math.ToBigInt(sides[j]["interest"])) == (0 - srt)
+	})
+
+	return sides, err
+}
+
+// GetLendingOrderBook get lending order token
+func (dao *LendingOrderDao) GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error) {
+
+	borrow, err := dao.getSideLendingOrderBook(term, lendingToken, types.BORROW, -1)
+	if err != nil {
+		logger.Error(err)
+		return nil, nil, err
+	}
+
+	lend, err := dao.getSideLendingOrderBook(term, lendingToken, types.LEND, -1)
+	if err != nil {
+		logger.Error(err)
+		return nil, nil, err
+	}
+
+	return borrow, lend, nil
 }
 
 // LendingOrderMsg for tomox rpc

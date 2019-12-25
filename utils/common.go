@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,6 +38,11 @@ func GetTradeChannelID(bt, qt common.Address) string {
 	return strings.ToLower(fmt.Sprintf("%s::%s", bt.Hex(), qt.Hex()))
 }
 
+// GetLendingTradeChannelID get channel from term and lending token
+func GetLendingTradeChannelID(term uint64, lendingToken common.Address) string {
+	return strings.ToLower(fmt.Sprintf("%s::%s", strconv.FormatUint(term, 10), lendingToken.Hex()))
+}
+
 func GetOHLCVChannelID(bt, qt common.Address, unit string, duration int64) string {
 	pair := GetPairKey(bt, qt)
 	return fmt.Sprintf("%s::%d::%s", pair, duration, unit)
@@ -45,7 +51,9 @@ func GetOHLCVChannelID(bt, qt common.Address, unit string, duration int64) strin
 func GetOrderBookChannelID(bt, qt common.Address) string {
 	return strings.ToLower(fmt.Sprintf("%s::%s", bt.Hex(), qt.Hex()))
 }
-
+func GetLendingOrderBookChannelID(term uint64, lendingToken common.Address) string {
+	return strings.ToLower(fmt.Sprintf("%s::%s", strconv.FormatUint(term, 10), lendingToken.Hex()))
+}
 func GetPriceBoardChannelID(bt, qt common.Address) string {
 	return strings.ToLower(fmt.Sprintf("%s::%s", bt.Hex(), qt.Hex()))
 }

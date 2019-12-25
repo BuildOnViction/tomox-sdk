@@ -400,4 +400,26 @@ type LendingOrderDao interface {
 	GetLendingNonce(addr common.Address) (uint64, error)
 	AddNewLendingOrder(o *types.LendingOrder) error
 	CancelLendingOrder(o *types.LendingOrder) error
+	GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error)
+}
+
+// LendingOrderBookService interface for lending order book
+type LendingOrderBookService interface {
+	GetLendingOrderBook(term uint64, lendingToken common.Address) (*types.LendingOrderBook, error)
+	SubscribeLendingOrderBook(c *ws.Client, term uint64, lendingToken common.Address)
+	UnsubscribeLendingOrderBook(c *ws.Client)
+	UnsubscribeLendingOrderBookChannel(c *ws.Client, term uint64, lendingToken common.Address)
+}
+
+// LendingTradeService interface for lending service
+type LendingTradeService interface {
+	Subscribe(c *ws.Client, term uint64, lendingToken common.Address)
+	UnsubscribeChannel(c *ws.Client, term uint64, lendingToken common.Address)
+	Unsubscribe(c *ws.Client)
+}
+
+// LendingTradeDao interface for lending dao
+type LendingTradeDao interface {
+	GetTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error)
+	Watch() (*mgo.ChangeStream, *mgo.Session, error)
 }

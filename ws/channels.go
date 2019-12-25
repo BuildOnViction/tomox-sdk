@@ -19,10 +19,10 @@ const (
 	NotificationChannel = "notification"
 
 	// Lending channel
-	LendingOrderChannel = "lending_order"
-	LendingTradeChannel = "lending_trade"
-
-	LendingOrderBookChannel = "lending_orderbook"
+	LendingOrderChannel        = "lending_orders"
+	LendingTradeChannel        = "lending_trades"
+	RawLendingOrderBookChannel = "raw_lending_orderbook"
+	LendingOrderBookChannel    = "lending_orderbook"
 )
 
 var socketChannels map[string]func(interface{}, *Client)

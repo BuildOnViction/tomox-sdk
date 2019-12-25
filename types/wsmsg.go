@@ -1,8 +1,11 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
+
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -88,15 +91,42 @@ type OrderMatchedPayload struct {
 }
 
 type SubscriptionPayload struct {
-	PairName   string         `json:"pairName,omitempty"`
-	QuoteToken common.Address `json:"quoteToken,omitempty"`
-	BaseToken  common.Address `json:"baseToken,omitempty"`
-	From       int64          `json"from"`
-	To         int64          `json:"to"`
-	Duration   int64          `json:"duration"`
-	Units      string         `json:"units"`
+	PairName     string         `json:"pairName,omitempty"`
+	QuoteToken   common.Address `json:"quoteToken,omitempty"`
+	BaseToken    common.Address `json:"baseToken,omitempty"`
+	From         int64          `json"from"`
+	To           int64          `json:"to"`
+	Duration     int64          `json:"duration"`
+	Units        string         `json:"units"`
+	Term         uint64         `json:"term"`
+	LendingToken common.Address `json:"lendingToken,omitempty"`
 }
 
+func (s *SubscriptionPayload) UnmarshalJSON(b []byte) error {
+	payload := map[string]interface{}{}
+	err := json.Unmarshal(b, &payload)
+	if err != nil {
+		return err
+	}
+	if payload["pairName"] != nil {
+		s.PairName = payload["pairName"].(string)
+	}
+
+	if payload["quoteToken"] != nil {
+		s.QuoteToken = common.HexToAddress(payload["quoteToken"].(string))
+	}
+	if payload["baseToken"] != nil {
+		s.BaseToken = common.HexToAddress(payload["baseToken"].(string))
+	}
+	if payload["term"] != nil {
+		s.Term, _ = strconv.ParseUint(payload["term"].(string), 10, 64)
+	}
+	if payload["lendingToken"] != nil {
+		s.LendingToken = common.HexToAddress(payload["lendingToken"].(string))
+	}
+	return nil
+
+}
 func NewOrderWebsocketMessage(o *Order) *WebsocketMessage {
 	return &WebsocketMessage{
 		Channel: "orders",

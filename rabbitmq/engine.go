@@ -55,6 +55,11 @@ func (c *Connection) SubscribeTradeResponses(fn func(*types.EngineResponse) erro
 	return c.SubscribeQueue(fn, "tradeResponse")
 }
 
+// SubscribeLendingTradeResponses subscribe trade responses
+func (c *Connection) SubscribeLendingTradeResponses(fn func(*types.EngineResponse) error) error {
+	return c.SubscribeQueue(fn, "lendingTradeResponse")
+}
+
 // SubscribeLendingOrderResponses subscribe order responses
 func (c *Connection) SubscribeLendingOrderResponses(fn func(*types.EngineResponse) error) error {
 	return c.SubscribeQueue(fn, "lendingOrderResponse")
@@ -127,6 +132,11 @@ func (c *Connection) PublishOrderResponse(res *types.EngineResponse) error {
 // PublishTradeResponse publish trade response to queue
 func (c *Connection) PublishTradeResponse(res *types.EngineResponse) error {
 	return c.PublishMessage(res, "tradeResponse")
+}
+
+// PublishLendingTradeResponse publish trade response to queue
+func (c *Connection) PublishLendingTradeResponse(res *types.EngineResponse) error {
+	return c.PublishMessage(res, "lendingTradeResponse")
 }
 
 // PublishLendingOrderResponse publish order response to queue

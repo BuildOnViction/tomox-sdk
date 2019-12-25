@@ -15,6 +15,13 @@ type Matches struct {
 	Trades      []*Trade `json:"trades"`
 }
 
+// LendingMatches matching trade
+type LendingMatches struct {
+	Investing     []*LendingOrder `json:"investing"`
+	Borrowing     *LendingOrder   `json:"borrowing"`
+	LendingTrades []*LendingTrade `json:"lendingTrades"`
+}
+
 func NewMatches(makerOrders []*Order, takerOrder *Order, trades []*Trade) *Matches {
 	return &Matches{
 		MakerOrders: makerOrders,
@@ -113,14 +120,16 @@ func (m *Matches) Validate() error {
 
 // EngineResponse engine message
 type EngineResponse struct {
-	Status            string        `json:"fillStatus,omitempty"`
-	Order             *Order        `json:"order,omitempty"`
-	Trade             *Trade        `json: "trade, omitenpty"`
-	Matches           *Matches      `json:"matches,omitempty"`
-	RecoveredOrders   *[]*Order     `json:"recoveredOrders,omitempty"`
-	InvalidatedOrders *[]*Order     `json:"invalidatedOrders,omitempty"`
-	CancelledTrades   *[]*Trade     `json:"cancelledTrades,omitempty"`
-	LendingOrder      *LendingOrder `json:"lendingOrder,omitempty"`
+	Status            string          `json:"fillStatus,omitempty"`
+	Order             *Order          `json:"order,omitempty"`
+	Trade             *Trade          `json:"trade,omitenpty"`
+	Matches           *Matches        `json:"matches,omitempty"`
+	RecoveredOrders   *[]*Order       `json:"recoveredOrders,omitempty"`
+	InvalidatedOrders *[]*Order       `json:"invalidatedOrders,omitempty"`
+	CancelledTrades   *[]*Trade       `json:"cancelledTrades,omitempty"`
+	LendingOrder      *LendingOrder   `json:"lendingOrder,omitempty"`
+	LendingTrade      *LendingTrade   `json:"lendingTrade,omitenpty"`
+	LendingMatches    *LendingMatches `json:"lendingMatches,omitempty"`
 }
 
 func (r *EngineResponse) AppendMatch(mo *Order, t *Trade) {
