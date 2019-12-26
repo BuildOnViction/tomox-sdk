@@ -57,6 +57,32 @@ func (s *OrderBookService) GetOrderBook(bt, qt common.Address) (*types.OrderBook
 	return ob, nil
 }
 
+func (s *OrderBookService) GetDbOrderBook(bt, qt common.Address) (*types.OrderBook, error) {
+	pair, err := s.pairDao.GetByTokenAddress(bt, qt)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if pair == nil {
+		return nil, errors.New("Pair not found")
+	}
+
+	bids, asks, err := s.orderDao.GetOrderBookInDb(pair)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	ob := &types.OrderBook{
+		PairName: pair.Name(),
+		Asks:     asks,
+		Bids:     bids,
+	}
+
+	return ob, nil
+}
+
 // SubscribeOrderBook is responsible for handling incoming orderbook subscription messages
 // It makes an entry of connection in pairSocket corresponding to pair,unit and duration
 func (s *OrderBookService) SubscribeOrderBook(c *ws.Client, bt, qt common.Address) {

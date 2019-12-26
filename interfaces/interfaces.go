@@ -43,6 +43,7 @@ type OrderDao interface {
 	UpdateOrderStatus(h common.Hash, status string) error
 	GetRawOrderBook(*types.Pair) ([]*types.Order, error)
 	GetOrderBook(*types.Pair) ([]map[string]string, []map[string]string, error)
+	GetOrderBookInDb(*types.Pair) ([]map[string]string, []map[string]string, error)
 	GetSideOrderBook(p *types.Pair, side string, sort int, limit ...int) ([]map[string]string, error)
 	GetOrderBookPricePoint(p *types.Pair, pp *big.Int, side string) (*big.Int, error)
 	FindAndModify(h common.Hash, o *types.Order) (*types.Order, error)
@@ -244,6 +245,7 @@ type OrderService interface {
 
 type OrderBookService interface {
 	GetOrderBook(bt, qt common.Address) (*types.OrderBook, error)
+	GetDbOrderBook(bt, qt common.Address) (*types.OrderBook, error)
 	GetRawOrderBook(bt, qt common.Address) (*types.RawOrderBook, error)
 	SubscribeOrderBook(c *ws.Client, bt, qt common.Address)
 	UnsubscribeOrderBook(c *ws.Client)
