@@ -311,8 +311,7 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 		})
 		return err
 	}
-	o.Status = "OPEN"
-	dao.Create(o)
+
 	o.Status = "ADDED"
 	ws.SendLendingOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	return nil
@@ -367,4 +366,81 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 // GetLendingNonce get nonce of order
 func (dao *LendingOrderDao) GetLendingNonce(userAddress common.Address) (uint64, error) {
 	return 0, nil
+}
+
+// GetLendingOrderBookInterest get amount from interest
+func (dao *LendingOrderDao) GetLendingOrderBookInterest(term uint64, lendingToken common.Address, interest uint64, side string) (*big.Int, error) {
+	var orders []types.LendingOrder
+	c := dao.GetCollection()
+
+	//TODO: need to have limit
+	err := c.Find(bson.M{
+		"status":       bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+		"term":         strconv.FormatUint(term, 10),
+		"lendingToken": lendingToken.Hex(),
+		"side":         side,
+		"interest":     strconv.FormatUint(interest, 10),
+	}).Sort("-createdAt").All(&orders)
+
+	amount := big.NewInt(0)
+
+	for _, order := range orders {
+		amount = math.Sub(math.Add(amount, order.Quantity), order.FilledAmount)
+	}
+
+	return amount, err
+}
+
+// UpdateStatus update lending status
+func (dao *LendingOrderDao) UpdateStatus(h common.Hash, status string) error {
+	query := bson.M{"hash": h.Hex()}
+	update := bson.M{"$set": bson.M{
+		"status": status,
+	}}
+
+	err := db.Update(dao.dbName, dao.collectionName, query, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+// UpdateFilledAmount update lending amount
+func (dao *LendingOrderDao) UpdateFilledAmount(hash common.Hash, value *big.Int) error {
+	q := bson.M{"hash": hash.Hex()}
+	res := []types.LendingOrder{}
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	o := res[0]
+	status := ""
+	filledAmount := math.Add(o.FilledAmount, value)
+
+	if math.IsEqualOrSmallerThan(filledAmount, big.NewInt(0)) {
+		filledAmount = big.NewInt(0)
+		status = "OPEN"
+	} else if math.IsEqualOrGreaterThan(filledAmount, o.Quantity) {
+		filledAmount = o.Quantity
+		status = "FILLED"
+	} else {
+		status = "PARTIAL_FILLED"
+	}
+
+	update := bson.M{"$set": bson.M{
+		"status":       status,
+		"filledAmount": filledAmount.String(),
+	}}
+
+	err = db.Update(dao.dbName, dao.collectionName, q, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
 }

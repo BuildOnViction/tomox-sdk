@@ -128,10 +128,12 @@ func NewRouter(
 
 	// Endpoint for lending
 	lendingOrderDao := daos.NewLendingOrderDao()
-	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
+	lendingTradeDao := daos.NewLendingTradeDao()
+
+	lendingEng := engine.NewLendingEngine(lendingOrderDao, lendingTradeDao)
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, lendingEng, rabbitConn)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
 
-	lendingTradeDao := daos.NewLendingTradeDao()
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 

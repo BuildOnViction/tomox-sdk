@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/utils/math"
 
 	"github.com/globalsign/mgo/bson"
@@ -93,40 +94,167 @@ type LendingTradeRecord struct {
 
 // MarshalJSON returns the json encoded byte array representing the trade struct
 func (t *LendingTrade) MarshalJSON() ([]byte, error) {
-	return json.Marshal(t)
+	trade := map[string]interface{}{
+		"borrowingOwner":   t.BorrowingOwner,
+		"investingOwner":   t.InvestingOwner,
+		"borrowingHash":    t.BorrowingHash,
+		"investingHash":    t.InvestingHash,
+		"borrowingRelayer": t.BorrowingRelayer,
+		"investingRelayer": t.InvestingRelayer,
+		"term":             strconv.FormatUint(t.Term, 10),
+		"interest":         strconv.FormatUint(t.Interest, 10),
+		"collateralPrice":  t.CollateralPrice.String(),
+		"liquidationPrice": t.LiquidationPrice.String(),
+		"amount":           t.Amount.String(),
+		"borrowingFee":     t.BorrowingFee.String(),
+		"investingFee":     t.InvestingFee.String(),
+		"status":           t.Status,
+		"takerOrderSide":   t.TakerOrderSide,
+		"takerOrderType":   t.TakerOrderType,
+		"hash":             t.Hash,
+		"createdAt":        t.CreatedAt.Format(time.RFC3339Nano),
+		"updatedAt":        t.UpdatedAt.Format(time.RFC3339Nano),
+	}
+
+	if (t.CollateralToken != common.Address{}) {
+		trade["collateralToken"] = t.CollateralToken.Hex()
+	}
+	if (t.LendingToken != common.Address{}) {
+		trade["lendingToken"] = t.LendingToken.Hex()
+	}
+	return json.Marshal(trade)
 }
 
 // UnmarshalJSON creates a trade object from a json byte string
 func (t *LendingTrade) UnmarshalJSON(b []byte) error {
-	err := json.Unmarshal(b, t)
+	trade := map[string]interface{}{}
+
+	err := json.Unmarshal(b, &trade)
 	if err != nil {
 		return err
 	}
+	if trade["collateralToken"] == nil {
+		return errors.New("collateralToken Hash is not set")
+	}
+	t.CollateralToken = common.HexToAddress(trade["collateralToken"].(string))
+	if trade["lendingToken"] == nil {
+		return errors.New("lendingToken Hash is not set")
+	}
+	t.LendingToken = common.HexToAddress(trade["lendingToken"].(string))
+
+	if trade["borrowingOwner"] == nil {
+		return errors.New("borrowingOwner Hash is not set")
+	}
+	t.BorrowingOwner = common.HexToAddress(trade["borrowingOwner"].(string))
+
+	if trade["investingOwner"] == nil {
+		return errors.New("investingOwner is not set")
+	}
+	t.InvestingOwner = common.HexToAddress(trade["investingOwner"].(string))
+
+	if trade["borrowingHash"] == nil {
+		return errors.New("borrowingHash is not set")
+	}
+	t.BorrowingHash = common.HexToHash(trade["borrowingHash"].(string))
+
+	if trade["hash"] == nil {
+		return errors.New("Hash is not set")
+	}
+	t.Hash = common.HexToHash(trade["hash"].(string))
+
+	if trade["investingHash"] == nil {
+		return errors.New("investingHash is not set")
+	}
+	t.InvestingHash = common.HexToHash(trade["investingHash"].(string))
+
+	if trade["borrowingRelayer"] == nil {
+		return errors.New("borrowingRelayer is not set")
+	}
+	t.BorrowingRelayer = common.HexToAddress(trade["borrowingRelayer"].(string))
+
+	if trade["investingRelayer"] == nil {
+		return errors.New("investingRelayer is not set")
+	}
+	t.InvestingRelayer = common.HexToAddress(trade["investingRelayer"].(string))
+
+	if trade["term"] == nil {
+		return errors.New("term is not set")
+	}
+	t.Term, _ = strconv.ParseUint(trade["term"].(string), 10, 64)
+
+	if trade["interest"] == nil {
+		return errors.New("interest is not set")
+	}
+	t.Interest, _ = strconv.ParseUint(trade["interest"].(string), 10, 64)
+
+	if trade["collateralPrice"] != nil {
+		t.CollateralPrice = new(big.Int)
+		t.CollateralPrice, _ = t.CollateralPrice.SetString(trade["collateralPrice"].(string), 10)
+	}
+	if trade["liquidationPrice"] != nil {
+		t.LiquidationPrice = new(big.Int)
+		t.LiquidationPrice, _ = t.LiquidationPrice.SetString(trade["liquidationPrice"].(string), 10)
+	}
+	if trade["amount"] != nil {
+		t.Amount = new(big.Int)
+		t.Amount, _ = t.Amount.SetString(trade["amount"].(string), 10)
+	}
+	if trade["borrowingFee"] != nil {
+		t.BorrowingFee = new(big.Int)
+		t.BorrowingFee, _ = t.BorrowingFee.SetString(trade["borrowingFee"].(string), 10)
+	}
+	if trade["investingFee"] != nil {
+		t.InvestingFee = new(big.Int)
+		t.InvestingFee, _ = t.InvestingFee.SetString(trade["investingFee"].(string), 10)
+	}
+	if trade["status"] != nil {
+		t.Status = trade["status"].(string)
+	}
+	if trade["takerOrderSide"] != nil {
+		t.TakerOrderSide = trade["takerOrderSide"].(string)
+	}
+	if trade["takerOrderType"] != nil {
+		t.TakerOrderType = trade["takerOrderType"].(string)
+	}
+	if trade["createdAt"] != nil {
+		tm, _ := time.Parse(time.RFC3339Nano, trade["createdAt"].(string))
+		t.CreatedAt = tm
+	}
+	if trade["updateAt"] != nil {
+		tm, _ := time.Parse(time.RFC3339Nano, trade["updateAt"].(string))
+		t.UpdatedAt = tm
+	}
+
 	return nil
 }
 
 // GetBSON insert to mongodb
 func (t *LendingTrade) GetBSON() (interface{}, error) {
 	tr := LendingTradeRecord{
-		ID:              t.ID,
-		BorrowingOwner:  t.BorrowingOwner.Hex(),
-		InvestingOwner:  t.InvestingOwner.Hex(),
-		CollateralToken: t.CollateralToken.Hex(),
-		LendingToken:    t.LendingToken.Hex(),
-		BorrowingHash:   t.BorrowingHash.Hex(),
-		Hash:            t.Hash.Hex(),
-		TxHash:          t.TxHash.Hex(),
-		InvestingHash:   t.InvestingHash.Hex(),
-		CreatedAt:       t.CreatedAt,
-		UpdatedAt:       t.UpdatedAt,
-		Interest:        strconv.FormatUint(t.Interest, 10),
-		Status:          t.Status,
-		Amount:          t.Amount.String(),
-		BorrowingFee:    t.BorrowingFee.String(),
-		InvestingFee:    t.InvestingFee.String(),
-		TakerOrderSide:  t.TakerOrderSide,
+		ID:               t.ID,
+		BorrowingOwner:   t.BorrowingOwner.Hex(),
+		InvestingOwner:   t.InvestingOwner.Hex(),
+		CollateralToken:  t.CollateralToken.Hex(),
+		LendingToken:     t.LendingToken.Hex(),
+		BorrowingHash:    t.BorrowingHash.Hex(),
+		BorrowingRelayer: t.BorrowingRelayer.Hex(),
+		InvestingRelayer: t.InvestingRelayer.Hex(),
+		InvestingHash:    t.InvestingHash.Hex(),
+		Term:             strconv.FormatUint(t.Term, 10),
+		Interest:         strconv.FormatUint(t.Interest, 10),
+		CollateralPrice:  t.CollateralPrice.String(),
+		LiquidationPrice: t.LiquidationPrice.String(),
+		Amount:           t.Amount.String(),
+		BorrowingFee:     t.BorrowingFee.String(),
+		InvestingFee:     t.InvestingFee.String(),
+		Status:           t.Status,
+		TakerOrderSide:   t.TakerOrderSide,
+		TakerOrderType:   t.TakerOrderType,
+		Hash:             t.Hash.Hex(),
+		TxHash:           t.TxHash.Hex(),
+		CreatedAt:        t.CreatedAt,
+		UpdatedAt:        t.UpdatedAt,
 	}
-
 	return tr, nil
 }
 
@@ -138,9 +266,7 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 	if err != nil {
 		return err
 	}
-
 	t.ID = decoded.ID
-
 	t.BorrowingOwner = common.HexToAddress(decoded.BorrowingOwner)
 	t.InvestingOwner = common.HexToAddress(decoded.InvestingOwner)
 	t.CollateralToken = common.HexToAddress(decoded.CollateralToken)
@@ -153,8 +279,11 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 	t.TxHash = common.HexToHash(decoded.TxHash)
 	t.Status = decoded.Status
 	t.Amount = math.ToBigInt(decoded.Amount)
+	t.LiquidationPrice = math.ToBigInt(decoded.LiquidationPrice)
+	t.CollateralPrice = math.ToBigInt(decoded.CollateralPrice)
 	t.Interest, _ = strconv.ParseUint(decoded.Interest, 10, 64)
 	t.Term, _ = strconv.ParseUint(decoded.Term, 10, 64)
+
 	t.BorrowingFee = math.ToBigInt(decoded.BorrowingFee)
 	t.InvestingFee = math.ToBigInt(decoded.InvestingFee)
 
@@ -174,7 +303,7 @@ func (t *LendingTrade) ComputeHash() common.Hash {
 	return common.BytesToHash(sha.Sum(nil))
 }
 
-// LengdingTradeChangeEvent event for changing mongo watch
+// LendingTradeChangeEvent event for changing mongo watch
 type LendingTradeChangeEvent struct {
 	ID                interface{}   `bson:"_id"`
 	OperationType     string        `bson:"operationType"`

@@ -3,31 +3,41 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"math/big"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/tomox-sdk/engine"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
 // LendingOrderService struct
 type LendingOrderService struct {
-	lendingDao interfaces.LendingOrderDao
-	engine     interfaces.Engine
-	broker     *rabbitmq.Connection
-	mutext     sync.RWMutex
+	lendingDao        interfaces.LendingOrderDao
+	engine            interfaces.Engine
+	lendingEng        *engine.LendingEngine
+	broker            *rabbitmq.Connection
+	mutext            sync.RWMutex
+	bulkLendingOrders map[string]map[common.Hash]*types.LendingOrder
 }
 
 // NewLendingOrderService returns a new instance of lending order service
-func NewLendingOrderService(lendingDao interfaces.LendingOrderDao, engine interfaces.Engine, broker *rabbitmq.Connection) *LendingOrderService {
+func NewLendingOrderService(lendingDao interfaces.LendingOrderDao, engine interfaces.Engine, lendingEng *engine.LendingEngine, broker *rabbitmq.Connection) *LendingOrderService {
+	bulkLendingOrders := make(map[string]map[common.Hash]*types.LendingOrder)
 	return &LendingOrderService{
 		lendingDao,
 		engine,
+		lendingEng,
 		broker,
 		sync.RWMutex{},
+		bulkLendingOrders,
 	}
 }
 
@@ -116,6 +126,10 @@ func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineRespon
 	}
 
 	if res.Status != types.ERROR_STATUS {
+		err := s.saveBulkLendingOrders(res)
+		if err != nil {
+			logger.Error("Save bulk order", err)
+		}
 	}
 
 	return nil
@@ -164,7 +178,12 @@ func (s *LendingOrderService) WatchChanges() {
 	defer s.WatchChanges()
 
 	ctx := context.Background()
-
+	go func() {
+		for {
+			<-time.After(500 * time.Millisecond)
+			s.processBulkLendingOrders()
+		}
+	}()
 	//Handling change stream in a cycle
 	for {
 		select {
@@ -263,6 +282,7 @@ func (s *LendingOrderService) handleNewLendingOrder(bytes []byte) error {
 		logger.Error(err)
 		return err
 	}
+	s.lendingEng.HandleNewOrder(o)
 	return s.lendingDao.AddNewLendingOrder(o)
 }
 
@@ -279,4 +299,61 @@ func (s *LendingOrderService) handleCancelLendingOrder(bytes []byte) error {
 // GetLendingNonceByUserAddress return nonce of user order
 func (s *LendingOrderService) GetLendingNonceByUserAddress(addr common.Address) (uint64, error) {
 	return s.lendingDao.GetLendingNonce(addr)
+}
+
+func (s *LendingOrderService) saveBulkLendingOrders(res *types.EngineResponse) error {
+	id := utils.GetLendingOrderBookChannelID(res.LendingOrder.Term, res.LendingOrder.LendingToken)
+
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+
+	if _, ok := s.bulkLendingOrders[id]; ok {
+		s.bulkLendingOrders[id][res.LendingOrder.Hash] = res.LendingOrder
+	} else {
+		s.bulkLendingOrders[id] = make(map[common.Hash]*types.LendingOrder)
+		s.bulkLendingOrders[id][res.LendingOrder.Hash] = res.LendingOrder
+	}
+	return nil
+}
+
+func (s *LendingOrderService) processBulkLendingOrders() {
+	s.mutext.Lock()
+	defer s.mutext.Unlock()
+	for p, orders := range s.bulkLendingOrders {
+		borrow := []map[string]string{}
+		lend := []map[string]string{}
+
+		if len(orders) <= 0 {
+			continue
+		}
+		for _, o := range orders {
+			side := o.Side
+			amount, err := s.lendingDao.GetLendingOrderBookInterest(o.Term, o.LendingToken, o.Interest, side)
+			if err != nil {
+				logger.Error(err)
+			}
+
+			// case where the amount at the pricepoint is equal to 0
+			if amount == nil {
+				amount = big.NewInt(0)
+			}
+
+			update := map[string]string{
+				"interest": strconv.FormatUint(o.Interest, 10),
+				"amount":   amount.String(),
+			}
+
+			if side == types.BORROW {
+				borrow = append(borrow, update)
+			} else {
+				lend = append(lend, update)
+			}
+		}
+		ws.GetLendingOrderBookSocket().BroadcastMessage(p, &types.LendingOrderBook{
+			Name:   p,
+			Borrow: borrow,
+			Lend:   lend,
+		})
+	}
+	s.bulkLendingOrders = make(map[string]map[common.Hash]*types.LendingOrder)
 }

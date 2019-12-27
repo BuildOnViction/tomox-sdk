@@ -187,8 +187,8 @@ func (dao *LendingTradeDao) GetByHash(h common.Hash) (*types.LendingTrade, error
 	return res[0], nil
 }
 
-// GetTradeByOrderBook get trade by term and lendingToken
-func (dao *LendingTradeDao) GetTradeByOrderBook(term uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error) {
+// GetLendingTradeByOrderBook get trade by term and lendingToken
+func (dao *LendingTradeDao) GetLendingTradeByOrderBook(term uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error) {
 	res := make([]*types.LendingTrade, 0)
 
 	var q bson.M

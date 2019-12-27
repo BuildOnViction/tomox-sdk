@@ -42,9 +42,9 @@ func NewLendingTradeService(
 
 // Subscribe Subscribe lending trade channel
 func (s *LendingTradeService) Subscribe(c *ws.Client, term uint64, lendingToken common.Address) {
-	socket := ws.GetTradeSocket()
+	socket := ws.GetLendingTradeSocket()
 	numTrades := types.DefaultLimit
-	trades, err := s.GetTradeByOrderBook(term, lendingToken, 0, 0, numTrades)
+	trades, err := s.GetLendingTradeByOrderBook(term, lendingToken, 0, 0, numTrades)
 	if err != nil {
 		logger.Error(err)
 		socket.SendErrorMessage(c, err.Error())
@@ -65,7 +65,7 @@ func (s *LendingTradeService) Subscribe(c *ws.Client, term uint64, lendingToken 
 
 // UnsubscribeChannel unsubscribe lending channel
 func (s *LendingTradeService) UnsubscribeChannel(c *ws.Client, term uint64, lendingToken common.Address) {
-	socket := ws.GetTradeSocket()
+	socket := ws.GetLendingTradeSocket()
 
 	id := utils.GetLendingTradeChannelID(term, lendingToken)
 	socket.UnsubscribeChannel(id, c)
@@ -73,13 +73,13 @@ func (s *LendingTradeService) UnsubscribeChannel(c *ws.Client, term uint64, lend
 
 // Unsubscribe unsubscribe lending channel
 func (s *LendingTradeService) Unsubscribe(c *ws.Client) {
-	socket := ws.GetTradeSocket()
+	socket := ws.GetLendingTradeSocket()
 	socket.Unsubscribe(c)
 }
 
-// GetTradeByOrderBook get sorted lending trade from term and lending tokens
-func (s *LendingTradeService) GetTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error) {
-	return s.lendingTradeDao.GetTradeByOrderBook(tern, lendingToken, from, to, n)
+// GetLendingTradeByOrderBook get sorted lending trade from term and lending tokens
+func (s *LendingTradeService) GetLendingTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error) {
+	return s.lendingTradeDao.GetLendingTradeByOrderBook(tern, lendingToken, from, to, n)
 }
 
 // WatchChanges watch changing trade database
@@ -103,7 +103,7 @@ func (s *LendingTradeService) WatchChanges() {
 	go func() {
 		for {
 			<-time.After(500 * time.Millisecond)
-			s.processBulkTrades()
+			s.processBulkLendingTrades()
 		}
 	}()
 
@@ -142,7 +142,7 @@ func (s *LendingTradeService) WatchChanges() {
 	}
 }
 
-func (s *LendingTradeService) processBulkTrades() {
+func (s *LendingTradeService) processBulkLendingTrades() {
 	s.mutext.Lock()
 	defer s.mutext.Unlock()
 
@@ -150,7 +150,7 @@ func (s *LendingTradeService) processBulkTrades() {
 	for id, trades := range s.bulkLendingTrades {
 		bulkPairs[id] = true
 		if len(trades) > 0 {
-			ws.GetTradeSocket().BroadcastMessage(id, trades)
+			ws.GetLendingTradeSocket().BroadcastMessage(id, trades)
 		}
 	}
 	s.bulkLendingTrades = make(map[string][]*types.LendingTrade)

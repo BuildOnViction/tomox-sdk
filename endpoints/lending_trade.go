@@ -21,7 +21,7 @@ func ServeLendingTradeResource(
 	lendingTradeService interfaces.LendingTradeService,
 ) {
 	e := &lendingTradeEndpoint{lendingTradeService}
-	ws.RegisterChannel(ws.TradeChannel, e.lendingTradeWebsocket)
+	ws.RegisterChannel(ws.LendingTradeChannel, e.lendingTradeWebsocket)
 }
 func (e *lendingTradeEndpoint) lendingTradeWebsocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)

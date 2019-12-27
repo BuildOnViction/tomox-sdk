@@ -401,6 +401,7 @@ type LendingOrderDao interface {
 	AddNewLendingOrder(o *types.LendingOrder) error
 	CancelLendingOrder(o *types.LendingOrder) error
 	GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error)
+	GetLendingOrderBookInterest(term uint64, lendingToken common.Address, interest uint64, side string) (*big.Int, error)
 }
 
 // LendingOrderBookService interface for lending order book
@@ -420,6 +421,6 @@ type LendingTradeService interface {
 
 // LendingTradeDao interface for lending dao
 type LendingTradeDao interface {
-	GetTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error)
+	GetLendingTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error)
 	Watch() (*mgo.ChangeStream, *mgo.Session, error)
 }
