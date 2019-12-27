@@ -90,6 +90,9 @@ func NewRouter(
 	walletDao := daos.NewWalletDao()
 	notificationDao := daos.NewNotificationDao()
 
+	lendingOrderDao := daos.NewLendingOrderDao()
+	lendingTradeDao := daos.NewLendingTradeDao()
+
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
@@ -97,6 +100,10 @@ func NewRouter(
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao)
 	ohlcvService.Init()
+
+	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeDao)
+	lendingOhlcvService.Init()
+
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
@@ -111,6 +118,12 @@ func NewRouter(
 	priceBoardService := services.NewPriceBoardService(tokenDao, tradeDao, ohlcvService)
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
+
+	// LEDNDING SERVICE
+	lendingEng := engine.NewLendingEngine(lendingOrderDao, lendingTradeDao)
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, lendingEng, rabbitConn)
+	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
+	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
 
 	// deploy http and ws endpoints
 	endpoints.ServeInfoResource(r, walletService, tokenService)
@@ -127,18 +140,12 @@ func NewRouter(
 	endpoints.ServeNotificationResource(r, notificationService)
 
 	// Endpoint for lending
-	lendingOrderDao := daos.NewLendingOrderDao()
-	lendingTradeDao := daos.NewLendingTradeDao()
 
-	lendingEng := engine.NewLendingEngine(lendingOrderDao, lendingTradeDao)
-	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, lendingEng, rabbitConn)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
-
-	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
-
-	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
 	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
+	endpoints.ServeLendingOhlcvResource(r, lendingOhlcvService)
+	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 	contractAddress := common.HexToAddress(app.Config.Tomochain["contract_address"])

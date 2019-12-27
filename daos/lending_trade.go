@@ -315,8 +315,8 @@ func (dao *LendingTradeDao) UpdateTradeStatus(h common.Hash, status string) erro
 	return nil
 }
 
-// GetTradeByTime get range trade
-func (dao *LendingTradeDao) GetTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error) {
+// GetLendingTradeByTime get range trade
+func (dao *LendingTradeDao) GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error) {
 	q := bson.M{}
 
 	dateFilter := bson.M{}

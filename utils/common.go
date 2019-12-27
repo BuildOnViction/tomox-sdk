@@ -47,6 +47,9 @@ func GetOHLCVChannelID(bt, qt common.Address, unit string, duration int64) strin
 	pair := GetPairKey(bt, qt)
 	return fmt.Sprintf("%s::%d::%s", pair, duration, unit)
 }
+func GetLendingOhlcvChannelID(term uint64, lendingToken common.Address, unit string, duration int64) string {
+	return fmt.Sprintf("%d::%s::%d::%s", term, lendingToken.Hex(), duration, unit)
+}
 
 func GetOrderBookChannelID(bt, qt common.Address) string {
 	return strings.ToLower(fmt.Sprintf("%s::%s", bt.Hex(), qt.Hex()))

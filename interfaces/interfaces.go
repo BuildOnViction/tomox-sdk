@@ -423,4 +423,12 @@ type LendingTradeService interface {
 type LendingTradeDao interface {
 	GetLendingTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error)
 	Watch() (*mgo.ChangeStream, *mgo.Session, error)
+	GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error)
+}
+
+// LendingOhlcvService interface for lending service
+type LendingOhlcvService interface {
+	GetOHLCV(term uint64, lendingToken common.Address, duration int64, unit string, timeInterval ...int64) ([]*types.LendingTick, error)
+	Subscribe(conn *ws.Client, p *types.SubscriptionPayload)
+	Unsubscribe(conn *ws.Client)
 }
