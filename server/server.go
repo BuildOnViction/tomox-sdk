@@ -92,7 +92,7 @@ func NewRouter(
 
 	lendingOrderDao := daos.NewLendingOrderDao()
 	lendingTradeDao := daos.NewLendingTradeDao()
-
+	lengdingPairDao := daos.NewLendingPairDao()
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
@@ -148,9 +148,10 @@ func NewRouter(
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
-	contractAddress := common.HexToAddress(app.Config.Tomochain["contract_address"])
-	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress)
-	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao)
+	contractAddress := common.HexToAddress(app.Config.Tomochain["exchange_contract_address"])
+	lendingContractAddress := common.HexToAddress(app.Config.Tomochain["lending_contract_address"])
+	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress, lendingContractAddress)
+	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao, lengdingPairDao)
 	endpoints.ServeRelayerResource(r, relayerService)
 
 	// Swagger UI
