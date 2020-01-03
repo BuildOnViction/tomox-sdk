@@ -10,7 +10,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	lru "github.com/hashicorp/golang-lru"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
@@ -30,7 +29,6 @@ type OrderService struct {
 	engine            interfaces.Engine
 	validator         interfaces.ValidatorService
 	broker            *rabbitmq.Connection
-	orderCache        *lru.Cache
 	orderByPricepoint map[string]map[common.Hash]*amountByTime
 	mutext            sync.RWMutex
 	orderPending      []*types.Order
@@ -55,7 +53,6 @@ func NewOrderService(
 	validator interfaces.ValidatorService,
 	broker *rabbitmq.Connection,
 ) *OrderService {
-	orderCache, _ := lru.New(2000)
 	bulkOrders := make(map[*types.PairAddresses]map[common.Hash]*types.Order)
 	orderByPricepoint := make(map[string]map[common.Hash]*amountByTime)
 	return &OrderService{
@@ -68,7 +65,6 @@ func NewOrderService(
 		engine,
 		validator,
 		broker,
-		orderCache,
 		orderByPricepoint,
 		sync.RWMutex{},
 		[]*types.Order{},
@@ -261,8 +257,6 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 			return err
 		}
 	}
-
-	s.orderCache.Add(o.Hash, o)
 
 	err = s.broker.PublishNewOrderMessage(o)
 	if err != nil {
