@@ -104,7 +104,7 @@ func NewRouter(
 	orderService := services.NewOrderService(orderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderService.LoadCache()
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
-	tradeService := services.NewTradeService(orderDao, tradeDao, ohlcvService, accountDao, notificationDao, rabbitConn)
+	tradeService := services.NewTradeService(orderDao, tradeDao, ohlcvService, notificationDao, rabbitConn)
 
 	walletService := services.NewWalletService(walletDao)
 

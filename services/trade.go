@@ -20,7 +20,6 @@ import (
 type TradeService struct {
 	OrderDao        interfaces.OrderDao
 	tradeDao        interfaces.TradeDao
-	accountDao      interfaces.AccountDao
 	notificationDao interfaces.NotificationDao
 	broker          *rabbitmq.Connection
 	ohlcvService    *OHLCVService
@@ -33,7 +32,6 @@ func NewTradeService(
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
 	ohlcvService *OHLCVService,
-	accountDao interfaces.AccountDao,
 	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
 ) *TradeService {
@@ -41,7 +39,6 @@ func NewTradeService(
 	return &TradeService{
 		OrderDao:        orderdao,
 		tradeDao:        tradeDao,
-		accountDao:      accountDao,
 		notificationDao: notificationDao,
 		broker:          broker,
 		ohlcvService:    ohlcvService,
