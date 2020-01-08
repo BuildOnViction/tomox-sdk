@@ -429,6 +429,12 @@ func (e *orderEndpoint) handleNewOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if o == nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
 	o.Hash = o.ComputeHash()
 
 	acc, err := e.accountService.FindOrCreate(o.UserAddress)
