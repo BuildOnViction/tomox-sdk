@@ -45,6 +45,7 @@ func (e *tokenEndpoint) HandleCreateToken(w http.ResponseWriter, r *http.Request
 
 	defer r.Body.Close()
 
+	// TODO: internal requests
 	err = e.tokenService.Create(&t)
 	if err != nil {
 		if err == services.ErrTokenExists {

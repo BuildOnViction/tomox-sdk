@@ -48,6 +48,7 @@ func (e *pairEndpoint) HandleCreatePair(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// TODO: internal requests
 	err = e.pairService.Create(p)
 	if err != nil {
 		switch err {

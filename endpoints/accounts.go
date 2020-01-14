@@ -25,9 +25,11 @@ func ServeAccountResource(
 
 	e := &AccountEndpoint{AccountService: accountService}
 
-	r.Handle(
-		"/api/account/create", http.HandlerFunc(e.handleCreateAccount),
-	).Methods("POST")
+	/*
+		r.Handle(
+			"/api/account/create", http.HandlerFunc(e.handleCreateAccount),
+		).Methods("POST")
+	*/
 
 	r.Handle(
 		"/api/account/favorite/{address}",
@@ -39,10 +41,12 @@ func ServeAccountResource(
 		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleAddFavoriteToken)),
 	).Methods("POST")
 
-	r.Handle(
-		"/api/account/favorite/remove",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleRemoveFavoriteToken)),
-	).Methods("POST")
+	/*
+		r.Handle(
+			"/api/account/favorite/remove",
+			alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleRemoveFavoriteToken)),
+		).Methods("POST")
+	*/
 
 	r.Handle(
 		"/api/account/{address}", http.HandlerFunc(e.handleGetAccount),
