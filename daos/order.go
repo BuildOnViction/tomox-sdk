@@ -881,44 +881,48 @@ func (dao *OrderDao) GetOrderBook(p *types.Pair) ([]map[string]string, []map[str
 
 	err = rpcClient.Call(&result, "tomox_getAskTree", p.BaseTokenAddress.Hex(), p.QuoteTokenAddress.Hex())
 	asks := []map[string]string{}
-	for k, v := range result.(map[string]interface{}) {
-		for y, z := range v.(map[string]interface{}) {
-			if y == "Volume" {
-				s := map[string]string{
-					"pricepoint": k,
-					"amount":     fmt.Sprintf("%.0f", z.(float64)),
+	if result != nil && err == nil {
+		for k, v := range result.(map[string]interface{}) {
+			for y, z := range v.(map[string]interface{}) {
+				if y == "Volume" {
+					s := map[string]string{
+						"pricepoint": k,
+						"amount":     fmt.Sprintf("%.0f", z.(float64)),
+					}
+					asks = append(asks, s)
+					break
 				}
-				asks = append(asks, s)
-				break
 			}
 		}
-	}
 
-	sort.SliceStable(asks, func(i, j int) bool {
-		return math.ToBigInt(asks[i]["pricepoint"]).Cmp(math.ToBigInt(asks[j]["pricepoint"])) == -1
-	})
+		sort.SliceStable(asks, func(i, j int) bool {
+			return math.ToBigInt(asks[i]["pricepoint"]).Cmp(math.ToBigInt(asks[j]["pricepoint"])) == -1
+		})
+	}
 
 	err = rpcClient.Call(&result, "tomox_getBidTree", p.BaseTokenAddress.Hex(), p.QuoteTokenAddress.Hex())
 	bids := []map[string]string{}
-	for k, v := range result.(map[string]interface{}) {
-		for y, z := range v.(map[string]interface{}) {
-			if y == "Volume" {
-				s := map[string]string{
-					"pricepoint": k,
-					"amount":     fmt.Sprintf("%.0f", z.(float64)),
+	if result != nil && err == nil {
+		for k, v := range result.(map[string]interface{}) {
+			for y, z := range v.(map[string]interface{}) {
+				if y == "Volume" {
+					s := map[string]string{
+						"pricepoint": k,
+						"amount":     fmt.Sprintf("%.0f", z.(float64)),
+					}
+					bids = append(bids, s)
+					break
 				}
-				bids = append(bids, s)
-				break
 			}
 		}
+		sort.SliceStable(bids, func(i, j int) bool {
+			return math.ToBigInt(bids[i]["pricepoint"]).Cmp(math.ToBigInt(bids[j]["pricepoint"])) == 1
+		})
 	}
-	sort.SliceStable(bids, func(i, j int) bool {
-		return math.ToBigInt(bids[i]["pricepoint"]).Cmp(math.ToBigInt(bids[j]["pricepoint"])) == 1
-	})
 
 	if err != nil {
 		logger.Error(err)
-		return nil, nil, err
+		return bids, asks, nil
 	}
 
 	return bids, asks, nil
