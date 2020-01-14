@@ -435,12 +435,10 @@ func (e *orderEndpoint) handleNewOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.Hash = o.ComputeHash()
-
 	acc, err := e.accountService.GetByAddress(o.UserAddress)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -452,7 +450,7 @@ func (e *orderEndpoint) handleNewOrder(w http.ResponseWriter, r *http.Request) {
 	err = e.orderService.NewOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -559,7 +557,6 @@ func (e *orderEndpoint) handleWSNewOrder(ev *types.WebsocketEvent, c *ws.Client)
 		return
 	}
 
-	o.Hash = o.ComputeHash()
 	ws.RegisterOrderConnection(o.UserAddress, c)
 
 	acc, err := e.accountService.GetByAddress(o.UserAddress)
