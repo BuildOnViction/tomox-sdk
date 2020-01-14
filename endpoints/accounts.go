@@ -36,16 +36,16 @@ func ServeAccountResource(
 		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleGetFavoriteTokens)),
 	).Methods("GET")
 
-	r.Handle(
-		"/api/account/favorite/add",
-		alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleAddFavoriteToken)),
-	).Methods("POST")
-
 	/*
 		r.Handle(
-			"/api/account/favorite/remove",
-			alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleRemoveFavoriteToken)),
+			"/api/account/favorite/add",
+			alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleAddFavoriteToken)),
 		).Methods("POST")
+
+			r.Handle(
+				"/api/account/favorite/remove",
+				alice.New(middlewares.VerifySignature).Then(http.HandlerFunc(e.handleRemoveFavoriteToken)),
+			).Methods("POST")
 	*/
 
 	r.Handle(
