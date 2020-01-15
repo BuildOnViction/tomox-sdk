@@ -154,19 +154,19 @@ func (t *Trade) Validate() error {
 // MarshalJSON returns the json encoded byte array representing the trade struct
 func (t *Trade) MarshalJSON() ([]byte, error) {
 	trade := map[string]interface{}{
-		"taker":           t.Taker,
-		"maker":           t.Maker,
-		"status":          t.Status,
-		"hash":            t.Hash,
-		"pairName":        t.PairName,
-		"pricepoint":      t.PricePoint.String(),
-		"amount":          t.Amount.String(),
-		"makeFee":         t.MakeFee.String(),
-		"takeFee":         t.TakeFee.String(),
-		"createdAt":       t.CreatedAt.Format(time.RFC3339Nano),
-		"takerOrderSide":  t.TakerOrderSide,
-		"takerOrderType":  t.TakerOrderType,
-		"makerrOrderType": t.MakerOrderType,
+		"taker":          t.Taker,
+		"maker":          t.Maker,
+		"status":         t.Status,
+		"hash":           t.Hash,
+		"pairName":       t.PairName,
+		"pricepoint":     t.PricePoint.String(),
+		"amount":         t.Amount.String(),
+		"makeFee":        t.MakeFee.String(),
+		"takeFee":        t.TakeFee.String(),
+		"createdAt":      t.CreatedAt.Format(time.RFC3339Nano),
+		"takerOrderSide": t.TakerOrderSide,
+		"takerOrderType": t.TakerOrderType,
+		"makerOrderType": t.MakerOrderType,
 	}
 
 	if (t.BaseToken != common.Address{}) {
