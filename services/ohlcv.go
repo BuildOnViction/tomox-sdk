@@ -28,7 +28,7 @@ const (
 	yesterdaySec = 24 * 60 * 60
 	hourSec      = 60 * 60
 	milisecond   = 1000
-	baseFiat     = "USD"
+	baseFiat     = "USDT"
 	tomo         = "TOMO"
 )
 
