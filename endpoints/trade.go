@@ -51,7 +51,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid base token address")
 			return
 		} else {
-			tradeSpec.BaseToken = bt
+			tradeSpec.BaseToken = common.HexToAddress(bt).Hex()
 		}
 	}
 
@@ -60,7 +60,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid base token address")
 			return
 		} else {
-			tradeSpec.QuoteToken = qt
+			tradeSpec.QuoteToken = common.HexToAddress(qt).Hex()
 		}
 	}
 
@@ -158,7 +158,7 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid base token address")
 			return
 		} else {
-			tradeSpec.BaseToken = bt
+			tradeSpec.BaseToken = common.HexToAddress(bt).Hex()
 		}
 	}
 
@@ -167,7 +167,7 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid base token address")
 			return
 		} else {
-			tradeSpec.QuoteToken = qt
+			tradeSpec.QuoteToken = common.HexToAddress(qt).Hex()
 		}
 	}
 
