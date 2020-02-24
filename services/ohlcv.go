@@ -823,7 +823,7 @@ func getGroupAddFieldBson(key, units string, duration int64) (bson.M, bson.M) {
 }
 
 // GetTokenPairData get tick of pair tokens
-func (s *OHLCVService) GetTokenPairData(pairName string, baseTokenSymbol string, baseToken common.Address, quoteToken common.Address) *types.PairData {
+func (s *OHLCVService) getTokenPairData(pairName string, baseTokenSymbol string, baseToken common.Address, quoteToken common.Address) *types.PairData {
 	tick := s.get24hTick(baseToken, quoteToken)
 	if tick != nil {
 		pairData := &types.PairData{
@@ -856,6 +856,16 @@ func (s *OHLCVService) GetTokenPairData(pairName string, baseTokenSymbol string,
 	return nil
 }
 
+// GetTokenPairData get tick of pair tokens
+func (s *OHLCVService) GetTokenPairData(baseToken common.Address, quoteToken common.Address) *types.PairData {
+	p, err := s.pairDao.GetByTokenAddress(baseToken, quoteToken)
+	if err != nil {
+		return nil
+	}
+	return s.getTokenPairData(p.Name(), p.BaseTokenSymbol, p.BaseTokenAddress, p.QuoteTokenAddress)
+
+}
+
 // GetAllTokenPairData get tick of all tokens
 func (s *OHLCVService) GetAllTokenPairData() ([]*types.PairData, error) {
 	pairs, err := s.pairDao.GetActivePairs()
@@ -864,7 +874,7 @@ func (s *OHLCVService) GetAllTokenPairData() ([]*types.PairData, error) {
 	}
 	pairsData := make([]*types.PairData, 0)
 	for _, p := range pairs {
-		pairData := s.GetTokenPairData(p.Name(), p.BaseTokenSymbol, p.BaseTokenAddress, p.QuoteTokenAddress)
+		pairData := s.getTokenPairData(p.Name(), p.BaseTokenSymbol, p.BaseTokenAddress, p.QuoteTokenAddress)
 		if pairData != nil {
 			pairsData = append(pairsData, pairData)
 		} else {

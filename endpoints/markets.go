@@ -14,25 +14,26 @@ import (
 
 type MarketsEndpoint struct {
 	MarketsService interfaces.MarketsService
-	PairService    interfaces.PairService
+	OHLCVService   interfaces.OHLCVService
 }
 
 // ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
 func ServeMarketsResource(
 	r *mux.Router,
 	marketsService interfaces.MarketsService,
-	pairService interfaces.PairService,
+	ohlcvService interfaces.OHLCVService,
 ) {
-	e := &MarketsEndpoint{marketsService, pairService}
+	e := &MarketsEndpoint{marketsService, ohlcvService}
 	r.HandleFunc("/api/market/stats/all", e.HandleGetAllMarketStats).Methods("GET")
 	r.HandleFunc("/api/market/stats", e.HandleGetMarketStats).Methods("GET")
 
 	ws.RegisterChannel(ws.MarketsChannel, e.handleMarketsWebSocket)
 }
 
+// HandleGetAllMarketStats get all market token data
 func (e *MarketsEndpoint) HandleGetAllMarketStats(w http.ResponseWriter, r *http.Request) {
 
-	res, err := e.PairService.GetAllMarketStats()
+	res, err := e.OHLCVService.GetAllTokenPairData()
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -49,6 +50,7 @@ func (e *MarketsEndpoint) HandleGetAllMarketStats(w http.ResponseWriter, r *http
 
 }
 
+// HandleGetMarketStats get market specific token data
 func (e *MarketsEndpoint) HandleGetMarketStats(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	baseToken := v.Get("baseToken")
@@ -77,10 +79,9 @@ func (e *MarketsEndpoint) HandleGetMarketStats(w http.ResponseWriter, r *http.Re
 	baseTokenAddress := common.HexToAddress(baseToken)
 	quoteTokenAddress := common.HexToAddress(quoteToken)
 
-	res, err := e.PairService.GetMarketStats(baseTokenAddress, quoteTokenAddress)
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+	res := e.OHLCVService.GetTokenPairData(baseTokenAddress, quoteTokenAddress)
+	if res == nil {
+		httputils.WriteError(w, http.StatusInternalServerError, "Pair data not found")
 		return
 	}
 

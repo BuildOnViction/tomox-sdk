@@ -217,6 +217,7 @@ type OHLCVService interface {
 	GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error)
 	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error)
 	GetAllTokenPairData() ([]*types.PairData, error)
+	GetTokenPairData(baseToken common.Address, quoteToken common.Address) *types.PairData
 }
 
 type EthereumService interface {
