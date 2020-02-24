@@ -24,7 +24,7 @@ import (
 
 const (
 	intervalMin  = 60 * 60 * 24
-	intervalMax  = 12 * 30 * 24 * 60 * 60
+	intervalMax  = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
 	yesterdaySec = 24 * 60 * 60
 	hourSec      = 60 * 60
 	milisecond   = 1000
@@ -121,77 +121,77 @@ func (s *OHLCVService) getConfig() []durationtick {
 		{
 			duration: 1,
 			unit:     "min",
-			interval: 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 5,
 			unit:     "min",
-			interval: 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 15,
 			unit:     "min",
-			interval: 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 30,
 			unit:     "min",
-			interval: 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 1,
 			unit:     "hour",
-			interval: 7 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 2,
 			unit:     "hour",
-			interval: 7 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 4,
 			unit:     "hour",
-			interval: 7 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 12,
 			unit:     "hour",
-			interval: 7 * 1 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 1,
 			unit:     "day",
-			interval: 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 1,
 			unit:     "week",
-			interval: 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 1,
 			unit:     "month",
-			interval: 12 * 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 3,
 			unit:     "month",
-			interval: 12 * 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 6,
 			unit:     "month",
-			interval: 2 * 12 * 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 9,
 			unit:     "month",
-			interval: 2 * 12 * 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 		{
 			duration: 1,
 			unit:     "year",
-			interval: 2 * 12 * 30 * 24 * 60 * 60,
+			interval: intervalMax,
 		},
 	}
 }
