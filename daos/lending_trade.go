@@ -95,7 +95,7 @@ func (dao *LendingTradeDao) Create(trades ...*types.LendingTrade) error {
 	y := make([]interface{}, len(trades))
 
 	for _, trade := range trades {
-		trade.ID = bson.NewObjectId()
+		trade.TradeID = bson.NewObjectId()
 		trade.CreatedAt = time.Now()
 		trade.UpdatedAt = time.Now()
 		y = append(y, trade)
@@ -113,7 +113,7 @@ func (dao *LendingTradeDao) Create(trades ...*types.LendingTrade) error {
 // Update update lending trade record
 func (dao *LendingTradeDao) Update(trade *types.LendingTrade) error {
 	trade.UpdatedAt = time.Now()
-	err := db.Update(dao.dbName, dao.collectionName, bson.M{"_id": trade.ID}, trade)
+	err := db.Update(dao.dbName, dao.collectionName, bson.M{"_id": trade.TradeID}, trade)
 	if err != nil {
 		logger.Error(err)
 		return err

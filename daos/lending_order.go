@@ -30,7 +30,7 @@ type LendingOrderDaoOption = func(*LendingOrderDao) error
 // NewLendingOrderDao returns a new instance of LendingOrderDao
 func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	dao := &LendingOrderDao{}
-	dao.collectionName = "lending_orders"
+	dao.collectionName = "lending_items"
 	dao.dbName = app.Config.DBName
 
 	for _, op := range opts {

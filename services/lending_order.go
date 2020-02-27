@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/tomochain/tomox-sdk/engine"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/rabbitmq"
@@ -22,19 +21,17 @@ import (
 type LendingOrderService struct {
 	lendingDao        interfaces.LendingOrderDao
 	engine            interfaces.Engine
-	lendingEng        *engine.LendingEngine
 	broker            *rabbitmq.Connection
 	mutext            sync.RWMutex
 	bulkLendingOrders map[string]map[common.Hash]*types.LendingOrder
 }
 
 // NewLendingOrderService returns a new instance of lending order service
-func NewLendingOrderService(lendingDao interfaces.LendingOrderDao, engine interfaces.Engine, lendingEng *engine.LendingEngine, broker *rabbitmq.Connection) *LendingOrderService {
+func NewLendingOrderService(lendingDao interfaces.LendingOrderDao, engine interfaces.Engine, broker *rabbitmq.Connection) *LendingOrderService {
 	bulkLendingOrders := make(map[string]map[common.Hash]*types.LendingOrder)
 	return &LendingOrderService{
 		lendingDao,
 		engine,
-		lendingEng,
 		broker,
 		sync.RWMutex{},
 		bulkLendingOrders,
@@ -282,7 +279,6 @@ func (s *LendingOrderService) handleNewLendingOrder(bytes []byte) error {
 		logger.Error(err)
 		return err
 	}
-	s.lendingEng.HandleNewOrder(o)
 	return s.lendingDao.AddNewLendingOrder(o)
 }
 

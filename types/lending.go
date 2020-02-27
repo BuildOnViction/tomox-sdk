@@ -42,7 +42,7 @@ type LendingOrder struct {
 	FilledAmount    *big.Int       `bson:"filledAmount" json:"filledAmount"`
 	Status          string         `bson:"status" json:"status"`
 	UserAddress     common.Address `bson:"userAddress" json:"userAddress"`
-	RelayerAddress  common.Address `bson:"relayerAddress" json:"relayerAddress"`
+	RelayerAddress  common.Address `bson:"relayer" json:"relayer"`
 	Signature       *Signature     `bson:"signature" json:"signature"`
 	Hash            common.Hash    `bson:"hash" json:"hash"`
 	TxHash          common.Hash    `bson:"txHash" json:"txHash"`
@@ -200,7 +200,7 @@ func (o *LendingOrder) PairCode() (string, error) {
 // MarshalJSON implements the json.Marshal interface
 func (o *LendingOrder) MarshalJSON() ([]byte, error) {
 	lending := map[string]interface{}{
-		"relayerAddress":  o.RelayerAddress,
+		"relayer":         o.RelayerAddress,
 		"userAddress":     o.UserAddress,
 		"collateralToken": o.CollateralToken,
 		"lendingToken":    o.LendingToken,
@@ -240,18 +240,16 @@ func (o *LendingOrder) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON : write custom logic to unmarshal bytes to LendingOrder
 func (o *LendingOrder) UnmarshalJSON(b []byte) error {
 	lending := map[string]interface{}{}
-
 	err := json.Unmarshal(b, &lending)
 	if err != nil {
 		return err
 	}
-
 	if lending["id"] != nil && bson.IsObjectIdHex(lending["id"].(string)) {
 		o.ID = bson.ObjectIdHex(lending["id"].(string))
 	}
 
-	if lending["relayerAddress"] != nil {
-		o.RelayerAddress = common.HexToAddress(lending["relayerAddress"].(string))
+	if lending["relayer"] != nil {
+		o.RelayerAddress = common.HexToAddress(lending["relayer"].(string))
 	}
 
 	if lending["userAddress"] != nil {
@@ -388,7 +386,7 @@ func (o *LendingOrder) GetBSON() (interface{}, error) {
 func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID              bson.ObjectId    `json:"id,omitempty" bson:"_id"`
-		RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
+		RelayerAddress  string           `json:"relayer" bson:"relayer"`
 		UserAddress     string           `json:"userAddress" bson:"userAddress"`
 		CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 		LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
@@ -469,7 +467,7 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 type LendingRecord struct {
 	ID              bson.ObjectId    `json:"id" bson:"_id"`
 	UserAddress     string           `json:"userAddress" bson:"userAddress"`
-	RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
+	RelayerAddress  string           `json:"relayer" bson:"relayer"`
 	CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 	LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
 	Term            string           `json:"term" bson:"term"`
@@ -509,7 +507,7 @@ type LendingOrderCancel struct {
 	LendingID      uint64         `json:"lendingID"`
 	Status         string         `json:"status"`
 	UserAddress    common.Address `json:"userAddress"`
-	RelayerAddress common.Address `json:"relayerAddress"`
+	RelayerAddress common.Address `json:"relayer"`
 	Term           uint64         `json:"term"`
 	Interest       uint64         `json:"interest"`
 	Signature      *Signature     `json:"signature"`
@@ -526,10 +524,10 @@ func (oc *LendingOrderCancel) MarshalJSON() ([]byte, error) {
 			"R": oc.Signature.R,
 			"S": oc.Signature.S,
 		},
-		"lendingID":      oc.LendingID,
-		"userAddress":    oc.UserAddress,
-		"relayerAddress": oc.RelayerAddress,
-		"status":         oc.Status,
+		"lendingID":   oc.LendingID,
+		"userAddress": oc.UserAddress,
+		"relayer":     oc.RelayerAddress,
+		"status":      oc.Status,
 	}
 
 	return json.Marshal(orderCancel)
@@ -578,10 +576,10 @@ func (oc *LendingOrderCancel) UnmarshalJSON(b []byte) error {
 	}
 	oc.UserAddress = common.HexToAddress(parsed["userAddress"].(string))
 
-	if parsed["relayerAddress"] == nil {
-		return errors.New("relayerAddress is missing")
+	if parsed["relayer"] == nil {
+		return errors.New("relayer is missing")
 	}
-	oc.RelayerAddress = common.HexToAddress(parsed["relayerAddress"].(string))
+	oc.RelayerAddress = common.HexToAddress(parsed["relayer"].(string))
 
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -204,4 +205,11 @@ func UnitToSecond(interval int64, unit string) int64 {
 	}
 
 	return intervalInSeconds
+}
+
+// ToBigInt string to bigint
+func ToBigInt(s string) *big.Int {
+	res := big.NewInt(0)
+	res.SetString(s, 10)
+	return res
 }

@@ -120,8 +120,7 @@ func NewRouter(
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// LEDNDING SERVICE
-	lendingEng := engine.NewLendingEngine(lendingOrderDao, lendingTradeDao)
-	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, lendingEng, rabbitConn)
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
 	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
 
@@ -132,6 +131,7 @@ func NewRouter(
 	endpoints.ServePairResource(r, pairService)
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
+
 	endpoints.ServeTradeResource(r, tradeService)
 	endpoints.ServeOrderResource(r, orderService, accountService)
 

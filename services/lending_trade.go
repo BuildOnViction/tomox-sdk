@@ -208,13 +208,13 @@ func (s *LendingTradeService) HandleLendingTradeResponse(res *types.EngineRespon
 // HandleOperationInsert sent WS messages to client when a trade is created with status "PENDING""
 func (s *LendingTradeService) HandleOperationInsert(trade *types.LendingTrade) error {
 	m := &types.LendingMatches{LendingTrades: []*types.LendingTrade{trade}}
-	borrower, err := s.lendingDao.GetByHash(trade.BorrowingHash)
+	borrower, err := s.lendingDao.GetByHash(trade.BorrowingOrderHash)
 	if err != nil {
 		logger.Error(err)
 		return errors.New("Can not find borrower order")
 	}
 	m.Borrowing = borrower
-	mo, err := s.lendingDao.GetByHash(trade.InvestingHash)
+	mo, err := s.lendingDao.GetByHash(trade.InvestingOrderHash)
 	if err != nil {
 		logger.Error(err)
 		return errors.New("Can not find maker order")
@@ -227,13 +227,13 @@ func (s *LendingTradeService) HandleOperationInsert(trade *types.LendingTrade) e
 // HandleOperationUpdate sent WS messages to client when a trade is updated with status "SUCCESS" or "ERROR"
 func (s *LendingTradeService) HandleOperationUpdate(trade *types.LendingTrade) error {
 	m := &types.LendingMatches{LendingTrades: []*types.LendingTrade{trade}}
-	borrower, err := s.lendingDao.GetByHash(trade.BorrowingHash)
+	borrower, err := s.lendingDao.GetByHash(trade.BorrowingOrderHash)
 	if err != nil {
 		logger.Error(err)
 		return errors.New("Can not find borrower order")
 	}
 	m.Borrowing = borrower
-	mo, err := s.lendingDao.GetByHash(trade.InvestingHash)
+	mo, err := s.lendingDao.GetByHash(trade.InvestingOrderHash)
 	if err != nil {
 		logger.Error(err)
 		return errors.New("Can not find maker order")
