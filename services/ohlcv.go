@@ -528,6 +528,8 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 
 // Get24hTick get 24h tick of token
 func (s *OHLCVService) Get24hTick(baseToken, quoteToken common.Address) *types.Tick {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	return s.get24hTick(baseToken, quoteToken)
 }
 func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.Tick {
