@@ -510,7 +510,7 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 	var res []*types.Tick
 	if _, ok := s.tickCache.ticks[key]; ok {
 		for _, t := range s.tickCache.ticks[key] {
-			if t.Timestamp >= start || start == 0 && (t.Timestamp <= end || end == 0) {
+			if (t.Timestamp >= start || start == 0) && (t.Timestamp <= end || end == 0) {
 				c := *t
 				c.Timestamp = t.Timestamp * 1000
 				res = append(res, &c)
