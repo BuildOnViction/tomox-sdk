@@ -872,6 +872,8 @@ func (s *OHLCVService) GetAllTokenPairData() ([]*types.PairData, error) {
 	if err != nil {
 		return nil, err
 	}
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	pairsData := make([]*types.PairData, 0)
 	for _, p := range pairs {
 		pairData := s.getTokenPairData(p.Name(), p.BaseTokenSymbol, p.BaseTokenAddress, p.QuoteTokenAddress)
@@ -914,6 +916,8 @@ func (s *OHLCVService) GetPairPrice(pairName string, timestamp int64) (int64, er
 
 //GetFiatPriceChart get fiat chart
 func (s *OHLCVService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	symbols := []string{"BTC", "ETH", "BNB", "TOMO"}
 	now := time.Now().Unix()
 	yesterday := now - yesterdaySec
