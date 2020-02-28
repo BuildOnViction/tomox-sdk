@@ -849,7 +849,7 @@ func (s *OHLCVService) getTokenPairData(pairName string, baseTokenSymbol string,
 		pairData.Volume = tick.VolumeByQuote
 		pairData.Close = tick.Close
 		pairData.Count = tick.Count
-		price, err := s.GetLastPriceCurrentByTime(baseTokenSymbol, time.Unix(tick.Timestamp/milisecond, 0))
+		price, err := s.getLastPriceCurrentByTime(baseTokenSymbol, time.Unix(tick.Timestamp/milisecond, 0))
 		if err == nil {
 			pairData.CloseBaseUsd = price
 		}
@@ -943,7 +943,7 @@ func (s *OHLCVService) GetFiatPriceChart() (map[string][]*types.FiatPriceItem, e
 			}
 		}
 		for step := yesterday; step <= now; step = step + hourSec {
-			price, err := s.GetLastPriceCurrentByTime(symbol, time.Unix(step, 0))
+			price, err := s.getLastPriceCurrentByTime(symbol, time.Unix(step, 0))
 			if err == nil {
 				fiat := &types.FiatPriceItem{
 					Symbol:       symbol,
@@ -991,8 +991,7 @@ func (s *OHLCVService) getLastPricePairAtTime(pairName string, createAt time.Tim
 	return nil, errors.New("Price not found")
 }
 
-// GetLastPriceCurrentByTime get last trade price
-func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error) {
+func (s *OHLCVService) getLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error) {
 	USD := symbol + "/" + baseFiat
 	price, err := s.getLastPricePairAtTime(USD, createAt)
 	if err != nil {
@@ -1015,4 +1014,11 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 		return big.NewFloat(0).Mul(symbolpricebytomo, tomopricebybase), nil
 	}
 	return price, err
+}
+
+// GetLastPriceCurrentByTime get last trade price
+func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.getLastPriceCurrentByTime(symbol, createAt)
 }
