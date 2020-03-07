@@ -198,17 +198,6 @@ paths:
       operationId: HandleGetPairs
       produces:
         - application/json
-      parameters:
-        - name: baseToken
-          in: query
-          description: Base token address
-          required: true
-          type: string
-        - name: quoteToken
-          in: query
-          description: Quote token address
-          required: true
-          type: string
       responses:
         '200':
           description: successful operation
