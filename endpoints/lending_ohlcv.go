@@ -102,7 +102,7 @@ func (e *LendingOhlcvEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 	b, _ := json.Marshal(input)
 	var ev *types.WebsocketEvent
 	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
-	socket := ws.GetOHLCVSocket()
+	socket := ws.GetLendingOhlcvSocket()
 	err := json.Unmarshal(b, &ev)
 	if err != nil {
 		logger.Error(err)
@@ -131,13 +131,13 @@ func (e *LendingOhlcvEndpoint) ohlcvWebSocket(input interface{}, c *ws.Client) {
 			socket.SendErrorMessage(c, errInvalidPayload)
 			return
 		}
-		if (p.BaseToken == common.Address{}) {
-			socket.SendErrorMessage(c, "Invalid base token")
+		if p.Term == 0 {
+			socket.SendErrorMessage(c, "Invalid term")
 			return
 		}
 
-		if (p.QuoteToken == common.Address{}) {
-			socket.SendErrorMessage(c, "Invalid Quote Token")
+		if (p.LendingToken == common.Address{}) {
+			socket.SendErrorMessage(c, "Invalid Lending Token")
 			return
 		}
 

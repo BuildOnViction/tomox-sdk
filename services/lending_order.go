@@ -96,6 +96,17 @@ func (s *LendingOrderService) CancelLendingOrder(oc *types.LendingOrderCancel) e
 	return nil
 }
 
+// RepayLendingOrder repay
+func (s *LendingOrderService) RepayLendingOrder(o *types.LendingOrder) error {
+	return s.lendingDao.RepayLendingOrder(o)
+}
+
+// TopupLendingOrder topup
+func (s *LendingOrderService) TopupLendingOrder(o *types.LendingOrder) error {
+
+	return s.lendingDao.TopupLendingOrder(o)
+}
+
 // HandleLendingOrderResponse listens to messages incoming from the engine and handles websocket
 // responses and database updates accordingly
 func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineResponse) error {

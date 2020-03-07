@@ -124,6 +124,12 @@ func (s *SubscriptionPayload) UnmarshalJSON(b []byte) error {
 	if payload["lendingToken"] != nil {
 		s.LendingToken = common.HexToAddress(payload["lendingToken"].(string))
 	}
+	if payload["units"] != nil {
+		s.Units = payload["units"].(string)
+	}
+	if payload["duration"] != nil {
+		s.Duration, _ = strconv.ParseInt(payload["duration"].(string), 10, 64)
+	}
 	return nil
 
 }

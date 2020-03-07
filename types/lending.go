@@ -18,7 +18,7 @@ import (
 
 const (
 	BORROW     = "BORROW"
-	LEND       = "LEND"
+	LEND       = "INVEST"
 	TypeMarket = "MO"
 	TypeLimit  = "LO"
 
@@ -42,15 +42,16 @@ type LendingOrder struct {
 	FilledAmount    *big.Int       `bson:"filledAmount" json:"filledAmount"`
 	Status          string         `bson:"status" json:"status"`
 	UserAddress     common.Address `bson:"userAddress" json:"userAddress"`
-	RelayerAddress  common.Address `bson:"relayer" json:"relayer"`
+	RelayerAddress  common.Address `bson:"relayerAddress" json:"relayerAddress"`
 	Signature       *Signature     `bson:"signature" json:"signature"`
 	Hash            common.Hash    `bson:"hash" json:"hash"`
 	TxHash          common.Hash    `bson:"txHash" json:"txHash"`
 	Nonce           *big.Int       `bson:"nonce" json:"nonce"`
 	CreatedAt       time.Time      `bson:"createdAt" json:"createdAt"`
 	UpdatedAt       time.Time      `bson:"updatedAt" json:"updatedAt"`
-	LendingID       uint64         `bson:"lendingID" json:"lendingID"`
+	LendingID       uint64         `bson:"lendingId" json:"lendingId"`
 	ExtraData       string         `bson:"extraData" json:"extraData"`
+	LendingTradeID  uint64         `bson:"tradeId" json:"tradeId"`
 	Key             string         `json:"key" bson:"key"`
 }
 
@@ -200,7 +201,7 @@ func (o *LendingOrder) PairCode() (string, error) {
 // MarshalJSON implements the json.Marshal interface
 func (o *LendingOrder) MarshalJSON() ([]byte, error) {
 	lending := map[string]interface{}{
-		"relayer":         o.RelayerAddress,
+		"relayerAddress":  o.RelayerAddress,
 		"userAddress":     o.UserAddress,
 		"collateralToken": o.CollateralToken,
 		"lendingToken":    o.LendingToken,
@@ -212,7 +213,8 @@ func (o *LendingOrder) MarshalJSON() ([]byte, error) {
 		"interest":        strconv.FormatUint(o.Interest, 10),
 		"createdAt":       o.CreatedAt.Format(time.RFC3339Nano),
 		"updatedAt":       o.UpdatedAt.Format(time.RFC3339Nano),
-		"lendingID":       strconv.FormatUint(o.LendingID, 10),
+		"lendingId":       strconv.FormatUint(o.LendingID, 10),
+		"tradeId":         strconv.FormatUint(o.LendingTradeID, 10),
 		"key":             o.Key,
 	}
 
@@ -248,8 +250,8 @@ func (o *LendingOrder) UnmarshalJSON(b []byte) error {
 		o.ID = bson.ObjectIdHex(lending["id"].(string))
 	}
 
-	if lending["relayer"] != nil {
-		o.RelayerAddress = common.HexToAddress(lending["relayer"].(string))
+	if lending["relayerAddress"] != nil {
+		o.RelayerAddress = common.HexToAddress(lending["relayerAddress"].(string))
 	}
 
 	if lending["userAddress"] != nil {
@@ -324,15 +326,20 @@ func (o *LendingOrder) UnmarshalJSON(b []byte) error {
 		o.UpdatedAt = t
 	}
 
-	if lending["lendingID"] != nil {
-		o.Status = lending["status"].(string)
-		lendingID, err := strconv.ParseInt(lending["lendingID"].(string), 10, 64)
+	if lending["lendingId"] != nil {
+		lendingID, err := strconv.ParseInt(lending["lendingId"].(string), 10, 64)
 		if err != nil {
 			logger.Error(err)
 		}
 		o.LendingID = uint64(lendingID)
 	}
-
+	if lending["tradeId"] != nil {
+		lendingTradeID, err := strconv.ParseInt(lending["tradeId"].(string), 10, 64)
+		if err != nil {
+			logger.Error(err)
+		}
+		o.LendingTradeID = uint64(lendingTradeID)
+	}
 	if lending["key"] != nil {
 		o.Key = lending["key"].(string)
 	}
@@ -386,7 +393,7 @@ func (o *LendingOrder) GetBSON() (interface{}, error) {
 func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID              bson.ObjectId    `json:"id,omitempty" bson:"_id"`
-		RelayerAddress  string           `json:"relayer" bson:"relayer"`
+		RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
 		UserAddress     string           `json:"userAddress" bson:"userAddress"`
 		CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 		LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
@@ -402,7 +409,7 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 		Signature       *SignatureRecord `json:"signature" bson:"signature"`
 		CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
 		UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
-		LendingID       string           `json:"lendingID" bson:"lendingID"`
+		LendingID       string           `json:"lendingId" bson:"lendingId"`
 		Key             string           `json:"key" bson:"key"`
 	})
 
@@ -467,7 +474,7 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 type LendingRecord struct {
 	ID              bson.ObjectId    `json:"id" bson:"_id"`
 	UserAddress     string           `json:"userAddress" bson:"userAddress"`
-	RelayerAddress  string           `json:"relayer" bson:"relayer"`
+	RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
 	CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 	LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
 	Term            string           `json:"term" bson:"term"`
@@ -482,7 +489,7 @@ type LendingRecord struct {
 	Signature       *SignatureRecord `json:"signature,omitempty" bson:"signature"`
 	CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
 	UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
-	LendingID       string           `json:"lendingID,omitempty" bson:"lendingID"`
+	LendingID       string           `json:"lendingId,omitempty" bson:"lendingId"`
 	NextOrder       string           `json:"nextOrder,omitempty" bson:"nextOrder"`
 	PrevOrder       string           `json:"prevOrder,omitempty" bson:"prevOrder"`
 	OrderList       string           `json:"orderList,omitempty" bson:"orderList"`
@@ -504,10 +511,10 @@ type LendingOrderCancel struct {
 	LendingHash    common.Hash    `json:"lendingHash"`
 	Nonce          *big.Int       `json:"nonce"`
 	Hash           common.Hash    `json:"hash"`
-	LendingID      uint64         `json:"lendingID"`
+	LendingID      uint64         `json:"lendingId"`
 	Status         string         `json:"status"`
 	UserAddress    common.Address `json:"userAddress"`
-	RelayerAddress common.Address `json:"relayer"`
+	RelayerAddress common.Address `json:"relayerAddress"`
 	Term           uint64         `json:"term"`
 	Interest       uint64         `json:"interest"`
 	Signature      *Signature     `json:"signature"`
@@ -524,10 +531,10 @@ func (oc *LendingOrderCancel) MarshalJSON() ([]byte, error) {
 			"R": oc.Signature.R,
 			"S": oc.Signature.S,
 		},
-		"lendingID":   oc.LendingID,
-		"userAddress": oc.UserAddress,
-		"relayer":     oc.RelayerAddress,
-		"status":      oc.Status,
+		"lendingId":      oc.LendingID,
+		"userAddress":    oc.UserAddress,
+		"relayerAddress": oc.RelayerAddress,
+		"status":         oc.Status,
 	}
 
 	return json.Marshal(orderCancel)
@@ -562,10 +569,10 @@ func (oc *LendingOrderCancel) UnmarshalJSON(b []byte) error {
 	}
 	oc.Status = parsed["status"].(string)
 
-	if parsed["lendingID"] == nil {
-		return errors.New("lendingID is missing")
+	if parsed["lendingId"] == nil {
+		return errors.New("lendingId is missing")
 	}
-	lendingID, err := strconv.ParseUint(parsed["lendingID"].(string), 10, 64)
+	lendingID, err := strconv.ParseUint(parsed["lendingId"].(string), 10, 64)
 	if err != nil {
 		return err
 	}
@@ -576,10 +583,10 @@ func (oc *LendingOrderCancel) UnmarshalJSON(b []byte) error {
 	}
 	oc.UserAddress = common.HexToAddress(parsed["userAddress"].(string))
 
-	if parsed["relayer"] == nil {
-		return errors.New("relayer is missing")
+	if parsed["relayerAddress"] == nil {
+		return errors.New("relayerAddress is missing")
 	}
-	oc.RelayerAddress = common.HexToAddress(parsed["relayer"].(string))
+	oc.RelayerAddress = common.HexToAddress(parsed["relayerAddress"].(string))
 
 	sig := parsed["signature"].(map[string]interface{})
 	oc.Signature = &Signature{

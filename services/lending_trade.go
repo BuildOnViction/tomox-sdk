@@ -263,3 +263,8 @@ func (s *LendingTradeService) saveBulkTrades(t *types.LendingTrade) {
 
 func (s *LendingTradeService) broadcastTickUpdate(pairs []string) {
 }
+
+// GetLendingTradesUserHistory get lending trade by history
+func (s *LendingTradeService) GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error) {
+	return s.lendingTradeDao.GetLendingTradesUserHistory(a, lendingtradeSpec, sortedBy, pageOffset, pageSize)
+}

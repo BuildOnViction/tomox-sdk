@@ -184,11 +184,14 @@ func (t *LendingTrade) UnmarshalJSON(b []byte) error {
 		tm, _ := time.Parse(time.RFC3339Nano, trade["createdAt"].(string))
 		t.CreatedAt = tm
 	}
-	if trade["updateAt"] != nil {
-		tm, _ := time.Parse(time.RFC3339Nano, trade["updateAt"].(string))
+	if trade["updatedAt"] != nil {
+		tm, _ := time.Parse(time.RFC3339Nano, trade["updatedAt"].(string))
 		t.UpdatedAt = tm
 	}
-
+	if trade["depositRate"] != nil {
+		t.DepositRate = new(big.Int)
+		t.DepositRate, _ = t.DepositRate.SetString(trade["depositRate"].(string), 10)
+	}
 	return nil
 }
 
@@ -220,6 +223,7 @@ type LendingTradeBSON struct {
 	Hash                   string        `bson:"hash" json:"hash"`
 	TxHash                 string        `bson:"txHash" json:"txHash"`
 	ExtraData              string        `bson:"extraData" json:"extraData"`
+	CreatedAt              time.Time     `bson:"createdAt" json:"createdAt"`
 	UpdatedAt              time.Time     `bson:"updatedAt" json:"updatedAt"`
 }
 
@@ -309,6 +313,7 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 	t.Hash = common.HexToHash(decoded.Hash)
 	t.TxHash = common.HexToHash(decoded.TxHash)
 	t.UpdatedAt = decoded.UpdatedAt
+	t.CreatedAt = decoded.CreatedAt
 
 	return nil
 }
@@ -317,6 +322,7 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 type LendingTradeSpec struct {
 	CollateralToken string
 	LendingToken    string
+	Term            string
 	DateFrom        int64
 	DateTo          int64
 }
@@ -324,7 +330,7 @@ type LendingTradeSpec struct {
 // LendingTradeRes response api
 type LendingTradeRes struct {
 	Total         int             `json:"total" bson:"total"`
-	LendingTrades []*LendingTrade `json:"trades" bson:"orders"`
+	LendingTrades []*LendingTrade `json:"trades" bson:"trades"`
 }
 
 // ComputeHash returns hashes the trade

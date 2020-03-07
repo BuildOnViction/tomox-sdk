@@ -24,6 +24,8 @@ func ServeLendingOrderResource(r *mux.Router, lendingorderService interfaces.Len
 	r.HandleFunc("/api/lending/nonce", e.handleGetLendingOrderNonce).Methods("GET")
 	r.HandleFunc("/api/lending", e.handleNewLendingOrder).Methods("POST")
 	r.HandleFunc("/api/lending/cancel", e.handleCancelLendingOrder).Methods("POST")
+	r.HandleFunc("/api/lending/repay", e.handleRepayLendingOrder).Methods("POST")
+	r.HandleFunc("/api/lending/topup", e.handleTopupLendingOrder).Methods("POST")
 	r.HandleFunc("/api/lending/{hash}", e.handleLendingByHash).Methods("GET")
 	ws.RegisterChannel(ws.LendingOrderChannel, e.ws)
 }
@@ -80,8 +82,48 @@ func (e *lendingorderEndpoint) handleCancelLendingOrder(w http.ResponseWriter, r
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
+}
+
+func (e *lendingorderEndpoint) handleRepayLendingOrder(w http.ResponseWriter, r *http.Request) {
+	o := &types.LendingOrder{}
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&o)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+	err = e.lendingorderService.RepayLendingOrder(o)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, o.Hash)
+}
+func (e *lendingorderEndpoint) handleTopupLendingOrder(w http.ResponseWriter, r *http.Request) {
+	o := &types.LendingOrder{}
+	decoder := json.NewDecoder(r.Body)
+
+	defer r.Body.Close()
+
+	err := decoder.Decode(&o)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+	err = e.lendingorderService.TopupLendingOrder(o)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, o.Hash)
 }
 
 // ws function handles incoming websocket messages on the order channel

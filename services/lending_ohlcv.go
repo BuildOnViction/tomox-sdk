@@ -20,6 +20,11 @@ import (
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
+const (
+	// LendingCachePath OHL cache file name
+	LendingCachePath = "lending.cache"
+)
+
 // LendingOhlcvService ohlcv lending struct
 type LendingOhlcvService struct {
 	lendingTradeDao  interfaces.LendingTradeDao
@@ -342,7 +347,7 @@ func (s *LendingOhlcvService) commitCache() error {
 	if err != nil {
 		return err
 	}
-	file, err := os.Create("ohlcv.cache")
+	file, err := os.Create(LendingCachePath)
 	defer file.Close()
 	if err == nil {
 		_, err = file.Write(tickData)
@@ -354,7 +359,7 @@ func (s *LendingOhlcvService) commitCache() error {
 }
 
 func (s *LendingOhlcvService) loadCache() error {
-	file, err := os.Open("ohlcv.cache")
+	file, err := os.Open(LendingCachePath)
 	defer file.Close()
 	if err != nil {
 		return err

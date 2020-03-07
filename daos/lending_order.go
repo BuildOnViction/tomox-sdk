@@ -66,7 +66,7 @@ func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	indexes := []mgo.Index{}
 	indexes, err := db.Session.DB(dao.dbName).C(dao.collectionName).Indexes()
 	if err == nil {
-		if !existedIndex("index_order_hash", indexes) {
+		if !existedIndex("index_lending_item_hash", indexes) {
 			err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
 			if err != nil {
 				panic(err)
@@ -261,6 +261,7 @@ type LendingOrderMsg struct {
 	Side            string         `json:"side,omitempty"`
 	Type            string         `json:"type,omitempty"`
 	LendingID       uint64         `json:"lendingID,omitempty"`
+	LendingTradeID  uint64         `json:"tradeId,omitempty"`
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
 	R *big.Int `json:"r" gencodec:"required"`
@@ -359,7 +360,91 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 	}
 
 	ws.SendLendingOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
-	dao.Create(o)
+	return nil
+}
+
+// RepayLendingOrder send repay transaction
+func (dao *LendingOrderDao) RepayLendingOrder(o *types.LendingOrder) error {
+
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+	defer rpcClient.Close()
+	bigstr := o.Nonce.String()
+	n, err := strconv.ParseInt(bigstr, 10, 64)
+	if err != nil {
+		return err
+	}
+	V := big.NewInt(int64(o.Signature.V))
+	R := o.Signature.R.Big()
+	S := o.Signature.S.Big()
+
+	msg := LendingOrderMsg{
+		AccountNonce:   uint64(n),
+		Status:         o.Status,
+		UserAddress:    o.UserAddress,
+		LendingToken:   o.LendingToken,
+		Term:           o.Term,
+		LendingTradeID: o.LendingTradeID,
+		RelayerAddress: o.RelayerAddress,
+		V:              V,
+		R:              R,
+		S:              S,
+	}
+	var result interface{}
+	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex(), o.LendingTradeID, o.UserAddress.Hex(), n)
+	err = rpcClient.Call(&result, "tomox_sendLending", msg)
+
+	if err != nil {
+		logger.Error(err)
+		ws.SendLendingOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+			Message: err.Error(),
+		})
+		return err
+	}
+
+	ws.SendLendingOrderMessage("ORDER_REPAY", o.UserAddress, o)
+	return nil
+}
+
+// TopupLendingOrder send top up lending transaction
+func (dao *LendingOrderDao) TopupLendingOrder(o *types.LendingOrder) error {
+
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+	defer rpcClient.Close()
+	bigstr := o.Nonce.String()
+	n, err := strconv.ParseInt(bigstr, 10, 64)
+	if err != nil {
+		return err
+	}
+	V := big.NewInt(int64(o.Signature.V))
+	R := o.Signature.R.Big()
+	S := o.Signature.S.Big()
+
+	msg := LendingOrderMsg{
+		AccountNonce:   uint64(n),
+		Status:         o.Status,
+		UserAddress:    o.UserAddress,
+		LendingToken:   o.LendingToken,
+		Term:           o.Term,
+		LendingTradeID: o.LendingTradeID,
+		RelayerAddress: o.RelayerAddress,
+		Quantity:       o.Quantity,
+		V:              V,
+		R:              R,
+		S:              S,
+	}
+	var result interface{}
+	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex(), o.LendingTradeID, o.UserAddress.Hex(), n)
+	err = rpcClient.Call(&result, "tomox_sendLending", msg)
+
+	if err != nil {
+		logger.Error(err)
+		ws.SendLendingOrderMessage("ERROR", o.UserAddress, OrderErrorMsg{
+			Message: err.Error(),
+		})
+		return err
+	}
+
+	ws.SendLendingOrderMessage("ORDER_TOPUP", o.UserAddress, o)
 	return nil
 }
 
