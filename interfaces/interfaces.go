@@ -50,8 +50,6 @@ type OrderDao interface {
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 	AddNewOrder(o *types.Order, topic string) error
 	CancelOrder(o *types.Order, topic string) error
-	AddTopic(t []string) (string, error)
-	DeleteTopic(t string) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 	GetOrderNonce(addr common.Address) (interface{}, error)
 	GetOpenOrders() ([]*types.Order, error)

@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -448,9 +449,38 @@ func (dao *LendingOrderDao) TopupLendingOrder(o *types.LendingOrder) error {
 	return nil
 }
 
-// GetLendingNonce get nonce of order
+// GetLendingNonce get nonce of lending order
 func (dao *LendingOrderDao) GetLendingNonce(userAddress common.Address) (uint64, error) {
-	return 0, nil
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	var result interface{}
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	err = rpcClient.Call(&result, "tomox_getLendingOrderCount", userAddress)
+
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+	logger.Info("OrderNonce:", result)
+	s := result.(string)
+	s = strings.TrimPrefix(s, "0x")
+	n, err := strconv.ParseUint(s, 16, 32)
+	if err != nil {
+		return 0, nil
+	}
+
+	return n, nil
 }
 
 // GetLendingOrderBookInterest get amount from interest
