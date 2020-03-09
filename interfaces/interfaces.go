@@ -387,7 +387,7 @@ type Relayer interface {
 // LendingOrderService for lending
 type LendingOrderService interface {
 	NewLendingOrder(o *types.LendingOrder) error
-	CancelLendingOrder(oc *types.LendingOrderCancel) error
+	CancelLendingOrder(oc *types.LendingOrder) error
 	GetLendingNonceByUserAddress(addr common.Address) (uint64, error)
 	GetByHash(h common.Hash) (*types.LendingOrder, error)
 	RepayLendingOrder(o *types.LendingOrder) error

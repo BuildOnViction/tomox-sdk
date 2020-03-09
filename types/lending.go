@@ -549,10 +549,10 @@ func (oc *LendingOrderCancel) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	if parsed["lendingHash"] == nil {
-		return errors.New("Lending Hash is missing")
-	}
-	oc.LendingHash = common.HexToHash(parsed["lendingHash"].(string))
+	// if parsed["lendingHash"] == nil {
+	// 	return errors.New("Lending Hash is missing")
+	// }
+	// oc.LendingHash = common.HexToHash(parsed["lendingHash"].(string))
 
 	if parsed["hash"] == nil {
 		return errors.New("Hash is missing")

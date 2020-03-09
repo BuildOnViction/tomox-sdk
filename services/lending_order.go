@@ -73,27 +73,8 @@ func (s *LendingOrderService) NewLendingOrder(o *types.LendingOrder) error {
 // CancelLendingOrder handles the cancellation order requests.
 // Only Orders which are OPEN or NEW i.e. Not yet filled/partially filled
 // can be cancelled
-func (s *LendingOrderService) CancelLendingOrder(oc *types.LendingOrderCancel) error {
-	var err error
-	var o *types.LendingOrder
-	o, err = s.lendingDao.GetByHash(oc.LendingHash)
-	if err != nil || o == nil {
-		return errors.New("No lending with corresponding hash")
-	}
-	o.Nonce = oc.Nonce
-	o.Signature = oc.Signature
-	o.Status = oc.Status
-	o.UserAddress = oc.UserAddress
-	o.RelayerAddress = oc.RelayerAddress
-	o.Term = oc.Term
-	o.Interest = oc.Interest
-	err = s.broker.PublishCancelLendingOrderMessage(o)
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
+func (s *LendingOrderService) CancelLendingOrder(o *types.LendingOrder) error {
+	return s.lendingDao.CancelLendingOrder(o)
 }
 
 // RepayLendingOrder repay

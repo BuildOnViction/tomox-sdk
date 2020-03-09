@@ -64,25 +64,22 @@ func (e *lendingorderEndpoint) handleNewLendingOrder(w http.ResponseWriter, r *h
 }
 
 func (e *lendingorderEndpoint) handleCancelLendingOrder(w http.ResponseWriter, r *http.Request) {
-	oc := &types.LendingOrderCancel{}
-
+	o := &types.LendingOrder{}
 	decoder := json.NewDecoder(r.Body)
-
 	defer r.Body.Close()
-
-	err := decoder.Decode(&oc)
+	err := decoder.Decode(&o)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid payload")
 		return
 	}
-	err = e.lendingorderService.CancelLendingOrder(oc)
+	err = e.lendingorderService.CancelLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	httputils.WriteJSON(w, http.StatusOK, oc.Hash)
+	httputils.WriteJSON(w, http.StatusOK, o.Hash)
 }
 
 func (e *lendingorderEndpoint) handleRepayLendingOrder(w http.ResponseWriter, r *http.Request) {
@@ -188,20 +185,20 @@ func (e *lendingorderEndpoint) handleWSNewLendingOrder(ev *types.WebsocketEvent,
 // handleCancelLendingOrder handles CancelLendingOrder message.
 func (e *lendingorderEndpoint) handleWSCancelLendingOrder(ev *types.WebsocketEvent, c *ws.Client) {
 	bytes, err := json.Marshal(ev.Payload)
-	oc := &types.LendingOrderCancel{}
+	o := &types.LendingOrder{}
 
-	err = json.Unmarshal(bytes, &oc)
+	err = json.Unmarshal(bytes, &o)
 	if err != nil {
 		logger.Error(err)
-		c.SendLendingOrderErrorMessage(err, oc.Hash)
+		c.SendLendingOrderErrorMessage(err, o.Hash)
 	}
 
-	ws.RegisterLendingOrderConnection(oc.UserAddress, c)
+	ws.RegisterLendingOrderConnection(o.UserAddress, c)
 
-	orderErr := e.lendingorderService.CancelLendingOrder(oc)
+	orderErr := e.lendingorderService.CancelLendingOrder(o)
 	if orderErr != nil {
 		logger.Error(orderErr)
-		c.SendLendingOrderErrorMessage(orderErr, oc.Hash)
+		c.SendLendingOrderErrorMessage(orderErr, o.Hash)
 		return
 	}
 }
