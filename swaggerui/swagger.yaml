@@ -967,7 +967,7 @@ paths:
   /lending/orderbook:
     get:
       tags:
-        - lending-orderbook
+        - orderbook
       summary: Retrieve the orderbook (amount and pricepoint) corresponding to a lendingToken and a term
       description: Retrieve the orderbook (amount and pricepoint) corresponding to a lendingToken and a term
       produces:
