@@ -24,11 +24,11 @@ func ServeLendingOrderBookResource(
 	lendingOrderBookService interfaces.LendingOrderBookService,
 ) {
 	e := &LendingOrderBookEndpoint{lendingOrderBookService}
-	r.HandleFunc("/api/lending/orderbook", e.handleGetLendingOrderBook)
+	r.HandleFunc("/api/lending/orderbook", e.HandleGetLendingOrderBook).Methods("GET")
 	ws.RegisterChannel(ws.LendingOrderBookChannel, e.lendingOrderBookWebSocket)
 }
 
-func (e *LendingOrderBookEndpoint) handleGetLendingOrderBook(w http.ResponseWriter, r *http.Request) {
+func (e *LendingOrderBookEndpoint) HandleGetLendingOrderBook(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	t := v.Get("term")
 	lendingToken := v.Get("lendingToken")

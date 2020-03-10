@@ -24,7 +24,7 @@ func ServeLendingTradeResource(
 	lendingTradeService interfaces.LendingTradeService,
 ) {
 	e := &lendingTradeEndpoint{lendingTradeService}
-	r.HandleFunc("/api/lending/trades/history", e.HandleGetLendingTradesHistory)
+	r.HandleFunc("/api/lending/trades/history", e.HandleGetLendingTradesHistory).Methods("GET")
 	ws.RegisterChannel(ws.LendingTradeChannel, e.lendingTradeWebsocket)
 }
 func (e *lendingTradeEndpoint) lendingTradeWebsocket(input interface{}, c *ws.Client) {

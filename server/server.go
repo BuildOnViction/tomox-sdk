@@ -141,9 +141,9 @@ func NewRouter(
 
 	// Endpoint for lending
 
+	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
-	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
 	endpoints.ServeLendingOhlcvResource(r, lendingOhlcvService)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 
