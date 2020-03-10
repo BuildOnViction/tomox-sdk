@@ -51,8 +51,6 @@ type OrderDao interface {
 	Aggregate(q []bson.M) ([]*types.OrderData, error)
 	AddNewOrder(o *types.Order, topic string) error
 	CancelOrder(o *types.Order, topic string) error
-	AddTopic(t []string) (string, error)
-	DeleteTopic(t string) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 	GetOrderNonce(addr common.Address) (interface{}, error)
 	GetOpenOrders() ([]*types.Order, error)
@@ -386,4 +384,66 @@ type RelayerService interface {
 // Relayer interface for relayer
 type Relayer interface {
 	GetRelayer() (*relayer.RInfo, error)
+	GetLending() (*relayer.LendingRInfo, error)
+}
+
+// LendingOrderService for lending
+type LendingOrderService interface {
+	NewLendingOrder(o *types.LendingOrder) error
+	CancelLendingOrder(oc *types.LendingOrder) error
+	GetLendingNonceByUserAddress(addr common.Address) (uint64, error)
+	GetByHash(h common.Hash) (*types.LendingOrder, error)
+	RepayLendingOrder(o *types.LendingOrder) error
+	TopupLendingOrder(o *types.LendingOrder) error
+}
+
+// LendingOrderDao dao
+type LendingOrderDao interface {
+	GetByHash(h common.Hash) (*types.LendingOrder, error)
+	Watch() (*mgo.ChangeStream, *mgo.Session, error)
+	GetLendingNonce(addr common.Address) (uint64, error)
+	AddNewLendingOrder(o *types.LendingOrder) error
+	CancelLendingOrder(o *types.LendingOrder) error
+	GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error)
+	GetLendingOrderBookInterest(term uint64, lendingToken common.Address, interest uint64, side string) (*big.Int, error)
+	RepayLendingOrder(o *types.LendingOrder) error
+	TopupLendingOrder(o *types.LendingOrder) error
+}
+
+// LendingOrderBookService interface for lending order book
+type LendingOrderBookService interface {
+	GetLendingOrderBook(term uint64, lendingToken common.Address) (*types.LendingOrderBook, error)
+	SubscribeLendingOrderBook(c *ws.Client, term uint64, lendingToken common.Address)
+	UnsubscribeLendingOrderBook(c *ws.Client)
+	UnsubscribeLendingOrderBookChannel(c *ws.Client, term uint64, lendingToken common.Address)
+}
+
+// LendingTradeService interface for lending service
+type LendingTradeService interface {
+	Subscribe(c *ws.Client, term uint64, lendingToken common.Address)
+	UnsubscribeChannel(c *ws.Client, term uint64, lendingToken common.Address)
+	Unsubscribe(c *ws.Client)
+	GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
+}
+
+// LendingTradeDao interface for lending dao
+type LendingTradeDao interface {
+	GetLendingTradeByOrderBook(tern uint64, lendingToken common.Address, from, to int64, n int) ([]*types.LendingTrade, error)
+	Watch() (*mgo.ChangeStream, *mgo.Session, error)
+	GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error)
+	GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
+}
+
+// LendingOhlcvService interface for lending service
+type LendingOhlcvService interface {
+	GetOHLCV(term uint64, lendingToken common.Address, duration int64, unit string, timeInterval ...int64) ([]*types.LendingTick, error)
+	Subscribe(conn *ws.Client, p *types.SubscriptionPayload)
+	Unsubscribe(conn *ws.Client)
+}
+
+// LendingPairDao interface for lending pair by term/lendingtoken
+type LendingPairDao interface {
+	Create(o *types.LendingPair) error
+	GetAll() ([]types.LendingPair, error)
+	DeleteByLendingKey(term uint64, lendingAddress common.Address) error
 }

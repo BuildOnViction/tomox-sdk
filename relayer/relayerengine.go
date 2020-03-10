@@ -3,7 +3,9 @@ package relayer
 import (
 	"context"
 	"errors"
+	"math/big"
 	"os"
+	"strconv"
 
 	ether "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -29,6 +31,12 @@ type PairToken struct {
 	QuoteToken common.Address
 }
 
+// LendingPairToken lending pari
+type LendingPairToken struct {
+	Term         uint64
+	LendingToken common.Address
+}
+
 // TokenInfo token info
 type TokenInfo struct {
 	Name     string
@@ -43,6 +51,13 @@ type RInfo struct {
 	Pairs   []*PairToken
 	MakeFee uint16
 	TakeFee uint16
+}
+
+// LendingRInfo lending relayer info
+type LendingRInfo struct {
+	Tokens       map[common.Address]*TokenInfo
+	LendingPairs []*LendingPairToken
+	Fee          uint16
 }
 
 // NewBlockchain init
@@ -202,4 +217,76 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 	}
 
 	return &relayerInfo, nil
+}
+
+// GetLendingRelayer return all lending pair in smart contract
+func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddress common.Address) (*LendingRInfo, error) {
+	logger.Debug("GetLendingRelayer:", coinAddress.Hex(), contractAddress.Hex())
+	abiRelayer, err := relayerAbi.GetLendingAbi()
+	if err != nil {
+		return nil, err
+	}
+	abiToken, err := relayerAbi.GetTokenAbi()
+	if err != nil {
+		return nil, err
+	}
+	input, err := abiRelayer.Pack("getLendingRelayerByCoinbase", coinAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := ether.CallMsg{To: &contractAddress, Data: input}
+	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	logger.Debug("lending relayer data: ", result)
+
+	lendingRInfo := LendingRInfo{
+		Tokens: make(map[common.Address]*TokenInfo),
+	}
+	if method, ok := abiRelayer.Methods["getLendingRelayerByCoinbase"]; ok {
+		contractData, err := method.Outputs.UnpackValues(result)
+		if err == nil {
+			if len(contractData) == 4 {
+				lendingRInfo.Fee = contractData[0].(uint16)
+				termList := contractData[2].([]*big.Int)
+				lendingTokenList := contractData[1].([]common.Address)
+				setLendingToken := utils.Union(lendingTokenList, lendingTokenList)
+				for _, t := range setLendingToken {
+					if utils.IsNativeTokenByAddress(t) {
+						tokenInfo := b.setBaseTokenInfo()
+						lendingRInfo.Tokens[t] = tokenInfo
+					} else {
+						tokenInfo, err := b.GetTokenInfo(t, &abiToken)
+						if err != nil {
+							return nil, err
+						}
+						lendingRInfo.Tokens[t] = tokenInfo
+						logger.Debug("Token data:", tokenInfo.Name, tokenInfo.Symbol)
+					}
+
+				}
+				if len(termList) == len(lendingTokenList) {
+					for i, v := range termList {
+						t, err := strconv.ParseUint(v.String(), 10, 64)
+						if err != nil {
+							return &lendingRInfo, err
+						}
+						pairToken := &LendingPairToken{
+							Term:         t,
+							LendingToken: lendingTokenList[i],
+						}
+						lendingRInfo.LendingPairs = append(lendingRInfo.LendingPairs, pairToken)
+					}
+				}
+
+			}
+		}
+	} else {
+		return &lendingRInfo, errors.New("Can not get relayer information")
+	}
+
+	return &lendingRInfo, nil
 }

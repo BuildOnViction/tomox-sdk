@@ -517,7 +517,6 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 			}
 		}
 	} else {
-		logger.Debug("keynull", key)
 		return nil
 	}
 	sort.Slice(res, func(i, j int) bool {
@@ -533,6 +532,8 @@ func (s *OHLCVService) Get24hTick(baseToken, quoteToken common.Address) *types.T
 	return s.get24hTick(baseToken, quoteToken)
 }
 func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.Tick {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	var res []*types.Tick
 	now := time.Now()
 	begin := now.AddDate(0, 0, -1).Unix()

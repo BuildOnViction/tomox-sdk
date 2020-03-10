@@ -31,6 +31,7 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.0
+	github.com/hashicorp/hcl v1.0.0
 	github.com/huin/goupnp v1.0.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.1 // indirect
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da
@@ -57,6 +58,7 @@ require (
 	github.com/tidwall/gjson v1.2.1
 	github.com/tidwall/match v1.0.1 // indirect
 	github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51 // indirect
+	github.com/tomochain/tomochain v1.5.6
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	github.com/valyala/fasttemplate v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b // indirect

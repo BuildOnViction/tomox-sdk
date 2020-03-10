@@ -79,3 +79,25 @@ func (c *Client) SendOrderErrorMessage(err error, h common.Hash) {
 	defer c.mu.Unlock()
 	c.send <- m
 }
+
+// SendLendingOrderErrorMessage send error lending transaction
+func (c *Client) SendLendingOrderErrorMessage(err error, h common.Hash) {
+	p := map[string]interface{}{
+		"message": err.Error(),
+		"hash":    h.Hex(),
+	}
+
+	e := types.WebsocketEvent{
+		Type:    "ERROR",
+		Payload: p,
+	}
+
+	m := types.WebsocketMessage{
+		Channel: LendingOrderChannel,
+		Event:   e,
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.send <- m
+}

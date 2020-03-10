@@ -5,7 +5,8 @@ error_file: config/errors.yaml
 log_level: DEBUG
 tomochain:
   exchange_address: 0x7a6C9957Adc86d3492418Ae01d4F05ebCF6c2f9e
-  contract_address: 0x0342d186212b04E69eA682b3bed8e232b6b3361a
+  exchange_contract_address: 0x0342d186212b04E69eA682b3bed8e232b6b3361a
+  lending_contract_address: 0x4d7eA2cE949216D6b120f3AA10164173615A2b6C
   http_url: http://localhost:8545
   ws_url: ws://localhost:8546
 jwt_signing_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d

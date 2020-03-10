@@ -11,9 +11,10 @@ import (
 
 // RelayerService struct
 type RelayerService struct {
-	relayer  interfaces.Relayer
-	tokenDao interfaces.TokenDao
-	pairDao  interfaces.PairDao
+	relayer        interfaces.Relayer
+	tokenDao       interfaces.TokenDao
+	pairDao        interfaces.PairDao
+	lendingPairDao interfaces.LendingPairDao
 }
 
 // NewRelayerService returns a new instance of orderservice
@@ -21,11 +22,14 @@ func NewRelayerService(
 	relaye interfaces.Relayer,
 	tokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
+	lendingPairDao interfaces.LendingPairDao,
+
 ) *RelayerService {
 	return &RelayerService{
 		relaye,
 		tokenDao,
 		pairDao,
+		lendingPairDao,
 	}
 }
 
@@ -82,6 +86,56 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 	}
 	return nil
 }
+
+func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) error {
+	currentPairs, err := s.lendingPairDao.GetAll()
+	logger.Info("UpdatePairRelayer starting...")
+	if err != nil {
+		return err
+	}
+
+	for _, newpair := range relayerInfo.LendingPairs {
+		found := false
+		for _, currentPair := range currentPairs {
+			if newpair.Term == currentPair.Term && newpair.LendingToken == currentPair.LendingTokenAddress {
+				found = true
+				break
+			}
+		}
+		if !found {
+			lendingTokenData := relayerInfo.Tokens[newpair.LendingToken]
+			pair := &types.LendingPair{
+				Term:                 newpair.Term,
+				LendingTokenAddress:  newpair.LendingToken,
+				LendingTokenDecimals: int(lendingTokenData.Decimals),
+				LendingTokenSymbol:   lendingTokenData.Symbol,
+			}
+			logger.Info("Create Pair:", pair.Term, pair.LendingTokenAddress.Hex())
+			err := s.lendingPairDao.Create(pair)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, currentPair := range currentPairs {
+		found := false
+		for _, newpair := range relayerInfo.LendingPairs {
+			if currentPair.Term == newpair.Term && currentPair.LendingTokenAddress == newpair.LendingToken {
+				found = true
+			}
+		}
+		if !found {
+			logger.Info("Delete Pair:", currentPair.Term, currentPair.LendingTokenAddress.Hex())
+			err := s.lendingPairDao.DeleteByLendingKey(currentPair.Term, currentPair.LendingTokenAddress)
+			if err == nil {
+				logger.Error(err)
+			}
+		}
+	}
+	return nil
+}
+
 func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 	currentTokens, err := s.tokenDao.GetAll()
 	if err != nil {
@@ -95,13 +149,13 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 				found = true
 			}
 		}
-        token := &types.Token{
-            Symbol:          v.Symbol,
-            ContractAddress: ntoken,
-            Decimals:        int(v.Decimals),
-            MakeFee:         big.NewInt(int64(relayerInfo.MakeFee)),
-            TakeFee:         big.NewInt(int64(relayerInfo.TakeFee)),
-        }
+		token := &types.Token{
+			Symbol:          v.Symbol,
+			ContractAddress: ntoken,
+			Decimals:        int(v.Decimals),
+			MakeFee:         big.NewInt(int64(relayerInfo.MakeFee)),
+			TakeFee:         big.NewInt(int64(relayerInfo.TakeFee)),
+		}
 		if !found {
 			logger.Info("Create Token:", token.ContractAddress.Hex())
 			err = s.tokenDao.Create(token)
@@ -111,7 +165,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 		} else {
 			logger.Info("Update Token:", token.ContractAddress.Hex())
 			err = s.tokenDao.UpdateByToken(ntoken, token)
-        }
+		}
 		for _, ctoken := range currentTokens {
 			found = false
 			for ntoken, v = range relayerInfo.Tokens {
@@ -140,5 +194,12 @@ func (s *RelayerService) UpdateRelayer() error {
 	}
 	s.updateTokenRelayer(relayerInfo)
 	s.updatePairRelayer(relayerInfo)
+
+	relayerLendingInfo, err := s.relayer.GetLending()
+	if err != nil {
+		return err
+	}
+	s.updateLendingPair(relayerLendingInfo)
+
 	return nil
 }
