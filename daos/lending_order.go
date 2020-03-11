@@ -263,6 +263,7 @@ type LendingOrderMsg struct {
 	Type            string         `json:"type,omitempty"`
 	LendingID       uint64         `json:"lendingID,omitempty"`
 	LendingTradeID  uint64         `json:"tradeId,omitempty"`
+	AutoTopUp       bool           `json:"autoTopUp,omitempty"`
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
 	R *big.Int `json:"r" gencodec:"required"`
@@ -285,12 +286,15 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 	R := o.Signature.R.Big()
 	S := o.Signature.S.Big()
 
+	autoTopUp := (uint64(o.AutoTopUp) == uint64(1))
+
 	msg := LendingOrderMsg{
 		AccountNonce:    uint64(n),
 		Quantity:        o.Quantity,
 		RelayerAddress:  o.RelayerAddress,
 		UserAddress:     o.UserAddress,
 		CollateralToken: o.CollateralToken,
+		AutoTopUp:       autoTopUp,
 		Term:            o.Term,
 		Interest:        o.Interest,
 		LendingToken:    o.LendingToken,

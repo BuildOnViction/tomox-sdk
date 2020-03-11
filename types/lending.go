@@ -52,6 +52,7 @@ type LendingOrder struct {
 	LendingID       uint64         `bson:"lendingId" json:"lendingId"`
 	ExtraData       string         `bson:"extraData" json:"extraData"`
 	LendingTradeID  uint64         `bson:"tradeId" json:"tradeId"`
+	AutoTopUp       uint64         `json:"autoTopUp" json:"autoTopUp"`
 	Key             string         `json:"key" bson:"key"`
 }
 
@@ -151,6 +152,11 @@ func (o *LendingOrder) ComputeHash() common.Hash {
 	sha.Write([]byte(o.Status))
 	sha.Write([]byte(o.Type))
 	sha.Write(common.BigToHash(o.Nonce).Bytes())
+	if o.Side == BORROW {
+		autoTopUp := int64(o.AutoTopUp)
+		sha.Write(common.BigToHash(big.NewInt(autoTopUp)).Bytes())
+	}
+
 	return common.BytesToHash(sha.Sum(nil))
 }
 
@@ -215,6 +221,7 @@ func (o *LendingOrder) MarshalJSON() ([]byte, error) {
 		"updatedAt":       o.UpdatedAt.Format(time.RFC3339Nano),
 		"lendingId":       strconv.FormatUint(o.LendingID, 10),
 		"tradeId":         strconv.FormatUint(o.LendingTradeID, 10),
+		"autoTopUp":       strconv.FormatUint(o.AutoTopUp, 10),
 		"key":             o.Key,
 	}
 
@@ -339,6 +346,13 @@ func (o *LendingOrder) UnmarshalJSON(b []byte) error {
 			logger.Error(err)
 		}
 		o.LendingTradeID = uint64(lendingTradeID)
+	}
+	if lending["autoTopUp"] != nil {
+		autoTopUp, err := strconv.ParseInt(lending["autoTopUp"].(string), 10, 64)
+		if err != nil {
+			logger.Error(err)
+		}
+		o.AutoTopUp = uint64(autoTopUp)
 	}
 	if lending["key"] != nil {
 		o.Key = lending["key"].(string)

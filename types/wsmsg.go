@@ -1,11 +1,11 @@
 package types
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"math/big"
 
-	"strconv"
+	//"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -102,6 +102,7 @@ type SubscriptionPayload struct {
 	LendingToken common.Address `json:"lendingToken,omitempty"`
 }
 
+/*
 func (s *SubscriptionPayload) UnmarshalJSON(b []byte) error {
 	payload := map[string]interface{}{}
 	err := json.Unmarshal(b, &payload)
@@ -133,6 +134,8 @@ func (s *SubscriptionPayload) UnmarshalJSON(b []byte) error {
 	return nil
 
 }
+*/
+
 func NewOrderWebsocketMessage(o *Order) *WebsocketMessage {
 	return &WebsocketMessage{
 		Channel: "orders",
