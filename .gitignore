@@ -70,4 +70,5 @@ ethereum/client.go
 config/config.yml
 
 ohlcv.cache
+lending.cache
 nohup.out

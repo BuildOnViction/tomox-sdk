@@ -90,6 +90,9 @@ func NewRouter(
 	walletDao := daos.NewWalletDao()
 	notificationDao := daos.NewNotificationDao()
 
+	lendingOrderDao := daos.NewLendingOrderDao()
+	lendingTradeDao := daos.NewLendingTradeDao()
+	lengdingPairDao := daos.NewLendingPairDao()
 	// instantiate engine
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
@@ -97,6 +100,10 @@ func NewRouter(
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao)
 	ohlcvService.Init()
+
+	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeDao)
+	lendingOhlcvService.Init()
+
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
@@ -112,6 +119,11 @@ func NewRouter(
 	marketsService := services.NewMarketsService(pairDao, orderDao, tradeDao, ohlcvService, pairService)
 	notificationService := services.NewNotificationService(notificationDao)
 
+	// LEDNDING SERVICE
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
+	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
+	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
+
 	// deploy http and ws endpoints
 	endpoints.ServeInfoResource(r, walletService, tokenService)
 	endpoints.ServeAccountResource(r, accountService)
@@ -119,6 +131,7 @@ func NewRouter(
 	endpoints.ServePairResource(r, pairService)
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
+
 	endpoints.ServeTradeResource(r, tradeService)
 	endpoints.ServeOrderResource(r, orderService, accountService)
 
@@ -126,10 +139,19 @@ func NewRouter(
 	endpoints.ServeMarketsResource(r, marketsService, ohlcvService)
 	endpoints.ServeNotificationResource(r, notificationService)
 
+	// Endpoint for lending
+
+	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
+	endpoints.ServeLendingOrderResource(r, lendingOrderService)
+	endpoints.ServeLendingTradeResource(r, lendingTradeService)
+	endpoints.ServeLendingOhlcvResource(r, lendingOhlcvService)
+	endpoints.ServeLendingTradeResource(r, lendingTradeService)
+
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
-	contractAddress := common.HexToAddress(app.Config.Tomochain["contract_address"])
-	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress)
-	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao)
+	contractAddress := common.HexToAddress(app.Config.Tomochain["exchange_contract_address"])
+	lendingContractAddress := common.HexToAddress(app.Config.Tomochain["lending_contract_address"])
+	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress, lendingContractAddress)
+	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao, lengdingPairDao)
 	endpoints.ServeRelayerResource(r, relayerService)
 
 	// Swagger UI
@@ -143,12 +165,21 @@ func NewRouter(
 	rabbitConn.SubscribeOrderResponses(orderService.HandleEngineResponse)
 	rabbitConn.SubscribeTradeResponses(tradeService.HandleTradeResponse)
 
+	// Subscribe lending
+	// for create/cancel order
+	rabbitConn.SubscribeLendingOrders(lendingOrderService.HandleLendingOrdersCreateCancel)
+	// for database changing response
+	rabbitConn.SubscribeLendingOrderResponses(lendingOrderService.HandleLendingOrderResponse)
+	rabbitConn.SubscribeLendingTradeResponses(lendingTradeService.HandleLendingTradeResponse)
 	// start cron service
 	cronService := crons.NewCronService(ohlcvService, priceBoardService, pairService, relayerService, eng)
 	// initialize MongoDB Change Streams
 	go orderService.WatchChanges()
 	go tradeService.WatchChanges()
 
+	// lending mongo watch change
+	go lendingOrderService.WatchChanges()
+	go lendingTradeService.WatchChanges()
 	cronService.InitCrons()
 	return r
 }

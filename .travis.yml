@@ -14,12 +14,12 @@ before_script:
 
 jobs:
   include:          
-    - stage: Lint
-      script:
-        - golangci-lint run
-    - stage: Test
-      script:
-        - go test -v -race ./...
+  #    - stage: Lint
+  #      script:
+  #        - golangci-lint run
+  #    - stage: Test
+  #      script:
+  #        - go test -v -race ./...
     - stage: Release application
       before_install:
         - sudo apt-get install gcc-multilib gcc-mingw-w64
@@ -38,6 +38,6 @@ jobs:
           tags: true
 
 stages:
-  - name: Test
+  #  - name: Lint
   - name: Release application
     if: type != pull_request AND branch =~ ^v AND tag IS present AND repo = tomochain/tomox-sdk

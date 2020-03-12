@@ -5,6 +5,7 @@ info:
   title: TomoDex APIs
 schemes:
   - https
+  - http
 basePath: /api
 tags:
   - name: accounts
@@ -946,6 +947,34 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Tick'
+        '400':
+          description: '*** Parameter missing'
+        '500':
+          description: Internal Server Error
+      security: []
+
+  /lending/orderbook:
+    get:
+      tags:
+        - orderbook
+      summary: Retrieve the orderbook (amount and pricepoint) corresponding to a lendingToken and a term
+      description: Retrieve the orderbook (amount and pricepoint) corresponding to a lendingToken and a term
+      produces:
+        - application/json
+      parameters:
+        - name: lendingToken
+          in: query
+          description: lending token address
+          required: true
+          type: string
+        - name: term
+          in: query
+          description: term (e.g 86400 seconds)
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
         '400':
           description: '*** Parameter missing'
         '500':

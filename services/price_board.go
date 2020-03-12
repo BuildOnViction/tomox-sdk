@@ -118,9 +118,9 @@ func (s *PriceBoardService) GetPriceBoardData(pairs []types.PairAddresses, durat
 	if tick != nil {
 		tick.Volume = tick.VolumeByQuote
 		return []*types.Tick{tick}, nil
-	} else {
-		return s.getPriceBoardData(pairs, duration, unit, timeInterval...)
 	}
+	return s.getPriceBoardData(pairs, duration, unit, timeInterval...)
+
 }
 
 func (s *PriceBoardService) getPriceBoardData(pairs []types.PairAddresses, duration int64, unit string, timeInterval ...int64) ([]*types.Tick, error) {

@@ -1089,63 +1089,6 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	return nil
 }
 
-func (dao *OrderDao) AddTopic(t []string) (string, error) {
-	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
-
-	defer rpcClient.Close()
-
-	if err != nil {
-		logger.Error(err)
-		return "", err
-	}
-
-	var result string
-	params := make(map[string]interface{})
-	params["topics"] = t
-
-	if err != nil {
-		logger.Error(err)
-		return "", err
-	}
-
-	err = rpcClient.Call(&result, "tomox_newTopic", params)
-
-	if err != nil {
-		logger.Error(err)
-		return "", err
-	}
-
-	return result, nil
-}
-
-func (dao *OrderDao) DeleteTopic(t string) error {
-	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
-
-	defer rpcClient.Close()
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	var result interface{}
-	params := t
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = rpcClient.Call(&result, "tomox_deleteTopic", params)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	return nil
-}
-
 // GetOrderNonce get nonce of order
 func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, error) {
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
