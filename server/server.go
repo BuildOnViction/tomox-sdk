@@ -101,7 +101,7 @@ func NewRouter(
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao)
 	ohlcvService.Init()
 
-	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeDao)
+	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeDao, lengdingPairDao)
 	lendingOhlcvService.Init()
 
 	tokenService := services.NewTokenService(tokenDao)
@@ -123,6 +123,8 @@ func NewRouter(
 	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
 	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
+	lendingMarketService := services.NewLendingMarketsService(lengdingPairDao, lendingOhlcvService)
+	lendingPairService := services.NewLendingPairService(lengdingPairDao)
 
 	// deploy http and ws endpoints
 	endpoints.ServeInfoResource(r, walletService, tokenService)
@@ -140,12 +142,13 @@ func NewRouter(
 	endpoints.ServeNotificationResource(r, notificationService)
 
 	// Endpoint for lending
-
+	endpoints.ServeLendingPairResource(r, lendingPairService)
 	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 	endpoints.ServeLendingOhlcvResource(r, lendingOhlcvService)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
+	endpoints.ServeLendingMarketsResource(r, lendingMarketService, lendingOhlcvService)
 
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 	contractAddress := common.HexToAddress(app.Config.Tomochain["exchange_contract_address"])

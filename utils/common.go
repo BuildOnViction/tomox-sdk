@@ -65,6 +65,14 @@ func GetPriceBoardChannelID(bt, qt common.Address) string {
 func GetMarketsChannelID(channel string) string {
 	return strings.ToLower(channel)
 }
+func GetLendingPairName(term uint64, lendingTokenName string) string {
+	return strings.ToUpper(fmt.Sprintf("%s::%s", strconv.FormatUint(term, 10), lendingTokenName))
+}
+
+// GetLendingMarketsChannelID format market chanel id
+func GetLendingMarketsChannelID(channel string) string {
+	return strings.ToLower(channel)
+}
 
 func Retry(retries int, fn func() error) error {
 	if err := fn(); err != nil {

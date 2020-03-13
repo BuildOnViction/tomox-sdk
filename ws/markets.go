@@ -30,7 +30,6 @@ func GetMarketSocket() *MarketsSocket {
 	if marketsSocket == nil {
 		marketsSocket = NewMarketsSocket()
 	}
-
 	return marketsSocket
 }
 

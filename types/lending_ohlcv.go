@@ -11,17 +11,16 @@ import (
 
 // LendingTick is the format in which mongo aggregate pipeline returns data when queried for OHLCV data
 type LendingTick struct {
-	LendingID     LendingID `json:"lendingID,omitempty" bson:"lendingID"`
-	Open          uint64    `json:"open,omitempty" bson:"open"`
-	Close         uint64    `json:"close,omitempty" bson:"close"`
-	High          uint64    `json:"high,omitempty" bson:"high"`
-	Low           uint64    `json:"low,omitempty" bson:"low"`
-	Volume        *big.Int  `json:"volume,omitempty" bson:"volume"`
-	VolumeByQuote *big.Int  `json:"volumebyquote,omitempty" bson:"volumebyquote"`
-	Count         *big.Int  `json:"count,omitempty" bson:"count"`
-	Timestamp     int64     `json:"timestamp,omitempty" bson:"timestamp"`
-	Duration      int64     `json:"duration" bson:"duration"`
-	Unit          string    `json:"unit" bson:"unit"`
+	LendingID LendingID `json:"lendingID,omitempty" bson:"lendingID"`
+	Open      uint64    `json:"open,omitempty" bson:"open"`
+	Close     uint64    `json:"close,omitempty" bson:"close"`
+	High      uint64    `json:"high,omitempty" bson:"high"`
+	Low       uint64    `json:"low,omitempty" bson:"low"`
+	Volume    *big.Int  `json:"volume,omitempty" bson:"volume"`
+	Count     *big.Int  `json:"count,omitempty" bson:"count"`
+	Timestamp int64     `json:"timestamp,omitempty" bson:"timestamp"`
+	Duration  int64     `json:"duration" bson:"duration"`
+	Unit      string    `json:"unit" bson:"unit"`
 }
 
 // LendingID is the subdocument for aggregate grouping for OHLCV data
@@ -52,9 +51,7 @@ func (t *LendingTick) MarshalJSON() ([]byte, error) {
 	if t.Volume != nil {
 		tick["volume"] = t.Volume.String()
 	}
-	if t.VolumeByQuote != nil {
-		tick["volumebyquote"] = t.VolumeByQuote.String()
-	}
+
 	if t.Count != nil {
 		tick["count"] = t.Count.String()
 	}
@@ -94,9 +91,7 @@ func (t *LendingTick) UnmarshalJSON(b []byte) error {
 	if tick["volume"] != nil {
 		t.Volume = math.ToBigInt(tick["volume"].(string))
 	}
-	if tick["volumebyquote"] != nil {
-		t.VolumeByQuote = math.ToBigInt(tick["volumebyquote"].(string))
-	}
+
 	if tick["count"] != nil {
 		t.Count = math.ToBigInt(tick["count"].(string))
 	}

@@ -439,6 +439,8 @@ type LendingOhlcvService interface {
 	GetOHLCV(term uint64, lendingToken common.Address, duration int64, unit string, timeInterval ...int64) ([]*types.LendingTick, error)
 	Subscribe(conn *ws.Client, p *types.SubscriptionPayload)
 	Unsubscribe(conn *ws.Client)
+	GetAllTokenPairData() ([]*types.LendingTick, error)
+	GetTokenPairData(term uint64, lendingToken common.Address) *types.LendingTick
 }
 
 // LendingPairDao interface for lending pair by term/lendingtoken
@@ -446,4 +448,17 @@ type LendingPairDao interface {
 	Create(o *types.LendingPair) error
 	GetAll() ([]types.LendingPair, error)
 	DeleteByLendingKey(term uint64, lendingAddress common.Address) error
+	GetByLendingID(term uint64, lendingToken common.Address) (*types.LendingPair, error)
+}
+
+//LendingPairService imp lending
+type LendingPairService interface {
+	GetAll() ([]types.LendingPair, error)
+}
+
+// LendingMarketsService lending service interface
+type LendingMarketsService interface {
+	Subscribe(c *ws.Client)
+	UnsubscribeChannel(c *ws.Client)
+	Unsubscribe(c *ws.Client)
 }

@@ -88,3 +88,14 @@ func (dao *LendingPairDao) DeleteByLendingKey(term uint64, lendingAddress common
 	query := bson.M{"lendingTokenAddress": lendingAddress.Hex(), "term": strconv.FormatUint(term, 10)}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }
+
+// GetByLendingID get pair from lending token and term
+func (dao *LendingPairDao) GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error) {
+	var res types.LendingPair
+	query := bson.M{"lendingTokenAddress": lendingAddress.Hex(), "term": strconv.FormatUint(term, 10)}
+	err := db.GetOne(dao.dbName, dao.collectionName, query, &res)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}

@@ -29,6 +29,7 @@ const (
 type LendingOhlcvService struct {
 	lendingTradeDao  interfaces.LendingTradeDao
 	lendingTickCache *lendingTickCache
+	lendingPairDao   interfaces.LendingPairDao
 	mutex            sync.RWMutex
 	tokenCache       map[common.Address]int
 }
@@ -44,12 +45,13 @@ type lendingtickfile struct {
 }
 
 // NewLendingOhlcvService init new ohlcv service
-func NewLendingOhlcvService(lendingTradeDao interfaces.LendingTradeDao) *LendingOhlcvService {
+func NewLendingOhlcvService(lendingTradeDao interfaces.LendingTradeDao, lendingPairDao interfaces.LendingPairDao) *LendingOhlcvService {
 	cache := &lendingTickCache{
 		ticks: make(map[string]map[int64]*types.LendingTick),
 	}
 	return &LendingOhlcvService{
 		lendingTradeDao:  lendingTradeDao,
+		lendingPairDao:   lendingPairDao,
 		lendingTickCache: cache,
 		tokenCache:       make(map[common.Address]int),
 	}
@@ -456,7 +458,6 @@ func (s *LendingOhlcvService) updateTick(key string, trade *types.LendingTrade) 
 }
 
 func (s *LendingOhlcvService) addTick(tick *types.LendingTick) {
-	tick.VolumeByQuote = big.NewInt(0)
 	key := s.getTickKey(tick.LendingID.Term, tick.LendingID.LendingToken, tick.Duration, tick.Unit)
 	if _, ok := s.lendingTickCache.ticks[key]; ok {
 
@@ -472,7 +473,7 @@ func (s *LendingOhlcvService) filterTick(key string, start, end int64) []*types.
 	var res []*types.LendingTick
 	if _, ok := s.lendingTickCache.ticks[key]; ok {
 		for _, t := range s.lendingTickCache.ticks[key] {
-			if t.Timestamp >= start || start == 0 && (t.Timestamp <= end || end == 0) {
+			if (t.Timestamp >= start || start == 0) && (t.Timestamp <= end || end == 0) {
 				c := *t
 				c.Timestamp = t.Timestamp * 1000
 				res = append(res, &c)
@@ -506,7 +507,6 @@ func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Addres
 		high := first.High
 		low := first.Low
 		volume := big.NewInt(0)
-		volumebyquote := big.NewInt(0)
 		count := big.NewInt(0)
 		for _, t := range res {
 			if high < t.High {
@@ -516,21 +516,32 @@ func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Addres
 				low = t.Low
 			}
 			volume = volume.Add(volume, t.Volume)
-			volumebyquote = volumebyquote.Add(volumebyquote, t.VolumeByQuote)
 			count = count.Add(count, t.Count)
 		}
 		return &types.LendingTick{
-			Open:          first.Open,
-			Close:         last.Close,
-			High:          high,
-			Low:           low,
-			Count:         count,
-			Volume:        volume,
-			VolumeByQuote: volumebyquote,
-			Timestamp:     last.Timestamp,
+			Open:      first.Open,
+			Close:     last.Close,
+			High:      high,
+			Low:       low,
+			Count:     count,
+			Volume:    volume,
+			Timestamp: last.Timestamp,
+			LendingID: types.LendingID{
+				Term:         term,
+				LendingToken: lendingToken,
+			},
+			Duration: 24,
+			Unit:     "hour",
 		}
 	}
-	return nil
+	return &types.LendingTick{
+		LendingID: types.LendingID{
+			Term:         term,
+			LendingToken: lendingToken,
+		},
+		Duration: 24,
+		Unit:     "hour",
+	}
 }
 
 // NotifyTrade trigger if trade comming
@@ -566,4 +577,43 @@ func (s *LendingOhlcvService) GetOHLCV(term uint64, lendingToken common.Address,
 	if ticks == nil {
 	}
 	return ticks, nil
+}
+
+// GetTokenPairData get tick of pair
+func (s *LendingOhlcvService) getTokenPairData(term uint64, lendingToken common.Address) *types.LendingTick {
+	return s.get24hTick(term, lendingToken)
+}
+
+// GetTokenPairData get tick of pair
+func (s *LendingOhlcvService) GetTokenPairData(term uint64, lendingToken common.Address) *types.LendingTick {
+	p, err := s.lendingPairDao.GetByLendingID(term, lendingToken)
+	tick := s.getTokenPairData(term, lendingToken)
+	if err == nil {
+		tick.LendingID.Name = utils.GetLendingPairName(term, p.LendingTokenSymbol)
+	}
+	return tick
+}
+
+// GetAllTokenPairData get tick of all tokens
+func (s *LendingOhlcvService) GetAllTokenPairData() ([]*types.LendingTick, error) {
+	pairs, err := s.lendingPairDao.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	pairsData := make([]*types.LendingTick, 0)
+	for _, p := range pairs {
+		pairData := s.getTokenPairData(p.Term, p.LendingTokenAddress)
+		if pairData != nil {
+			pairData.LendingID = types.LendingID{
+				Term:         p.Term,
+				LendingToken: p.LendingTokenAddress,
+				Name:         utils.GetLendingPairName(p.Term, p.LendingTokenSymbol),
+			}
+			pairsData = append(pairsData, pairData)
+		}
+
+	}
+	return pairsData, nil
 }

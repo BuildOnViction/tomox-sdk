@@ -41,7 +41,7 @@ func (e *MarketsEndpoint) HandleGetAllMarketStats(w http.ResponseWriter, r *http
 	}
 
 	if res == nil {
-		httputils.WriteJSON(w, http.StatusOK, []types.Pair{})
+		httputils.WriteJSON(w, http.StatusOK, []types.PairData{})
 		return
 	}
 
