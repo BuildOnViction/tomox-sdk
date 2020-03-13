@@ -1,4 +1,3 @@
-coingecko_api_url: https://api.coingecko.com/api/v3
 db_name: tomodex
 env: dev
 error_file: config/errors.yaml
