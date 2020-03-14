@@ -55,9 +55,14 @@ type RInfo struct {
 
 // LendingRInfo lending relayer info
 type LendingRInfo struct {
-	Tokens       map[common.Address]*TokenInfo
-	LendingPairs []*LendingPairToken
-	Fee          uint16
+	ColateralTokens map[common.Address]*TokenInfo
+	LendingTokens   map[common.Address]*TokenInfo
+	LendingPairs    []*LendingPairToken
+	Fee             uint16
+}
+type Corrateral struct {
+	Name    string         `json:"name"`
+	Address common.Address `json:"address"`
 }
 
 // NewBlockchain init
@@ -226,15 +231,15 @@ func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddre
 	if err != nil {
 		return nil, err
 	}
-	abiToken, err := relayerAbi.GetTokenAbi()
-	if err != nil {
-		return nil, err
-	}
+
 	input, err := abiRelayer.Pack("getLendingRelayerByCoinbase", coinAddress)
 	if err != nil {
 		return nil, err
 	}
-
+	abiToken, err := relayerAbi.GetTokenAbi()
+	if err != nil {
+		return nil, err
+	}
 	msg := ether.CallMsg{To: &contractAddress, Data: input}
 	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
 	if err != nil {
@@ -244,8 +249,10 @@ func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddre
 	logger.Debug("lending relayer data: ", result)
 
 	lendingRInfo := LendingRInfo{
-		Tokens: make(map[common.Address]*TokenInfo),
+		ColateralTokens: make(map[common.Address]*TokenInfo),
+		LendingTokens:   make(map[common.Address]*TokenInfo),
 	}
+
 	if method, ok := abiRelayer.Methods["getLendingRelayerByCoinbase"]; ok {
 		contractData, err := method.Outputs.UnpackValues(result)
 		if err == nil {
@@ -257,13 +264,13 @@ func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddre
 				for _, t := range setLendingToken {
 					if utils.IsNativeTokenByAddress(t) {
 						tokenInfo := b.setBaseTokenInfo()
-						lendingRInfo.Tokens[t] = tokenInfo
+						lendingRInfo.LendingTokens[t] = tokenInfo
 					} else {
 						tokenInfo, err := b.GetTokenInfo(t, &abiToken)
 						if err != nil {
 							return nil, err
 						}
-						lendingRInfo.Tokens[t] = tokenInfo
+						lendingRInfo.LendingTokens[t] = tokenInfo
 						logger.Debug("Token data:", tokenInfo.Name, tokenInfo.Symbol)
 					}
 
@@ -288,5 +295,34 @@ func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddre
 		return &lendingRInfo, errors.New("Can not get relayer information")
 	}
 
+	for i := 0; i < len(lendingRInfo.LendingPairs); i++ {
+		input, err = abiRelayer.Pack("COLLATERALS", big.NewInt(int64(i)))
+		if err != nil {
+			return nil, err
+		}
+
+		msg = ether.CallMsg{To: &contractAddress, Data: input}
+		result, err = b.ethclient.CallContract(context.Background(), msg, nil)
+		if err != nil {
+			logger.Error(err)
+			return nil, err
+		}
+		var unpackResult interface{}
+		err = abiRelayer.Unpack(&unpackResult, "COLLATERALS", result)
+		if err == nil {
+			t := unpackResult.(common.Address)
+			if utils.IsNativeTokenByAddress(t) {
+				tokenInfo := b.setBaseTokenInfo()
+				lendingRInfo.ColateralTokens[t] = tokenInfo
+			} else {
+				tokenInfo, err := b.GetTokenInfo(t, &abiToken)
+				if err != nil {
+					return nil, err
+				}
+				lendingRInfo.ColateralTokens[t] = tokenInfo
+			}
+		}
+
+	}
 	return &lendingRInfo, nil
 }

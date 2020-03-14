@@ -84,12 +84,15 @@ func NewRouter(
 	// get daos for dependency injection
 	orderDao := daos.NewOrderDao()
 	tokenDao := daos.NewTokenDao()
+
 	pairDao := daos.NewPairDao()
 	tradeDao := daos.NewTradeDao()
 	accountDao := daos.NewAccountDao()
 	walletDao := daos.NewWalletDao()
 	notificationDao := daos.NewNotificationDao()
 
+	tokenLendingDao := daos.NewLendingTokenDao()
+	tokenCollateralDao := daos.NewCollateralTokenDao()
 	lendingOrderDao := daos.NewLendingOrderDao()
 	lendingTradeDao := daos.NewLendingTradeDao()
 	lengdingPairDao := daos.NewLendingPairDao()
@@ -120,6 +123,9 @@ func NewRouter(
 	notificationService := services.NewNotificationService(notificationDao)
 
 	// LEDNDING SERVICE
+	tokenLendingService := services.NewTokenService(tokenLendingDao)
+	tokenCollateralService := services.NewTokenService(tokenCollateralDao)
+
 	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, rabbitConn)
 	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
@@ -142,6 +148,9 @@ func NewRouter(
 	endpoints.ServeNotificationResource(r, notificationService)
 
 	// Endpoint for lending
+
+	endpoints.ServeLendingTokenResource(r, tokenCollateralService, tokenLendingService)
+
 	endpoints.ServeLendingPairResource(r, lendingPairService)
 	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
@@ -154,7 +163,8 @@ func NewRouter(
 	contractAddress := common.HexToAddress(app.Config.Tomochain["exchange_contract_address"])
 	lendingContractAddress := common.HexToAddress(app.Config.Tomochain["lending_contract_address"])
 	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress, lendingContractAddress)
-	relayerService := services.NewRelayerService(relayerEngine, tokenDao, pairDao, lengdingPairDao)
+
+	relayerService := services.NewRelayerService(relayerEngine, tokenDao, tokenCollateralDao, tokenLendingDao, pairDao, lengdingPairDao)
 	endpoints.ServeRelayerResource(r, relayerService)
 
 	// Swagger UI

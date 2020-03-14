@@ -33,6 +33,34 @@ func NewTokenDao() *TokenDao {
 	return &TokenDao{collection, dbName}
 }
 
+// NewLendingTokenDao lending dao
+func NewLendingTokenDao() *TokenDao {
+	dbName := app.Config.DBName
+	collection := "lending_tokens"
+	index := mgo.Index{
+		Key:    []string{"contractAddress"},
+		Unique: true,
+	}
+
+	db.Session.DB(dbName).C(collection).EnsureIndex(index)
+
+	return &TokenDao{collection, dbName}
+}
+
+// NewCollateralTokenDao lending dao
+func NewCollateralTokenDao() *TokenDao {
+	dbName := app.Config.DBName
+	collection := "collateral_tokens"
+	index := mgo.Index{
+		Key:    []string{"contractAddress"},
+		Unique: true,
+	}
+
+	db.Session.DB(dbName).C(collection).EnsureIndex(index)
+
+	return &TokenDao{collection, dbName}
+}
+
 // Create function performs the DB insertion task for token collection
 func (dao *TokenDao) Create(token *types.Token) error {
 	if err := token.Validate(); err != nil {
@@ -136,11 +164,11 @@ func (dao *TokenDao) UpdateByToken(addr common.Address, token *types.Token) erro
 	q := bson.M{"contractAddress": addr.Hex()}
 
 	update := bson.M{
-        "$set": bson.M{
-            "makeFee": token.MakeFee.String(),
-            "takeFee": token.TakeFee.String(),
-        },
-    }
+		"$set": bson.M{
+			"makeFee": token.MakeFee.String(),
+			"takeFee": token.TakeFee.String(),
+		},
+	}
 	err := db.Update(dao.dbName, dao.collectionName, q, update)
 	if err != nil {
 		logger.Error(err)
