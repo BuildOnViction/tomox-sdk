@@ -89,7 +89,7 @@ func (o *LendingOrder) Validate() error {
 		return errors.New("LendingOrder 'nonce' parameter is required")
 	}
 
-	if (o.CollateralToken == common.Address{}) {
+	if (o.Side == BORROW) && (o.CollateralToken == common.Address{}) {
 		return errors.New("LendingOrder 'collateralToken' parameter is required")
 	}
 
