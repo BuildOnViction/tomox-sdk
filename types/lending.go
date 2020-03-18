@@ -141,7 +141,9 @@ func (o *LendingOrder) ComputeHash() common.Hash {
 	sha := sha3.NewKeccak256()
 	sha.Write(o.RelayerAddress.Bytes())
 	sha.Write(o.UserAddress.Bytes())
-	sha.Write(o.CollateralToken.Bytes())
+	if o.Side == BORROW {
+		sha.Write(o.CollateralToken.Bytes())
+	}
 	sha.Write(o.LendingToken.Bytes())
 	sha.Write(common.BigToHash(o.Quantity).Bytes())
 	sha.Write(common.BigToHash(big.NewInt(int64(o.Term))).Bytes())
