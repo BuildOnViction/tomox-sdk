@@ -42,7 +42,7 @@ type LendingOrder struct {
 	FilledAmount    *big.Int       `bson:"filledAmount" json:"filledAmount"`
 	Status          string         `bson:"status" json:"status"`
 	UserAddress     common.Address `bson:"userAddress" json:"userAddress"`
-	RelayerAddress  common.Address `bson:"relayerAddress" json:"relayerAddress"`
+	RelayerAddress  common.Address `bson:"relayer" json:"relayerAddress"`
 	Signature       *Signature     `bson:"signature" json:"signature"`
 	Hash            common.Hash    `bson:"hash" json:"hash"`
 	TxHash          common.Hash    `bson:"txHash" json:"txHash"`
@@ -407,7 +407,7 @@ func (o *LendingOrder) GetBSON() (interface{}, error) {
 func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 	decoded := new(struct {
 		ID              bson.ObjectId    `json:"id,omitempty" bson:"_id"`
-		RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
+		RelayerAddress  string           `json:"relayerAddress" bson:"relayer"`
 		UserAddress     string           `json:"userAddress" bson:"userAddress"`
 		CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 		LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
@@ -488,7 +488,7 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 type LendingRecord struct {
 	ID              bson.ObjectId    `json:"id" bson:"_id"`
 	UserAddress     string           `json:"userAddress" bson:"userAddress"`
-	RelayerAddress  string           `json:"relayerAddress" bson:"relayerAddress"`
+	RelayerAddress  string           `json:"relayerAddress" bson:"relayer"`
 	CollateralToken string           `json:"collateralToken" bson:"collateralToken"`
 	LendingToken    string           `json:"lendingToken" bson:"lendingToken"`
 	Term            string           `json:"term" bson:"term"`
