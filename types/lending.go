@@ -109,7 +109,7 @@ func (o *LendingOrder) Validate() error {
 		}
 	}
 	if o.Side != LEND && o.Side != BORROW {
-		return errors.New("LendingOrder 'side' should be 'LEND' or 'BORROW', but got: '" + o.Side + "'")
+		return errors.New("LendingOrder 'side' should be 'INVEST' or 'BORROW', but got: '" + o.Side + "'")
 	}
 
 	if o.Signature == nil {
