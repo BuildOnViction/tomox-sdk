@@ -534,14 +534,15 @@ func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Addres
 			Unit:     "hour",
 		}
 	}
-	return &types.LendingTick{
-		LendingID: types.LendingID{
-			Term:         term,
-			LendingToken: lendingToken,
-		},
-		Duration: 24,
-		Unit:     "hour",
-	}
+    return &types.LendingTick{
+        LendingID: types.LendingID{
+            Term:         term,
+            LendingToken: lendingToken,
+        },
+        Duration: 24,
+        Unit:     "hour",
+        Volume:    big.NewInt(0),
+    }
 }
 
 // NotifyTrade trigger if trade comming
