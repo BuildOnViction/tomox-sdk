@@ -395,6 +395,7 @@ type LendingOrderService interface {
 	GetByHash(h common.Hash) (*types.LendingOrder, error)
 	RepayLendingOrder(o *types.LendingOrder) error
 	TopupLendingOrder(o *types.LendingOrder) error
+	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 }
 
 // LendingOrderDao dao
@@ -408,6 +409,7 @@ type LendingOrderDao interface {
 	GetLendingOrderBookInterest(term uint64, lendingToken common.Address, interest uint64, side string) (*big.Int, error)
 	RepayLendingOrder(o *types.LendingOrder) error
 	TopupLendingOrder(o *types.LendingOrder) error
+	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 }
 
 // LendingOrderBookService interface for lending order book
@@ -424,6 +426,7 @@ type LendingTradeService interface {
 	UnsubscribeChannel(c *ws.Client, term uint64, lendingToken common.Address)
 	Unsubscribe(c *ws.Client)
 	GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
+	GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
 }
 
 // LendingTradeDao interface for lending dao
@@ -432,6 +435,7 @@ type LendingTradeDao interface {
 	Watch() (*mgo.ChangeStream, *mgo.Session, error)
 	GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error)
 	GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
+	GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
 }
 
 // LendingOhlcvService interface for lending service

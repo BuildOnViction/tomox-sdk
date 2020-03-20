@@ -268,3 +268,8 @@ func (s *LendingTradeService) broadcastTickUpdate(pairs []string) {
 func (s *LendingTradeService) GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error) {
 	return s.lendingTradeDao.GetLendingTradesUserHistory(a, lendingtradeSpec, sortedBy, pageOffset, pageSize)
 }
+
+// GetLendingTrades get lending trade
+func (s *LendingTradeService) GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error) {
+	return s.lendingTradeDao.GetLendingTrades(lendingtradeSpec, sortedBy, pageOffset, pageSize)
+}

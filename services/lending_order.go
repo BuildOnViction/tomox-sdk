@@ -345,3 +345,7 @@ func (s *LendingOrderService) processBulkLendingOrders() {
 	}
 	s.bulkLendingOrders = make(map[string]map[common.Hash]*types.LendingOrder)
 }
+
+func (s *LendingOrderService) GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error) {
+	return s.lendingDao.GetLendingOrders(lendingSpec, sort, offset, size)
+}

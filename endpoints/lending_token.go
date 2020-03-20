@@ -12,6 +12,7 @@ import (
 type lendingTokenEndpoint struct {
 	collateralTokenService interfaces.TokenService
 	lendingTokenService    interfaces.TokenService
+	lendingPairservice     interfaces.LendingPairService
 }
 
 // ServeLendingTokenResource sets up the routing of token endpoints and the corresponding handlers.
@@ -19,14 +20,32 @@ func ServeLendingTokenResource(
 	r *mux.Router,
 	collateralTokenService interfaces.TokenService,
 	lendingTokenService interfaces.TokenService,
+	lendingPairservice interfaces.LendingPairService,
 ) {
-	e := &lendingTokenEndpoint{collateralTokenService, lendingTokenService}
+	e := &lendingTokenEndpoint{collateralTokenService, lendingTokenService, lendingPairservice}
 	r.HandleFunc("/api/lending/collateraltoken/{address}", e.handleGetCollateralToken).Methods("GET")
 	r.HandleFunc("/api/lending/collateraltoken", e.handleGetCollateralTokens).Methods("GET")
 	r.HandleFunc("/api/lending/lendingtoken/{address}", e.handleGetLendingToken).Methods("GET")
 	r.HandleFunc("/api/lending/lendingtoken", e.handleGetLendingTokens).Methods("GET")
+	r.HandleFunc("/api/lending/terms", e.handleGetTerms).Methods("GET")
 }
-
+func (e *lendingTokenEndpoint) handleGetTerms(w http.ResponseWriter, r *http.Request) {
+	res, err := e.lendingPairservice.GetAll()
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	terms := []uint64{}
+	for _, p := range res {
+		terms = append(terms, p.Term)
+	}
+	t := new(struct {
+		Terms []uint64 `json:"terms"`
+	})
+	t.Terms = terms
+	httputils.WriteJSON(w, http.StatusOK, t)
+}
 func (e *lendingTokenEndpoint) handleGetCollateralTokens(w http.ResponseWriter, r *http.Request) {
 	res, err := e.collateralTokenService.GetAll()
 	if err != nil {

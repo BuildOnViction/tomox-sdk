@@ -24,7 +24,8 @@ func ServeLendingTradeResource(
 	lendingTradeService interfaces.LendingTradeService,
 ) {
 	e := &lendingTradeEndpoint{lendingTradeService}
-	r.HandleFunc("/api/lending/trades/history", e.HandleGetLendingTradesHistory).Methods("GET")
+	r.HandleFunc("/api/lending/trades", e.handleGetLendingTrades).Methods("GET")
+	r.HandleFunc("/api/lending/trades/history", e.handleGetLendingTradesHistory).Methods("GET")
 	ws.RegisterChannel(ws.LendingTradeChannel, e.lendingTradeWebsocket)
 }
 func (e *lendingTradeEndpoint) lendingTradeWebsocket(input interface{}, c *ws.Client) {
@@ -85,12 +86,13 @@ func (e *lendingTradeEndpoint) lendingTradeWebsocket(input interface{}, c *ws.Cl
 	}
 }
 
-// HandleGetTradesHistory is responsible for handling user's trade history requests
-func (e *lendingTradeEndpoint) HandleGetLendingTradesHistory(w http.ResponseWriter, r *http.Request) {
+// handleGetLendingTradesHistory is responsible for handling user's trade history requests
+func (e *lendingTradeEndpoint) handleGetLendingTradesHistory(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	addr := v.Get("address")
 	term := v.Get("term")
 	lt := v.Get("lendingToken")
+	status := v.Get("status")
 	fromParam := v.Get("from")
 	toParam := v.Get("to")
 
@@ -121,7 +123,7 @@ func (e *lendingTradeEndpoint) HandleGetLendingTradesHistory(w http.ResponseWrit
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid lending token address")
 			return
 		} else {
-			lendingTradeSpec.LendingToken = lt
+			lendingTradeSpec.LendingToken = common.HexToAddress(lt).Hex()
 		}
 	}
 
@@ -134,8 +136,15 @@ func (e *lendingTradeEndpoint) HandleGetLendingTradesHistory(w http.ResponseWrit
 		lendingTradeSpec.DateFrom = int64(t)
 	}
 	if term != "" {
-
+		_, err := strconv.Atoi(term)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid term")
+			return
+		}
 		lendingTradeSpec.Term = term
+	}
+	if status != "" {
+		lendingTradeSpec.Status = status
 	}
 	offset := 0
 	size := types.DefaultLimit
@@ -184,4 +193,100 @@ func (e *lendingTradeEndpoint) HandleGetLendingTradesHistory(w http.ResponseWrit
 
 	httputils.WriteJSON(w, http.StatusOK, res)
 
+}
+func (e *lendingTradeEndpoint) handleGetLendingTrades(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	lendingToken := v.Get("lendingToken")
+	term := v.Get("term")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
+	status := v.Get("status")
+	pageOffset := v.Get("pageOffset")
+	pageSize := v.Get("pageSize")
+	sortBy := v.Get("sortBy")
+	sortType := v.Get("sortType")
+
+	sortedList := make(map[string]string)
+	sortedList["time"] = "createdAt"
+
+	var lendingTradeSpec types.LendingTradeSpec
+	if lendingToken != "" {
+		if !common.IsHexAddress(lendingToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid lendingToken")
+			return
+		} else {
+			lendingTradeSpec.LendingToken = common.HexToAddress(lendingToken).Hex()
+		}
+	}
+
+	if term != "" {
+		_, err := strconv.Atoi(term)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid term")
+			return
+		}
+		lendingTradeSpec.Term = term
+	}
+	if status != "" {
+		lendingTradeSpec.Status = status
+	}
+	if toParam != "" {
+		t, _ := strconv.Atoi(toParam)
+		lendingTradeSpec.DateTo = int64(t)
+	}
+	if fromParam != "" {
+		t, _ := strconv.Atoi(fromParam)
+		lendingTradeSpec.DateFrom = int64(t)
+	}
+
+	offset := 0
+	size := types.DefaultLimit
+	sortDB := []string{}
+	if sortType != "asc" && sortType != "dec" {
+		sortType = "dec"
+	}
+	if sortBy != "" {
+		if val, ok := sortedList[sortBy]; ok {
+			if sortType == "asc" {
+				sortDB = append(sortDB, "+"+val)
+			} else {
+				sortDB = append(sortDB, "-"+val)
+			}
+
+		}
+	}
+	if pageOffset != "" {
+		t, err := strconv.Atoi(pageOffset)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
+			return
+		}
+		offset = t
+	}
+	if pageSize != "" {
+		t, err := strconv.Atoi(pageSize)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
+			return
+		}
+		size = t
+	}
+
+	res, err := e.lendingTradeService.GetLendingTrades(&lendingTradeSpec, sortDB, offset*size, size)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if res == nil {
+		r := types.LendingTradeRes{
+			Total:         0,
+			LendingTrades: []*types.LendingTrade{},
+		}
+		httputils.WriteJSON(w, http.StatusOK, r)
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, res)
 }

@@ -323,6 +323,7 @@ type LendingTradeSpec struct {
 	CollateralToken string
 	LendingToken    string
 	Term            string
+	Status          string
 	DateFrom        int64
 	DateTo          int64
 }

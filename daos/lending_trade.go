@@ -356,6 +356,44 @@ func (dao *LendingTradeDao) GetLendingTradesUserHistory(a common.Address, lendin
 	if lendingtradeSpec.LendingToken != "" {
 		q["lendingToken"] = lendingtradeSpec.LendingToken
 	}
+	if lendingtradeSpec.Status != "" {
+		q["status"] = lendingtradeSpec.Status
+	}
+	var res types.LendingTradeRes
+	trades := []*types.LendingTrade{}
+	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sortedBy, pageOffset, pageSize, &trades)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	res.Total = c
+	res.LendingTrades = trades
+	return &res, nil
+}
+
+// GetLendingTrades get user lending trade
+func (dao *LendingTradeDao) GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error) {
+	q := bson.M{}
+	if lendingtradeSpec.DateFrom != 0 || lendingtradeSpec.DateTo != 0 {
+		dateFilter := bson.M{}
+		if lendingtradeSpec.DateFrom != 0 {
+			dateFilter["$gte"] = strconv.FormatInt(lendingtradeSpec.DateFrom, 10)
+		}
+		if lendingtradeSpec.DateTo != 0 {
+			dateFilter["$lt"] = strconv.FormatInt(lendingtradeSpec.DateTo, 10)
+		}
+		q["createdAt"] = dateFilter
+	}
+
+	if lendingtradeSpec.Term != "" {
+		q["term"] = lendingtradeSpec.Term
+	}
+	if lendingtradeSpec.LendingToken != "" {
+		q["lendingToken"] = lendingtradeSpec.LendingToken
+	}
+	if lendingtradeSpec.Status != "" {
+		q["status"] = lendingtradeSpec.Status
+	}
 	var res types.LendingTradeRes
 	trades := []*types.LendingTrade{}
 	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sortedBy, pageOffset, pageSize, &trades)

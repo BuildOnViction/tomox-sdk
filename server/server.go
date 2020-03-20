@@ -149,14 +149,13 @@ func NewRouter(
 
 	// Endpoint for lending
 
-	endpoints.ServeLendingTokenResource(r, tokenCollateralService, tokenLendingService)
+	endpoints.ServeLendingTokenResource(r, tokenCollateralService, tokenLendingService, lendingPairService)
 
 	endpoints.ServeLendingPairResource(r, lendingPairService)
 	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
+	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
-	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 	endpoints.ServeLendingOhlcvResource(r, lendingOhlcvService)
-	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 	endpoints.ServeLendingMarketsResource(r, lendingMarketService, lendingOhlcvService)
 
 	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])

@@ -563,3 +563,58 @@ func (dao *LendingOrderDao) UpdateFilledAmount(hash common.Hash, value *big.Int)
 
 	return nil
 }
+
+// GetLendingOrders filter lending order
+func (dao *LendingOrderDao) GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error) {
+
+	q := bson.M{}
+	if lendingSpec.UserAddress != "" {
+		q["userAddress"] = lendingSpec.UserAddress
+	}
+	if lendingSpec.DateFrom != 0 || lendingSpec.DateTo != 0 {
+		dateFilter := bson.M{}
+		if lendingSpec.DateFrom != 0 {
+
+			dateFilter["$gte"] = time.Unix(lendingSpec.DateFrom, 0)
+		}
+		if lendingSpec.DateTo != 0 {
+			dateFilter["$lt"] = time.Unix(lendingSpec.DateTo, 0)
+		}
+		q["createdAt"] = dateFilter
+	}
+	if lendingSpec.LendingToken != "" {
+		q["lendingToken"] = lendingSpec.LendingToken
+	}
+	if lendingSpec.CollateralToken != "" {
+		q["collateralToken"] = lendingSpec.CollateralToken
+	}
+
+	if lendingSpec.Side != "" {
+		q["side"] = strings.ToUpper(lendingSpec.Side)
+	}
+	if lendingSpec.Status != "" {
+		q["status"] = strings.ToUpper(lendingSpec.Status)
+	}
+	if lendingSpec.Type != "" {
+		q["type"] = strings.ToUpper(lendingSpec.Type)
+	}
+	if lendingSpec.Hash != "" {
+		q["hash"] = lendingSpec.Hash
+	}
+	if lendingSpec.Term != "" {
+		q["term"] = lendingSpec.Term
+	}
+	var res types.LendingRes
+	lendings := []*types.LendingOrder{}
+	c, err := db.GetEx(dao.dbName, dao.collectionName, q, sort, offset, size, &lendings)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	res.Total = c
+	for i := range lendings {
+		lendings[i].Signature = nil
+	}
+	res.LendingItems = lendings
+	return &res, nil
+}

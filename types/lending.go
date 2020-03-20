@@ -67,6 +67,7 @@ type LendingSpec struct {
 	UserAddress     string
 	CollateralToken string
 	LendingToken    string
+	Term            string
 	Status          string
 	Side            string
 	Type            string
