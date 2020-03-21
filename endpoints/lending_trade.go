@@ -109,10 +109,6 @@ func (e *lendingTradeEndpoint) handleGetLendingTradesHistory(w http.ResponseWrit
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")
 		return
 	}
-	if term == "" {
-		httputils.WriteError(w, http.StatusBadRequest, "term Parameter missing")
-		return
-	}
 	if !common.IsHexAddress(addr) {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
 		return
