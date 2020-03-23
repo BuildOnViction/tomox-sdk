@@ -23,6 +23,7 @@ const (
 
 // LendingTrade lending trade struct
 type LendingTrade struct {
+    ID                     bson.ObjectId  `json:"id,omitempty" bson:"_id"`
 	Borrower               common.Address `bson:"borrower" json:"borrower"`
 	Investor               common.Address `bson:"investor" json:"investor"`
 	LendingToken           common.Address `bson:"lendingToken" json:"lendingToken"`
@@ -45,7 +46,7 @@ type LendingTrade struct {
 	TakerOrderSide         string         `bson:"takerOrderSide" json:"takerOrderSide"`
 	TakerOrderType         string         `bson:"takerOrderType" json:"takerOrderType"`
 	MakerOrderType         string         `bson:"makerOrderType" json:"makerOrderType"`
-	TradeID                bson.ObjectId  `bson:"tradeID" json:"tradeID"`
+	TradeID                string         `bson:"tradeId" json:"tradeID"`
 	Hash                   common.Hash    `bson:"hash" json:"hash"`
 	TxHash                 common.Hash    `bson:"txHash" json:"txHash"`
 	ExtraData              string         `bson:"extraData" json:"extraData"`
@@ -76,6 +77,7 @@ func (t *LendingTrade) MarshalJSON() ([]byte, error) {
 		"takerOrderSide":     t.TakerOrderSide,
 		"takerOrderType":     t.TakerOrderType,
 		"hash":               t.Hash,
+		"tradeID":            t.TradeID,
 		"createdAt":          t.CreatedAt.Format(time.RFC3339Nano),
 		"updatedAt":          t.UpdatedAt.Format(time.RFC3339Nano),
 	}
@@ -197,6 +199,7 @@ func (t *LendingTrade) UnmarshalJSON(b []byte) error {
 
 // LendingTradeBSON lending trade mongo
 type LendingTradeBSON struct {
+    ID                     bson.ObjectId `json:"id,omitempty" bson:"_id"`
 	Borrower               string        `bson:"borrower" json:"borrower"`
 	Investor               string        `bson:"investor" json:"investor"`
 	LendingToken           string        `bson:"lendingToken" json:"lendingToken"`
@@ -219,7 +222,7 @@ type LendingTradeBSON struct {
 	TakerOrderSide         string        `bson:"takerOrderSide" json:"takerOrderSide"`
 	TakerOrderType         string        `bson:"takerOrderType" json:"takerOrderType"`
 	MakerOrderType         string        `bson:"makerOrderType" json:"makerOrderType"`
-	TradeID                bson.ObjectId `bson:"tradeID" json:"tradeID"`
+    TradeID                string        `bson:"tradeId" json:"tradeID"`
 	Hash                   string        `bson:"hash" json:"hash"`
 	TxHash                 string        `bson:"txHash" json:"txHash"`
 	ExtraData              string        `bson:"extraData" json:"extraData"`
@@ -234,6 +237,7 @@ func (t *LendingTrade) GetBSON() (interface{}, error) {
 			"createdAt": t.CreatedAt,
 		},
 		"$set": LendingTradeBSON{
+            ID:                     t.ID,
 			Borrower:               t.Borrower.Hex(),
 			Investor:               t.Investor.Hex(),
 			LendingToken:           t.LendingToken.Hex(),
@@ -274,6 +278,7 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 		return err
 	}
 
+	t.ID = decoded.ID
 	t.TradeID = decoded.TradeID
 	t.Borrower = common.HexToAddress(decoded.Borrower)
 	t.Investor = common.HexToAddress(decoded.Investor)
