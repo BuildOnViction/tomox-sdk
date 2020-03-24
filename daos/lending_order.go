@@ -319,7 +319,7 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 	}
 
 	o.Status = "ADDED"
-	ws.SendLendingOrderMessage("ORDER_ADDED", o.UserAddress, o)
+	ws.SendLendingOrderMessage("LENDING_ORDER_ADDED", o.UserAddress, o)
 	return nil
 }
 

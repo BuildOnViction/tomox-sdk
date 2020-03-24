@@ -37,6 +37,13 @@ func NewTokenDao() *TokenDao {
 func NewLendingTokenDao() *TokenDao {
 	dbName := app.Config.DBName
 	collection := "lending_tokens"
+	index := mgo.Index{
+		Key:    []string{"contractAddress"},
+		Unique: true,
+	}
+
+	db.Session.DB(dbName).C(collection).EnsureIndex(index)
+
 	return &TokenDao{collection, dbName}
 }
 
@@ -44,6 +51,11 @@ func NewLendingTokenDao() *TokenDao {
 func NewCollateralTokenDao() *TokenDao {
 	dbName := app.Config.DBName
 	collection := "collateral_tokens"
+	index := mgo.Index{
+		Key:    []string{"contractAddress"},
+		Unique: true,
+	}
+	db.Session.DB(dbName).C(collection).EnsureIndex(index)
 	return &TokenDao{collection, dbName}
 }
 
