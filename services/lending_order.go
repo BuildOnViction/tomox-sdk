@@ -20,6 +20,7 @@ import (
 // LendingOrderService struct
 type LendingOrderService struct {
 	lendingDao        interfaces.LendingOrderDao
+	notificationDao   interfaces.NotificationDao
 	engine            interfaces.Engine
 	broker            *rabbitmq.Connection
 	mutext            sync.RWMutex
@@ -27,10 +28,16 @@ type LendingOrderService struct {
 }
 
 // NewLendingOrderService returns a new instance of lending order service
-func NewLendingOrderService(lendingDao interfaces.LendingOrderDao, engine interfaces.Engine, broker *rabbitmq.Connection) *LendingOrderService {
+func NewLendingOrderService(
+    lendingDao interfaces.LendingOrderDao,
+	notificationDao interfaces.NotificationDao,
+    engine interfaces.Engine,
+    broker *rabbitmq.Connection,
+) *LendingOrderService {
 	bulkLendingOrders := make(map[string]map[common.Hash]*types.LendingOrder)
 	return &LendingOrderService{
 		lendingDao,
+		notificationDao,
 		engine,
 		broker,
 		sync.RWMutex{},
@@ -129,6 +136,22 @@ func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineRespon
 func (s *LendingOrderService) handleLendingOrderAdded(res *types.EngineResponse) {
 	o := res.LendingOrder
 	ws.SendLendingOrderMessage("LENDINNG_ORDER_ADDED", o.UserAddress, o)
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: "LENDING_ORDER_ADDED",
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendNotificationMessage("LENDING_ORDER_ADDED", o.UserAddress, notifications)
 }
 
 func (s *LendingOrderService) handleLendingOrderPartialFilled(res *types.EngineResponse) {
@@ -138,6 +161,25 @@ func (s *LendingOrderService) handleLendingOrderFilled(res *types.EngineResponse
 }
 
 func (s *LendingOrderService) handleLendingOrderCancelled(res *types.EngineResponse) {
+	o := res.LendingOrder
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: "LENDING_ORDER_CANCELLED",
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendOrderMessage("LENDING_ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendNotificationMessage("LENDING_ORDER_CANCELLED", o.UserAddress, notifications)
+	logger.Info("BroadcastOrderBookUpdate Lending Cancelled")
 }
 
 func (s *LendingOrderService) handleLendingOrderRejected(res *types.EngineResponse) {
@@ -145,6 +187,25 @@ func (s *LendingOrderService) handleLendingOrderRejected(res *types.EngineRespon
 
 // handleEngineError returns an websocket error message to the client and recovers orders on the
 func (s *LendingOrderService) handleEngineError(res *types.EngineResponse) {
+	o := res.LendingOrder
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: "LENDING_ORDER_REJECTED",
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendOrderMessage("LENDING_ORDER_REJECTED", o.UserAddress, o)
+	ws.SendNotificationMessage("LENDING_ORDER_REJECTED", o.UserAddress, notifications)
+	logger.Info("BroadcastOrderBookUpdate lending rejected")
 }
 
 // handleEngineUnknownMessage returns a websocket messsage in case the engine resonse is not recognized

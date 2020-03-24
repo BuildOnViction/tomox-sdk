@@ -90,6 +90,18 @@ type OrderMatchedPayload struct {
 	Matches *Matches `json:"matches"`
 }
 
+type LendingOrderPendingPayload struct {
+	LendingMatches *LendingMatches `json:"matches"`
+}
+
+type LendingOrderSuccessPayload struct {
+	LendingMatches *LendingMatches `json:"matches"`
+}
+
+type LendingOrderMatchedPayload struct {
+	LendingMatches *LendingMatches `json:"matches"`
+}
+
 type SubscriptionPayload struct {
 	PairName     string         `json:"pairName,omitempty"`
 	QuoteToken   common.Address `json:"quoteToken,omitempty"`

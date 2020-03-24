@@ -1085,7 +1085,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	ws.SendOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendOrderMessage("LENDING_ORDER_CANCELLED", o.UserAddress, o)
 	return nil
 }
 

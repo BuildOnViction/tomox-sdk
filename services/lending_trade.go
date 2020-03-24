@@ -19,6 +19,7 @@ import (
 type LendingTradeService struct {
 	lendingDao        interfaces.LendingOrderDao
 	lendingTradeDao   interfaces.LendingTradeDao
+	notificationDao   interfaces.NotificationDao
 	broker            *rabbitmq.Connection
 	bulkLendingTrades map[string][]*types.LendingTrade
 	mutext            sync.RWMutex
@@ -28,12 +29,14 @@ type LendingTradeService struct {
 func NewLendingTradeService(
 	lendingdao interfaces.LendingOrderDao,
 	lendingTradeDao interfaces.LendingTradeDao,
+	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
 ) *LendingTradeService {
 	bulkLendingTrades := make(map[string][]*types.LendingTrade)
 	return &LendingTradeService{
 		lendingDao:        lendingdao,
 		lendingTradeDao:   lendingTradeDao,
+        notificationDao:   notificationDao,
 		broker:            broker,
 		bulkLendingTrades: bulkLendingTrades,
 		mutext:            sync.RWMutex{},
@@ -250,7 +253,31 @@ func (s *LendingTradeService) HandleOperationUpdate(trade *types.LendingTrade) e
 func (s *LendingTradeService) HandleTradeSuccess(m *types.LendingMatches) {
 	trades := m.LendingTrades
 	for _, t := range trades {
+		investor := t.Investor
+		borrower := t.Borrower
+
 		s.saveBulkTrades(t)
+
+		ws.SendOrderMessage("LENDING_ORDER_SUCCESS", investor, types.LendingOrderSuccessPayload{LendingMatches: m})
+		ws.SendOrderMessage("LENDING_ORDER_SUCCESS", borrower, types.LendingOrderSuccessPayload{LendingMatches: m})
+		s.notificationDao.Create(&types.Notification{
+			Recipient: investor,
+			Message: types.Message{
+				MessageType: "LENDING_ORDER_SUCCESS",
+				Description: t.Hash.Hex(),
+			},
+			Type:   types.TypeLog,
+			Status: types.StatusUnread,
+		})
+		s.notificationDao.Create(&types.Notification{
+			Recipient: borrower,
+			Message: types.Message{
+				MessageType: "LENDING_ORDER_SUCCESS",
+				Description: t.Hash.Hex(),
+			},
+			Type:   types.TypeLog,
+			Status: types.StatusUnread,
+		})
 	}
 }
 

@@ -308,14 +308,10 @@ func (s *TradeService) HandleOperationUpdate(trade *types.Trade) error {
 // HandleTradeSuccess handle order match success
 func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	trades := m.Trades
-	pairs := make([]types.PairAddresses, 0)
 	for _, t := range trades {
 		maker := t.Maker
 		taker := t.Taker
-		pair := types.PairAddresses{BaseToken: t.BaseToken, QuoteToken: t.QuoteToken}
-		pairs = append(pairs, pair)
 
-		// s.bulkTrades[pair] = append(s.bulkTrades[pair], t)
 		s.saveBulkTrades(t)
 
 		ws.SendOrderMessage("ORDER_SUCCESS", maker, types.OrderSuccessPayload{Matches: m})
@@ -341,8 +337,6 @@ func (s *TradeService) HandleTradeSuccess(m *types.Matches) {
 	}
 
 	s.ohlcvService.NotifyTrade(trades[0])
-	// s.broadcastTradeUpdate(trades)
-	// s.broadcastTickUpdate(pairs)
 }
 
 func (s *TradeService) saveBulkTrades(t *types.Trade) {
