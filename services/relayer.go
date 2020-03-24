@@ -243,7 +243,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 }
 
 func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingRInfo) error {
-	currentTokens, err := s.colateralTokenDao.GetAll()
+	currentTokens, err := s.lendingTokenDao.GetAll()
 	if err != nil {
 		return err
 	}
