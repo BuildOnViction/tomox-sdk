@@ -44,6 +44,9 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 
 	sortedList := make(map[string]string)
 	sortedList["time"] = "createdAt"
+	if sortBy == "" {
+		sortBy = "time"
+	}
 
 	var tradeSpec types.TradeSpec
 	if bt != "" {
@@ -141,6 +144,9 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 
 	sortedList := make(map[string]string)
 	sortedList["time"] = "createdAt"
+	if sortBy == "" {
+		sortBy = "time"
+	}
 	var tradeSpec types.TradeSpec
 
 	if addr == "" {
@@ -184,7 +190,7 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 	size := types.DefaultLimit
 	sortDB := []string{}
 	if sortType != "asc" && sortType != "dec" {
-		sortType = "asc"
+		sortType = "dec"
 	}
 	if sortBy != "" {
 		if val, ok := sortedList[sortBy]; ok {

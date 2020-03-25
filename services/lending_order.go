@@ -152,6 +152,7 @@ func (s *LendingOrderService) handleLendingOrderAdded(res *types.EngineResponse)
 	}
 
 	ws.SendNotificationMessage("LENDING_ORDER_ADDED", o.UserAddress, notifications)
+	logger.Info("BroadcastOrderBookUpdate Lending Added")
 }
 
 func (s *LendingOrderService) handleLendingOrderPartialFilled(res *types.EngineResponse) {

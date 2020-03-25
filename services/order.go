@@ -406,9 +406,6 @@ func (s *OrderService) handleEngineOrderAdded(res *types.EngineResponse) {
 	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
 	ws.SendNotificationMessage("ORDER_ADDED", o.UserAddress, notifications)
 	s.updateOrderPricepoint(o)
-	// logger.Info("BroadcastOrderBookUpdate add")
-	// s.broadcastOrderBookUpdate([]*types.Order{o})
-	// s.broadcastRawOrderBookUpdate([]*types.Order{o})
 }
 
 func (s *OrderService) handleOrderPartialFilled(res *types.EngineResponse) {

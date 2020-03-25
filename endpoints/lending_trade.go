@@ -103,6 +103,10 @@ func (e *lendingTradeEndpoint) handleGetLendingTradesHistory(w http.ResponseWrit
 
 	sortedList := make(map[string]string)
 	sortedList["time"] = "createdAt"
+	if sortBy == "" {
+		sortBy = "time"
+	}
+
 	var lendingTradeSpec types.LendingTradeSpec
 
 	if addr == "" {
@@ -146,7 +150,7 @@ func (e *lendingTradeEndpoint) handleGetLendingTradesHistory(w http.ResponseWrit
 	size := types.DefaultLimit
 	sortDB := []string{}
 	if sortType != "asc" && sortType != "dec" {
-		sortType = "asc"
+		sortType = "dec"
 	}
 	if sortBy != "" {
 		if val, ok := sortedList[sortBy]; ok {
@@ -204,6 +208,9 @@ func (e *lendingTradeEndpoint) handleGetLendingTrades(w http.ResponseWriter, r *
 
 	sortedList := make(map[string]string)
 	sortedList["time"] = "createdAt"
+	if sortBy == "" {
+		sortBy = "time"
+	}
 
 	var lendingTradeSpec types.LendingTradeSpec
 	if lendingToken != "" {

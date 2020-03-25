@@ -36,7 +36,7 @@ func NewLendingTradeService(
 	return &LendingTradeService{
 		lendingDao:        lendingdao,
 		lendingTradeDao:   lendingTradeDao,
-        notificationDao:   notificationDao,
+		notificationDao:   notificationDao,
 		broker:            broker,
 		bulkLendingTrades: bulkLendingTrades,
 		mutext:            sync.RWMutex{},
@@ -258,8 +258,8 @@ func (s *LendingTradeService) HandleTradeSuccess(m *types.LendingMatches) {
 
 		s.saveBulkTrades(t)
 
-		ws.SendOrderMessage("LENDING_ORDER_SUCCESS", investor, types.LendingOrderSuccessPayload{LendingMatches: m})
-		ws.SendOrderMessage("LENDING_ORDER_SUCCESS", borrower, types.LendingOrderSuccessPayload{LendingMatches: m})
+		ws.SendLendingOrderMessage("LENDING_ORDER_SUCCESS", investor, types.LendingOrderSuccessPayload{LendingMatches: m})
+		ws.SendLendingOrderMessage("LENDING_ORDER_SUCCESS", borrower, types.LendingOrderSuccessPayload{LendingMatches: m})
 		s.notificationDao.Create(&types.Notification{
 			Recipient: investor,
 			Message: types.Message{
