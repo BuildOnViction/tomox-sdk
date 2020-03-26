@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 )
@@ -21,4 +22,9 @@ func NewLendingPairService(
 // GetAll is reponsible for fetching all the pairs in the DB
 func (s *LendingPairService) GetAll() ([]types.LendingPair, error) {
 	return s.lendingPairDao.GetAll()
+}
+
+// GetByLendingID get pair by ID
+func (s *LendingPairService) GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error) {
+	return s.lendingPairDao.GetByLendingID(term, lendingAddress)
 }

@@ -25,6 +25,7 @@ const (
 	LendingOrderBookChannel    = "lending_orderbook"
 	LendingOhlcvChannel        = "lending_ohlcv"
 	LendingMarketsChannel      = "lending_markets"
+	LendingPriceBoardChannel   = "lending_price_board"
 )
 
 var socketChannels map[string]func(interface{}, *Client)
