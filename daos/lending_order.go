@@ -364,7 +364,7 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendLendingOrderMessage("LENDING_ORDER_CANCELLED", o.UserAddress, o)
 	return nil
 }
 
