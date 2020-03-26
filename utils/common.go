@@ -74,6 +74,11 @@ func GetLendingMarketsChannelID(channel string) string {
 	return strings.ToLower(channel)
 }
 
+// GetLendingChannelID get channel from term and lending token
+func GetLendingChannelID(term uint64, lendingToken common.Address) string {
+	return strings.ToLower(fmt.Sprintf("%s::%s", strconv.FormatUint(term, 10), lendingToken.Hex()))
+}
+
 func Retry(retries int, fn func() error) error {
 	if err := fn(); err != nil {
 		retries--

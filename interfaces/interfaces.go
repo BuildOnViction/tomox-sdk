@@ -458,11 +458,19 @@ type LendingPairDao interface {
 //LendingPairService imp lending
 type LendingPairService interface {
 	GetAll() ([]types.LendingPair, error)
+	GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error)
 }
 
 // LendingMarketsService lending service interface
 type LendingMarketsService interface {
 	Subscribe(c *ws.Client)
 	UnsubscribeChannel(c *ws.Client)
+	Unsubscribe(c *ws.Client)
+}
+
+// LendingPriceBoardService lending price board service
+type LendingPriceBoardService interface {
+	Subscribe(c *ws.Client, term uint64, lendingToken common.Address)
+	UnsubscribeChannel(c *ws.Client, term uint64, lendingToken common.Address)
 	Unsubscribe(c *ws.Client)
 }
