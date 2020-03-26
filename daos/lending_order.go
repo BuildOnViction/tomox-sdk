@@ -319,7 +319,7 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 	}
 
 	o.Status = "ADDED"
-	ws.SendLendingOrderMessage("LENDING_ORDER_ADDED", o.UserAddress, o)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_ADDED, o.UserAddress, o)
 	return nil
 }
 
@@ -364,7 +364,7 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage("LENDING_ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_CANCELLED, o.UserAddress, o)
 	return nil
 }
 

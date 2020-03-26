@@ -1042,7 +1042,7 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		return err
 	}
 	o.Status = "ADDED"
-	ws.SendOrderMessage("ORDER_ADDED", o.UserAddress, o)
+	ws.SendOrderMessage(types.ORDER_ADDED, o.UserAddress, o)
 	return nil
 }
 
@@ -1085,7 +1085,7 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 		return err
 	}
 
-	ws.SendOrderMessage("LENDING_ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendOrderMessage(types.ORDER_CANCELLED, o.UserAddress, o)
 	return nil
 }
 
