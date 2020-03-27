@@ -349,7 +349,7 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 	}
 
 	o.Status = "ADDED"
-	ws.SendLendingOrderMessage("LENDING_ORDER_ADDED", o.UserAddress, o)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_ADDED, o.UserAddress, o)
 	return nil
 }
 
@@ -394,7 +394,7 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage("ORDER_CANCELLED", o.UserAddress, o)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_CANCELLED, o.UserAddress, o)
 	return nil
 }
 
@@ -436,7 +436,7 @@ func (dao *LendingOrderDao) RepayLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage("ORDER_REPAY", o.UserAddress, o)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
 	return nil
 }
 
@@ -479,7 +479,7 @@ func (dao *LendingOrderDao) TopupLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage("ORDER_TOPUP", o.UserAddress, o)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
 	return nil
 }
 
