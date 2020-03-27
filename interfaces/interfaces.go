@@ -396,6 +396,8 @@ type LendingOrderService interface {
 	RepayLendingOrder(o *types.LendingOrder) error
 	TopupLendingOrder(o *types.LendingOrder) error
 	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
+	GetTopup(topupSpec types.TopupSpec, sort []string, offset int, size int) (*types.LendingRes, error)
+	GetRepay(repaySpec types.RepaySpec, sort []string, offset int, size int) (*types.LendingRes, error)
 }
 
 // LendingOrderDao dao

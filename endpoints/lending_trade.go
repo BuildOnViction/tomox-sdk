@@ -122,9 +122,9 @@ func (e *lendingTradeEndpoint) handleGetLendingTradesHistory(w http.ResponseWrit
 		if !common.IsHexAddress(lt) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid lending token address")
 			return
-		} else {
-			lendingTradeSpec.LendingToken = common.HexToAddress(lt).Hex()
 		}
+		lendingTradeSpec.LendingToken = common.HexToAddress(lt).Hex()
+
 	}
 
 	if toParam != "" {
@@ -217,9 +217,9 @@ func (e *lendingTradeEndpoint) handleGetLendingTrades(w http.ResponseWriter, r *
 		if !common.IsHexAddress(lendingToken) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid lendingToken")
 			return
-		} else {
-			lendingTradeSpec.LendingToken = common.HexToAddress(lendingToken).Hex()
 		}
+		lendingTradeSpec.LendingToken = common.HexToAddress(lendingToken).Hex()
+
 	}
 
 	if term != "" {

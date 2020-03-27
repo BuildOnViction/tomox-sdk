@@ -91,9 +91,12 @@ func NewRouter(
 	walletDao := daos.NewWalletDao()
 	notificationDao := daos.NewNotificationDao()
 
+	// Lending Dao
 	tokenLendingDao := daos.NewLendingTokenDao()
 	tokenCollateralDao := daos.NewCollateralTokenDao()
 	lendingOrderDao := daos.NewLendingOrderDao()
+	lendingTopupDao := daos.NewTopupDao()
+	lendingRepayDao := daos.NewRepayDao()
 	lendingTradeDao := daos.NewLendingTradeDao()
 	lengdingPairDao := daos.NewLendingPairDao()
 	// instantiate engine
@@ -126,7 +129,7 @@ func NewRouter(
 	tokenLendingService := services.NewTokenService(tokenLendingDao)
 	tokenCollateralService := services.NewTokenService(tokenCollateralDao)
 
-	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, notificationDao, eng, rabbitConn)
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, notificationDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, notificationDao, rabbitConn)
 	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
 	lendingMarketService := services.NewLendingMarketsService(lengdingPairDao, lendingOhlcvService)

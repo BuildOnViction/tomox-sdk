@@ -76,6 +76,29 @@ type LendingSpec struct {
 	Hash            string
 }
 
+// TopupSpec filter topup
+type TopupSpec struct {
+	UserAddress     string
+	CollateralToken string
+	LendingToken    string
+	Term            string
+	Status          string
+	DateFrom        int64
+	DateTo          int64
+	Hash            string
+}
+
+// RepaySpec filter repay
+type RepaySpec struct {
+	UserAddress  string
+	LendingToken string
+	Term         string
+	Status       string
+	DateFrom     int64
+	DateTo       int64
+	Hash         string
+}
+
 // Validate Verify userAddress, collateralToken, lendingToken, etc. conditions are working
 func (o *LendingOrder) Validate() error {
 	if o.RelayerAddress != common.HexToAddress(app.Config.Tomochain["exchange_address"]) {
@@ -427,6 +450,7 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 		CreatedAt       time.Time        `json:"createdAt" bson:"createdAt"`
 		UpdatedAt       time.Time        `json:"updatedAt" bson:"updatedAt"`
 		LendingID       string           `json:"lendingId" bson:"lendingId"`
+		TradeID         string           `json:"tradeId" bson:"tradeId"`
 		Key             string           `json:"key" bson:"key"`
 	})
 
@@ -482,6 +506,12 @@ func (o *LendingOrder) SetBSON(raw bson.Raw) error {
 		logger.Error(err)
 	}
 	o.LendingID = uint64(lendingID)
+	tradeID, err := strconv.ParseInt(decoded.TradeID, 10, 64)
+	if err != nil {
+		logger.Error(err)
+	}
+	o.LendingTradeID = uint64(tradeID)
+
 	o.Key = decoded.Key
 
 	return nil

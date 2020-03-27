@@ -20,6 +20,8 @@ import (
 // LendingOrderService struct
 type LendingOrderService struct {
 	lendingDao        interfaces.LendingOrderDao
+	topupDao          interfaces.LendingOrderDao
+	repayDao          interfaces.LendingOrderDao
 	notificationDao   interfaces.NotificationDao
 	engine            interfaces.Engine
 	broker            *rabbitmq.Connection
@@ -29,14 +31,18 @@ type LendingOrderService struct {
 
 // NewLendingOrderService returns a new instance of lending order service
 func NewLendingOrderService(
-    lendingDao interfaces.LendingOrderDao,
+	lendingDao interfaces.LendingOrderDao,
+	topupDao interfaces.LendingOrderDao,
+	repayDao interfaces.LendingOrderDao,
 	notificationDao interfaces.NotificationDao,
-    engine interfaces.Engine,
-    broker *rabbitmq.Connection,
+	engine interfaces.Engine,
+	broker *rabbitmq.Connection,
 ) *LendingOrderService {
 	bulkLendingOrders := make(map[string]map[common.Hash]*types.LendingOrder)
 	return &LendingOrderService{
 		lendingDao,
+		topupDao,
+		repayDao,
 		notificationDao,
 		engine,
 		broker,
@@ -408,6 +414,32 @@ func (s *LendingOrderService) processBulkLendingOrders() {
 	s.bulkLendingOrders = make(map[string]map[common.Hash]*types.LendingOrder)
 }
 
+// GetLendingOrders filter lending
 func (s *LendingOrderService) GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error) {
 	return s.lendingDao.GetLendingOrders(lendingSpec, sort, offset, size)
+}
+
+// GetTopup filter topup
+func (s *LendingOrderService) GetTopup(topupSpec types.TopupSpec, sort []string, offset int, size int) (*types.LendingRes, error) {
+	lendingSpec := types.LendingSpec{
+		UserAddress:     topupSpec.UserAddress,
+		CollateralToken: topupSpec.CollateralToken,
+		LendingToken:    topupSpec.LendingToken,
+		Term:            topupSpec.Term,
+		DateFrom:        topupSpec.DateFrom,
+		DateTo:          topupSpec.DateTo,
+	}
+	return s.topupDao.GetLendingOrders(lendingSpec, sort, offset, size)
+}
+
+// GetRepay filter relay
+func (s *LendingOrderService) GetRepay(repaySpec types.RepaySpec, sort []string, offset int, size int) (*types.LendingRes, error) {
+	lendingSpec := types.LendingSpec{
+		UserAddress:  repaySpec.UserAddress,
+		LendingToken: repaySpec.LendingToken,
+		Term:         repaySpec.Term,
+		DateFrom:     repaySpec.DateFrom,
+		DateTo:       repaySpec.DateTo,
+	}
+	return s.repayDao.GetLendingOrders(lendingSpec, sort, offset, size)
 }

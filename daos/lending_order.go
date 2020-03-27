@@ -103,6 +103,36 @@ func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	return dao
 }
 
+// NewTopupDao topup dao
+func NewTopupDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
+	dao := &LendingOrderDao{}
+	dao.collectionName = "lending_topup"
+	dao.dbName = app.Config.DBName
+
+	for _, op := range opts {
+		err := op(dao)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return dao
+}
+
+// NewRepayDao repay dao
+func NewRepayDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
+	dao := &LendingOrderDao{}
+	dao.collectionName = "lending_repay"
+	dao.dbName = app.Config.DBName
+
+	for _, op := range opts {
+		err := op(dao)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return dao
+}
+
 // GetCollection get collection name
 func (dao *LendingOrderDao) GetCollection() *mgo.Collection {
 	return db.GetCollection(dao.dbName, dao.collectionName)
