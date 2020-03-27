@@ -73,6 +73,27 @@ func (dao *LendingPairDao) GetAll() ([]types.LendingPair, error) {
 		return nil, err
 	}
 
+	ret := []types.LendingPair{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.LendingTokenAddress.Hex() + "::" + string(it.Term)
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
+}
+
+func (dao *LendingPairDao) GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error) {
+	var res []types.LendingPair
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{"relayerAddress": addr.Hex()}, 0, 0, &res)
+	if err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }
 

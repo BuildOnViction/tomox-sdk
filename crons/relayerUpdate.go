@@ -5,12 +5,12 @@ import (
 )
 
 func (s *CronService) startRelayerUpdate(c *cron.Cron) {
-	s.RelayService.UpdateRelayer()
+	s.RelayService.UpdateRelayers()
 	c.AddFunc("*/600 * * * * *", s.updateRelayer())
 }
 
 func (s *CronService) updateRelayer() func() {
 	return func() {
-		s.RelayService.UpdateRelayer()
+		s.RelayService.UpdateRelayers()
 	}
 }

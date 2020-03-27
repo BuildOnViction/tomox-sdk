@@ -118,6 +118,7 @@ type WalletDao interface {
 type PairDao interface {
 	Create(o *types.Pair) error
 	GetAll() ([]types.Pair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
 	GetActivePairs() ([]*types.Pair, error)
 	GetByID(id bson.ObjectId) (*types.Pair, error)
 	GetByName(name string) (*types.Pair, error)
@@ -264,6 +265,7 @@ type PairService interface {
 	GetMarketStats(bt, qt common.Address) (*types.PairData, error)
 	GetAllMarketStats() ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
 	GetListedPairs() ([]types.Pair, error)
 	GetUnlistedPairs() ([]types.Pair, error)
 }
@@ -385,6 +387,8 @@ type RelayerService interface {
 type Relayer interface {
 	GetRelayer() (*relayer.RInfo, error)
 	GetLending() (*relayer.LendingRInfo, error)
+	GetRelayers() ([]*relayer.RInfo, error)
+	GetLendings() ([]*relayer.LendingRInfo, error)
 }
 
 // LendingOrderService for lending
@@ -453,6 +457,7 @@ type LendingOhlcvService interface {
 type LendingPairDao interface {
 	Create(o *types.LendingPair) error
 	GetAll() ([]types.LendingPair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error)
 	DeleteByLendingKey(term uint64, lendingAddress common.Address) error
 	GetByLendingID(term uint64, lendingToken common.Address) (*types.LendingPair, error)
 }
@@ -460,6 +465,7 @@ type LendingPairDao interface {
 //LendingPairService imp lending
 type LendingPairService interface {
 	GetAll() ([]types.LendingPair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error)
 	GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error)
 }
 

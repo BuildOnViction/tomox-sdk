@@ -28,6 +28,7 @@ type Pair struct {
 	Rank               int            `json:"rank,omitempty" bson:"rank"`
 	MakeFee            *big.Int       `json:"makeFee,omitempty" bson:"makeFee"`
 	TakeFee            *big.Int       `json:"takeFee,omitempty" bson:"takeFee"`
+	RelayerAddress     common.Address `json:"relayerAddress,omitempty" bson:"relayerAddress"`
 	CreatedAt          time.Time      `json:"-" bson:"createdAt"`
 	UpdatedAt          time.Time      `json:"-" bson:"updatedAt"`
 }
@@ -46,6 +47,10 @@ func (p *Pair) UnmarshalJSON(b []byte) error {
 
 	if pair["quoteTokenAddress"] != nil {
 		p.QuoteTokenAddress = common.HexToAddress(pair["quoteTokenAddress"].(string))
+	}
+
+	if pair["relayerAddress"] != nil {
+		p.RelayerAddress = common.HexToAddress(pair["relayerAddress"].(string))
 	}
 
 	if pair["baseTokenSymbol"] != nil {
@@ -80,6 +85,7 @@ func (p *Pair) MarshalJSON() ([]byte, error) {
 		"quoteTokenDecimals": p.QuoteTokenDecimals,
 		"baseTokenAddress":   p.BaseTokenAddress,
 		"quoteTokenAddress":  p.QuoteTokenAddress,
+		"relayerAddress":     p.RelayerAddress,
 		"rank":               p.Rank,
 		"active":             p.Active,
 		"listed":             p.Listed,
@@ -117,6 +123,7 @@ func (p *Pair) SetBSON(raw bson.Raw) error {
 	p.QuoteTokenSymbol = decoded.QuoteTokenSymbol
 	p.QuoteTokenAddress = common.HexToAddress(decoded.QuoteTokenAddress)
 	p.QuoteTokenDecimals = decoded.QuoteTokenDecimals
+	p.RelayerAddress = common.HexToAddress(decoded.RelayerAddress)
 	p.Listed = decoded.Listed
 	p.Active = decoded.Active
 	p.Rank = decoded.Rank
@@ -137,6 +144,7 @@ func (p *Pair) GetBSON() (interface{}, error) {
 		QuoteTokenSymbol:   p.QuoteTokenSymbol,
 		QuoteTokenAddress:  p.QuoteTokenAddress.Hex(),
 		QuoteTokenDecimals: p.QuoteTokenDecimals,
+		RelayerAddress:     p.RelayerAddress.Hex(),
 		Active:             p.Active,
 		Listed:             p.Listed,
 		Rank:               p.Rank,
@@ -266,6 +274,7 @@ type PairRecord struct {
 	QuoteTokenSymbol   string    `json:"quoteTokenSymbol" bson:"quoteTokenSymbol"`
 	QuoteTokenAddress  string    `json:"quoteTokenAddress" bson:"quoteTokenAddress"`
 	QuoteTokenDecimals int       `json:"quoteTokenDecimals" bson:"quoteTokenDecimals"`
+	RelayerAddress     string    `json:"relayerAddress" bson:"relayerAddress"`
 	Active             bool      `json:"active" bson:"active"`
 	Listed             bool      `json:"listed" bson:"listed"`
 	MakeFee            string    `json:"makeFee" bson:"makeFee"`

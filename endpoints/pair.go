@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/gorilla/mux"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/services"
 	"github.com/tomochain/tomox-sdk/types"
@@ -75,7 +76,13 @@ func (e *pairEndpoint) HandleCreatePair(w http.ResponseWriter, r *http.Request) 
 }
 
 func (e *pairEndpoint) HandleGetPairs(w http.ResponseWriter, r *http.Request) {
-	res, err := e.pairService.GetAll()
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+	ex := common.HexToAddress(relayerAddress)
+	res, err := e.pairService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())

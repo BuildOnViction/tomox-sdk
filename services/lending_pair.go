@@ -24,6 +24,10 @@ func (s *LendingPairService) GetAll() ([]types.LendingPair, error) {
 	return s.lendingPairDao.GetAll()
 }
 
+func (s *LendingPairService) GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error) {
+	return s.lendingPairDao.GetAllByCoinbase(addr)
+}
+
 // GetByLendingID get pair by ID
 func (s *LendingPairService) GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error) {
 	return s.lendingPairDao.GetByLendingID(term, lendingAddress)

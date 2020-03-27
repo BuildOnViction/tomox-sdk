@@ -73,6 +73,27 @@ func (dao *PairDao) GetAll() ([]types.Pair, error) {
 		return nil, err
 	}
 
+	ret := []types.Pair{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.BaseTokenAddress.Hex() + "::" + it.QuoteTokenAddress.Hex()
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
+}
+
+func (dao *PairDao) GetAllByCoinbase(addr common.Address) ([]types.Pair, error) {
+	var res []types.Pair
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{"relayerAddress": addr.Hex()}, 0, 0, &res)
+	if err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }
 
@@ -124,7 +145,18 @@ func (dao *PairDao) GetActivePairs() ([]*types.Pair, error) {
 		return nil, nil
 	}
 
-	return res, nil
+	ret := []*types.Pair{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.BaseTokenAddress.Hex() + "::" + it.QuoteTokenAddress.Hex()
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
 }
 
 // GetByID function fetches details of a pair using pair's mongo ID.

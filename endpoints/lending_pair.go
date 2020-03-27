@@ -3,7 +3,9 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
@@ -23,7 +25,13 @@ func ServeLendingPairResource(
 }
 
 func (e *lendingPairEndpoint) HandleGetLendingPairs(w http.ResponseWriter, r *http.Request) {
-	res, err := e.lendingPairService.GetAll()
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+	ex := common.HexToAddress(relayerAddress)
+	res, err := e.lendingPairService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())

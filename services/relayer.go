@@ -63,6 +63,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 				QuoteTokenSymbol:   pairQuoteData.Symbol,
 				QuoteTokenAddress:  newpair.QuoteToken,
 				QuoteTokenDecimals: int(pairQuoteData.Decimals),
+				RelayerAddress:     relayerInfo.Address,
 				Active:             true,
 				MakeFee:            big.NewInt(int64(relayerInfo.MakeFee)),
 				TakeFee:            big.NewInt(int64(relayerInfo.TakeFee)),
@@ -115,6 +116,7 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 				LendingTokenAddress:  newpair.LendingToken,
 				LendingTokenDecimals: int(lendingTokenData.Decimals),
 				LendingTokenSymbol:   lendingTokenData.Symbol,
+				RelayerAddress:       relayerInfo.Address,
 			}
 			logger.Info("Create Pair:", pair.Term, pair.LendingTokenAddress.Hex())
 			err := s.lendingPairDao.Create(pair)
@@ -308,5 +310,27 @@ func (s *RelayerService) UpdateRelayer() error {
 	s.updateLendingPair(relayerLendingInfo)
 	s.updateCollateralTokenRelayer(relayerLendingInfo)
 	s.updateLendingTokenRelayer(relayerLendingInfo)
+	return nil
+}
+
+func (s *RelayerService) UpdateRelayers() error {
+	relayerInfos, err := s.relayer.GetRelayers()
+	if err != nil {
+		return err
+	}
+	for _, relayerInfo := range relayerInfos {
+		s.updateTokenRelayer(relayerInfo)
+		s.updatePairRelayer(relayerInfo)
+	}
+
+	relayerLendingInfos, err := s.relayer.GetLendings()
+	if err != nil {
+		return err
+	}
+	for _, relayerLendingInfo := range relayerLendingInfos {
+		s.updateLendingPair(relayerLendingInfo)
+		s.updateCollateralTokenRelayer(relayerLendingInfo)
+		s.updateLendingTokenRelayer(relayerLendingInfo)
+	}
 	return nil
 }

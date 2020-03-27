@@ -41,7 +41,7 @@ func NewCronService(
 // InitCrons is responsible for initializing all the crons in the system
 func (s *CronService) InitCrons() {
 
-	s.RelayService.UpdateRelayer()
+	s.RelayService.UpdateRelayers()
 	c := cron.New()
 	s.startRelayerUpdate(c)
 	// s.tickStreamingCron(c)   // Cron to fetch OHLCV data

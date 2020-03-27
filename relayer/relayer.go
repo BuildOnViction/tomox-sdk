@@ -41,7 +41,17 @@ func (r *Relayer) GetRelayer() (*RInfo, error) {
 	ethclient := ethclient.NewClient(client)
 	bc := NewBlockchain(client, ethclient, signer)
 	return bc.GetRelayer(r.coinBase, r.relayerAddress)
+}
 
+func (r *Relayer) GetRelayers() ([]*RInfo, error) {
+	signer := NewSigner()
+	client, err := rpc.Dial(r.rpcURL)
+	if err != nil {
+		fmt.Println(err)
+	}
+	ethclient := ethclient.NewClient(client)
+	bc := NewBlockchain(client, ethclient, signer)
+	return bc.GetRelayers(r.relayerAddress)
 }
 
 // GetLending get relayer information
@@ -55,4 +65,15 @@ func (r *Relayer) GetLending() (*LendingRInfo, error) {
 	bc := NewBlockchain(client, ethclient, signer)
 	return bc.GetLendingRelayer(r.coinBase, r.lendingRelayerAddress)
 
+}
+
+func (r *Relayer) GetLendings() ([]*LendingRInfo, error) {
+	signer := NewSigner()
+	client, err := rpc.Dial(r.rpcURL)
+	if err != nil {
+		fmt.Println(err)
+	}
+	ethclient := ethclient.NewClient(client)
+	bc := NewBlockchain(client, ethclient, signer)
+	return bc.GetLendingRelayers(r.relayerAddress)
 }

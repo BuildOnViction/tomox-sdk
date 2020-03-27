@@ -47,6 +47,7 @@ type TokenInfo struct {
 
 // RInfo struct
 type RInfo struct {
+	Address common.Address
 	Tokens  map[common.Address]*TokenInfo
 	Pairs   []*PairToken
 	MakeFee uint16
@@ -55,6 +56,7 @@ type RInfo struct {
 
 // LendingRInfo lending relayer info
 type LendingRInfo struct {
+	Address         common.Address
 	ColateralTokens map[common.Address]*TokenInfo
 	LendingTokens   map[common.Address]*TokenInfo
 	LendingPairs    []*LendingPairToken
@@ -152,6 +154,75 @@ func (b *Blockchain) setBaseTokenInfo() *TokenInfo {
 	}
 }
 
+func (b *Blockchain) GetRelayers(contractAddress common.Address) ([]*RInfo, error) {
+	count, _ := b.GetRelayerCount(contractAddress)
+
+	var rInfos []*RInfo
+	logger.Debug("Relayer count", count.String())
+	for i := int64(0); i < int64(count.Uint64()); i++ {
+		coinbase, _ := b.GetRelayerCoinBaseByIndex(i, contractAddress)
+		rInfo, _ := b.GetRelayer(coinbase, contractAddress)
+		rInfos = append(rInfos, rInfo)
+	}
+
+	return rInfos, nil
+}
+
+func (b *Blockchain) GetRelayerCoinBaseByIndex(idx int64, contractAddress common.Address) (common.Address, error) {
+	abiRelayer, err := relayerAbi.GetRelayerAbi()
+	if err != nil {
+		return common.Address{}, err
+	}
+	input, err := abiRelayer.Pack("RELAYER_COINBASES", big.NewInt(idx))
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	msg := ether.CallMsg{To: &contractAddress, Data: input}
+	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
+	if err != nil {
+		logger.Error(err)
+		return common.Address{}, err
+	}
+
+	if method, ok := abiRelayer.Methods["RELAYER_COINBASES"]; ok {
+		contractData, _ := method.Outputs.UnpackValues(result)
+		return contractData[0].(common.Address), nil
+	} else {
+		return common.Address{}, errors.New("Can not get coinbase")
+	}
+
+	return common.Address{}, nil
+}
+
+func (b *Blockchain) GetRelayerCount(contractAddress common.Address) (*big.Int, error) {
+	abiRelayer, err := relayerAbi.GetRelayerAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	input, err := abiRelayer.Pack("RelayerCount")
+	if err != nil {
+		return nil, err
+	}
+
+	msg := ether.CallMsg{To: &contractAddress, Data: input}
+	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if method, ok := abiRelayer.Methods["RelayerCount"]; ok {
+		contractData, _ := method.Outputs.UnpackValues(result)
+		return contractData[0].(*big.Int), nil
+	} else {
+		return nil, errors.New("Can not get relayer information")
+	}
+
+	return nil, nil
+}
+
 // GetRelayer return all tokens in smart contract
 func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress common.Address) (*RInfo, error) {
 	abiRelayer, err := relayerAbi.GetRelayerAbi()
@@ -173,10 +244,11 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 		logger.Error(err)
 		return nil, err
 	}
-	logger.Debug("data: ", result)
+	logger.Debug("relayer coinbase:", coinAddress.Hex())
 
 	relayerInfo := RInfo{
-		Tokens: make(map[common.Address]*TokenInfo),
+		Tokens:  make(map[common.Address]*TokenInfo),
+		Address: coinAddress,
 	}
 	if method, ok := abiRelayer.Methods["getRelayerByCoinbase"]; ok {
 		contractData, err := method.Outputs.UnpackValues(result)
@@ -187,7 +259,6 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 				fromTokens := contractData[4].([]common.Address)
 				toTokens := contractData[5].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
-				logger.Debug("Relayer data:", fromTokens, toTokens)
 				for _, t := range setToken {
 					if utils.IsNativeTokenByAddress(t) {
 						tokenInfo := b.setBaseTokenInfo()
@@ -198,7 +269,7 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 							return nil, err
 						}
 						relayerInfo.Tokens[t] = tokenInfo
-						logger.Debug("Token data:", tokenInfo.Name, tokenInfo.Symbol, tokenInfo.address)
+						logger.Debug("Token data:", tokenInfo.Name, tokenInfo.Symbol)
 					}
 
 				}
@@ -224,6 +295,20 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 	return &relayerInfo, nil
 }
 
+func (b *Blockchain) GetLendingRelayers(contractAddress common.Address) ([]*LendingRInfo, error) {
+	count, _ := b.GetRelayerCount(contractAddress)
+
+	var rLInfos []*LendingRInfo
+	logger.Debug("Lending Relayer count", count.String())
+	for i := int64(0); i < int64(count.Uint64()); i++ {
+		coinbase, _ := b.GetRelayerCoinBaseByIndex(i, contractAddress)
+		rLInfo, _ := b.GetLendingRelayer(coinbase, contractAddress)
+		rLInfos = append(rLInfos, rLInfo)
+	}
+
+	return rLInfos, nil
+}
+
 // GetLendingRelayer return all lending pair in smart contract
 func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddress common.Address) (*LendingRInfo, error) {
 	logger.Debug("GetLendingRelayer:", coinAddress.Hex(), contractAddress.Hex())
@@ -246,11 +331,12 @@ func (b *Blockchain) GetLendingRelayer(coinAddress common.Address, contractAddre
 		logger.Error(err)
 		return nil, err
 	}
-	logger.Debug("lending relayer data: ", result)
+	logger.Debug("lending relayer coinbase:", coinAddress.Hex())
 
 	lendingRInfo := LendingRInfo{
 		ColateralTokens: make(map[common.Address]*TokenInfo),
 		LendingTokens:   make(map[common.Address]*TokenInfo),
+		Address:         coinAddress,
 	}
 
 	if method, ok := abiRelayer.Methods["getLendingRelayerByCoinbase"]; ok {
