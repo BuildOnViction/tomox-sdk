@@ -127,6 +127,7 @@ type PairDao interface {
 	GetListedPairs() ([]types.Pair, error)
 	GetUnlistedPairs() ([]types.Pair, error)
 	DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error
+	DeleteByTokenAndCoinbase(baseAddress common.Address, quoteAddress common.Address, addr common.Address) error
 }
 
 type TradeDao interface {
@@ -162,7 +163,9 @@ type TradeDao interface {
 type TokenDao interface {
 	Create(token *types.Token) error
 	UpdateByToken(contractAddress common.Address, token *types.Token) error
+	UpdateByTokenAndCoinbase(contractAddress common.Address, addr common.Address, token *types.Token) error
 	GetAll() ([]types.Token, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Token, error)
 	GetByID(id bson.ObjectId) (*types.Token, error)
 	GetByAddress(addr common.Address) (*types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
@@ -170,6 +173,7 @@ type TokenDao interface {
 	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
 	DeleteByToken(contractAddress common.Address) error
+	DeleteByTokenAndCoinbase(contractAddress common.Address, addr common.Address) error
 }
 
 type NotificationDao interface {
@@ -275,6 +279,7 @@ type TokenService interface {
 	GetByID(id bson.ObjectId) (*types.Token, error)
 	GetByAddress(a common.Address) (*types.Token, error)
 	GetAll() ([]types.Token, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
 	GetBaseTokens() ([]types.Token, error)
 }

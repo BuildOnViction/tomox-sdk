@@ -19,6 +19,7 @@ type Token struct {
 	Address         common.Address `json:"address" bson:"address"`
 	Image           Image          `json:"image" bson:"image"`
 	ContractAddress common.Address `json:"contractAddress" bson:"contractAddress"`
+	RelayerAddress  common.Address `json:"relayerAddress" bson:"relayerAddress"`
 	Decimals        int            `json:"decimals" bson:"decimals"`
 	Active          bool           `json:"active" bson:"active"`
 	Listed          bool           `json:"listed" bson:"listed"`
@@ -38,6 +39,7 @@ type TokenRecord struct {
 	Symbol          string        `json:"symbol" bson:"symbol"`
 	Image           Image         `json:"image" bson:"image"`
 	ContractAddress string        `json:"contractAddress" bson:"contractAddress"`
+	RelayerAddress  string        `json:"relayerAddress" bson:"relayerAddress"`
 	Decimals        int           `json:"decimals" bson:"decimals"`
 	Active          bool          `json:"active" bson:"active"`
 	Quote           bool          `json:"quote" bson:"quote"`
@@ -102,6 +104,7 @@ func (t *Token) MarshalJSON() ([]byte, error) {
 		"id":              t.ID,
 		"symbol":          t.Symbol,
 		"contractAddress": t.ContractAddress.Hex(),
+		"relayerAddress":  t.RelayerAddress.Hex(),
 		"decimals":        t.Decimals,
 		"image":           t.Image,
 		"active":          t.Active,
@@ -173,6 +176,7 @@ func (t *Token) GetBSON() (interface{}, error) {
 		Symbol:          t.Symbol,
 		Image:           t.Image,
 		ContractAddress: t.ContractAddress.Hex(),
+		RelayerAddress:  t.RelayerAddress.Hex(),
 		Decimals:        t.Decimals,
 		Active:          t.Active,
 		Quote:           t.Quote,
@@ -206,6 +210,9 @@ func (t *Token) SetBSON(raw bson.Raw) error {
 	t.Image = decoded.Image
 	if common.IsHexAddress(decoded.ContractAddress) {
 		t.ContractAddress = common.HexToAddress(decoded.ContractAddress)
+	}
+	if common.IsHexAddress(decoded.RelayerAddress) {
+		t.RelayerAddress = common.HexToAddress(decoded.RelayerAddress)
 	}
 	t.Decimals = decoded.Decimals
 	t.Active = decoded.Active

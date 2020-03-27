@@ -42,7 +42,7 @@ func NewPairDao(options ...PairDaoOption) *PairDao {
 	}
 
 	index := mgo.Index{
-		Key:    []string{"baseTokenAddress", "quoteTokenAddress"},
+		Key:    []string{"baseTokenAddress", "quoteTokenAddress", "relayerAddress"},
 		Unique: true,
 	}
 
@@ -236,5 +236,10 @@ func (dao *PairDao) GetByTokenAddress(baseToken, quoteToken common.Address) (*ty
 // DeleteByToken delete token by contract address
 func (dao *PairDao) DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error {
 	query := bson.M{"baseTokenAddress": baseAddress.Hex(), "quoteTokenAddress": quoteAddress.Hex()}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}
+
+func (dao *PairDao) DeleteByTokenAndCoinbase(baseAddress common.Address, quoteAddress common.Address, addr common.Address) error {
+	query := bson.M{"baseTokenAddress": baseAddress.Hex(), "quoteTokenAddress": quoteAddress.Hex(), "relayerAddress": addr.Hex()}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }

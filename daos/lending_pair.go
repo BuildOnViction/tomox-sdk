@@ -43,7 +43,7 @@ func NewLendingPairDao(options ...LendingPairDaoOption) *LendingPairDao {
 		}
 	}
 	index := mgo.Index{
-		Key:    []string{"lendingTokenAddress", "term"},
+		Key:    []string{"lendingTokenAddress", "term", "relayerAddress"},
 		Unique: true,
 	}
 	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)

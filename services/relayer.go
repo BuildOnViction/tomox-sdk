@@ -40,7 +40,7 @@ func NewRelayerService(
 }
 
 func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
-	currentPairs, err := s.pairDao.GetAll()
+	currentPairs, err := s.pairDao.GetAllByCoinbase(relayerInfo.Address)
 	logger.Info("UpdatePairRelayer starting...")
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 		}
 		if !found {
 			logger.Info("Delete Pair:", currentPair.BaseTokenAddress.Hex(), currentPair.QuoteTokenAddress.Hex())
-			err := s.pairDao.DeleteByToken(currentPair.BaseTokenAddress, currentPair.QuoteTokenAddress)
+			err := s.pairDao.DeleteByTokenAndCoinbase(currentPair.BaseTokenAddress, currentPair.QuoteTokenAddress, relayerInfo.Address)
 			if err == nil {
 				logger.Error(err)
 			}
@@ -95,7 +95,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 }
 
 func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) error {
-	currentPairs, err := s.lendingPairDao.GetAll()
+	currentPairs, err := s.lendingPairDao.GetAllByCoinbase(relayerInfo.Address)
 	logger.Info("UpdatePairRelayer starting...")
 	if err != nil {
 		return err
@@ -145,7 +145,7 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 }
 
 func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
-	currentTokens, err := s.tokenDao.GetAll()
+	currentTokens, err := s.tokenDao.GetAllByCoinbase(relayerInfo.Address)
 	if err != nil {
 		return err
 	}
@@ -160,6 +160,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 		token := &types.Token{
 			Symbol:          v.Symbol,
 			ContractAddress: ntoken,
+			RelayerAddress:  relayerInfo.Address,
 			Decimals:        int(v.Decimals),
 			MakeFee:         big.NewInt(int64(relayerInfo.MakeFee)),
 			TakeFee:         big.NewInt(int64(relayerInfo.TakeFee)),
@@ -172,7 +173,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 			}
 		} else {
 			logger.Info("Update Token:", token.ContractAddress.Hex())
-			err = s.tokenDao.UpdateByToken(ntoken, token)
+			err = s.tokenDao.UpdateByTokenAndCoinbase(ntoken, relayerInfo.Address, token)
 		}
 		for _, ctoken := range currentTokens {
 			found = false
@@ -184,7 +185,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 			}
 			if !found {
 				logger.Info("Delete Token:", ctoken.ContractAddress.Hex)
-				err = s.tokenDao.DeleteByToken(ctoken.ContractAddress)
+				err = s.tokenDao.DeleteByTokenAndCoinbase(ctoken.ContractAddress, relayerInfo.Address)
 				if err != nil {
 					logger.Error(err)
 				}
@@ -195,7 +196,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 }
 
 func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.LendingRInfo) error {
-	currentTokens, err := s.colateralTokenDao.GetAll()
+	currentTokens, err := s.colateralTokenDao.GetAllByCoinbase(relayerInfo.Address)
 	if err != nil {
 		return err
 	}
@@ -210,6 +211,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 		token := &types.Token{
 			Symbol:          v.Symbol,
 			ContractAddress: ntoken,
+			RelayerAddress:  relayerInfo.Address,
 			Decimals:        int(v.Decimals),
 			MakeFee:         big.NewInt(int64(relayerInfo.Fee)),
 			TakeFee:         big.NewInt(int64(relayerInfo.Fee)),
@@ -222,7 +224,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 			}
 		} else {
 			logger.Info("Update collateral token:", token.ContractAddress.Hex())
-			err = s.colateralTokenDao.UpdateByToken(ntoken, token)
+			err = s.colateralTokenDao.UpdateByTokenAndCoinbase(ntoken, relayerInfo.Address, token)
 		}
 		for _, ctoken := range currentTokens {
 			found = false
@@ -234,7 +236,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 			}
 			if !found {
 				logger.Info("Delete collateral token:", ctoken.ContractAddress.Hex)
-				err = s.colateralTokenDao.DeleteByToken(ctoken.ContractAddress)
+				err = s.colateralTokenDao.DeleteByTokenAndCoinbase(ctoken.ContractAddress, relayerInfo.Address)
 				if err != nil {
 					logger.Error(err)
 				}
@@ -245,7 +247,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 }
 
 func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingRInfo) error {
-	currentTokens, err := s.lendingTokenDao.GetAll()
+	currentTokens, err := s.lendingTokenDao.GetAllByCoinbase(relayerInfo.Address)
 	if err != nil {
 		return err
 	}
@@ -260,19 +262,20 @@ func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingR
 		token := &types.Token{
 			Symbol:          v.Symbol,
 			ContractAddress: ntoken,
+			RelayerAddress:  relayerInfo.Address,
 			Decimals:        int(v.Decimals),
 			MakeFee:         big.NewInt(int64(relayerInfo.Fee)),
 			TakeFee:         big.NewInt(int64(relayerInfo.Fee)),
 		}
 		if !found {
-			logger.Info("Create collateral token:", token.ContractAddress.Hex())
+			logger.Info("Create lending token:", token.ContractAddress.Hex())
 			err = s.lendingTokenDao.Create(token)
 			if err != nil {
 				logger.Error(err)
 			}
 		} else {
-			logger.Info("Update collateral token:", token.ContractAddress.Hex())
-			err = s.lendingTokenDao.UpdateByToken(ntoken, token)
+			logger.Info("Update lending token:", token.ContractAddress.Hex())
+			err = s.lendingTokenDao.UpdateByTokenAndCoinbase(ntoken, relayerInfo.Address, token)
 		}
 		for _, ctoken := range currentTokens {
 			found = false
@@ -283,8 +286,8 @@ func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingR
 				}
 			}
 			if !found {
-				logger.Info("Delete collateral token:", ctoken.ContractAddress.Hex)
-				err = s.lendingTokenDao.DeleteByToken(ctoken.ContractAddress)
+				logger.Info("Delete lending token:", ctoken.ContractAddress.Hex)
+				err = s.lendingTokenDao.DeleteByTokenAndCoinbase(ctoken.ContractAddress, relayerInfo.Address)
 				if err != nil {
 					logger.Error(err)
 				}

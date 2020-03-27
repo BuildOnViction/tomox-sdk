@@ -24,7 +24,7 @@ func NewTokenDao() *TokenDao {
 	dbName := app.Config.DBName
 	collection := "tokens"
 	index := mgo.Index{
-		Key:    []string{"contractAddress"},
+		Key:    []string{"contractAddress", "relayerAddress"},
 		Unique: true,
 	}
 
@@ -38,7 +38,7 @@ func NewLendingTokenDao() *TokenDao {
 	dbName := app.Config.DBName
 	collection := "lending_tokens"
 	index := mgo.Index{
-		Key:    []string{"contractAddress"},
+		Key:    []string{"contractAddress", "relayerAddress"},
 		Unique: true,
 	}
 
@@ -52,7 +52,7 @@ func NewCollateralTokenDao() *TokenDao {
 	dbName := app.Config.DBName
 	collection := "collateral_tokens"
 	index := mgo.Index{
-		Key:    []string{"contractAddress"},
+		Key:    []string{"contractAddress", "relayerAddress"},
 		Unique: true,
 	}
 	db.Session.DB(dbName).C(collection).EnsureIndex(index)
@@ -81,8 +81,30 @@ func (dao *TokenDao) Create(token *types.Token) error {
 
 // GetAll function fetches all the tokens in the token collection of mongodb.
 func (dao *TokenDao) GetAll() ([]types.Token, error) {
+	var res []types.Token
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	ret := []types.Token{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.ContractAddress.Hex()
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
+}
+
+func (dao *TokenDao) GetAllByCoinbase(addr common.Address) ([]types.Token, error) {
 	var response []types.Token
-	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &response)
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{"relayerAddress": addr.Hex()}, 0, 0, &response)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -176,6 +198,24 @@ func (dao *TokenDao) UpdateByToken(addr common.Address, token *types.Token) erro
 	return nil
 }
 
+func (dao *TokenDao) UpdateByTokenAndCoinbase(addr common.Address, coinbase common.Address, token *types.Token) error {
+	q := bson.M{"contractAddress": addr.Hex(), "relayerAddress": coinbase.Hex()}
+
+	update := bson.M{
+		"$set": bson.M{
+			"makeFee": token.MakeFee.String(),
+			"takeFee": token.TakeFee.String(),
+		},
+	}
+	err := db.Update(dao.dbName, dao.collectionName, q, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
 // Drop drops all the order documents in the current database
 func (dao *TokenDao) Drop() error {
 	err := db.DropCollection(dao.dbName, dao.collectionName)
@@ -190,5 +230,10 @@ func (dao *TokenDao) Drop() error {
 // DeleteByToken delete token by contract address
 func (dao *TokenDao) DeleteByToken(contractAddress common.Address) error {
 	query := bson.M{"contractAddress": contractAddress.Hex()}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}
+
+func (dao *TokenDao) DeleteByTokenAndCoinbase(contractAddress common.Address, addr common.Address) error {
+	query := bson.M{"contractAddress": contractAddress.Hex(), "relayerAddress": addr.Hex()}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }
