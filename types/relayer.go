@@ -2,20 +2,25 @@ package types
 
 import (
 	"encoding/json"
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-ozzo/ozzo-validation"
+	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
 // Relayer corresponds to a single Ethereum address. It contains a list of token balances for that address
 type Relayer struct {
-	ID        bson.ObjectId  `json:"-" bson:"_id"`
-	Address   common.Address `json:"address" bson:"address"`
-	Domain    string         `json:"domain" bson:"domain"`
-	CreatedAt time.Time      `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt" bson:"updatedAt"`
+	ID         bson.ObjectId  `json:"-" bson:"_id"`
+	Address    common.Address `json:"address" bson:"address"`
+	Domain     string         `json:"domain" bson:"domain"`
+	MakeFee    *big.Int       `json:"makeFee,omitempty" bson:"makeFee,omitempty"`
+	TakeFee    *big.Int       `json:"takeFee,omitempty" bson:"makeFee,omitempty"`
+	LendingFee *big.Int       `json:"lendingFee,omitempty" bson:"lendingFee,omitempty"`
+	CreatedAt  time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
 // GetBSON implements bson.Getter
@@ -31,6 +36,18 @@ func (a *Relayer) GetBSON() (interface{}, error) {
 		ar.ID = bson.NewObjectId()
 	} else {
 		ar.ID = a.ID
+	}
+
+	if a.MakeFee != nil {
+		ar.MakeFee = a.MakeFee.String()
+	}
+
+	if a.TakeFee != nil {
+		ar.TakeFee = a.TakeFee.String()
+	}
+
+	if a.LendingFee != nil {
+		ar.LendingFee = a.LendingFee.String()
 	}
 
 	return ar, nil
@@ -50,13 +67,24 @@ func (a *Relayer) SetBSON(raw bson.Raw) error {
 	a.Domain = decoded.Domain
 	a.CreatedAt = decoded.CreatedAt
 	a.UpdatedAt = decoded.UpdatedAt
+	if decoded.MakeFee != "" {
+		a.MakeFee = math.ToBigInt(decoded.MakeFee)
+	}
+
+	if decoded.TakeFee != "" {
+		a.TakeFee = math.ToBigInt(decoded.TakeFee)
+	}
+
+	if decoded.LendingFee != "" {
+		a.LendingFee = math.ToBigInt(decoded.LendingFee)
+	}
 
 	return nil
 }
 
 // MarshalJSON implements the json.Marshal interface
 func (a *Relayer) MarshalJSON() ([]byte, error) {
-	account := map[string]interface{}{
+	relayer := map[string]interface{}{
 		"id":        a.ID,
 		"address":   a.Address,
 		"domain":    a.Domain,
@@ -64,32 +92,56 @@ func (a *Relayer) MarshalJSON() ([]byte, error) {
 		"updatedAt": a.UpdatedAt.String(),
 	}
 
-	return json.Marshal(account)
+	if a.MakeFee != nil {
+		relayer["makeFee"] = a.MakeFee.String()
+	}
+
+	if a.TakeFee != nil {
+		relayer["takeFee"] = a.TakeFee.String()
+	}
+
+	if a.LendingFee != nil {
+		relayer["lendingFee"] = a.LendingFee.String()
+	}
+
+	return json.Marshal(relayer)
 }
 
 func (a *Relayer) UnmarshalJSON(b []byte) error {
-	account := map[string]interface{}{}
-	err := json.Unmarshal(b, &account)
+	relayer := map[string]interface{}{}
+	err := json.Unmarshal(b, &relayer)
 	if err != nil {
 		return err
 	}
 
-	if account["id"] != nil && bson.IsObjectIdHex(account["id"].(string)) {
-		a.ID = bson.ObjectIdHex(account["id"].(string))
+	if relayer["id"] != nil && bson.IsObjectIdHex(relayer["id"].(string)) {
+		a.ID = bson.ObjectIdHex(relayer["id"].(string))
 	}
 
-	if account["address"] != nil {
-		a.Address = common.HexToAddress(account["address"].(string))
+	if relayer["address"] != nil {
+		a.Address = common.HexToAddress(relayer["address"].(string))
 	}
 
-	if account["domain"] != nil {
-		a.Domain = account["domain"].(string)
+	if relayer["domain"] != nil {
+		a.Domain = relayer["domain"].(string)
+	}
+
+	if relayer["makeFee"] != nil {
+		a.MakeFee = math.ToBigInt(relayer["makeFee"].(string))
+	}
+
+	if relayer["takeFee"] != nil {
+		a.TakeFee = math.ToBigInt(relayer["takeFee"].(string))
+	}
+
+	if relayer["lendingFee"] != nil {
+		a.LendingFee = math.ToBigInt(relayer["lendingFee"].(string))
 	}
 
 	return nil
 }
 
-// Validate enforces the account model
+// Validate enforces the relayer model
 func (a Relayer) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Address, validation.Required),
@@ -98,11 +150,14 @@ func (a Relayer) Validate() error {
 
 // RelayerRecord corresponds to what is stored in the DB. big.Ints are encoded as strings
 type RelayerRecord struct {
-	ID        bson.ObjectId `json:"id" bson:"_id"`
-	Address   string        `json:"address" bson:"address"`
-	Domain    string        `json:"domain" bson:"domain"`
-	CreatedAt time.Time     `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time     `json:"updatedAt" bson:"updatedAt"`
+	ID         bson.ObjectId `json:"id" bson:"_id"`
+	Address    string        `json:"address" bson:"address"`
+	Domain     string        `json:"domain" bson:"domain"`
+	MakeFee    string        `json:"makeFee,omitempty" bson:"makeFee,omitempty"`
+	TakeFee    string        `json:"takeFee,omitempty" bson:"takeFee,omitempty"`
+	LendingFee string        `json:"lendingFee,omitempty" bson:"lendingFee,omitempty"`
+	CreatedAt  time.Time     `json:"createdAt" bson:"createdAt"`
+	UpdatedAt  time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
 
 type RelayerBSONUpdate struct {

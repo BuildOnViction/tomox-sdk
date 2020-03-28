@@ -90,6 +90,7 @@ type RelayerDao interface {
 	Create(account *types.Relayer) (err error)
 	GetAll() (res []types.Relayer, err error)
 	DeleteByAddress(addr common.Address) error
+	UpdateByAddress(addr common.Address, relayer *types.Relayer) error
 }
 
 type ConfigDao interface {

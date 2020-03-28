@@ -146,7 +146,7 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 	return nil
 }
 
-func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo) error {
+func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRelayerInfos []*relayer.LendingRInfo) error {
 	currentRelayers, err := s.relayerDao.GetAll()
 	if err != nil {
 		return err
@@ -161,14 +161,30 @@ func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo) error {
 				break
 			}
 		}
-		if !found {
-			domain := r.Address.Hex() + ".devnet.tomochain.com"
-			relayer := &types.Relayer{
-				Domain:  domain,
-				Address: r.Address,
+		lendingFee := uint16(0)
+		for _, l := range lendingRelayerInfos {
+			if l.Address.Hex() == r.Address.Hex() {
+				lendingFee = l.Fee
+				break
 			}
+		}
+		domain := r.Address.Hex() + ".devnet.tomochain.com"
+		relayer := &types.Relayer{
+			Domain:     domain,
+			Address:    r.Address,
+			MakeFee:    big.NewInt(int64(r.MakeFee)),
+			TakeFee:    big.NewInt(int64(r.TakeFee)),
+			LendingFee: big.NewInt(int64(lendingFee)),
+		}
+		if !found {
 			logger.Info("Create relayer:", r.Address.Hex())
 			err = s.relayerDao.Create(relayer)
+			if err != nil {
+				logger.Error(err)
+			}
+		} else {
+			logger.Info("Update relayer:", r.Address.Hex())
+			err = s.relayerDao.UpdateByAddress(r.Address, relayer)
 			if err != nil {
 				logger.Error(err)
 			}
@@ -371,7 +387,6 @@ func (s *RelayerService) UpdateRelayers() error {
 	if err != nil {
 		return err
 	}
-	s.updateRelayers(relayerInfos)
 	for _, relayerInfo := range relayerInfos {
 		s.updateTokenRelayer(relayerInfo)
 		s.updatePairRelayer(relayerInfo)
@@ -386,5 +401,6 @@ func (s *RelayerService) UpdateRelayers() error {
 		s.updateCollateralTokenRelayer(relayerLendingInfo)
 		s.updateLendingTokenRelayer(relayerLendingInfo)
 	}
+	s.updateRelayers(relayerInfos, relayerLendingInfos)
 	return nil
 }

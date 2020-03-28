@@ -104,3 +104,23 @@ func (dao *RelayerDao) DeleteByAddress(addr common.Address) error {
 	query := bson.M{"address": addr.Hex()}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }
+
+func (dao *RelayerDao) UpdateByAddress(addr common.Address, relayer *types.Relayer) error {
+	q := bson.M{"address": addr.Hex()}
+
+	update := bson.M{
+		"$set": bson.M{
+			"makeFee":    relayer.MakeFee.String(),
+			"takeFee":    relayer.TakeFee.String(),
+			"lendingFee": relayer.LendingFee.String(),
+			"domain":     relayer.Domain,
+		},
+	}
+	err := db.Update(dao.dbName, dao.collectionName, q, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
