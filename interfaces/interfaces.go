@@ -86,6 +86,12 @@ type AccountDao interface {
 	DeleteFavoriteToken(owner, token common.Address) error
 }
 
+type RelayerDao interface {
+	Create(account *types.Relayer) (err error)
+	GetAll() (res []types.Relayer, err error)
+	DeleteByAddress(addr common.Address) error
+}
+
 type ConfigDao interface {
 	GetSchemaVersion() uint64
 	GetAddressIndex(chain types.Chain) (uint64, error)

@@ -17,6 +17,7 @@ type RelayerService struct {
 	lendingTokenDao   interfaces.TokenDao
 	pairDao           interfaces.PairDao
 	lendingPairDao    interfaces.LendingPairDao
+	relayerDao        interfaces.RelayerDao
 }
 
 // NewRelayerService returns a new instance of orderservice
@@ -27,7 +28,7 @@ func NewRelayerService(
 	lendingTokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
 	lendingPairDao interfaces.LendingPairDao,
-
+	relayerDao interfaces.RelayerDao,
 ) *RelayerService {
 	return &RelayerService{
 		relaye,
@@ -36,6 +37,7 @@ func NewRelayerService(
 		lendingTokenDao,
 		pairDao,
 		lendingPairDao,
+		relayerDao,
 	}
 }
 
@@ -137,6 +139,54 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 			logger.Info("Delete Pair:", currentPair.Term, currentPair.LendingTokenAddress.Hex())
 			err := s.lendingPairDao.DeleteByLendingKey(currentPair.Term, currentPair.LendingTokenAddress)
 			if err == nil {
+				logger.Error(err)
+			}
+		}
+	}
+	return nil
+}
+
+func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo) error {
+	currentRelayers, err := s.relayerDao.GetAll()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, r := range relayerInfos {
+		found = false
+		for _, v := range currentRelayers {
+			if v.Address.Hex() == r.Address.Hex() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			domain := r.Address.Hex() + ".devnet.tomochain.com"
+			relayer := &types.Relayer{
+				Domain:  domain,
+				Address: r.Address,
+			}
+			logger.Info("Create relayer:", r.Address.Hex())
+			err = s.relayerDao.Create(relayer)
+			if err != nil {
+				logger.Error(err)
+			}
+		}
+	}
+
+	for _, r := range currentRelayers {
+		found = false
+		for _, v := range relayerInfos {
+			if v.Address.Hex() == r.Address.Hex() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			logger.Info("Delete relayer:", r.Address.Hex)
+			err = s.relayerDao.DeleteByAddress(r.Address)
+			if err != nil {
 				logger.Error(err)
 			}
 		}
@@ -321,6 +371,7 @@ func (s *RelayerService) UpdateRelayers() error {
 	if err != nil {
 		return err
 	}
+	s.updateRelayers(relayerInfos)
 	for _, relayerInfo := range relayerInfos {
 		s.updateTokenRelayer(relayerInfo)
 		s.updatePairRelayer(relayerInfo)
