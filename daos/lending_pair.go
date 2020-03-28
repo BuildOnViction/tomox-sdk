@@ -77,7 +77,7 @@ func (dao *LendingPairDao) GetAll() ([]types.LendingPair, error) {
 	keys := make(map[string]bool)
 
 	for _, it := range res {
-		code := it.LendingTokenAddress.Hex() + "::" + string(it.Term)
+		code := it.LendingTokenAddress.Hex() + "::" + strconv.FormatUint(it.Term, 10)
 		if _, value := keys[code]; !value {
 			keys[code] = true
 			ret = append(ret, it)

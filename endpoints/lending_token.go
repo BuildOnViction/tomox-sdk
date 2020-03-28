@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
 )
@@ -30,7 +31,13 @@ func ServeLendingTokenResource(
 	r.HandleFunc("/api/lending/terms", e.handleGetTerms).Methods("GET")
 }
 func (e *lendingTokenEndpoint) handleGetTerms(w http.ResponseWriter, r *http.Request) {
-	res, err := e.lendingPairservice.GetAll()
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+	ex := common.HexToAddress(relayerAddress)
+	res, err := e.lendingPairservice.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -47,7 +54,13 @@ func (e *lendingTokenEndpoint) handleGetTerms(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, t)
 }
 func (e *lendingTokenEndpoint) handleGetCollateralTokens(w http.ResponseWriter, r *http.Request) {
-	res, err := e.collateralTokenService.GetAll()
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+	ex := common.HexToAddress(relayerAddress)
+	res, err := e.collateralTokenService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -80,7 +93,13 @@ func (e *lendingTokenEndpoint) handleGetCollateralToken(w http.ResponseWriter, r
 }
 
 func (e *lendingTokenEndpoint) handleGetLendingTokens(w http.ResponseWriter, r *http.Request) {
-	res, err := e.lendingTokenService.GetAll()
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+	ex := common.HexToAddress(relayerAddress)
+	res, err := e.lendingTokenService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())

@@ -31,7 +31,7 @@ func ServeInfoResource(
 func (e *infoEndpoint) handleGetInfo(w http.ResponseWriter, r *http.Request) {
 	ex := common.HexToAddress(app.Config.Tomochain["exchange_address"])
 
-	quotes, err := e.tokenService.GetAll()
+	quotes, err := e.tokenService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 	}
