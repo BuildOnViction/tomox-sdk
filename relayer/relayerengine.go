@@ -295,14 +295,14 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 	return &relayerInfo, nil
 }
 
-func (b *Blockchain) GetLendingRelayers(contractAddress common.Address) ([]*LendingRInfo, error) {
-	count, _ := b.GetRelayerCount(contractAddress)
+func (b *Blockchain) GetLendingRelayers(registrationAddress common.Address, lendingAddress common.Address) ([]*LendingRInfo, error) {
+	count, _ := b.GetRelayerCount(registrationAddress)
 
 	var rLInfos []*LendingRInfo
 	logger.Debug("Lending Relayer count", count.String())
 	for i := int64(0); i < int64(count.Uint64()); i++ {
-		coinbase, _ := b.GetRelayerCoinBaseByIndex(i, contractAddress)
-		rLInfo, _ := b.GetLendingRelayer(coinbase, contractAddress)
+		coinbase, _ := b.GetRelayerCoinBaseByIndex(i, registrationAddress)
+		rLInfo, _ := b.GetLendingRelayer(coinbase, lendingAddress)
 		rLInfos = append(rLInfos, rLInfo)
 	}
 

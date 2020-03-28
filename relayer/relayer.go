@@ -75,5 +75,5 @@ func (r *Relayer) GetLendings() ([]*LendingRInfo, error) {
 	}
 	ethclient := ethclient.NewClient(client)
 	bc := NewBlockchain(client, ethclient, signer)
-	return bc.GetLendingRelayers(r.relayerAddress)
+	return bc.GetLendingRelayers(r.relayerAddress, r.lendingRelayerAddress)
 }
