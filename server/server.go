@@ -136,11 +136,18 @@ func NewRouter(
 	lendingMarketService := services.NewLendingMarketsService(lengdingPairDao, lendingOhlcvService)
 	lendingPairService := services.NewLendingPairService(lengdingPairDao)
 	lendingPriceboardService := services.NewLendingPriceBoardService(lendingPairService, lendingOhlcvService)
+
+	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
+	contractAddress := common.HexToAddress(app.Config.Tomochain["exchange_contract_address"])
+	lendingContractAddress := common.HexToAddress(app.Config.Tomochain["lending_contract_address"])
+	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress, lendingContractAddress)
+	relayerService := services.NewRelayerService(relayerEngine, tokenDao, tokenCollateralDao, tokenLendingDao, pairDao, lengdingPairDao, relayerDao)
+
 	// deploy http and ws endpoints
-	endpoints.ServeInfoResource(r, walletService, tokenService)
+	endpoints.ServeInfoResource(r, walletService, tokenService, relayerService)
 	endpoints.ServeAccountResource(r, accountService)
-	endpoints.ServeTokenResource(r, tokenService)
-	endpoints.ServePairResource(r, pairService)
+	endpoints.ServeTokenResource(r, tokenService, relayerService)
+	endpoints.ServePairResource(r, pairService, relayerService)
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 
@@ -153,9 +160,9 @@ func NewRouter(
 
 	// Endpoint for lending
 
-	endpoints.ServeLendingTokenResource(r, tokenCollateralService, tokenLendingService, lendingPairService)
+	endpoints.ServeLendingTokenResource(r, tokenCollateralService, tokenLendingService, lendingPairService, relayerService)
 
-	endpoints.ServeLendingPairResource(r, lendingPairService)
+	endpoints.ServeLendingPairResource(r, lendingPairService, relayerService)
 	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
 	endpoints.ServeLendingTradeResource(r, lendingTradeService)
 	endpoints.ServeLendingOrderResource(r, lendingOrderService)
@@ -163,12 +170,6 @@ func NewRouter(
 	endpoints.ServeLendingMarketsResource(r, lendingMarketService, lendingOhlcvService)
 	endpoints.ServeLendingPriceBoardResource(r, lendingPriceboardService)
 
-	exchangeAddress := common.HexToAddress(app.Config.Tomochain["exchange_address"])
-	contractAddress := common.HexToAddress(app.Config.Tomochain["exchange_contract_address"])
-	lendingContractAddress := common.HexToAddress(app.Config.Tomochain["lending_contract_address"])
-	relayerEngine := relayer.NewRelayer(app.Config.Tomochain["http_url"], exchangeAddress, contractAddress, lendingContractAddress)
-
-	relayerService := services.NewRelayerService(relayerEngine, tokenDao, tokenCollateralDao, tokenLendingDao, pairDao, lengdingPairDao, relayerDao)
 	endpoints.ServeRelayerResource(r, relayerService)
 
 	// Swagger UI

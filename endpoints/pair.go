@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/gorilla/mux"
-	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/services"
 	"github.com/tomochain/tomox-sdk/types"
@@ -15,15 +14,17 @@ import (
 )
 
 type pairEndpoint struct {
-	pairService interfaces.PairService
+	pairService    interfaces.PairService
+	relayerService interfaces.RelayerService
 }
 
 // ServePairResource sets up the routing of pair endpoints and the corresponding handlers.
 func ServePairResource(
 	r *mux.Router,
 	p interfaces.PairService,
+	rl interfaces.RelayerService,
 ) {
-	e := &pairEndpoint{p}
+	e := &pairEndpoint{p, rl}
 	r.HandleFunc("/api/pairs", e.HandleGetPairs).Methods("GET")
 	r.HandleFunc("/api/pair", e.HandleGetPair).Methods("GET")
 	r.HandleFunc("/api/pair", e.HandleCreatePair).Methods("POST")
@@ -76,12 +77,9 @@ func (e *pairEndpoint) HandleCreatePair(w http.ResponseWriter, r *http.Request) 
 }
 
 func (e *pairEndpoint) HandleGetPairs(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	relayerAddress := v.Get("relayerAddress")
-	if relayerAddress == "" {
-		relayerAddress = app.Config.Tomochain["exchange_address"]
-	}
-	ex := common.HexToAddress(relayerAddress)
+
+	ex := e.relayerService.GetRelayerAddress(r)
+
 	res, err := e.pairService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)

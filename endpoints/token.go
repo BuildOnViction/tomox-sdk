@@ -16,15 +16,17 @@ import (
 )
 
 type tokenEndpoint struct {
-	tokenService interfaces.TokenService
+	tokenService   interfaces.TokenService
+	relayerService interfaces.RelayerService
 }
 
 // ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
 func ServeTokenResource(
 	r *mux.Router,
 	tokenService interfaces.TokenService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &tokenEndpoint{tokenService}
+	e := &tokenEndpoint{tokenService, relayerService}
 	r.HandleFunc("/api/tokens/base", e.HandleGetBaseTokens).Methods("GET")
 	r.HandleFunc("/api/tokens/quote", e.HandleGetQuoteTokens).Methods("GET")
 	r.HandleFunc("/api/tokens/{address}", e.HandleGetToken).Methods("GET")
@@ -63,12 +65,7 @@ func (e *tokenEndpoint) HandleCreateToken(w http.ResponseWriter, r *http.Request
 }
 
 func (e *tokenEndpoint) HandleGetTokens(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	relayerAddress := v.Get("relayerAddress")
-	if relayerAddress == "" {
-		relayerAddress = app.Config.Tomochain["exchange_address"]
-	}
-	ex := common.HexToAddress(relayerAddress)
+	ex := e.relayerService.GetRelayerAddress(r)
 	res, err := e.tokenService.GetAllByCoinbase(ex)
 
 	if err != nil {

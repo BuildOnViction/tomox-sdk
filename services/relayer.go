@@ -2,11 +2,15 @@ package services
 
 import (
 	"math/big"
+	"net/http"
 
 	"github.com/tomochain/tomox-sdk/relayer"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
+	"github.com/tomochain/tomox-sdk/utils"
 )
 
 // RelayerService struct
@@ -39,6 +43,28 @@ func NewRelayerService(
 		lendingPairDao,
 		relayerDao,
 	}
+}
+
+func (s *RelayerService) GetByAddress(addr common.Address) (*types.Relayer, error) {
+	return s.relayerDao.GetByAddress(addr)
+}
+
+func (s *RelayerService) GetRelayerAddress(r *http.Request) common.Address {
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+
+	if relayerAddress == "" {
+		relayer, _ := s.relayerDao.GetByHost(r.Host)
+		if relayer != nil {
+			relayerAddress = relayer.Address.Hex()
+		}
+	}
+
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+
+	return common.HexToAddress(relayerAddress)
 }
 
 func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
@@ -168,7 +194,7 @@ func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRe
 				break
 			}
 		}
-		domain := r.Address.Hex() + ".devnet.tomochain.com"
+		domain := utils.GetSubDomainFromAddress(r.Address) + ".devnet.tomochain.com"
 		relayer := &types.Relayer{
 			Domain:     domain,
 			Address:    r.Address,

@@ -100,6 +100,22 @@ func (dao *RelayerDao) GetByAddress(owner common.Address) (*types.Relayer, error
 	return &res[0], nil
 }
 
+func (dao *RelayerDao) GetByHost(host string) (*types.Relayer, error) {
+	res := []types.Relayer{}
+	q := bson.M{"domain": host}
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if len(res) == 0 {
+		return nil, nil
+	}
+
+	return &res[0], nil
+}
+
 func (dao *RelayerDao) DeleteByAddress(addr common.Address) error {
 	query := bson.M{"address": addr.Hex()}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)

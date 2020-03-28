@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"net/http"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -87,8 +88,10 @@ type AccountDao interface {
 }
 
 type RelayerDao interface {
-	Create(account *types.Relayer) (err error)
+	Create(relayer *types.Relayer) (err error)
 	GetAll() (res []types.Relayer, err error)
+	GetByHost(host string) (relayer *types.Relayer, err error)
+	GetByAddress(addr common.Address) (relayer *types.Relayer, err error)
 	DeleteByAddress(addr common.Address) error
 	UpdateByAddress(addr common.Address, relayer *types.Relayer) error
 }
@@ -393,6 +396,9 @@ type EthereumProvider interface {
 // RelayerService interface for relayer
 type RelayerService interface {
 	UpdateRelayer() error
+	UpdateRelayers() error
+	GetRelayerAddress(r *http.Request) common.Address
+	GetByAddress(addr common.Address) (*types.Relayer, error)
 }
 
 // Relayer interface for relayer

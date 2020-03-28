@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
 )
@@ -14,6 +13,7 @@ type lendingTokenEndpoint struct {
 	collateralTokenService interfaces.TokenService
 	lendingTokenService    interfaces.TokenService
 	lendingPairservice     interfaces.LendingPairService
+	relayerService         interfaces.RelayerService
 }
 
 // ServeLendingTokenResource sets up the routing of token endpoints and the corresponding handlers.
@@ -22,8 +22,9 @@ func ServeLendingTokenResource(
 	collateralTokenService interfaces.TokenService,
 	lendingTokenService interfaces.TokenService,
 	lendingPairservice interfaces.LendingPairService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &lendingTokenEndpoint{collateralTokenService, lendingTokenService, lendingPairservice}
+	e := &lendingTokenEndpoint{collateralTokenService, lendingTokenService, lendingPairservice, relayerService}
 	r.HandleFunc("/api/lending/collateraltoken/{address}", e.handleGetCollateralToken).Methods("GET")
 	r.HandleFunc("/api/lending/collateraltoken", e.handleGetCollateralTokens).Methods("GET")
 	r.HandleFunc("/api/lending/lendingtoken/{address}", e.handleGetLendingToken).Methods("GET")
@@ -31,12 +32,7 @@ func ServeLendingTokenResource(
 	r.HandleFunc("/api/lending/terms", e.handleGetTerms).Methods("GET")
 }
 func (e *lendingTokenEndpoint) handleGetTerms(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	relayerAddress := v.Get("relayerAddress")
-	if relayerAddress == "" {
-		relayerAddress = app.Config.Tomochain["exchange_address"]
-	}
-	ex := common.HexToAddress(relayerAddress)
+	ex := e.relayerService.GetRelayerAddress(r)
 	res, err := e.lendingPairservice.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
@@ -54,12 +50,7 @@ func (e *lendingTokenEndpoint) handleGetTerms(w http.ResponseWriter, r *http.Req
 	httputils.WriteJSON(w, http.StatusOK, t)
 }
 func (e *lendingTokenEndpoint) handleGetCollateralTokens(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	relayerAddress := v.Get("relayerAddress")
-	if relayerAddress == "" {
-		relayerAddress = app.Config.Tomochain["exchange_address"]
-	}
-	ex := common.HexToAddress(relayerAddress)
+	ex := e.relayerService.GetRelayerAddress(r)
 	res, err := e.collateralTokenService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
@@ -93,12 +84,7 @@ func (e *lendingTokenEndpoint) handleGetCollateralToken(w http.ResponseWriter, r
 }
 
 func (e *lendingTokenEndpoint) handleGetLendingTokens(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	relayerAddress := v.Get("relayerAddress")
-	if relayerAddress == "" {
-		relayerAddress = app.Config.Tomochain["exchange_address"]
-	}
-	ex := common.HexToAddress(relayerAddress)
+	ex := e.relayerService.GetRelayerAddress(r)
 	res, err := e.lendingTokenService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)

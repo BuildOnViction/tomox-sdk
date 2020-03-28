@@ -3,9 +3,7 @@ package endpoints
 import (
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
-	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
@@ -13,24 +11,21 @@ import (
 
 type lendingPairEndpoint struct {
 	lendingPairService interfaces.LendingPairService
+	relayerService     interfaces.RelayerService
 }
 
 // ServeLendingPairResource sets up the routing of pair endpoints and the corresponding handlers.
 func ServeLendingPairResource(
 	r *mux.Router,
 	p interfaces.LendingPairService,
+	rl interfaces.RelayerService,
 ) {
-	e := &lendingPairEndpoint{p}
+	e := &lendingPairEndpoint{p, rl}
 	r.HandleFunc("/api/lending/pairs", e.HandleGetLendingPairs).Methods("GET")
 }
 
 func (e *lendingPairEndpoint) HandleGetLendingPairs(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	relayerAddress := v.Get("relayerAddress")
-	if relayerAddress == "" {
-		relayerAddress = app.Config.Tomochain["exchange_address"]
-	}
-	ex := common.HexToAddress(relayerAddress)
+	ex := e.relayerService.GetRelayerAddress(r)
 	res, err := e.lendingPairService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)

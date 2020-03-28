@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/big"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -225,4 +226,21 @@ func ToBigInt(s string) *big.Int {
 	res := big.NewInt(0)
 	res.SetString(s, 10)
 	return res
+}
+
+func GetSubDomainFromAddress(addr common.Address) string {
+	sub := addr.Hex()
+	sub = strings.TrimPrefix(sub, "0x")
+	sub = strings.ToLower(sub)
+	reg, err := regexp.Compile("[^a-z]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sub = reg.ReplaceAllString(sub, "")
+	if len(sub) > 8 {
+		sub = sub[len(sub)-8:]
+	}
+
+	return sub
 }
