@@ -1,7 +1,6 @@
 package daos
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/globalsign/mgo"
