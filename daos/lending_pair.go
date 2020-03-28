@@ -110,6 +110,11 @@ func (dao *LendingPairDao) DeleteByLendingKey(term uint64, lendingAddress common
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }
 
+func (dao *LendingPairDao) DeleteByLendingKeyAndCoinbase(term uint64, lendingAddress common.Address, addr common.Address) error {
+	query := bson.M{"relayerAddress": addr.Hex(), "lendingTokenAddress": lendingAddress.Hex(), "term": strconv.FormatUint(term, 10)}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}
+
 // GetByLendingID get pair from lending token and term
 func (dao *LendingPairDao) GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error) {
 	var res types.LendingPair

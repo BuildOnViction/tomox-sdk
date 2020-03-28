@@ -470,6 +470,7 @@ type LendingPairDao interface {
 	GetAll() ([]types.LendingPair, error)
 	GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error)
 	DeleteByLendingKey(term uint64, lendingAddress common.Address) error
+	DeleteByLendingKeyAndCoinbase(term uint64, lendingAddress common.Address, addr common.Address) error
 	GetByLendingID(term uint64, lendingToken common.Address) (*types.LendingPair, error)
 }
 

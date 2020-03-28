@@ -98,7 +98,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 
 func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) error {
 	currentPairs, err := s.lendingPairDao.GetAllByCoinbase(relayerInfo.Address)
-	logger.Info("UpdatePairRelayer starting...")
+	logger.Info("UpdateLendingPairRelayer starting...")
 	if err != nil {
 		return err
 	}
