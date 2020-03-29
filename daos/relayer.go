@@ -129,6 +129,9 @@ func (dao *RelayerDao) UpdateByAddress(addr common.Address, relayer *types.Relay
 			"makeFee":    relayer.MakeFee.String(),
 			"takeFee":    relayer.TakeFee.String(),
 			"lendingFee": relayer.LendingFee.String(),
+			"deposit":    relayer.Deposit.String(),
+			"owner":      relayer.Owner.Hex(),
+			"rid":        relayer.RID,
 		},
 	}
 	err := db.Update(dao.dbName, dao.collectionName, q, update)

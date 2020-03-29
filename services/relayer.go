@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"math/big"
 	"net/http"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
-	"github.com/tomochain/tomox-sdk/utils"
 )
 
 // RelayerService struct
@@ -194,9 +194,12 @@ func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRe
 				break
 			}
 		}
-		domain := utils.GetSubDomainFromAddress(r.Address) + ".devnet.tomochain.com"
+		domain := fmt.Sprintf("%03d", r.RID) + "." + app.Config.Tomochain["domain_suffix"]
 		relayer := &types.Relayer{
 			Domain:     domain,
+			RID:        r.RID,
+			Owner:      r.Owner,
+			Deposit:    r.Deposit,
 			Address:    r.Address,
 			MakeFee:    big.NewInt(int64(r.MakeFee)),
 			TakeFee:    big.NewInt(int64(r.TakeFee)),

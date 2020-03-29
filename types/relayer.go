@@ -14,6 +14,9 @@ import (
 // Relayer corresponds to a single Ethereum address. It contains a list of token balances for that address
 type Relayer struct {
 	ID         bson.ObjectId  `json:"-" bson:"_id"`
+	RID        int            `json:"rid" bson:"rid"`
+	Owner      common.Address `json:"owner" bson:"owner"`
+	Deposit    *big.Int       `json:"deposit" bson:"deposit"`
 	Address    common.Address `json:"address" bson:"address"`
 	Domain     string         `json:"domain" bson:"domain"`
 	MakeFee    *big.Int       `json:"makeFee,omitempty" bson:"makeFee,omitempty"`
@@ -26,6 +29,9 @@ type Relayer struct {
 // GetBSON implements bson.Getter
 func (a *Relayer) GetBSON() (interface{}, error) {
 	ar := RelayerRecord{
+		RID:       a.RID,
+		Owner:     a.Owner.Hex(),
+		Deposit:   a.Deposit.String(),
 		Domain:    a.Domain,
 		Address:   a.Address.Hex(),
 		CreatedAt: a.CreatedAt,
@@ -63,6 +69,9 @@ func (a *Relayer) SetBSON(raw bson.Raw) error {
 	}
 
 	a.Address = common.HexToAddress(decoded.Address)
+	a.Owner = common.HexToAddress(decoded.Owner)
+	a.Deposit = math.ToBigInt(decoded.Deposit)
+	a.RID = decoded.RID
 	a.ID = decoded.ID
 	a.Domain = decoded.Domain
 	a.CreatedAt = decoded.CreatedAt
@@ -86,8 +95,11 @@ func (a *Relayer) SetBSON(raw bson.Raw) error {
 func (a *Relayer) MarshalJSON() ([]byte, error) {
 	relayer := map[string]interface{}{
 		"id":        a.ID,
-		"address":   a.Address,
+		"address":   a.Address.Hex(),
 		"domain":    a.Domain,
+		"rid":       a.RID,
+		"owner":     a.Owner.Hex(),
+		"deposit":   a.Deposit.String(),
 		"createdAt": a.CreatedAt.String(),
 		"updatedAt": a.UpdatedAt.String(),
 	}
@@ -122,6 +134,18 @@ func (a *Relayer) UnmarshalJSON(b []byte) error {
 		a.Address = common.HexToAddress(relayer["address"].(string))
 	}
 
+	if relayer["owner"] != nil {
+		a.Owner = common.HexToAddress(relayer["owner"].(string))
+	}
+
+	if relayer["deposit"] != nil {
+		a.Deposit = math.ToBigInt(relayer["deposit"].(string))
+	}
+
+	if relayer["rid"] != nil {
+		a.RID = relayer["rid"].(int)
+	}
+
 	if relayer["domain"] != nil {
 		a.Domain = relayer["domain"].(string)
 	}
@@ -151,6 +175,9 @@ func (a Relayer) Validate() error {
 // RelayerRecord corresponds to what is stored in the DB. big.Ints are encoded as strings
 type RelayerRecord struct {
 	ID         bson.ObjectId `json:"id" bson:"_id"`
+	RID        int           `json:"rid" bson:"rid"`
+	Owner      string        `json:"owner" bson:"owner"`
+	Deposit    string        `json:"deposit" bson:"deposit"`
 	Address    string        `json:"address" bson:"address"`
 	Domain     string        `json:"domain" bson:"domain"`
 	MakeFee    string        `json:"makeFee,omitempty" bson:"makeFee,omitempty"`

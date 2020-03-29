@@ -47,6 +47,9 @@ type TokenInfo struct {
 
 // RInfo struct
 type RInfo struct {
+	RID     int
+	Owner   common.Address
+	Deposit *big.Int
 	Address common.Address
 	Tokens  map[common.Address]*TokenInfo
 	Pairs   []*PairToken
@@ -254,6 +257,10 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 		contractData, err := method.Outputs.UnpackValues(result)
 		if err == nil {
 			if len(contractData) == 6 {
+				idx := contractData[0].(*big.Int)
+				relayerInfo.RID, _ = strconv.Atoi(idx.String())
+				relayerInfo.Owner = contractData[1].(common.Address)
+				relayerInfo.Deposit = contractData[2].(*big.Int)
 				relayerInfo.MakeFee = contractData[3].(uint16)
 				relayerInfo.TakeFee = contractData[3].(uint16)
 				fromTokens := contractData[4].([]common.Address)
