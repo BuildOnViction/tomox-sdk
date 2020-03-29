@@ -69,7 +69,7 @@ func (s *RelayerService) GetRelayerAddress(r *http.Request) common.Address {
 
 func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 	currentPairs, err := s.pairDao.GetAllByCoinbase(relayerInfo.Address)
-	logger.Info("UpdatePairRelayer starting...")
+	logger.Info("UpdatePairRelayer starting...", relayerInfo.Address.Hex())
 	if err != nil {
 		return err
 	}
@@ -96,10 +96,10 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 				MakeFee:            big.NewInt(int64(relayerInfo.MakeFee)),
 				TakeFee:            big.NewInt(int64(relayerInfo.TakeFee)),
 			}
-			logger.Info("Create Pair:", pair.BaseTokenAddress.Hex(), pair.QuoteTokenAddress.Hex())
+			logger.Info("Create Pair:", pair.BaseTokenAddress.Hex(), pair.QuoteTokenAddress.Hex(), relayerInfo.Address.Hex())
 			err := s.pairDao.Create(pair)
 			if err != nil {
-				return err
+				logger.Error(err)
 			}
 		}
 	}
