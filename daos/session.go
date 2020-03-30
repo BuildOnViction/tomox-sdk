@@ -1,7 +1,6 @@
 package daos
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/globalsign/mgo"
@@ -24,7 +23,6 @@ var logger = utils.Logger
 func InitSession(session *mgo.Session) (*mgo.Session, error) {
 	if db == nil {
 		if session == nil {
-			fmt.Println(app.Config.MongoURL)
 			db1, err := mgo.Dial(app.Config.MongoURL)
 			if err != nil {
 				logger.Error(err)

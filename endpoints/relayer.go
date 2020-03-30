@@ -22,7 +22,7 @@ func ServeRelayerResource(
 }
 
 func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Request) {
-	err := e.relayerService.UpdateRelayer()
+	err := e.relayerService.UpdateRelayers()
 
 	if err != nil {
 		logger.Error(err)

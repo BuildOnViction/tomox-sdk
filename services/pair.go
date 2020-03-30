@@ -180,6 +180,10 @@ func (s *PairService) GetAll() ([]types.Pair, error) {
 	return s.pairDao.GetAll()
 }
 
+func (s *PairService) GetAllByCoinbase(addr common.Address) ([]types.Pair, error) {
+	return s.pairDao.GetAllByCoinbase(addr)
+}
+
 func (s *PairService) GetListedPairs() ([]types.Pair, error) {
 	return s.pairDao.GetListedPairs()
 }

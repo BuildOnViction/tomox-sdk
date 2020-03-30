@@ -1,10 +1,14 @@
 package services
 
 import (
+	"fmt"
 	"math/big"
+	"net/http"
 
 	"github.com/tomochain/tomox-sdk/relayer"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 )
@@ -17,6 +21,7 @@ type RelayerService struct {
 	lendingTokenDao   interfaces.TokenDao
 	pairDao           interfaces.PairDao
 	lendingPairDao    interfaces.LendingPairDao
+	relayerDao        interfaces.RelayerDao
 }
 
 // NewRelayerService returns a new instance of orderservice
@@ -27,7 +32,7 @@ func NewRelayerService(
 	lendingTokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
 	lendingPairDao interfaces.LendingPairDao,
-
+	relayerDao interfaces.RelayerDao,
 ) *RelayerService {
 	return &RelayerService{
 		relaye,
@@ -36,12 +41,35 @@ func NewRelayerService(
 		lendingTokenDao,
 		pairDao,
 		lendingPairDao,
+		relayerDao,
 	}
 }
 
+func (s *RelayerService) GetByAddress(addr common.Address) (*types.Relayer, error) {
+	return s.relayerDao.GetByAddress(addr)
+}
+
+func (s *RelayerService) GetRelayerAddress(r *http.Request) common.Address {
+	v := r.URL.Query()
+	relayerAddress := v.Get("relayerAddress")
+
+	if relayerAddress == "" {
+		relayer, _ := s.relayerDao.GetByHost(r.Host)
+		if relayer != nil {
+			relayerAddress = relayer.Address.Hex()
+		}
+	}
+
+	if relayerAddress == "" {
+		relayerAddress = app.Config.Tomochain["exchange_address"]
+	}
+
+	return common.HexToAddress(relayerAddress)
+}
+
 func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
-	currentPairs, err := s.pairDao.GetAll()
-	logger.Info("UpdatePairRelayer starting...")
+	currentPairs, err := s.pairDao.GetAllByCoinbase(relayerInfo.Address)
+	logger.Info("UpdatePairRelayer starting...", relayerInfo.Address.Hex())
 	if err != nil {
 		return err
 	}
@@ -63,14 +91,15 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 				QuoteTokenSymbol:   pairQuoteData.Symbol,
 				QuoteTokenAddress:  newpair.QuoteToken,
 				QuoteTokenDecimals: int(pairQuoteData.Decimals),
+				RelayerAddress:     relayerInfo.Address,
 				Active:             true,
 				MakeFee:            big.NewInt(int64(relayerInfo.MakeFee)),
 				TakeFee:            big.NewInt(int64(relayerInfo.TakeFee)),
 			}
-			logger.Info("Create Pair:", pair.BaseTokenAddress.Hex(), pair.QuoteTokenAddress.Hex())
+			logger.Info("Create Pair:", pair.BaseTokenAddress.Hex(), pair.QuoteTokenAddress.Hex(), relayerInfo.Address.Hex())
 			err := s.pairDao.Create(pair)
 			if err != nil {
-				return err
+				logger.Error(err)
 			}
 		}
 	}
@@ -84,7 +113,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 		}
 		if !found {
 			logger.Info("Delete Pair:", currentPair.BaseTokenAddress.Hex(), currentPair.QuoteTokenAddress.Hex())
-			err := s.pairDao.DeleteByToken(currentPair.BaseTokenAddress, currentPair.QuoteTokenAddress)
+			err := s.pairDao.DeleteByTokenAndCoinbase(currentPair.BaseTokenAddress, currentPair.QuoteTokenAddress, relayerInfo.Address)
 			if err == nil {
 				logger.Error(err)
 			}
@@ -94,8 +123,8 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 }
 
 func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) error {
-	currentPairs, err := s.lendingPairDao.GetAll()
-	logger.Info("UpdatePairRelayer starting...")
+	currentPairs, err := s.lendingPairDao.GetAllByCoinbase(relayerInfo.Address)
+	logger.Info("UpdateLendingPairRelayer starting...")
 	if err != nil {
 		return err
 	}
@@ -115,6 +144,7 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 				LendingTokenAddress:  newpair.LendingToken,
 				LendingTokenDecimals: int(lendingTokenData.Decimals),
 				LendingTokenSymbol:   lendingTokenData.Symbol,
+				RelayerAddress:       relayerInfo.Address,
 			}
 			logger.Info("Create Pair:", pair.Term, pair.LendingTokenAddress.Hex())
 			err := s.lendingPairDao.Create(pair)
@@ -142,8 +172,75 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 	return nil
 }
 
+func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRelayerInfos []*relayer.LendingRInfo) error {
+	currentRelayers, err := s.relayerDao.GetAll()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, r := range relayerInfos {
+		found = false
+		for _, v := range currentRelayers {
+			if v.Address.Hex() == r.Address.Hex() {
+				found = true
+				break
+			}
+		}
+		lendingFee := uint16(0)
+		for _, l := range lendingRelayerInfos {
+			if l.Address.Hex() == r.Address.Hex() {
+				lendingFee = l.Fee
+				break
+			}
+		}
+		domain := fmt.Sprintf("%03d", r.RID) + "." + app.Config.Tomochain["domain_suffix"]
+		relayer := &types.Relayer{
+			Domain:     domain,
+			RID:        r.RID,
+			Owner:      r.Owner,
+			Deposit:    r.Deposit,
+			Address:    r.Address,
+			MakeFee:    big.NewInt(int64(r.MakeFee)),
+			TakeFee:    big.NewInt(int64(r.TakeFee)),
+			LendingFee: big.NewInt(int64(lendingFee)),
+		}
+		if !found {
+			logger.Info("Create relayer:", r.Address.Hex())
+			err = s.relayerDao.Create(relayer)
+			if err != nil {
+				logger.Error(err)
+			}
+		} else {
+			logger.Info("Update relayer:", r.Address.Hex())
+			err = s.relayerDao.UpdateByAddress(r.Address, relayer)
+			if err != nil {
+				logger.Error(err)
+			}
+		}
+	}
+
+	for _, r := range currentRelayers {
+		found = false
+		for _, v := range relayerInfos {
+			if v.Address.Hex() == r.Address.Hex() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			logger.Info("Delete relayer:", r.Address.Hex)
+			err = s.relayerDao.DeleteByAddress(r.Address)
+			if err != nil {
+				logger.Error(err)
+			}
+		}
+	}
+	return nil
+}
+
 func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
-	currentTokens, err := s.tokenDao.GetAll()
+	currentTokens, err := s.tokenDao.GetAllByCoinbase(relayerInfo.Address)
 	if err != nil {
 		return err
 	}
@@ -158,6 +255,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 		token := &types.Token{
 			Symbol:          v.Symbol,
 			ContractAddress: ntoken,
+			RelayerAddress:  relayerInfo.Address,
 			Decimals:        int(v.Decimals),
 			MakeFee:         big.NewInt(int64(relayerInfo.MakeFee)),
 			TakeFee:         big.NewInt(int64(relayerInfo.TakeFee)),
@@ -170,7 +268,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 			}
 		} else {
 			logger.Info("Update Token:", token.ContractAddress.Hex())
-			err = s.tokenDao.UpdateByToken(ntoken, token)
+			err = s.tokenDao.UpdateByTokenAndCoinbase(ntoken, relayerInfo.Address, token)
 		}
 		for _, ctoken := range currentTokens {
 			found = false
@@ -182,7 +280,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 			}
 			if !found {
 				logger.Info("Delete Token:", ctoken.ContractAddress.Hex)
-				err = s.tokenDao.DeleteByToken(ctoken.ContractAddress)
+				err = s.tokenDao.DeleteByTokenAndCoinbase(ctoken.ContractAddress, relayerInfo.Address)
 				if err != nil {
 					logger.Error(err)
 				}
@@ -193,7 +291,7 @@ func (s *RelayerService) updateTokenRelayer(relayerInfo *relayer.RInfo) error {
 }
 
 func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.LendingRInfo) error {
-	currentTokens, err := s.colateralTokenDao.GetAll()
+	currentTokens, err := s.colateralTokenDao.GetAllByCoinbase(relayerInfo.Address)
 	if err != nil {
 		return err
 	}
@@ -208,6 +306,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 		token := &types.Token{
 			Symbol:          v.Symbol,
 			ContractAddress: ntoken,
+			RelayerAddress:  relayerInfo.Address,
 			Decimals:        int(v.Decimals),
 			MakeFee:         big.NewInt(int64(relayerInfo.Fee)),
 			TakeFee:         big.NewInt(int64(relayerInfo.Fee)),
@@ -220,7 +319,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 			}
 		} else {
 			logger.Info("Update collateral token:", token.ContractAddress.Hex())
-			err = s.colateralTokenDao.UpdateByToken(ntoken, token)
+			err = s.colateralTokenDao.UpdateByTokenAndCoinbase(ntoken, relayerInfo.Address, token)
 		}
 		for _, ctoken := range currentTokens {
 			found = false
@@ -232,7 +331,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 			}
 			if !found {
 				logger.Info("Delete collateral token:", ctoken.ContractAddress.Hex)
-				err = s.colateralTokenDao.DeleteByToken(ctoken.ContractAddress)
+				err = s.colateralTokenDao.DeleteByTokenAndCoinbase(ctoken.ContractAddress, relayerInfo.Address)
 				if err != nil {
 					logger.Error(err)
 				}
@@ -243,7 +342,7 @@ func (s *RelayerService) updateCollateralTokenRelayer(relayerInfo *relayer.Lendi
 }
 
 func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingRInfo) error {
-	currentTokens, err := s.lendingTokenDao.GetAll()
+	currentTokens, err := s.lendingTokenDao.GetAllByCoinbase(relayerInfo.Address)
 	if err != nil {
 		return err
 	}
@@ -258,19 +357,20 @@ func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingR
 		token := &types.Token{
 			Symbol:          v.Symbol,
 			ContractAddress: ntoken,
+			RelayerAddress:  relayerInfo.Address,
 			Decimals:        int(v.Decimals),
 			MakeFee:         big.NewInt(int64(relayerInfo.Fee)),
 			TakeFee:         big.NewInt(int64(relayerInfo.Fee)),
 		}
 		if !found {
-			logger.Info("Create collateral token:", token.ContractAddress.Hex())
+			logger.Info("Create lending token:", token.ContractAddress.Hex())
 			err = s.lendingTokenDao.Create(token)
 			if err != nil {
 				logger.Error(err)
 			}
 		} else {
-			logger.Info("Update collateral token:", token.ContractAddress.Hex())
-			err = s.lendingTokenDao.UpdateByToken(ntoken, token)
+			logger.Info("Update lending token:", token.ContractAddress.Hex())
+			err = s.lendingTokenDao.UpdateByTokenAndCoinbase(ntoken, relayerInfo.Address, token)
 		}
 		for _, ctoken := range currentTokens {
 			found = false
@@ -281,8 +381,8 @@ func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingR
 				}
 			}
 			if !found {
-				logger.Info("Delete collateral token:", ctoken.ContractAddress.Hex)
-				err = s.lendingTokenDao.DeleteByToken(ctoken.ContractAddress)
+				logger.Info("Delete lending token:", ctoken.ContractAddress.Hex)
+				err = s.lendingTokenDao.DeleteByTokenAndCoinbase(ctoken.ContractAddress, relayerInfo.Address)
 				if err != nil {
 					logger.Error(err)
 				}
@@ -308,5 +408,28 @@ func (s *RelayerService) UpdateRelayer() error {
 	s.updateLendingPair(relayerLendingInfo)
 	s.updateCollateralTokenRelayer(relayerLendingInfo)
 	s.updateLendingTokenRelayer(relayerLendingInfo)
+	return nil
+}
+
+func (s *RelayerService) UpdateRelayers() error {
+	relayerInfos, err := s.relayer.GetRelayers()
+	if err != nil {
+		return err
+	}
+	for _, relayerInfo := range relayerInfos {
+		s.updateTokenRelayer(relayerInfo)
+		s.updatePairRelayer(relayerInfo)
+	}
+
+	relayerLendingInfos, err := s.relayer.GetLendings()
+	if err != nil {
+		return err
+	}
+	for _, relayerLendingInfo := range relayerLendingInfos {
+		s.updateLendingPair(relayerLendingInfo)
+		s.updateCollateralTokenRelayer(relayerLendingInfo)
+		s.updateLendingTokenRelayer(relayerLendingInfo)
+	}
+	s.updateRelayers(relayerInfos, relayerLendingInfos)
 	return nil
 }

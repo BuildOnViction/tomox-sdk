@@ -43,7 +43,7 @@ func NewLendingPairDao(options ...LendingPairDaoOption) *LendingPairDao {
 		}
 	}
 	index := mgo.Index{
-		Key:    []string{"lendingTokenAddress", "term"},
+		Key:    []string{"lendingTokenAddress", "term", "relayerAddress"},
 		Unique: true,
 	}
 	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
@@ -73,6 +73,27 @@ func (dao *LendingPairDao) GetAll() ([]types.LendingPair, error) {
 		return nil, err
 	}
 
+	ret := []types.LendingPair{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.LendingTokenAddress.Hex() + "::" + strconv.FormatUint(it.Term, 10)
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
+}
+
+func (dao *LendingPairDao) GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error) {
+	var res []types.LendingPair
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{"relayerAddress": addr.Hex()}, 0, 0, &res)
+	if err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }
 
@@ -86,6 +107,11 @@ func (dao *LendingPairDao) GetByID(id bson.ObjectId) (*types.LendingPair, error)
 // DeleteByLendingKey delete token by term and lending token address
 func (dao *LendingPairDao) DeleteByLendingKey(term uint64, lendingAddress common.Address) error {
 	query := bson.M{"lendingTokenAddress": lendingAddress.Hex(), "term": strconv.FormatUint(term, 10)}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}
+
+func (dao *LendingPairDao) DeleteByLendingKeyAndCoinbase(term uint64, lendingAddress common.Address, addr common.Address) error {
+	query := bson.M{"relayerAddress": addr.Hex(), "lendingTokenAddress": lendingAddress.Hex(), "term": strconv.FormatUint(term, 10)}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }
 

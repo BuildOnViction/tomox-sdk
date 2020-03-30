@@ -11,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/globalsign/mgo/bson"
-	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/utils/math"
 )
@@ -103,10 +102,6 @@ type RepaySpec struct {
 
 // Validate Verify userAddress, collateralToken, lendingToken, etc. conditions are working
 func (o *LendingOrder) Validate() error {
-	if o.RelayerAddress != common.HexToAddress(app.Config.Tomochain["exchange_address"]) {
-		return errors.New("LendingOrder 'exchange_address' parameter is incorrect")
-	}
-
 	if (o.UserAddress == common.Address{}) {
 		return errors.New("LendingOrder 'userAddress' parameter is required")
 	}

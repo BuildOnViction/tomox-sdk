@@ -17,6 +17,7 @@ type LendingPair struct {
 	LendingTokenSymbol   string         `json:"lendingTokenSymbol,omitempty" bson:"lendingTokenSymbol"`
 	LendingTokenAddress  common.Address `json:"lendingTokenAddress,omitempty" bson:"lendingTokenAddress"`
 	LendingTokenDecimals int            `json:"lendingTokenDecimals,omitempty" bson:"lendingTokenDecimals"`
+	RelayerAddress       common.Address `json:"relayerAddress,omitempty" bson:"relayerAddress"`
 	CreatedAt            time.Time      `json:"-" bson:"createdAt"`
 	UpdatedAt            time.Time      `json:"-" bson:"updatedAt"`
 }
@@ -28,6 +29,7 @@ type LendingPairRecord struct {
 	LendingTokenSymbol   string        `json:"lendingTokenSymbol" bson:"lendingTokenSymbol"`
 	LendingTokenAddress  string        `json:"lendingTokenAddress" bson:"lendingTokenAddress"`
 	LendingTokenDecimals int           `json:"lendingTokenDecimals" bson:"lendingTokenDecimals"`
+	RelayerAddress       string        `json:"relayerAddress" bson:"relayerAddress"`
 	CreatedAt            time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt            time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
@@ -56,6 +58,10 @@ func (p *LendingPair) UnmarshalJSON(b []byte) error {
 	if lendingPair["lendingTokenDecimals"] != nil {
 		p.LendingTokenDecimals = lendingPair["lendingTokenDecimals"].(int)
 	}
+
+	if lendingPair["relayerAddress"] != nil {
+		p.RelayerAddress = common.HexToAddress(lendingPair["relayerAddress"].(string))
+	}
 	return nil
 }
 
@@ -66,6 +72,7 @@ func (p *LendingPair) MarshalJSON() ([]byte, error) {
 		"lendingTokenAddress":  p.LendingTokenAddress,
 		"lendingTokenSymbol":   p.LendingTokenSymbol,
 		"lendingTokenDecimals": p.LendingTokenDecimals,
+		"relayerAddress":       p.RelayerAddress,
 	}
 
 	return json.Marshal(lendingPair)
@@ -86,6 +93,7 @@ func (p *LendingPair) SetBSON(raw bson.Raw) error {
 	p.LendingTokenAddress = common.HexToAddress(decoded.LendingTokenAddress)
 	p.LendingTokenDecimals = decoded.LendingTokenDecimals
 	p.LendingTokenSymbol = decoded.LendingTokenSymbol
+	p.RelayerAddress = common.HexToAddress(decoded.RelayerAddress)
 	p.CreatedAt = decoded.CreatedAt
 	p.UpdatedAt = decoded.UpdatedAt
 	return nil
@@ -99,6 +107,7 @@ func (p *LendingPair) GetBSON() (interface{}, error) {
 		LendingTokenAddress:  p.LendingTokenAddress.Hex(),
 		LendingTokenDecimals: p.LendingTokenDecimals,
 		LendingTokenSymbol:   p.LendingTokenSymbol,
+		RelayerAddress:       p.RelayerAddress.Hex(),
 		CreatedAt:            p.CreatedAt,
 		UpdatedAt:            p.UpdatedAt,
 	}, nil

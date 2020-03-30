@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"net/http"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -86,6 +87,15 @@ type AccountDao interface {
 	DeleteFavoriteToken(owner, token common.Address) error
 }
 
+type RelayerDao interface {
+	Create(relayer *types.Relayer) (err error)
+	GetAll() (res []types.Relayer, err error)
+	GetByHost(host string) (relayer *types.Relayer, err error)
+	GetByAddress(addr common.Address) (relayer *types.Relayer, err error)
+	DeleteByAddress(addr common.Address) error
+	UpdateByAddress(addr common.Address, relayer *types.Relayer) error
+}
+
 type ConfigDao interface {
 	GetSchemaVersion() uint64
 	GetAddressIndex(chain types.Chain) (uint64, error)
@@ -118,6 +128,7 @@ type WalletDao interface {
 type PairDao interface {
 	Create(o *types.Pair) error
 	GetAll() ([]types.Pair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
 	GetActivePairs() ([]*types.Pair, error)
 	GetByID(id bson.ObjectId) (*types.Pair, error)
 	GetByName(name string) (*types.Pair, error)
@@ -126,6 +137,7 @@ type PairDao interface {
 	GetListedPairs() ([]types.Pair, error)
 	GetUnlistedPairs() ([]types.Pair, error)
 	DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error
+	DeleteByTokenAndCoinbase(baseAddress common.Address, quoteAddress common.Address, addr common.Address) error
 }
 
 type TradeDao interface {
@@ -161,7 +173,9 @@ type TradeDao interface {
 type TokenDao interface {
 	Create(token *types.Token) error
 	UpdateByToken(contractAddress common.Address, token *types.Token) error
+	UpdateByTokenAndCoinbase(contractAddress common.Address, addr common.Address, token *types.Token) error
 	GetAll() ([]types.Token, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Token, error)
 	GetByID(id bson.ObjectId) (*types.Token, error)
 	GetByAddress(addr common.Address) (*types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
@@ -169,6 +183,7 @@ type TokenDao interface {
 	UpdateFiatPriceBySymbol(symbol string, price float64) error
 	Drop() error
 	DeleteByToken(contractAddress common.Address) error
+	DeleteByTokenAndCoinbase(contractAddress common.Address, addr common.Address) error
 }
 
 type NotificationDao interface {
@@ -264,6 +279,7 @@ type PairService interface {
 	GetMarketStats(bt, qt common.Address) (*types.PairData, error)
 	GetAllMarketStats() ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
 	GetListedPairs() ([]types.Pair, error)
 	GetUnlistedPairs() ([]types.Pair, error)
 }
@@ -273,6 +289,7 @@ type TokenService interface {
 	GetByID(id bson.ObjectId) (*types.Token, error)
 	GetByAddress(a common.Address) (*types.Token, error)
 	GetAll() ([]types.Token, error)
+	GetAllByCoinbase(addr common.Address) ([]types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
 	GetBaseTokens() ([]types.Token, error)
 }
@@ -379,12 +396,17 @@ type EthereumProvider interface {
 // RelayerService interface for relayer
 type RelayerService interface {
 	UpdateRelayer() error
+	UpdateRelayers() error
+	GetRelayerAddress(r *http.Request) common.Address
+	GetByAddress(addr common.Address) (*types.Relayer, error)
 }
 
 // Relayer interface for relayer
 type Relayer interface {
 	GetRelayer() (*relayer.RInfo, error)
 	GetLending() (*relayer.LendingRInfo, error)
+	GetRelayers() ([]*relayer.RInfo, error)
+	GetLendings() ([]*relayer.LendingRInfo, error)
 }
 
 // LendingOrderService for lending
@@ -453,13 +475,16 @@ type LendingOhlcvService interface {
 type LendingPairDao interface {
 	Create(o *types.LendingPair) error
 	GetAll() ([]types.LendingPair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error)
 	DeleteByLendingKey(term uint64, lendingAddress common.Address) error
+	DeleteByLendingKeyAndCoinbase(term uint64, lendingAddress common.Address, addr common.Address) error
 	GetByLendingID(term uint64, lendingToken common.Address) (*types.LendingPair, error)
 }
 
 //LendingPairService imp lending
 type LendingPairService interface {
 	GetAll() ([]types.LendingPair, error)
+	GetAllByCoinbase(addr common.Address) ([]types.LendingPair, error)
 	GetByLendingID(term uint64, lendingAddress common.Address) (*types.LendingPair, error)
 }
 

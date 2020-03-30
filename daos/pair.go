@@ -42,7 +42,7 @@ func NewPairDao(options ...PairDaoOption) *PairDao {
 	}
 
 	index := mgo.Index{
-		Key:    []string{"baseTokenAddress", "quoteTokenAddress"},
+		Key:    []string{"baseTokenAddress", "quoteTokenAddress", "relayerAddress"},
 		Unique: true,
 	}
 
@@ -69,6 +69,27 @@ func (dao *PairDao) Create(pair *types.Pair) error {
 func (dao *PairDao) GetAll() ([]types.Pair, error) {
 	var res []types.Pair
 	err := db.Get(dao.dbName, dao.collectionName, bson.M{}, 0, 0, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := []types.Pair{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.BaseTokenAddress.Hex() + "::" + it.QuoteTokenAddress.Hex()
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
+}
+
+func (dao *PairDao) GetAllByCoinbase(addr common.Address) ([]types.Pair, error) {
+	var res []types.Pair
+	err := db.Get(dao.dbName, dao.collectionName, bson.M{"relayerAddress": addr.Hex()}, 0, 0, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +145,18 @@ func (dao *PairDao) GetActivePairs() ([]*types.Pair, error) {
 		return nil, nil
 	}
 
-	return res, nil
+	ret := []*types.Pair{}
+	keys := make(map[string]bool)
+
+	for _, it := range res {
+		code := it.BaseTokenAddress.Hex() + "::" + it.QuoteTokenAddress.Hex()
+		if _, value := keys[code]; !value {
+			keys[code] = true
+			ret = append(ret, it)
+		}
+	}
+
+	return ret, nil
 }
 
 // GetByID function fetches details of a pair using pair's mongo ID.
@@ -204,5 +236,10 @@ func (dao *PairDao) GetByTokenAddress(baseToken, quoteToken common.Address) (*ty
 // DeleteByToken delete token by contract address
 func (dao *PairDao) DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error {
 	query := bson.M{"baseTokenAddress": baseAddress.Hex(), "quoteTokenAddress": quoteAddress.Hex()}
+	return db.RemoveItem(dao.dbName, dao.collectionName, query)
+}
+
+func (dao *PairDao) DeleteByTokenAndCoinbase(baseAddress common.Address, quoteAddress common.Address, addr common.Address) error {
+	query := bson.M{"baseTokenAddress": baseAddress.Hex(), "quoteTokenAddress": quoteAddress.Hex(), "relayerAddress": addr.Hex()}
 	return db.RemoveItem(dao.dbName, dao.collectionName, query)
 }

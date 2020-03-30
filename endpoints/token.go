@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/services"
 	"github.com/tomochain/tomox-sdk/types"
@@ -15,20 +16,22 @@ import (
 )
 
 type tokenEndpoint struct {
-	tokenService interfaces.TokenService
+	tokenService   interfaces.TokenService
+	relayerService interfaces.RelayerService
 }
 
 // ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
 func ServeTokenResource(
 	r *mux.Router,
 	tokenService interfaces.TokenService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &tokenEndpoint{tokenService}
+	e := &tokenEndpoint{tokenService, relayerService}
 	r.HandleFunc("/api/tokens/base", e.HandleGetBaseTokens).Methods("GET")
 	r.HandleFunc("/api/tokens/quote", e.HandleGetQuoteTokens).Methods("GET")
 	r.HandleFunc("/api/tokens/{address}", e.HandleGetToken).Methods("GET")
 	r.HandleFunc("/api/tokens", e.HandleGetTokens).Methods("GET")
-	r.HandleFunc("/api/tokens", e.HandleCreateToken).Methods("POST")
+	// r.HandleFunc("/api/tokens", e.HandleCreateToken).Methods("POST")
 
 	ws.RegisterChannel(ws.TokenChannel, e.ws)
 }
@@ -62,7 +65,8 @@ func (e *tokenEndpoint) HandleCreateToken(w http.ResponseWriter, r *http.Request
 }
 
 func (e *tokenEndpoint) HandleGetTokens(w http.ResponseWriter, r *http.Request) {
-	res, err := e.tokenService.GetAll()
+	ex := e.relayerService.GetRelayerAddress(r)
+	res, err := e.tokenService.GetAllByCoinbase(ex)
 
 	if err != nil {
 		logger.Error(err)
@@ -142,7 +146,9 @@ func (e *tokenEndpoint) ws(input interface{}, c *ws.Client) {
 // handleSubmitSignatures handles NewTrade messages. New trade messages are transmitted to the corresponding order channel
 // and received in the handleClientResponse.
 func (e *tokenEndpoint) handleGetTokensWS(ev *types.WebsocketEvent, c *ws.Client) {
-	res, err := e.tokenService.GetAll()
+	relayerAddress := app.Config.Tomochain["exchange_address"]
+	ex := common.HexToAddress(relayerAddress)
+	res, err := e.tokenService.GetAllByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		c.SendMessage(ws.TokenChannel, types.ERROR, err.Error())

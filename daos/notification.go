@@ -35,7 +35,9 @@ func NewNotificationDao() *NotificationDao {
 
 	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i2)
 
-	logger.Warning("Index failed", err)
+	if err != nil {
+		logger.Warning("Index failed", err)
+	}
 
 	return dao
 }

@@ -55,6 +55,10 @@ func (s *TokenService) GetAll() ([]types.Token, error) {
 	return s.tokenDao.GetAll()
 }
 
+func (s *TokenService) GetAllByCoinbase(addr common.Address) ([]types.Token, error) {
+	return s.tokenDao.GetAllByCoinbase(addr)
+}
+
 // GetQuote fetches all the quote tokens from db
 func (s *TokenService) GetQuoteTokens() ([]types.Token, error) {
 	return s.tokenDao.GetQuoteTokens()
