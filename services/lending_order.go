@@ -282,12 +282,6 @@ func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao) {
 	defer s.watchChanges(dao)
 
 	ctx := context.Background()
-	go func() {
-		for {
-			<-time.After(500 * time.Millisecond)
-			s.processBulkLendingOrders()
-		}
-	}()
 	//Handling change stream in a cycle
 	for {
 		select {
@@ -325,6 +319,12 @@ func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao) {
 
 // WatchChanges watch database
 func (s *LendingOrderService) WatchChanges() {
+	go func() {
+		for {
+			<-time.After(500 * time.Millisecond)
+			s.processBulkLendingOrders()
+		}
+	}()
 	go s.watchChanges(s.lendingDao)
 	go s.watchChanges(s.topupDao)
 	s.watchChanges(s.repayDao)
