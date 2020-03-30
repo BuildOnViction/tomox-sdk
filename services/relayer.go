@@ -393,8 +393,8 @@ func (s *RelayerService) updateLendingTokenRelayer(relayerInfo *relayer.LendingR
 }
 
 // UpdateRelayer get the total number of orders amount created by a user
-func (s *RelayerService) UpdateRelayer() error {
-	relayerInfo, err := s.relayer.GetRelayer()
+func (s *RelayerService) UpdateRelayer(coinbase common.Address) error {
+	relayerInfo, err := s.relayer.GetRelayer(coinbase)
 	if err != nil {
 		return err
 	}

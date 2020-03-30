@@ -32,7 +32,7 @@ func NewRelayer(rpcURL string,
 }
 
 // GetRelayer get relayer information
-func (r *Relayer) GetRelayer() (*RInfo, error) {
+func (r *Relayer) GetRelayer(coinbase common.Address) (*RInfo, error) {
 	signer := NewSigner()
 	client, err := rpc.Dial(r.rpcURL)
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *Relayer) GetRelayer() (*RInfo, error) {
 	}
 	ethclient := ethclient.NewClient(client)
 	bc := NewBlockchain(client, ethclient, signer)
-	return bc.GetRelayer(r.coinBase, r.relayerAddress)
+	return bc.GetRelayer(coinbase, r.relayerAddress)
 }
 
 func (r *Relayer) GetRelayers() ([]*RInfo, error) {

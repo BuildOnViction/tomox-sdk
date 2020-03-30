@@ -395,7 +395,7 @@ type EthereumProvider interface {
 
 // RelayerService interface for relayer
 type RelayerService interface {
-	UpdateRelayer() error
+	UpdateRelayer(addr common.Address) error
 	UpdateRelayers() error
 	GetRelayerAddress(r *http.Request) common.Address
 	GetByAddress(addr common.Address) (*types.Relayer, error)
@@ -403,7 +403,7 @@ type RelayerService interface {
 
 // Relayer interface for relayer
 type Relayer interface {
-	GetRelayer() (*relayer.RInfo, error)
+	GetRelayer(addr common.Address) (*relayer.RInfo, error)
 	GetLending() (*relayer.LendingRInfo, error)
 	GetRelayers() ([]*relayer.RInfo, error)
 	GetLendings() ([]*relayer.LendingRInfo, error)
