@@ -26,6 +26,8 @@ const (
 	LendingStatusFilled        = "FILLED"
 	LendingStatusRejected      = "REJECTED"
 	LendingStatusCancelled     = "CANCELLED"
+	LendingStatusRepay         = "REPAY"
+	LendingStatusTopup         = "TOPUP"
 )
 
 // LendingOrder contains the data related to an lending sent by the user
