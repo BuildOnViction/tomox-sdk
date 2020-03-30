@@ -58,28 +58,29 @@ type LendingTrade struct {
 func (t *LendingTrade) MarshalJSON() ([]byte, error) {
 
 	trade := map[string]interface{}{
-		"borrower":           t.Borrower,
-		"investor":           t.Investor,
-		"borrowingOrderHash": t.BorrowingOrderHash,
-		"investingOrderHash": t.InvestingOrderHash,
-		"borrowingRelayer":   t.BorrowingRelayer,
-		"investingRelayer":   t.InvestingRelayer,
-		"term":               strconv.FormatUint(t.Term, 10),
-		"interest":           strconv.FormatUint(t.Interest, 10),
-		"collateralPrice":    t.CollateralPrice.String(),
-		"liquidationPrice":   t.LiquidationPrice.String(),
-		"liquidationTime":    strconv.FormatUint(t.LiquidationTime, 10),
-		"depositRate":        t.DepositRate.String(),
-		"amount":             t.Amount.String(),
-		"borrowingFee":       t.BorrowingFee.String(),
-		"investingFee":       t.InvestingFee.String(),
-		"status":             t.Status,
-		"takerOrderSide":     t.TakerOrderSide,
-		"takerOrderType":     t.TakerOrderType,
-		"hash":               t.Hash,
-		"tradeID":            t.TradeID,
-		"createdAt":          t.CreatedAt.Format(time.RFC3339Nano),
-		"updatedAt":          t.UpdatedAt.Format(time.RFC3339Nano),
+		"borrower":               t.Borrower,
+		"investor":               t.Investor,
+		"borrowingOrderHash":     t.BorrowingOrderHash,
+		"investingOrderHash":     t.InvestingOrderHash,
+		"borrowingRelayer":       t.BorrowingRelayer,
+		"investingRelayer":       t.InvestingRelayer,
+		"term":                   strconv.FormatUint(t.Term, 10),
+		"interest":               strconv.FormatUint(t.Interest, 10),
+		"collateralPrice":        t.CollateralPrice.String(),
+		"collateralLockedAmount": t.CollateralLockedAmount.String(),
+		"liquidationPrice":       t.LiquidationPrice.String(),
+		"liquidationTime":        strconv.FormatUint(t.LiquidationTime, 10),
+		"depositRate":            t.DepositRate.String(),
+		"amount":                 t.Amount.String(),
+		"borrowingFee":           t.BorrowingFee.String(),
+		"investingFee":           t.InvestingFee.String(),
+		"status":                 t.Status,
+		"takerOrderSide":         t.TakerOrderSide,
+		"takerOrderType":         t.TakerOrderType,
+		"hash":                   t.Hash,
+		"tradeID":                t.TradeID,
+		"createdAt":              t.CreatedAt.Format(time.RFC3339Nano),
+		"updatedAt":              t.UpdatedAt.Format(time.RFC3339Nano),
 	}
 
 	if (t.CollateralToken != common.Address{}) {
@@ -152,6 +153,11 @@ func (t *LendingTrade) UnmarshalJSON(b []byte) error {
 		return errors.New("interest is not set")
 	}
 	t.Interest, _ = strconv.ParseUint(trade["interest"].(string), 10, 64)
+
+	if trade["collateralLockedAmount"] != nil {
+		t.CollateralLockedAmount = new(big.Int)
+		t.CollateralLockedAmount, _ = t.CollateralLockedAmount.SetString(trade["collateralLockedAmount"].(string), 10)
+	}
 
 	if trade["collateralPrice"] != nil {
 		t.CollateralPrice = new(big.Int)
