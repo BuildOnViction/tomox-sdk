@@ -106,7 +106,7 @@ func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 // NewTopupDao topup dao
 func NewTopupDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	dao := &LendingOrderDao{}
-	dao.collectionName = "lending_topup"
+	dao.collectionName = "lending_topups"
 	dao.dbName = app.Config.DBName
 
 	for _, op := range opts {
@@ -121,7 +121,7 @@ func NewTopupDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 // NewRepayDao repay dao
 func NewRepayDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	dao := &LendingOrderDao{}
-	dao.collectionName = "lending_repay"
+	dao.collectionName = "lending_repays"
 	dao.dbName = app.Config.DBName
 
 	for _, op := range opts {
