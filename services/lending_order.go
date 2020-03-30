@@ -120,6 +120,12 @@ func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineRespon
 	case types.LENDING_ORDER_FILLED:
 		s.handleLendingOrderFilled(res)
 		break
+	case types.LENDING_ORDER_REPAYED:
+		s.handleLendingRepay(res)
+		break
+	case types.LENDING_ORDER_TOPUPED:
+		s.handleLendingTopup(res)
+		break
 	case types.ERROR_STATUS:
 		s.handleEngineError(res)
 		break
@@ -146,7 +152,7 @@ func (s *LendingOrderService) handleLendingOrderAdded(res *types.EngineResponse)
 	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
 		Message: types.Message{
-			MessageType: "LENDING_ORDER_ADDED",
+			MessageType: res.Status,
 			Description: o.Hash.Hex(),
 		},
 		Type:   types.TypeLog,
@@ -157,7 +163,7 @@ func (s *LendingOrderService) handleLendingOrderAdded(res *types.EngineResponse)
 		logger.Error(err)
 	}
 
-	ws.SendNotificationMessage("LENDING_ORDER_ADDED", o.UserAddress, notifications)
+	ws.SendNotificationMessage(types.SubscriptionEvent(res.Status), o.UserAddress, notifications)
 	logger.Info("BroadcastOrderBookUpdate Lending Added")
 }
 
@@ -165,6 +171,47 @@ func (s *LendingOrderService) handleLendingOrderPartialFilled(res *types.EngineR
 }
 
 func (s *LendingOrderService) handleLendingOrderFilled(res *types.EngineResponse) {
+}
+
+func (s *LendingOrderService) handleLendingTopup(res *types.EngineResponse) {
+	o := res.LendingOrder
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: res.Status,
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendNotificationMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, notifications)
+}
+func (s *LendingOrderService) handleLendingRepay(res *types.EngineResponse) {
+	o := res.LendingOrder
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: res.Status,
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendNotificationMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, notifications)
 }
 
 func (s *LendingOrderService) handleLendingOrderCancelled(res *types.EngineResponse) {
@@ -220,8 +267,8 @@ func (s *LendingOrderService) handleEngineUnknownMessage(res *types.EngineRespon
 }
 
 // WatchChanges watch database
-func (s *LendingOrderService) WatchChanges() {
-	ct, sc, err := s.lendingDao.Watch()
+func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao) {
+	ct, sc, err := dao.Watch()
 
 	if err != nil {
 		logger.Error("Failed to open change stream")
@@ -232,7 +279,7 @@ func (s *LendingOrderService) WatchChanges() {
 	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
-	defer s.WatchChanges()
+	defer s.watchChanges(dao)
 
 	ctx := context.Background()
 	go func() {
@@ -276,24 +323,37 @@ func (s *LendingOrderService) WatchChanges() {
 	}
 }
 
+// WatchChanges watch database
+func (s *LendingOrderService) WatchChanges() {
+	go s.watchChanges(s.lendingDao)
+	go s.watchChanges(s.topupDao)
+	s.watchChanges(s.repayDao)
+}
+
 // HandleDocumentType handle order frome changing db
 func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEvent) error {
 	res := &types.EngineResponse{}
 
-	if ev.FullDocument.Status == types.OrderStatusOpen {
+	if ev.FullDocument.Status == types.LendingStatusOpen {
 		res.Status = types.LENDING_ORDER_ADDED
 		res.LendingOrder = ev.FullDocument
-	} else if ev.FullDocument.Status == types.OrderStatusCancelled {
+	} else if ev.FullDocument.Status == types.LendingStatusCancelled {
 		res.Status = types.LENDING_ORDER_CANCELLED
 		res.LendingOrder = ev.FullDocument
-	} else if ev.FullDocument.Status == types.OrderStatusRejected {
+	} else if ev.FullDocument.Status == types.LendingStatusRejected {
 		res.Status = types.LENDING_ORDER_REJECTED
 		res.LendingOrder = ev.FullDocument
-	} else if ev.FullDocument.Status == types.OrderStatusFilled {
+	} else if ev.FullDocument.Status == types.LendingStatusFilled {
 		res.Status = types.LENDING_ORDER_FILLED
 		res.LendingOrder = ev.FullDocument
-	} else if ev.FullDocument.Status == types.OrderStatusPartialFilled {
+	} else if ev.FullDocument.Status == types.LendingStatusPartialFilled {
 		res.Status = types.LENDING_ORDER_PARTIALLY_FILLED
+		res.LendingOrder = ev.FullDocument
+	} else if ev.FullDocument.Status == types.LendingStatusRepay {
+		res.Status = types.LENDING_ORDER_REPAYED
+		res.LendingOrder = ev.FullDocument
+	} else if ev.FullDocument.Status == types.LendingStatusTopup {
+		res.Status = types.LENDING_ORDER_TOPUPED
 		res.LendingOrder = ev.FullDocument
 	}
 
