@@ -15,6 +15,7 @@ type CronService struct {
 	Engine                   *engine.Engine
 	lendingPriceBoardService *services.LendingPriceBoardService
 	lendingPairService       *services.LendingPairService
+	lendingOhlcvService      *services.LendingOhlcvService
 }
 
 // NewCronService returns a new instance of CronService
@@ -26,6 +27,7 @@ func NewCronService(
 	engine *engine.Engine,
 	lendingPriceBoardService *services.LendingPriceBoardService,
 	lendingPairService *services.LendingPairService,
+	lendingOhlcvService *services.LendingOhlcvService,
 ) *CronService {
 	return &CronService{
 		OHLCVService:             ohlcvService,
@@ -35,6 +37,7 @@ func NewCronService(
 		Engine:                   engine,
 		lendingPriceBoardService: lendingPriceBoardService,
 		lendingPairService:       lendingPairService,
+		lendingOhlcvService:      lendingOhlcvService,
 	}
 }
 
@@ -48,5 +51,6 @@ func (s *CronService) InitCrons() {
 	s.startPriceBoardCron(c) // Cron to fetch data for top price board
 	s.startMarketsCron(c)    // Cron to fetch markets data
 	s.startLendingPriceBoardCron(c)
+	s.startLendingMarketsCron(c)
 	c.Start()
 }
