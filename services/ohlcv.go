@@ -867,6 +867,44 @@ func (s *OHLCVService) GetTokenPairData(baseToken common.Address, quoteToken com
 
 }
 
+func (s *OHLCVService) GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error) {
+	pairs, err := s.pairDao.GetActivePairsByCoinbase(addr)
+	if err != nil {
+		return nil, err
+	}
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	pairsData := make([]*types.PairData, 0)
+	for _, p := range pairs {
+		pairData := s.getTokenPairData(p.Name(), p.BaseTokenSymbol, p.BaseTokenAddress, p.QuoteTokenAddress)
+		if pairData != nil {
+			pairsData = append(pairsData, pairData)
+		} else {
+			emptyPairData := &types.PairData{
+				Pair:         types.PairID{PairName: p.Name(), BaseToken: p.BaseTokenAddress, QuoteToken: p.QuoteTokenAddress},
+				Open:         big.NewInt(0),
+				High:         big.NewInt(0),
+				Low:          big.NewInt(0),
+				Volume:       big.NewInt(0),
+				Close:        big.NewInt(0),
+				CloseBaseUsd: big.NewFloat(0),
+				Count:        big.NewInt(0),
+				OrderVolume:  big.NewInt(0),
+				OrderCount:   big.NewInt(0),
+				BidPrice:     big.NewInt(0),
+				AskPrice:     big.NewInt(0),
+				Price:        big.NewInt(0),
+			}
+
+			pairsData = append(pairsData, emptyPairData)
+
+		}
+
+	}
+
+	return pairsData, nil
+}
+
 // GetAllTokenPairData get tick of all tokens
 func (s *OHLCVService) GetAllTokenPairData() ([]*types.PairData, error) {
 	pairs, err := s.pairDao.GetActivePairs()

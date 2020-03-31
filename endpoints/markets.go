@@ -15,6 +15,7 @@ import (
 type MarketsEndpoint struct {
 	MarketsService interfaces.MarketsService
 	OHLCVService   interfaces.OHLCVService
+	RelayerService interfaces.RelayerService
 }
 
 // ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
@@ -22,8 +23,9 @@ func ServeMarketsResource(
 	r *mux.Router,
 	marketsService interfaces.MarketsService,
 	ohlcvService interfaces.OHLCVService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &MarketsEndpoint{marketsService, ohlcvService}
+	e := &MarketsEndpoint{marketsService, ohlcvService, relayerService}
 	r.HandleFunc("/api/market/stats/all", e.HandleGetAllMarketStats).Methods("GET")
 	r.HandleFunc("/api/market/stats", e.HandleGetMarketStats).Methods("GET")
 
@@ -33,7 +35,8 @@ func ServeMarketsResource(
 // HandleGetAllMarketStats get all market token data
 func (e *MarketsEndpoint) HandleGetAllMarketStats(w http.ResponseWriter, r *http.Request) {
 
-	res, err := e.OHLCVService.GetAllTokenPairData()
+	ex := e.RelayerService.GetRelayerAddress(r)
+	res, err := e.OHLCVService.GetAllTokenPairDataByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())

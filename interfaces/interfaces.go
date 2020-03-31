@@ -130,6 +130,7 @@ type PairDao interface {
 	GetAll() ([]types.Pair, error)
 	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
 	GetActivePairs() ([]*types.Pair, error)
+	GetActivePairsByCoinbase(addr common.Address) ([]*types.Pair, error)
 	GetByID(id bson.ObjectId) (*types.Pair, error)
 	GetByName(name string) (*types.Pair, error)
 	GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol string) (*types.Pair, error)
@@ -230,6 +231,7 @@ type OHLCVService interface {
 	GetFiatPriceChart() (map[string][]*types.FiatPriceItem, error)
 	GetLastPriceCurrentByTime(symbol string, createAt time.Time) (*big.Float, error)
 	GetAllTokenPairData() ([]*types.PairData, error)
+	GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error)
 	GetTokenPairData(baseToken common.Address, quoteToken common.Address) *types.PairData
 }
 
