@@ -879,20 +879,15 @@ func (dao *OrderDao) GetOrderBook(p *types.Pair) ([]map[string]string, []map[str
 
 	var result interface{}
 
-	err = rpcClient.Call(&result, "tomox_getAskTree", p.BaseTokenAddress.Hex(), p.QuoteTokenAddress.Hex())
+	err = rpcClient.Call(&result, "tomox_getAsks", p.BaseTokenAddress.Hex(), p.QuoteTokenAddress.Hex())
 	asks := []map[string]string{}
 	if result != nil && err == nil {
 		for k, v := range result.(map[string]interface{}) {
-			for y, z := range v.(map[string]interface{}) {
-				if y == "Volume" {
-					s := map[string]string{
-						"pricepoint": k,
-						"amount":     fmt.Sprintf("%.0f", z.(float64)),
-					}
-					asks = append(asks, s)
-					break
-				}
+			s := map[string]string{
+				"pricepoint": k,
+				"amount":     fmt.Sprintf("%.0f", v.(float64)),
 			}
+			asks = append(asks, s)
 		}
 
 		sort.SliceStable(asks, func(i, j int) bool {
@@ -900,20 +895,15 @@ func (dao *OrderDao) GetOrderBook(p *types.Pair) ([]map[string]string, []map[str
 		})
 	}
 
-	err = rpcClient.Call(&result, "tomox_getBidTree", p.BaseTokenAddress.Hex(), p.QuoteTokenAddress.Hex())
+	err = rpcClient.Call(&result, "tomox_getBids", p.BaseTokenAddress.Hex(), p.QuoteTokenAddress.Hex())
 	bids := []map[string]string{}
 	if result != nil && err == nil {
 		for k, v := range result.(map[string]interface{}) {
-			for y, z := range v.(map[string]interface{}) {
-				if y == "Volume" {
-					s := map[string]string{
-						"pricepoint": k,
-						"amount":     fmt.Sprintf("%.0f", z.(float64)),
-					}
-					bids = append(bids, s)
-					break
-				}
+			s := map[string]string{
+				"pricepoint": k,
+				"amount":     fmt.Sprintf("%.0f", v.(float64)),
 			}
+			bids = append(bids, s)
 		}
 		sort.SliceStable(bids, func(i, j int) bool {
 			return math.ToBigInt(bids[i]["pricepoint"]).Cmp(math.ToBigInt(bids[j]["pricepoint"])) == 1

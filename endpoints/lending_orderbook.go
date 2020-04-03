@@ -25,6 +25,7 @@ func ServeLendingOrderBookResource(
 ) {
 	e := &LendingOrderBookEndpoint{lendingOrderBookService}
 	r.HandleFunc("/api/lending/orderbook", e.HandleGetLendingOrderBook).Methods("GET")
+	r.HandleFunc("/api/lending/orderbook/db", e.HandleGetLendingOrderBookInDb).Methods("GET")
 	ws.RegisterChannel(ws.LendingOrderBookChannel, e.lendingOrderBookWebSocket)
 }
 
@@ -50,6 +51,37 @@ func (e *LendingOrderBookEndpoint) HandleGetLendingOrderBook(w http.ResponseWrit
 
 	lendingTokenAddress := common.HexToAddress(lendingToken)
 	ob, err := e.lendingOrderBookService.GetLendingOrderBook(term, lendingTokenAddress)
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, ob)
+}
+
+func (e *LendingOrderBookEndpoint) HandleGetLendingOrderBookInDb(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	t := v.Get("term")
+	lendingToken := v.Get("lendingToken")
+	term, err := strconv.ParseUint(t, 10, 32)
+	if err != nil {
+		httputils.WriteError(w, http.StatusBadRequest, "Term parameter is incorect")
+		return
+	}
+
+	if lendingToken == "" {
+		httputils.WriteError(w, http.StatusBadRequest, "lendingToken Parameter missing")
+		return
+	}
+
+	if !common.IsHexAddress(lendingToken) {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
+		return
+	}
+
+	lendingTokenAddress := common.HexToAddress(lendingToken)
+	ob, err := e.lendingOrderBookService.GetLendingOrderBookInDb(term, lendingTokenAddress)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())

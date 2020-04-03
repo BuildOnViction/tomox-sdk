@@ -39,6 +39,22 @@ func (s *LendingOrderBookService) GetLendingOrderBook(term uint64, lendingToken 
 	return ob, nil
 }
 
+func (s *LendingOrderBookService) GetLendingOrderBookInDb(term uint64, lendingToken common.Address) (*types.LendingOrderBook, error) {
+	borrow, lend, err := s.lendingOrderDao.GetLendingOrderBookInDb(term, lendingToken)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	ob := &types.LendingOrderBook{
+		Name:   utils.GetLendingOrderBookChannelID(term, lendingToken),
+		Lend:   lend,
+		Borrow: borrow,
+	}
+
+	return ob, nil
+}
+
 // SubscribeLendingOrderBook is responsible for handling incoming orderbook subscription messages
 // It makes an entry of connection in pairSocket corresponding to pair,unit and duration
 func (s *LendingOrderBookService) SubscribeLendingOrderBook(c *ws.Client, term uint64, lendingToken common.Address) {

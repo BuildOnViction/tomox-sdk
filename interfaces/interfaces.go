@@ -432,6 +432,7 @@ type LendingOrderDao interface {
 	AddNewLendingOrder(o *types.LendingOrder) error
 	CancelLendingOrder(o *types.LendingOrder) error
 	GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error)
+	GetLendingOrderBookInDb(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error)
 	GetLendingOrderBookInterest(term uint64, lendingToken common.Address, interest uint64, side string) (*big.Int, error)
 	RepayLendingOrder(o *types.LendingOrder) error
 	TopupLendingOrder(o *types.LendingOrder) error
@@ -441,6 +442,7 @@ type LendingOrderDao interface {
 // LendingOrderBookService interface for lending order book
 type LendingOrderBookService interface {
 	GetLendingOrderBook(term uint64, lendingToken common.Address) (*types.LendingOrderBook, error)
+	GetLendingOrderBookInDb(term uint64, lendingToken common.Address) (*types.LendingOrderBook, error)
 	SubscribeLendingOrderBook(c *ws.Client, term uint64, lendingToken common.Address)
 	UnsubscribeLendingOrderBook(c *ws.Client)
 	UnsubscribeLendingOrderBookChannel(c *ws.Client, term uint64, lendingToken common.Address)

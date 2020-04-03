@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 	"strconv"
@@ -261,7 +262,7 @@ func (dao *LendingOrderDao) getSideLendingOrderBook(term uint64, lendingToken co
 }
 
 // GetLendingOrderBook get lending order token
-func (dao *LendingOrderDao) GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error) {
+func (dao *LendingOrderDao) GetLendingOrderBookInDb(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error) {
 
 	borrow, err := dao.getSideLendingOrderBook(term, lendingToken, types.BORROW, -1)
 	if err != nil {
@@ -276,6 +277,51 @@ func (dao *LendingOrderDao) GetLendingOrderBook(term uint64, lendingToken common
 	}
 
 	return borrow, lend, nil
+}
+
+func (dao *LendingOrderDao) GetLendingOrderBook(term uint64, lendingToken common.Address) ([]map[string]string, []map[string]string, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+	defer rpcClient.Close()
+
+	var result interface{}
+
+	err = rpcClient.Call(&result, "tomox_getInvests", lendingToken.Hex(), term)
+	asks := []map[string]string{}
+	if result != nil && err == nil {
+		for k, v := range result.(map[string]interface{}) {
+			s := map[string]string{
+				"interest": k,
+				"amount":   fmt.Sprintf("%.0f", v.(float64)),
+			}
+			asks = append(asks, s)
+		}
+
+		sort.SliceStable(asks, func(i, j int) bool {
+			return math.ToBigInt(asks[i]["interest"]).Cmp(math.ToBigInt(asks[j]["interest"])) == -1
+		})
+	}
+
+	err = rpcClient.Call(&result, "tomox_getBorrows", lendingToken.Hex(), term)
+	bids := []map[string]string{}
+	if result != nil && err == nil {
+		for k, v := range result.(map[string]interface{}) {
+			s := map[string]string{
+				"interest": k,
+				"amount":   fmt.Sprintf("%.0f", v.(float64)),
+			}
+			bids = append(bids, s)
+		}
+		sort.SliceStable(bids, func(i, j int) bool {
+			return math.ToBigInt(bids[i]["interest"]).Cmp(math.ToBigInt(bids[j]["interest"])) == 1
+		})
+	}
+
+	if err != nil {
+		logger.Error(err)
+		return bids, asks, nil
+	}
+
+	return bids, asks, nil
 }
 
 // LendingOrderMsg for tomox rpc
