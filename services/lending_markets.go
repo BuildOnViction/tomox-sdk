@@ -30,6 +30,12 @@ func (s *LendingMarketsService) Subscribe(c *ws.Client) {
 	socket := ws.GetLendingMarketSocket()
 	id := utils.GetLendingMarketsChannelID(ws.LendingMarketsChannel)
 
+	err := socket.Subscribe(id, c)
+	if err != nil {
+		socket.SendErrorMessage(c, err.Error())
+		return
+	}
+
 	tick, err := s.LendingOhlcvService.GetAllTokenPairData()
 	if err != nil {
 		logger.Error(err)
