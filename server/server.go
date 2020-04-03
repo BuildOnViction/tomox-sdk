@@ -108,9 +108,6 @@ func NewRouter(
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao)
 	ohlcvService.Init()
 
-	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeDao, lengdingPairDao)
-	lendingOhlcvService.Init()
-
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
@@ -132,6 +129,10 @@ func NewRouter(
 
 	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, notificationDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, notificationDao, rabbitConn)
+
+	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeService, lengdingPairDao)
+	lendingOhlcvService.Init()
+
 	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
 	lendingMarketService := services.NewLendingMarketsService(lengdingPairDao, lendingOhlcvService)
 	lendingPairService := services.NewLendingPairService(lengdingPairDao)

@@ -17,12 +17,13 @@ import (
 // LendingTradeService struct with daos required, responsible for communicating with daos.
 // LendingTradeService functions are responsible for interacting with daos and implements business logics.
 type LendingTradeService struct {
-	lendingDao        interfaces.LendingOrderDao
-	lendingTradeDao   interfaces.LendingTradeDao
-	notificationDao   interfaces.NotificationDao
-	broker            *rabbitmq.Connection
-	bulkLendingTrades map[string][]*types.LendingTrade
-	mutext            sync.RWMutex
+	lendingDao          interfaces.LendingOrderDao
+	lendingTradeDao     interfaces.LendingTradeDao
+	notificationDao     interfaces.NotificationDao
+	broker              *rabbitmq.Connection
+	bulkLendingTrades   map[string][]*types.LendingTrade
+	mutext              sync.RWMutex
+	tradeNotifyCallback func(*types.LendingTrade)
 }
 
 // NewLendingTradeService returns a new instance of LendingTradeService
@@ -34,13 +35,19 @@ func NewLendingTradeService(
 ) *LendingTradeService {
 	bulkLendingTrades := make(map[string][]*types.LendingTrade)
 	return &LendingTradeService{
-		lendingDao:        lendingdao,
-		lendingTradeDao:   lendingTradeDao,
-		notificationDao:   notificationDao,
-		broker:            broker,
-		bulkLendingTrades: bulkLendingTrades,
-		mutext:            sync.RWMutex{},
+		lendingDao:          lendingdao,
+		lendingTradeDao:     lendingTradeDao,
+		notificationDao:     notificationDao,
+		broker:              broker,
+		bulkLendingTrades:   bulkLendingTrades,
+		mutext:              sync.RWMutex{},
+		tradeNotifyCallback: nil,
 	}
+}
+
+// RegisterNotify register a only trade notify function
+func (s *LendingTradeService) RegisterNotify(fn func(*types.LendingTrade)) {
+	s.tradeNotifyCallback = fn
 }
 
 // Subscribe Subscribe lending trade channel
@@ -279,6 +286,9 @@ func (s *LendingTradeService) HandleTradeSuccess(m *types.LendingMatches) {
 			Status: types.StatusUnread,
 		})
 	}
+	if s.tradeNotifyCallback != nil {
+		s.tradeNotifyCallback(trades[0])
+	}
 }
 
 func (s *LendingTradeService) saveBulkTrades(t *types.LendingTrade) {
@@ -299,4 +309,9 @@ func (s *LendingTradeService) GetLendingTradesUserHistory(a common.Address, lend
 // GetLendingTrades get lending trade
 func (s *LendingTradeService) GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error) {
 	return s.lendingTradeDao.GetLendingTrades(lendingtradeSpec, sortedBy, pageOffset, pageSize)
+}
+
+//GetLendingTradeByTime get lending trade by range time
+func (s *LendingTradeService) GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error) {
+	return s.lendingTradeDao.GetLendingTradeByTime(dateFrom, dateTo, pageOffset, pageSize)
 }

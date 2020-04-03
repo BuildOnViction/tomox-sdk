@@ -455,6 +455,8 @@ type LendingTradeService interface {
 	Unsubscribe(c *ws.Client)
 	GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
 	GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
+	RegisterNotify(fn func(*types.LendingTrade))
+	GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error)
 }
 
 // LendingTradeDao interface for lending dao

@@ -27,11 +27,11 @@ const (
 
 // LendingOhlcvService ohlcv lending struct
 type LendingOhlcvService struct {
-	lendingTradeDao  interfaces.LendingTradeDao
-	lendingTickCache *lendingTickCache
-	lendingPairDao   interfaces.LendingPairDao
-	mutex            sync.RWMutex
-	tokenCache       map[common.Address]int
+	lendingTradeService interfaces.LendingTradeService
+	lendingTickCache    *lendingTickCache
+	lendingPairDao      interfaces.LendingPairDao
+	mutex               sync.RWMutex
+	tokenCache          map[common.Address]int
 }
 
 type lendingTickCache struct {
@@ -45,15 +45,15 @@ type lendingtickfile struct {
 }
 
 // NewLendingOhlcvService init new ohlcv service
-func NewLendingOhlcvService(lendingTradeDao interfaces.LendingTradeDao, lendingPairDao interfaces.LendingPairDao) *LendingOhlcvService {
+func NewLendingOhlcvService(lendingTradeService interfaces.LendingTradeService, lendingPairDao interfaces.LendingPairDao) *LendingOhlcvService {
 	cache := &lendingTickCache{
 		ticks: make(map[string]map[int64]*types.LendingTick),
 	}
 	return &LendingOhlcvService{
-		lendingTradeDao:  lendingTradeDao,
-		lendingPairDao:   lendingPairDao,
-		lendingTickCache: cache,
-		tokenCache:       make(map[common.Address]int),
+		lendingTradeService: lendingTradeService,
+		lendingPairDao:      lendingPairDao,
+		lendingTickCache:    cache,
+		tokenCache:          make(map[common.Address]int),
 	}
 }
 
@@ -227,7 +227,7 @@ func (s *LendingOhlcvService) Init() {
 			}
 		}
 	}()
-
+	s.lendingTradeService.RegisterNotify(s.NotifyTrade)
 	logger.Info("OHLCV finished")
 }
 
@@ -264,7 +264,7 @@ func (s *LendingOhlcvService) fetch(fromdate int64, todate int64, frame *timefra
 	size := 1000
 	now := time.Now().Unix()
 	for {
-		trades, err := s.lendingTradeDao.GetLendingTradeByTime(fromdate, todate, pageOffset*size, size)
+		trades, err := s.lendingTradeService.GetLendingTradeByTime(fromdate, todate, pageOffset*size, size)
 		logger.Debug("FETCH DATA", pageOffset*size)
 		if err != nil || len(trades) == 0 {
 			break
@@ -490,11 +490,11 @@ func (s *LendingOhlcvService) filterTick(key string, start, end int64) []*types.
 
 // Get24hTick get 24h tick of token
 func (s *LendingOhlcvService) Get24hTick(term uint64, lendingToken common.Address) *types.LendingTick {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	return s.get24hTick(term, lendingToken)
 }
 func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Address) *types.LendingTick {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
 	var res []*types.LendingTick
 	now := time.Now()
 	begin := now.AddDate(0, 0, -1).Unix()
@@ -534,15 +534,15 @@ func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Addres
 			Unit:     "hour",
 		}
 	}
-    return &types.LendingTick{
-        LendingID: types.LendingID{
-            Term:         term,
-            LendingToken: lendingToken,
-        },
-        Duration: 24,
-        Unit:     "hour",
-        Volume:    big.NewInt(0),
-    }
+	return &types.LendingTick{
+		LendingID: types.LendingID{
+			Term:         term,
+			LendingToken: lendingToken,
+		},
+		Duration: 24,
+		Unit:     "hour",
+		Volume:   big.NewInt(0),
+	}
 }
 
 // NotifyTrade trigger if trade comming
