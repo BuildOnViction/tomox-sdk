@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
@@ -30,6 +31,7 @@ type LendingOhlcvService struct {
 	lendingTradeService interfaces.LendingTradeService
 	lendingTickCache    *lendingTickCache
 	lendingPairDao      interfaces.LendingPairDao
+	bulkPairs           map[string]bool
 	mutex               sync.RWMutex
 	tokenCache          map[common.Address]int
 }
@@ -54,6 +56,7 @@ func NewLendingOhlcvService(lendingTradeService interfaces.LendingTradeService, 
 		lendingPairDao:      lendingPairDao,
 		lendingTickCache:    cache,
 		tokenCache:          make(map[common.Address]int),
+		bulkPairs:           make(map[string]bool),
 	}
 }
 
@@ -98,6 +101,41 @@ func (s *LendingOhlcvService) Subscribe(conn *ws.Client, p *types.SubscriptionPa
 
 	ws.RegisterConnectionUnsubscribeHandler(conn, socket.UnsubscribeChannelHandler(id))
 	socket.SendInitMessage(conn, ohlcv)
+}
+
+func (s *LendingOhlcvService) processBulkOhlcv() {
+
+	pairs := make([]string, 0)
+	for p, val := range s.bulkPairs {
+		if val {
+			pairs = append(pairs, p)
+		}
+	}
+	if len(pairs) > 0 {
+		s.broadcastTickUpdate(pairs)
+	}
+	s.bulkPairs = make(map[string]bool)
+}
+
+func (s *LendingOhlcvService) broadcastTickUpdate(pairs []string) {
+	for unit, durations := range app.Config.TickDuration {
+		for _, duration := range durations {
+			for _, pair := range pairs {
+				term, lendingToken, _ := utils.ParseLendingChannelID(pair)
+				ticks, err := s.GetOHLCV(term, lendingToken, duration, unit)
+				if err != nil {
+					logger.Error("Get ticks", err)
+					return
+				}
+
+				for _, tick := range ticks {
+					id := utils.GetLendingOhlcvChannelID(term, lendingToken, unit, duration)
+					ws.GetLendingOhlcvSocket().BroadcastLendingOhlcv(id, tick)
+				}
+			}
+
+		}
+	}
 }
 
 func (s *LendingOhlcvService) getConfig() []durationtick {
@@ -228,6 +266,12 @@ func (s *LendingOhlcvService) Init() {
 		}
 	}()
 	s.lendingTradeService.RegisterNotify(s.NotifyTrade)
+	go func() {
+		for {
+			<-time.After(500 * time.Millisecond)
+			s.processBulkOhlcv()
+		}
+	}()
 	logger.Info("OHLCV finished")
 }
 
@@ -555,6 +599,9 @@ func (s *LendingOhlcvService) NotifyTrade(trade *types.LendingTrade) {
 	}
 	lastFrame := s.lastTimeFrame()
 	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
+	id := utils.GetLendingChannelID(trade.Term, trade.LendingToken)
+	logger.Info("add pair aaaaaaaaaaaaaaaaaaa", id)
+	s.bulkPairs[id] = true
 }
 
 // GetOHLCV fetches OHLCV data using

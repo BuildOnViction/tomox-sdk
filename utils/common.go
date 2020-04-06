@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -42,6 +43,19 @@ func GetTradeChannelID(bt, qt common.Address) string {
 // GetLendingTradeChannelID get channel from term and lending token
 func GetLendingTradeChannelID(term uint64, lendingToken common.Address) string {
 	return strings.ToLower(fmt.Sprintf("%s::%s", strconv.FormatUint(term, 10), lendingToken.Hex()))
+}
+
+// ParseLendingTradeChannelID parse channel to get term and lending token
+func ParseLendingChannelID(id string) (uint64, common.Address, error) {
+	x := strings.Split(id, "::")
+	if len(x) != 2 {
+		return 0, common.Address{}, errors.New("Error parser id")
+	}
+	term, ok := big.NewInt(0).SetString(x[0], 10)
+	if !ok {
+		return 0, common.Address{}, errors.New("Error parser id")
+	}
+	return term.Uint64(), common.HexToAddress(x[1]), nil
 }
 
 func GetOHLCVChannelID(bt, qt common.Address, unit string, duration int64) string {

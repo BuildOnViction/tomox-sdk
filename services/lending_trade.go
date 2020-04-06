@@ -94,6 +94,16 @@ func (s *LendingTradeService) GetLendingTradeByOrderBook(tern uint64, lendingTok
 
 // WatchChanges watch changing trade database
 func (s *LendingTradeService) WatchChanges() {
+	go func() {
+		for {
+			<-time.After(500 * time.Millisecond)
+			s.processBulkLendingTrades()
+		}
+	}()
+	s.watchChanges()
+}
+
+func (s *LendingTradeService) watchChanges() {
 
 	ct, sc, err := s.lendingTradeDao.Watch()
 
@@ -109,13 +119,6 @@ func (s *LendingTradeService) WatchChanges() {
 	defer s.WatchChanges()
 
 	ctx := context.Background()
-
-	go func() {
-		for {
-			<-time.After(500 * time.Millisecond)
-			s.processBulkLendingTrades()
-		}
-	}()
 
 	//Handling change stream in a cycle
 	for {
@@ -172,7 +175,6 @@ func (s *LendingTradeService) processBulkLendingTrades() {
 	}
 	if len(pairs) > 0 {
 
-		s.broadcastTickUpdate(pairs)
 	}
 }
 
@@ -296,9 +298,6 @@ func (s *LendingTradeService) saveBulkTrades(t *types.LendingTrade) {
 	defer s.mutext.Unlock()
 	id := utils.GetLendingTradeChannelID(t.Term, t.LendingToken)
 	s.bulkLendingTrades[id] = append(s.bulkLendingTrades[id], t)
-}
-
-func (s *LendingTradeService) broadcastTickUpdate(pairs []string) {
 }
 
 // GetLendingTradesUserHistory get lending trade by history
