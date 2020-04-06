@@ -21,29 +21,18 @@ type appConfig struct {
 	MongoDBPassword string `mapstructure:"mongo_password"`
 	MongoDBUsername string `mapstructure:"mongo_username"`
 
-	// simulate the environment
-	Simulated bool `mapstructure:"simulated"`
-
 	// the data source name (DSN) for connecting to the database. required.
 	DBName string `mapstructure:"db_name"`
+
+	ApiAuthKey string `mapstructure:"api_auth_key"`
 
 	// the RabbitMQURL is the URI of rabbitmq to use
 	RabbitMQURL string `mapstructure:"rabbitmq_url"`
 
-	// the signing method for JWT. Defaults to "HS256"
-	JWTSigningMethod string `mapstructure:"jwt_signing_method"`
-	// JWT signing key. required.
-	JWTSigningKey string `mapstructure:"jwt_signing_key"`
-	// JWT verification key. required.
-	JWTVerificationKey string `mapstructure:"jwt_verification_key"`
 	// TickDuration is user by tick streaming cron
 	TickDuration map[string][]int64 `mapstructure:"tick_duration"`
 
 	Tomochain map[string]string `mapstructure:"tomochain"`
-
-	CoingeckoAPIUrl string `mapstructure:"coingecko_api_url"`
-
-	SupportedCurrencies string `mapstructure:"supported_currencies"`
 
 	Env string `mapstructure:"env"`
 }

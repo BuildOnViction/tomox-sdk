@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
 )
@@ -22,13 +23,27 @@ func ServeRelayerResource(
 }
 
 func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	authKey := v.Get("authKey")
+	relayerName := v.Get("relayerName")
+
+	if app.Config.ApiAuthKey != authKey {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid auth key")
+		return
+	}
+
 	ex := e.relayerService.GetRelayerAddress(r)
 	err := e.relayerService.UpdateRelayer(ex)
 
+	if relayerName != "" {
+		err = e.relayerService.UpdateNameByAddress(ex, relayerName)
+	}
+
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	httputils.WriteMessage(w, http.StatusOK, "OK")
 }

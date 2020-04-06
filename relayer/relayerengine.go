@@ -47,14 +47,16 @@ type TokenInfo struct {
 
 // RInfo struct
 type RInfo struct {
-	RID     int
-	Owner   common.Address
-	Deposit *big.Int
-	Address common.Address
-	Tokens  map[common.Address]*TokenInfo
-	Pairs   []*PairToken
-	MakeFee uint16
-	TakeFee uint16
+	RID      int
+	Owner    common.Address
+	Deposit  *big.Int
+	Address  common.Address
+	Tokens   map[common.Address]*TokenInfo
+	Pairs    []*PairToken
+	Resign   bool
+	LockTime int
+	MakeFee  uint16
+	TakeFee  uint16
 }
 
 // LendingRInfo lending relayer info
@@ -226,6 +228,34 @@ func (b *Blockchain) GetRelayerCount(contractAddress common.Address) (*big.Int, 
 	return nil, nil
 }
 
+func (b *Blockchain) GetRelayerResignStatus(contractAddress common.Address, coinbase common.Address) (*big.Int, error) {
+	abiRelayer, err := relayerAbi.GetRelayerAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	input, err := abiRelayer.Pack("RESIGN_REQUESTS", coinbase)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := ether.CallMsg{To: &contractAddress, Data: input}
+	result, err := b.ethclient.CallContract(context.Background(), msg, nil)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if method, ok := abiRelayer.Methods["RESIGN_REQUESTS"]; ok {
+		contractData, _ := method.Outputs.UnpackValues(result)
+		return contractData[0].(*big.Int), nil
+	} else {
+		return nil, errors.New("Can not get relayer information")
+	}
+
+	return nil, nil
+}
+
 // GetRelayer return all tokens in smart contract
 func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress common.Address) (*RInfo, error) {
 	abiRelayer, err := relayerAbi.GetRelayerAbi()
@@ -266,6 +296,11 @@ func (b *Blockchain) GetRelayer(coinAddress common.Address, contractAddress comm
 				fromTokens := contractData[4].([]common.Address)
 				toTokens := contractData[5].([]common.Address)
 				setToken := utils.Union(fromTokens, toTokens)
+				lockTime, _ := b.GetRelayerResignStatus(contractAddress, coinAddress)
+				relayerInfo.LockTime, _ = strconv.Atoi(lockTime.String())
+				if relayerInfo.Resign = false; relayerInfo.LockTime > 0 {
+					relayerInfo.Resign = true
+				}
 				for _, t := range setToken {
 					if utils.IsNativeTokenByAddress(t) {
 						tokenInfo := b.setBaseTokenInfo()

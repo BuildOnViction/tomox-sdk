@@ -49,6 +49,10 @@ func (s *RelayerService) GetByAddress(addr common.Address) (*types.Relayer, erro
 	return s.relayerDao.GetByAddress(addr)
 }
 
+func (s *RelayerService) UpdateNameByAddress(addr common.Address, name string) error {
+	return s.relayerDao.UpdateNameByAddress(addr, name)
+}
+
 func (s *RelayerService) GetRelayerAddress(r *http.Request) common.Address {
 	v := r.URL.Query()
 	relayerAddress := v.Get("relayerAddress")
@@ -201,6 +205,8 @@ func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRe
 			Owner:      r.Owner,
 			Deposit:    r.Deposit,
 			Address:    r.Address,
+			Resign:     r.Resign,
+			LockTime:   r.LockTime,
 			MakeFee:    big.NewInt(int64(r.MakeFee)),
 			TakeFee:    big.NewInt(int64(r.TakeFee)),
 			LendingFee: big.NewInt(int64(lendingFee)),
@@ -236,6 +242,49 @@ func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRe
 			}
 		}
 	}
+	return nil
+}
+
+func (s *RelayerService) updateRelayer(relayerInfo *relayer.RInfo, lendingRelayerInfo *relayer.LendingRInfo) error {
+	currentRelayer, err := s.relayerDao.GetByAddress(relayerInfo.Address)
+	if err != nil {
+		return err
+	}
+
+	found := false
+	if currentRelayer != nil {
+		found = true
+	}
+
+	lendingFee := lendingRelayerInfo.Fee
+	domain := fmt.Sprintf("%03d", relayerInfo.RID) + "." + app.Config.Tomochain["domain_suffix"]
+	relayer := &types.Relayer{
+		Domain:     domain,
+		RID:        relayerInfo.RID,
+		Owner:      relayerInfo.Owner,
+		Deposit:    relayerInfo.Deposit,
+		Address:    relayerInfo.Address,
+		Resign:     relayerInfo.Resign,
+		LockTime:   relayerInfo.LockTime,
+		MakeFee:    big.NewInt(int64(relayerInfo.MakeFee)),
+		TakeFee:    big.NewInt(int64(relayerInfo.TakeFee)),
+		LendingFee: big.NewInt(int64(lendingFee)),
+	}
+
+	if !found {
+		logger.Info("Create relayer:", relayerInfo.Address.Hex())
+		err = s.relayerDao.Create(relayer)
+		if err != nil {
+			logger.Error(err)
+		}
+	} else {
+		logger.Info("Update relayer:", relayerInfo.Address.Hex())
+		err = s.relayerDao.UpdateByAddress(relayerInfo.Address, relayer)
+		if err != nil {
+			logger.Error(err)
+		}
+	}
+
 	return nil
 }
 
@@ -408,6 +457,7 @@ func (s *RelayerService) UpdateRelayer(coinbase common.Address) error {
 	s.updateLendingPair(relayerLendingInfo)
 	s.updateCollateralTokenRelayer(relayerLendingInfo)
 	s.updateLendingTokenRelayer(relayerLendingInfo)
+	s.updateRelayer(relayerInfo, relayerLendingInfo)
 	return nil
 }
 

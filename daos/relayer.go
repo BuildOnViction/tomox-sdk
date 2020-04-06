@@ -132,8 +132,28 @@ func (dao *RelayerDao) UpdateByAddress(addr common.Address, relayer *types.Relay
 			"deposit":    relayer.Deposit.String(),
 			"owner":      relayer.Owner.Hex(),
 			"rid":        relayer.RID,
+			"resign":     relayer.Resign,
+			"lockTime":   relayer.LockTime,
 		},
 	}
+	err := db.Update(dao.dbName, dao.collectionName, q, update)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (dao *RelayerDao) UpdateNameByAddress(addr common.Address, name string) error {
+	q := bson.M{"address": addr.Hex()}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name": name,
+		},
+	}
+
 	err := db.Update(dao.dbName, dao.collectionName, q, update)
 	if err != nil {
 		logger.Error(err)

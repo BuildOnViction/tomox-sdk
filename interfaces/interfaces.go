@@ -94,6 +94,7 @@ type RelayerDao interface {
 	GetByAddress(addr common.Address) (relayer *types.Relayer, err error)
 	DeleteByAddress(addr common.Address) error
 	UpdateByAddress(addr common.Address, relayer *types.Relayer) error
+	UpdateNameByAddress(addr common.Address, name string) error
 }
 
 type ConfigDao interface {
@@ -399,6 +400,7 @@ type EthereumProvider interface {
 type RelayerService interface {
 	UpdateRelayer(addr common.Address) error
 	UpdateRelayers() error
+	UpdateNameByAddress(addr common.Address, name string) error
 	GetRelayerAddress(r *http.Request) common.Address
 	GetByAddress(addr common.Address) (*types.Relayer, error)
 }

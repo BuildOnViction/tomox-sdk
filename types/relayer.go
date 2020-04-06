@@ -19,6 +19,9 @@ type Relayer struct {
 	Deposit    *big.Int       `json:"deposit" bson:"deposit"`
 	Address    common.Address `json:"address" bson:"address"`
 	Domain     string         `json:"domain" bson:"domain"`
+	Name       string         `json:"name" bson:"name"`
+	Resign     bool           `json:"resign" bson:"resign"`
+	LockTime   int            `json:"lockTime" bson:"lockTime"`
 	MakeFee    *big.Int       `json:"makeFee,omitempty" bson:"makeFee,omitempty"`
 	TakeFee    *big.Int       `json:"takeFee,omitempty" bson:"makeFee,omitempty"`
 	LendingFee *big.Int       `json:"lendingFee,omitempty" bson:"lendingFee,omitempty"`
@@ -33,6 +36,9 @@ func (a *Relayer) GetBSON() (interface{}, error) {
 		Owner:     a.Owner.Hex(),
 		Deposit:   a.Deposit.String(),
 		Domain:    a.Domain,
+		Name:      a.Name,
+		Resign:    a.Resign,
+		LockTime:  a.LockTime,
 		Address:   a.Address.Hex(),
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
@@ -74,6 +80,9 @@ func (a *Relayer) SetBSON(raw bson.Raw) error {
 	a.RID = decoded.RID
 	a.ID = decoded.ID
 	a.Domain = decoded.Domain
+	a.Name = decoded.Name
+	a.Resign = decoded.Resign
+	a.LockTime = decoded.LockTime
 	a.CreatedAt = decoded.CreatedAt
 	a.UpdatedAt = decoded.UpdatedAt
 	if decoded.MakeFee != "" {
@@ -97,6 +106,9 @@ func (a *Relayer) MarshalJSON() ([]byte, error) {
 		"id":        a.ID,
 		"address":   a.Address.Hex(),
 		"domain":    a.Domain,
+		"name":      a.Name,
+		"resign":    a.Resign,
+		"lockTime":  a.LockTime,
 		"rid":       a.RID,
 		"owner":     a.Owner.Hex(),
 		"deposit":   a.Deposit.String(),
@@ -150,6 +162,18 @@ func (a *Relayer) UnmarshalJSON(b []byte) error {
 		a.Domain = relayer["domain"].(string)
 	}
 
+	if relayer["name"] != nil {
+		a.Name = relayer["name"].(string)
+	}
+
+	if relayer["resign"] != nil {
+		a.Resign = relayer["resign"].(bool)
+	}
+
+	if relayer["lockTime"] != nil {
+		a.LockTime = relayer["lockTime"].(int)
+	}
+
 	if relayer["makeFee"] != nil {
 		a.MakeFee = math.ToBigInt(relayer["makeFee"].(string))
 	}
@@ -180,6 +204,9 @@ type RelayerRecord struct {
 	Deposit    string        `json:"deposit" bson:"deposit"`
 	Address    string        `json:"address" bson:"address"`
 	Domain     string        `json:"domain" bson:"domain"`
+	Name       string        `json:"name" bson:"name"`
+	Resign     bool          `json:"resign" bson:"resign"`
+	LockTime   int           `json:"lockTime" bson:"lockTime"`
 	MakeFee    string        `json:"makeFee,omitempty" bson:"makeFee,omitempty"`
 	TakeFee    string        `json:"takeFee,omitempty" bson:"takeFee,omitempty"`
 	LendingFee string        `json:"lendingFee,omitempty" bson:"lendingFee,omitempty"`
