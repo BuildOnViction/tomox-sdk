@@ -9,14 +9,10 @@ tomochain:
   http_url: http://localhost:8545
   ws_url: ws://localhost:8546
   domain_suffix: devnet.tomochain.com
-jwt_signing_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
-jwt_verification_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
 api_auth_key: QfCAH04Cob7b71QCqy738vw5XGSnFZ9d
 mongo_url: localhost:27017
 rabbitmq_url: amqp://guest:guest@localhost:5672/
 server_port: 8080
-simulated: false
-supported_currencies: ETH,TOMO,BTC,USDT
 tick_duration:
   day:
   - 1
