@@ -167,6 +167,9 @@ func (t *LendingTrade) UnmarshalJSON(b []byte) error {
 		t.LiquidationPrice = new(big.Int)
 		t.LiquidationPrice, _ = t.LiquidationPrice.SetString(trade["liquidationPrice"].(string), 10)
 	}
+	if trade["liquidationTime"] != nil {
+		t.LiquidationTime, _ = strconv.ParseUint(trade["liquidationTime"].(string), 10, 64)
+	}
 	if trade["amount"] != nil {
 		t.Amount = new(big.Int)
 		t.Amount, _ = t.Amount.SetString(trade["amount"].(string), 10)
