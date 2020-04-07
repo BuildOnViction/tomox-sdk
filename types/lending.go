@@ -28,6 +28,7 @@ const (
 	LendingStatusCancelled     = "CANCELLED"
 	LendingStatusRepay         = "REPAY"
 	LendingStatusTopup         = "TOPUP"
+	LendingStatusRecall        = "RECALL"
 )
 
 // LendingOrder contains the data related to an lending sent by the user
@@ -98,6 +99,18 @@ type RepaySpec struct {
 	DateFrom     int64
 	DateTo       int64
 	Hash         string
+}
+
+// RecallSpec filter recall
+type RecallSpec struct {
+	UserAddress     string
+	CollateralToken string
+	LendingToken    string
+	Term            string
+	Status          string
+	DateFrom        int64
+	DateTo          int64
+	Hash            string
 }
 
 // Validate Verify userAddress, collateralToken, lendingToken, etc. conditions are working

@@ -134,6 +134,21 @@ func NewRepayDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	return dao
 }
 
+// NewRecallDao recall dao
+func NewRecallDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
+	dao := &LendingOrderDao{}
+	dao.collectionName = "lending_recalls"
+	dao.dbName = app.Config.DBName
+
+	for _, op := range opts {
+		err := op(dao)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return dao
+}
+
 // GetCollection get collection name
 func (dao *LendingOrderDao) GetCollection() *mgo.Collection {
 	return db.GetCollection(dao.dbName, dao.collectionName)

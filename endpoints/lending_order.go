@@ -24,6 +24,7 @@ func ServeLendingOrderResource(r *mux.Router, lendingorderService interfaces.Len
 	r.HandleFunc("/api/lending/orders", e.handleGetLendingOrders).Methods("GET")
 	r.HandleFunc("/api/lending/repay", e.handleGetRepay).Methods("GET")
 	r.HandleFunc("/api/lending/topup", e.handleGetTopup).Methods("GET")
+	r.HandleFunc("/api/lending/recall", e.handleGetRecall).Methods("GET")
 	r.HandleFunc("/api/lending/nonce", e.handleGetLendingOrderNonce).Methods("GET")
 	r.HandleFunc("/api/lending", e.handleNewLendingOrder).Methods("POST")
 	r.HandleFunc("/api/lending/cancel", e.handleCancelLendingOrder).Methods("POST")
@@ -621,6 +622,140 @@ func (e *lendingorderEndpoint) handleGetRepay(w http.ResponseWriter, r *http.Req
 	var lendings *types.LendingRes
 
 	lendings, err = e.lendingorderService.GetRepay(repaySpec, sortDB, offset*size, size)
+
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if lendings == nil {
+		r := types.LendingRes{
+			Total:        0,
+			LendingItems: []*types.LendingOrder{},
+		}
+		httputils.WriteJSON(w, http.StatusOK, r)
+		return
+	}
+
+	httputils.WriteJSON(w, http.StatusOK, lendings)
+}
+func (e *lendingorderEndpoint) handleGetRecall(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	addr := v.Get("address")
+	lendingToken := v.Get("lendingToken")
+	collateralToken := v.Get("collateralToken")
+	term := v.Get("term")
+	fromParam := v.Get("from")
+	toParam := v.Get("to")
+	pageOffset := v.Get("pageOffset")
+	pageSize := v.Get("pageSize")
+	sortBy := v.Get("sortBy")
+	sortType := v.Get("sortType")
+	lendinghash := v.Get("hash")
+
+	sortedList := make(map[string]string)
+	sortedList["time"] = "createdAt"
+	sortedList["term"] = "term"
+
+	var recallSpec types.RecallSpec
+	if addr != "" {
+		if !common.IsHexAddress(addr) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
+			return
+		}
+		recallSpec.UserAddress = common.HexToAddress(addr).Hex()
+
+	}
+
+	if lendingToken != "" {
+		if !common.IsHexAddress(lendingToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid lendingToken address")
+			return
+		}
+		recallSpec.LendingToken = common.HexToAddress(lendingToken).Hex()
+	}
+
+	if collateralToken != "" {
+		if !common.IsHexAddress(collateralToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid colateralToken address")
+			return
+		}
+		recallSpec.CollateralToken = common.HexToAddress(collateralToken).Hex()
+	}
+
+	if term != "" {
+		_, err := strconv.Atoi(term)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid term")
+			return
+		}
+		recallSpec.Term = term
+	}
+
+	if fromParam != "" {
+		t, err := strconv.Atoi(fromParam)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid time from value")
+			return
+		}
+		recallSpec.DateFrom = int64(t)
+	}
+
+	if toParam != "" {
+		t, err := strconv.Atoi(toParam)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid time to value")
+			return
+		}
+		recallSpec.DateTo = int64(t)
+	}
+	offset := 0
+	size := types.DefaultLimit
+	sortDB := []string{}
+
+	if sortType != "asc" && sortType != "dec" {
+		sortType = "dec"
+	}
+
+	if sortBy == "" {
+		sortBy = "time"
+	}
+
+	if val, ok := sortedList[sortBy]; ok {
+		if sortType == "asc" {
+			sortDB = append(sortDB, "+"+val)
+		} else {
+			sortDB = append(sortDB, "-"+val)
+		}
+
+	}
+
+	if pageOffset != "" {
+		t, err := strconv.Atoi(pageOffset)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
+			return
+		}
+		offset = t
+	}
+	if pageSize != "" {
+		t, err := strconv.Atoi(pageSize)
+		if err != nil {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
+			return
+		}
+		size = t
+	}
+
+	if lendinghash != "" {
+		recallSpec.Hash = lendinghash
+	}
+
+	var err error
+	var lendings *types.LendingRes
+
+	lendings, err = e.lendingorderService.GetRecall(recallSpec, sortDB, offset*size, size)
 
 	if err != nil {
 		logger.Error(err)

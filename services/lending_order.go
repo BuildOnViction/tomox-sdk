@@ -22,6 +22,7 @@ type LendingOrderService struct {
 	lendingDao        interfaces.LendingOrderDao
 	topupDao          interfaces.LendingOrderDao
 	repayDao          interfaces.LendingOrderDao
+	recallDao         interfaces.LendingOrderDao
 	notificationDao   interfaces.NotificationDao
 	engine            interfaces.Engine
 	broker            *rabbitmq.Connection
@@ -34,6 +35,7 @@ func NewLendingOrderService(
 	lendingDao interfaces.LendingOrderDao,
 	topupDao interfaces.LendingOrderDao,
 	repayDao interfaces.LendingOrderDao,
+	recallDao interfaces.LendingOrderDao,
 	notificationDao interfaces.NotificationDao,
 	engine interfaces.Engine,
 	broker *rabbitmq.Connection,
@@ -43,6 +45,7 @@ func NewLendingOrderService(
 		lendingDao,
 		topupDao,
 		repayDao,
+		recallDao,
 		notificationDao,
 		engine,
 		broker,
@@ -125,6 +128,9 @@ func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineRespon
 		break
 	case types.LENDING_ORDER_TOPUPED:
 		s.handleLendingTopup(res)
+		break
+	case types.LENDING_ORDER_RECALLED:
+		s.handleLendingRecall(res)
 		break
 	case types.ERROR_STATUS:
 		s.handleEngineError(res)
@@ -212,6 +218,27 @@ func (s *LendingOrderService) handleLendingRepay(res *types.EngineResponse) {
 	}
 
 	ws.SendNotificationMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, notifications)
+}
+
+func (s *LendingOrderService) handleLendingRecall(res *types.EngineResponse) {
+	o := res.LendingOrder
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_RECALLED, o.UserAddress, o)
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: res.Status,
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendNotificationMessage(types.LENDING_ORDER_RECALLED, o.UserAddress, notifications)
 }
 
 func (s *LendingOrderService) handleLendingOrderCancelled(res *types.EngineResponse) {
@@ -327,7 +354,8 @@ func (s *LendingOrderService) WatchChanges() {
 	}()
 	go s.watchChanges(s.lendingDao)
 	go s.watchChanges(s.topupDao)
-	s.watchChanges(s.repayDao)
+	go s.watchChanges(s.repayDao)
+	s.watchChanges(s.recallDao)
 }
 
 // HandleDocumentType handle order frome changing db
@@ -354,6 +382,9 @@ func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEven
 		res.LendingOrder = ev.FullDocument
 	} else if ev.FullDocument.Status == types.LendingStatusTopup {
 		res.Status = types.LENDING_ORDER_TOPUPED
+		res.LendingOrder = ev.FullDocument
+	} else if ev.FullDocument.Status == types.LendingStatusRecall {
+		res.Status = types.LENDING_ORDER_RECALLED
 		res.LendingOrder = ev.FullDocument
 	}
 
@@ -492,7 +523,7 @@ func (s *LendingOrderService) GetTopup(topupSpec types.TopupSpec, sort []string,
 	return s.topupDao.GetLendingOrders(lendingSpec, sort, offset, size)
 }
 
-// GetRepay filter relay
+// GetRepay filter repay
 func (s *LendingOrderService) GetRepay(repaySpec types.RepaySpec, sort []string, offset int, size int) (*types.LendingRes, error) {
 	lendingSpec := types.LendingSpec{
 		UserAddress:  repaySpec.UserAddress,
@@ -502,4 +533,17 @@ func (s *LendingOrderService) GetRepay(repaySpec types.RepaySpec, sort []string,
 		DateTo:       repaySpec.DateTo,
 	}
 	return s.repayDao.GetLendingOrders(lendingSpec, sort, offset, size)
+}
+
+// GetRecall filter recall
+func (s *LendingOrderService) GetRecall(recallSpec types.RecallSpec, sort []string, offset int, size int) (*types.LendingRes, error) {
+	lendingSpec := types.LendingSpec{
+		UserAddress:     recallSpec.UserAddress,
+		CollateralToken: recallSpec.CollateralToken,
+		LendingToken:    recallSpec.LendingToken,
+		Term:            recallSpec.Term,
+		DateFrom:        recallSpec.DateFrom,
+		DateTo:          recallSpec.DateTo,
+	}
+	return s.recallDao.GetLendingOrders(lendingSpec, sort, offset, size)
 }
