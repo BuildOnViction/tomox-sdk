@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -19,15 +20,17 @@ import (
 
 // LendingOrderService struct
 type LendingOrderService struct {
-	lendingDao        interfaces.LendingOrderDao
-	topupDao          interfaces.LendingOrderDao
-	repayDao          interfaces.LendingOrderDao
-	recallDao         interfaces.LendingOrderDao
-	notificationDao   interfaces.NotificationDao
-	engine            interfaces.Engine
-	broker            *rabbitmq.Connection
-	mutext            sync.RWMutex
-	bulkLendingOrders map[string]map[common.Hash]*types.LendingOrder
+	lendingDao         interfaces.LendingOrderDao
+	topupDao           interfaces.LendingOrderDao
+	repayDao           interfaces.LendingOrderDao
+	recallDao          interfaces.LendingOrderDao
+	collateralTokenDao interfaces.TokenDao
+	lendingTokenDao    interfaces.TokenDao
+	notificationDao    interfaces.NotificationDao
+	engine             interfaces.Engine
+	broker             *rabbitmq.Connection
+	mutext             sync.RWMutex
+	bulkLendingOrders  map[string]map[common.Hash]*types.LendingOrder
 }
 
 // NewLendingOrderService returns a new instance of lending order service
@@ -36,6 +39,8 @@ func NewLendingOrderService(
 	topupDao interfaces.LendingOrderDao,
 	repayDao interfaces.LendingOrderDao,
 	recallDao interfaces.LendingOrderDao,
+	collateralTokenDao interfaces.TokenDao,
+	lendingTokenDao interfaces.TokenDao,
 	notificationDao interfaces.NotificationDao,
 	engine interfaces.Engine,
 	broker *rabbitmq.Connection,
@@ -46,6 +51,8 @@ func NewLendingOrderService(
 		topupDao,
 		repayDao,
 		recallDao,
+		collateralTokenDao,
+		lendingTokenDao,
 		notificationDao,
 		engine,
 		broker,
@@ -546,4 +553,22 @@ func (s *LendingOrderService) GetRecall(recallSpec types.RecallSpec, sort []stri
 		DateTo:          recallSpec.DateTo,
 	}
 	return s.recallDao.GetLendingOrders(lendingSpec, sort, offset, size)
+}
+
+// EstimateCollateral estimate collateral amount to make lending
+func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Int) (*big.Float, *big.Float, error) {
+	collateralPrice, err := s.lendingDao.GetLastTokenPrice(collateralToken, lendingToken)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	lendingTokenInfo, err := s.lendingTokenDao.GetByAddress(lendingToken)
+	if err != nil {
+		return nil, nil, err
+	}
+	lendingDecimals := big.NewInt(int64(math.Pow10(lendingTokenInfo.Decimals)))
+	x := new(big.Float).Quo(new(big.Float).SetInt(collateralPrice), new(big.Float).SetInt(lendingDecimals))
+	a := new(big.Int).Mul(lendingAmount, lendingDecimals)
+	collateralAmount := new(big.Float).Quo(new(big.Float).SetInt(a), new(big.Float).SetInt(collateralPrice))
+	return collateralAmount, x, nil
 }

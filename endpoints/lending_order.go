@@ -3,6 +3,7 @@ package endpoints
 import (
 	"encoding/json"
 	"log"
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -12,6 +13,10 @@ import (
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils/httputils"
 	"github.com/tomochain/tomox-sdk/ws"
+)
+
+const (
+	COLLATERAL_RATE = 1.5
 )
 
 type lendingorderEndpoint struct {
@@ -25,6 +30,7 @@ func ServeLendingOrderResource(r *mux.Router, lendingorderService interfaces.Len
 	r.HandleFunc("/api/lending/repay", e.handleGetRepay).Methods("GET")
 	r.HandleFunc("/api/lending/topup", e.handleGetTopup).Methods("GET")
 	r.HandleFunc("/api/lending/recall", e.handleGetRecall).Methods("GET")
+	r.HandleFunc("/api/lending/estimate", e.handleGetEstimateCollateral).Methods("GET")
 	r.HandleFunc("/api/lending/nonce", e.handleGetLendingOrderNonce).Methods("GET")
 	r.HandleFunc("/api/lending", e.handleNewLendingOrder).Methods("POST")
 	r.HandleFunc("/api/lending/cancel", e.handleCancelLendingOrder).Methods("POST")
@@ -773,4 +779,49 @@ func (e *lendingorderEndpoint) handleGetRecall(w http.ResponseWriter, r *http.Re
 	}
 
 	httputils.WriteJSON(w, http.StatusOK, lendings)
+}
+
+func (e *lendingorderEndpoint) handleGetEstimateCollateral(w http.ResponseWriter, r *http.Request) {
+	v := r.URL.Query()
+	lendingToken := v.Get("lendingToken")
+	collateralToken := v.Get("collateralToken")
+	amount := v.Get("amount")
+	type res struct {
+		CollateralToken          common.Address `json:"collateralToken"`
+		LendingToken             common.Address `json:"lendingToken"`
+		LendingAmount            *big.Int       `json:"lendingAmount"`
+		Rate                     float64        `json:"rate"`
+		CollateralPrice          *big.Float     `json:"collateralPrice"`
+		EstimateCollateralAmount *big.Float     `json:"estimateCollateralAmount"`
+	}
+	var result res
+	result.Rate = COLLATERAL_RATE
+	if lendingToken != "" {
+		if !common.IsHexAddress(lendingToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid lendingToken address")
+			return
+		}
+		result.LendingToken = common.HexToAddress(lendingToken)
+	}
+
+	if collateralToken != "" {
+		if !common.IsHexAddress(collateralToken) {
+			httputils.WriteError(w, http.StatusBadRequest, "Invalid colateralToken address")
+			return
+		}
+		result.CollateralToken = common.HexToAddress(collateralToken)
+	}
+	lendingAmount, ok := new(big.Int).SetString(amount, 10)
+	if !ok {
+		httputils.WriteError(w, http.StatusBadRequest, "Invalid lending amount")
+		return
+	}
+	result.LendingAmount = lendingAmount
+	collateralAmount, colalteralPrice, err := e.lendingorderService.EstimateCollateral(common.HexToAddress(collateralToken), common.HexToAddress(lendingToken), lendingAmount)
+	if err != nil {
+		httputils.WriteError(w, http.StatusBadRequest, "Cant not estimate collateral amount")
+	}
+	result.EstimateCollateralAmount = collateralAmount
+	result.CollateralPrice = colalteralPrice
+	httputils.WriteJSON(w, http.StatusOK, result)
 }

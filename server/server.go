@@ -128,7 +128,7 @@ func NewRouter(
 	tokenLendingService := services.NewTokenService(tokenLendingDao)
 	tokenCollateralService := services.NewTokenService(tokenCollateralDao)
 
-	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, lendingRecallDao, notificationDao, eng, rabbitConn)
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, lendingRecallDao, tokenCollateralDao, tokenLendingDao, notificationDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, notificationDao, rabbitConn)
 	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeService, lengdingPairDao)
 	lendingOhlcvService.Init()
