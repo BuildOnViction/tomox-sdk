@@ -600,7 +600,6 @@ func (s *LendingOhlcvService) NotifyTrade(trade *types.LendingTrade) {
 	lastFrame := s.lastTimeFrame()
 	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
 	id := utils.GetLendingChannelID(trade.Term, trade.LendingToken)
-	logger.Info("add pair aaaaaaaaaaaaaaaaaaa", id)
 	s.bulkPairs[id] = true
 }
 
