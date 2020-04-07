@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"sort"
@@ -123,6 +124,21 @@ func NewTopupDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 func NewRepayDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	dao := &LendingOrderDao{}
 	dao.collectionName = "lending_repays"
+	dao.dbName = app.Config.DBName
+
+	for _, op := range opts {
+		err := op(dao)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return dao
+}
+
+// NewRecallDao recall dao
+func NewRecallDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
+	dao := &LendingOrderDao{}
+	dao.collectionName = "lending_recalls"
 	dao.dbName = app.Config.DBName
 
 	for _, op := range opts {
@@ -695,4 +711,37 @@ func (dao *LendingOrderDao) GetLendingOrders(lendingSpec types.LendingSpec, sort
 	}
 	res.LendingItems = lendings
 	return &res, nil
+}
+
+// GetLastTokenPrice get last token price
+func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	var result interface{}
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	err = rpcClient.Call(&result, "tomox_getLastEpochPrice", bToken, qToken)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	s := result.(string)
+	s = strings.TrimPrefix(s, "0x")
+	n, ok := new(big.Int).SetString(s, 16)
+	if !ok {
+		return nil, errors.New("error parse price")
+	}
+
+	return n, nil
 }
