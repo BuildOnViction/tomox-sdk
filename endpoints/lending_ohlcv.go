@@ -25,7 +25,7 @@ func ServeLendingOhlcvResource(
 	lendingOhlcvService interfaces.LendingOhlcvService,
 ) {
 	e := &LendingOhlcvEndpoint{lendingOhlcvService}
-	r.HandleFunc("/api/lending/ohlcv", e.handleGetLendingOhlcv).Methods("GET")
+	r.HandleFunc("/api/lending-ohlcv", e.handleGetLendingOhlcv).Methods("GET")
 	ws.RegisterChannel(ws.LendingOhlcvChannel, e.ohlcvWebSocket)
 }
 
