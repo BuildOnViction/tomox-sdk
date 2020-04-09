@@ -818,7 +818,7 @@ func (e *lendingorderEndpoint) handleGetEstimateCollateral(w http.ResponseWriter
 	}
 	result.LendingAmount = lendingAmount
 	collateralAmount, colalteralPrice, err := e.lendingorderService.EstimateCollateral(common.HexToAddress(collateralToken), common.HexToAddress(lendingToken), lendingAmount)
-	if err != nil {
+	if err != nil || collateralAmount == nil {
 		httputils.WriteError(w, http.StatusBadRequest, "Cant not estimate collateral amount")
 	}
 	result.EstimateCollateralAmount = collateralAmount.Mul(collateralAmount, big.NewFloat(result.Rate))
