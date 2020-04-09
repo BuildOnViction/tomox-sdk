@@ -18,6 +18,13 @@ import (
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
+const (
+	LENDING_EVENT = "ORDER"
+	REPAY_EVENT   = "REPAY"
+	TOPUP_EVENT   = "TOPUP"
+	RECALL_EVENT  = "RECALL"
+)
+
 // LendingOrderService struct
 type LendingOrderService struct {
 	lendingDao         interfaces.LendingOrderDao
@@ -139,6 +146,17 @@ func (s *LendingOrderService) HandleLendingOrderResponse(res *types.EngineRespon
 	case types.LENDING_ORDER_RECALLED:
 		s.handleLendingRecall(res)
 		break
+
+	case types.LENDING_ORDER_TOPUP_REJECTED:
+		s.handleLendingReject(res, types.LENDING_ORDER_TOPUP_REJECTED)
+		break
+	case types.LENDING_ORDER_REPAY_REJECTED:
+		s.handleLendingReject(res, types.LENDING_ORDER_REPAY_REJECTED)
+		break
+	case types.LENDING_ORDER_RECALL_REJECTED:
+		s.handleLendingReject(res, types.LENDING_ORDER_RECALL_REJECTED)
+		break
+
 	case types.ERROR_STATUS:
 		s.handleEngineError(res)
 		break
@@ -248,6 +266,27 @@ func (s *LendingOrderService) handleLendingRecall(res *types.EngineResponse) {
 	ws.SendNotificationMessage(types.LENDING_ORDER_RECALLED, o.UserAddress, notifications)
 }
 
+func (s *LendingOrderService) handleLendingReject(res *types.EngineResponse, lendingType types.SubscriptionEvent) {
+	o := res.LendingOrder
+	ws.SendLendingOrderMessage(lendingType, o.UserAddress, o)
+
+	notifications, err := s.notificationDao.Create(&types.Notification{
+		Recipient: o.UserAddress,
+		Message: types.Message{
+			MessageType: res.Status,
+			Description: o.Hash.Hex(),
+		},
+		Type:   types.TypeLog,
+		Status: types.StatusUnread,
+	})
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	ws.SendNotificationMessage(lendingType, o.UserAddress, notifications)
+}
+
 func (s *LendingOrderService) handleLendingOrderCancelled(res *types.EngineResponse) {
 	o := res.LendingOrder
 
@@ -301,7 +340,7 @@ func (s *LendingOrderService) handleEngineUnknownMessage(res *types.EngineRespon
 }
 
 // WatchChanges watch database
-func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao) {
+func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao, docType string) {
 	ct, sc, err := dao.Watch()
 
 	if err != nil {
@@ -313,7 +352,7 @@ func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao) {
 	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
-	defer s.watchChanges(dao)
+	defer s.watchChanges(dao, docType)
 
 	ctx := context.Background()
 	//Handling change stream in a cycle
@@ -345,7 +384,7 @@ func (s *LendingOrderService) watchChanges(dao interfaces.LendingOrderDao) {
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
 				logger.Debugf("Lending Operation Type: %s", ev.OperationType)
-				s.HandleDocumentType(ev)
+				s.HandleDocumentType(ev, docType)
 			}
 		}
 	}
@@ -359,14 +398,14 @@ func (s *LendingOrderService) WatchChanges() {
 			s.processBulkLendingOrders()
 		}
 	}()
-	go s.watchChanges(s.lendingDao)
-	go s.watchChanges(s.topupDao)
-	go s.watchChanges(s.repayDao)
-	s.watchChanges(s.recallDao)
+	go s.watchChanges(s.lendingDao, LENDING_EVENT)
+	go s.watchChanges(s.topupDao, TOPUP_EVENT)
+	go s.watchChanges(s.repayDao, REPAY_EVENT)
+	s.watchChanges(s.recallDao, RECALL_EVENT)
 }
 
 // HandleDocumentType handle order frome changing db
-func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEvent) error {
+func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEvent, docType string) error {
 	res := &types.EngineResponse{}
 
 	if ev.FullDocument.Status == types.LendingStatusOpen {
@@ -374,9 +413,6 @@ func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEven
 		res.LendingOrder = ev.FullDocument
 	} else if ev.FullDocument.Status == types.LendingStatusCancelled {
 		res.Status = types.LENDING_ORDER_CANCELLED
-		res.LendingOrder = ev.FullDocument
-	} else if ev.FullDocument.Status == types.LendingStatusRejected {
-		res.Status = types.LENDING_ORDER_REJECTED
 		res.LendingOrder = ev.FullDocument
 	} else if ev.FullDocument.Status == types.LendingStatusFilled {
 		res.Status = types.LENDING_ORDER_FILLED
@@ -393,6 +429,24 @@ func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEven
 	} else if ev.FullDocument.Status == types.LendingStatusRecall {
 		res.Status = types.LENDING_ORDER_RECALLED
 		res.LendingOrder = ev.FullDocument
+	} else if ev.FullDocument.Status == types.LendingStatusRejected {
+		if docType == REPAY_EVENT {
+			res.Status = types.LENDING_ORDER_REPAY_REJECTED
+			res.LendingOrder = ev.FullDocument
+		}
+		if docType == TOPUP_EVENT {
+			res.Status = types.LENDING_ORDER_TOPUP_REJECTED
+			res.LendingOrder = ev.FullDocument
+		}
+		if docType == RECALL_EVENT {
+			res.Status = types.LENDING_ORDER_RECALL_REJECTED
+			res.LendingOrder = ev.FullDocument
+		}
+		if docType == LENDING_EVENT {
+			res.Status = types.LENDING_ORDER_REJECTED
+			res.LendingOrder = ev.FullDocument
+		}
+
 	}
 
 	if res.Status != "" {
