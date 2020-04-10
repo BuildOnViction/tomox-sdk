@@ -171,7 +171,7 @@ func (e *lendingorderEndpoint) handleGetLendingOrders(w http.ResponseWriter, r *
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -194,7 +194,7 @@ func (e *lendingorderEndpoint) handleLendingByHash(w http.ResponseWriter, r *htt
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, res)
@@ -215,7 +215,7 @@ func (e *lendingorderEndpoint) handleNewLendingOrder(w http.ResponseWriter, r *h
 	err = e.lendingorderService.NewLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusCreated, o)
@@ -234,7 +234,7 @@ func (e *lendingorderEndpoint) handleCancelLendingOrder(w http.ResponseWriter, r
 	err = e.lendingorderService.CancelLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, o.Hash)
@@ -255,7 +255,7 @@ func (e *lendingorderEndpoint) handleRepayLendingOrder(w http.ResponseWriter, r 
 	err = e.lendingorderService.RepayLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, o.Hash)
@@ -275,7 +275,7 @@ func (e *lendingorderEndpoint) handleTopupLendingOrder(w http.ResponseWriter, r 
 	err = e.lendingorderService.TopupLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, o.Hash)
@@ -380,7 +380,7 @@ func (e *lendingorderEndpoint) handleGetLendingOrderNonce(w http.ResponseWriter,
 	total, err := e.lendingorderService.GetLendingNonceByUserAddress(a)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, total)
@@ -505,7 +505,7 @@ func (e *lendingorderEndpoint) handleGetTopup(w http.ResponseWriter, r *http.Req
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -631,7 +631,7 @@ func (e *lendingorderEndpoint) handleGetRepay(w http.ResponseWriter, r *http.Req
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -765,7 +765,7 @@ func (e *lendingorderEndpoint) handleGetRecall(w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
