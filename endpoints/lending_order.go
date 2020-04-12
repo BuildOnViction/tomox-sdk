@@ -296,9 +296,40 @@ func (e *lendingorderEndpoint) ws(input interface{}, c *ws.Client) {
 		e.handleWSNewLendingOrder(msg, c)
 	case "CANCEL_LENDING_ORDER":
 		e.handleWSCancelLendingOrder(msg, c)
+	case "SUBSCRIBE":
+		e.handleWSSubLendingOrder(msg, c)
 	default:
 		log.Print("Response with error")
 	}
+}
+
+func (e *lendingorderEndpoint) handleWSSubLendingOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	var addr string
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
+	bytes, err := json.Marshal(ev.Payload)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
+
+	err = json.Unmarshal(bytes, &addr)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, errInvalidPayload)
+		return
+	}
+
+	a := common.HexToAddress(addr)
+	ws.RegisterLendingOrderConnection(a, c)
+	ws.SendLendingOrderMessage(types.INIT, a, nil)
 }
 
 // handleWSNewLendingOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
