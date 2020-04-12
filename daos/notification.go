@@ -47,14 +47,12 @@ func NewNotificationDao() *NotificationDao {
 // All the notifications are inserted in one query itself.
 func (dao *NotificationDao) Create(notifications ...*types.Notification) ([]*types.Notification, error) {
 	y := make([]interface{}, len(notifications))
-	result := make([]*types.Notification, len(notifications))
 
 	for _, notification := range notifications {
 		notification.ID = bson.NewObjectId()
 		notification.CreatedAt = time.Now()
 		notification.UpdatedAt = time.Now()
 		y = append(y, notification)
-		result = append(result, notification)
 	}
 
 	err := db.Create(dao.dbName, dao.collectionName, y...)
@@ -63,7 +61,7 @@ func (dao *NotificationDao) Create(notifications ...*types.Notification) ([]*typ
 		return nil, err
 	}
 
-	return result, nil
+	return notifications, nil
 }
 
 // GetAll function fetches all the notifications in the notification collection of mongodb.
