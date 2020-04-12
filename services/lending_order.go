@@ -34,6 +34,7 @@ type LendingOrderService struct {
 	collateralTokenDao interfaces.TokenDao
 	lendingTokenDao    interfaces.TokenDao
 	notificationDao    interfaces.NotificationDao
+	lendingTradeDao    interfaces.LendingTradeDao
 	engine             interfaces.Engine
 	broker             *rabbitmq.Connection
 	mutext             sync.RWMutex
@@ -49,6 +50,7 @@ func NewLendingOrderService(
 	collateralTokenDao interfaces.TokenDao,
 	lendingTokenDao interfaces.TokenDao,
 	notificationDao interfaces.NotificationDao,
+	lendingTradeDao interfaces.LendingTradeDao,
 	engine interfaces.Engine,
 	broker *rabbitmq.Connection,
 ) *LendingOrderService {
@@ -61,6 +63,7 @@ func NewLendingOrderService(
 		collateralTokenDao,
 		lendingTokenDao,
 		notificationDao,
+		lendingTradeDao,
 		engine,
 		broker,
 		sync.RWMutex{},
@@ -206,7 +209,6 @@ func (s *LendingOrderService) handleLendingOrderFilled(res *types.EngineResponse
 
 func (s *LendingOrderService) handleLendingTopup(res *types.EngineResponse) {
 	o := res.LendingOrder
-	ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
 
 	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
@@ -223,10 +225,12 @@ func (s *LendingOrderService) handleLendingTopup(res *types.EngineResponse) {
 	}
 
 	ws.SendNotificationMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, notifications)
+	lendingTrade, _ := s.lendingTradeDao.GetByHash(o.Hash)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, lendingTrade)
 }
+
 func (s *LendingOrderService) handleLendingRepay(res *types.EngineResponse) {
 	o := res.LendingOrder
-	ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
 
 	notifications, err := s.notificationDao.Create(&types.Notification{
 		Recipient: o.UserAddress,
@@ -243,6 +247,8 @@ func (s *LendingOrderService) handleLendingRepay(res *types.EngineResponse) {
 	}
 
 	ws.SendNotificationMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, notifications)
+	lendingTrade, _ := s.lendingTradeDao.GetByHash(o.Hash)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, lendingTrade)
 }
 
 func (s *LendingOrderService) handleLendingRecall(res *types.EngineResponse) {
@@ -264,6 +270,8 @@ func (s *LendingOrderService) handleLendingRecall(res *types.EngineResponse) {
 	}
 
 	ws.SendNotificationMessage(types.LENDING_ORDER_RECALLED, o.UserAddress, notifications)
+	lendingTrade, _ := s.lendingTradeDao.GetByHash(o.Hash)
+	ws.SendLendingOrderMessage(types.LENDING_ORDER_RECALLED, o.UserAddress, lendingTrade)
 }
 
 func (s *LendingOrderService) handleLendingReject(res *types.EngineResponse, lendingType types.SubscriptionEvent) {

@@ -499,7 +499,7 @@ func (dao *LendingOrderDao) RepayLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
+	// ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
 	return nil
 }
 
@@ -543,7 +543,7 @@ func (dao *LendingOrderDao) TopupLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
+	// ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
 	return nil
 }
 

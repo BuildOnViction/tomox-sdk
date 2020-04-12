@@ -471,6 +471,7 @@ type LendingTradeDao interface {
 	GetLendingTradeByTime(dateFrom, dateTo int64, pageOffset int, pageSize int) ([]*types.LendingTrade, error)
 	GetLendingTradesUserHistory(a common.Address, lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
 	GetLendingTrades(lendingtradeSpec *types.LendingTradeSpec, sortedBy []string, pageOffset int, pageSize int) (*types.LendingTradeRes, error)
+	GetByHash(hash common.Hash) (*types.LendingTrade, error)
 }
 
 // LendingOhlcvService interface for lending service
