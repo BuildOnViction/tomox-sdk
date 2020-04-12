@@ -319,13 +319,13 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 
 	var orderSpec types.OrderSpec
 
-    orderSpec.UserAddress = common.HexToAddress(addr).Hex()
+	orderSpec.UserAddress = common.HexToAddress(addr).Hex()
 	if baseToken != "" {
 		if !common.IsHexAddress(baseToken) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
 			return
 		}
-        orderSpec.BaseToken = common.HexToAddress(baseToken).Hex()
+		orderSpec.BaseToken = common.HexToAddress(baseToken).Hex()
 	}
 
 	if quoteToken != "" {
@@ -333,7 +333,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
 			return
 		}
-        orderSpec.QuoteToken = common.HexToAddress(quoteToken).Hex()
+		orderSpec.QuoteToken = common.HexToAddress(quoteToken).Hex()
 	}
 
 	if fromParam != "" {
