@@ -95,7 +95,6 @@ func (t Token) Validate() error {
 	return validation.ValidateStruct(&t,
 		validation.Field(&t.Symbol, validation.Required),
 		validation.Field(&t.ContractAddress, validation.Required),
-		validation.Field(&t.Decimals, validation.Required),
 	)
 }
 
