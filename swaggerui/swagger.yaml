@@ -6,7 +6,7 @@ info:
 schemes:
   - https
   - http
-host: https://dex.tomochain.com
+host: dex.tomochain.com
 basePath: /api
 tags:
   - name: accounts
