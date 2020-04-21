@@ -3,6 +3,7 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
 	"github.com/tomochain/tomox-sdk/app"
 	"github.com/tomochain/tomox-sdk/interfaces"
@@ -26,17 +27,22 @@ func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Req
 	v := r.URL.Query()
 	authKey := v.Get("authKey")
 	relayerName := v.Get("relayerName")
+	relayerUrl := v.Get("relayerUrl")
+	address := v.Get("relayerAddress")
+	relayerAddress := common.HexToAddress(address)
 
 	if app.Config.ApiAuthKey != authKey {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid auth key")
 		return
 	}
 
-	ex := e.relayerService.GetRelayerAddress(r)
-	err := e.relayerService.UpdateRelayer(ex)
+	relayer, err := e.relayerService.GetByAddress(relayerAddress)
+	if relayer == nil {
+		err = e.relayerService.UpdateRelayer(relayerAddress)
+	}
 
 	if relayerName != "" {
-		err = e.relayerService.UpdateNameByAddress(ex, relayerName)
+		err = e.relayerService.UpdateNameByAddress(relayerAddress, relayerName, relayerUrl)
 	}
 
 	if err != nil {

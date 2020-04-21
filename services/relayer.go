@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"math/big"
 	"net/http"
 
@@ -49,8 +48,8 @@ func (s *RelayerService) GetByAddress(addr common.Address) (*types.Relayer, erro
 	return s.relayerDao.GetByAddress(addr)
 }
 
-func (s *RelayerService) UpdateNameByAddress(addr common.Address, name string) error {
-	return s.relayerDao.UpdateNameByAddress(addr, name)
+func (s *RelayerService) UpdateNameByAddress(addr common.Address, name string, url string) error {
+	return s.relayerDao.UpdateNameByAddress(addr, name, url)
 }
 
 func (s *RelayerService) GetRelayerAddress(r *http.Request) common.Address {
@@ -198,9 +197,7 @@ func (s *RelayerService) updateRelayers(relayerInfos []*relayer.RInfo, lendingRe
 				break
 			}
 		}
-		domain := fmt.Sprintf("%03d", r.RID) + "." + app.Config.Tomochain["domain_suffix"]
 		relayer := &types.Relayer{
-			Domain:     domain,
 			RID:        r.RID,
 			Owner:      r.Owner,
 			Deposit:    r.Deposit,
@@ -257,9 +254,7 @@ func (s *RelayerService) updateRelayer(relayerInfo *relayer.RInfo, lendingRelaye
 	}
 
 	lendingFee := lendingRelayerInfo.Fee
-	domain := fmt.Sprintf("%03d", relayerInfo.RID) + "." + app.Config.Tomochain["domain_suffix"]
 	relayer := &types.Relayer{
-		Domain:     domain,
 		RID:        relayerInfo.RID,
 		Owner:      relayerInfo.Owner,
 		Deposit:    relayerInfo.Deposit,
