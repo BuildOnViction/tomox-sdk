@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -39,6 +40,13 @@ func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Req
 	relayer, err := e.relayerService.GetByAddress(relayerAddress)
 	if relayer == nil {
 		err = e.relayerService.UpdateRelayer(relayerAddress)
+	}
+
+	if relayerUrl != "" {
+		u, err := url.Parse(relayerUrl)
+		if err == nil {
+			relayerUrl = u.Host
+		}
 	}
 
 	if relayerName != "" {
