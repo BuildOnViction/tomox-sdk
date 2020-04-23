@@ -425,7 +425,7 @@ type LendingOrderService interface {
 	GetTopup(topupSpec types.TopupSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetRepay(repaySpec types.RepaySpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetRecall(recall types.RecallSpec, sort []string, offset int, size int) (*types.LendingRes, error)
-	EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Int) (*big.Float, *big.Float, error)
+	EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Float) (*big.Float, *big.Float, error)
 }
 
 // LendingOrderDao dao

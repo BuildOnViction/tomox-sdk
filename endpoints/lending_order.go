@@ -789,7 +789,7 @@ func (e *lendingorderEndpoint) handleGetEstimateCollateral(w http.ResponseWriter
 	type res struct {
 		CollateralToken          common.Address `json:"collateralToken"`
 		LendingToken             common.Address `json:"lendingToken"`
-		LendingAmount            *big.Int       `json:"lendingAmount"`
+		LendingAmount            *big.Float     `json:"lendingAmount"`
 		Rate                     float64        `json:"rate"`
 		CollateralPrice          *big.Float     `json:"collateralPrice"`
 		EstimateCollateralAmount *big.Float     `json:"estimateCollateralAmount"`
@@ -811,7 +811,7 @@ func (e *lendingorderEndpoint) handleGetEstimateCollateral(w http.ResponseWriter
 		}
 		result.CollateralToken = common.HexToAddress(collateralToken)
 	}
-	lendingAmount, ok := new(big.Int).SetString(amount, 10)
+	lendingAmount, ok := new(big.Float).SetString(amount)
 	if !ok {
 		httputils.WriteError(w, http.StatusBadRequest, "Invalid lending amount")
 		return

@@ -610,7 +610,7 @@ func (s *LendingOrderService) GetRecall(recallSpec types.RecallSpec, sort []stri
 }
 
 // EstimateCollateral estimate collateral amount to make lending
-func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Int) (*big.Float, *big.Float, error) {
+func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Float) (*big.Float, *big.Float, error) {
 	collateralPrice, err := s.lendingDao.GetLastTokenPrice(collateralToken, lendingToken)
 	if err != nil {
 		return nil, nil, err
@@ -622,7 +622,7 @@ func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address,
 	}
 	lendingDecimals := big.NewInt(int64(math.Pow10(lendingTokenInfo.Decimals)))
 	x := new(big.Float).Quo(new(big.Float).SetInt(collateralPrice), new(big.Float).SetInt(lendingDecimals))
-	a := new(big.Int).Mul(lendingAmount, lendingDecimals)
-	collateralAmount := new(big.Float).Quo(new(big.Float).SetInt(a), new(big.Float).SetInt(collateralPrice))
+	a := new(big.Float).Mul(lendingAmount, new(big.Float).SetInt(lendingDecimals))
+	collateralAmount := new(big.Float).Quo(a, new(big.Float).SetInt(collateralPrice))
 	return collateralAmount, x, nil
 }
