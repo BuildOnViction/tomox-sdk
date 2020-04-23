@@ -171,7 +171,7 @@ func (e *lendingorderEndpoint) handleGetLendingOrders(w http.ResponseWriter, r *
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -194,7 +194,7 @@ func (e *lendingorderEndpoint) handleLendingByHash(w http.ResponseWriter, r *htt
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, res)
@@ -215,7 +215,7 @@ func (e *lendingorderEndpoint) handleNewLendingOrder(w http.ResponseWriter, r *h
 	err = e.lendingorderService.NewLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusCreated, o)
@@ -234,7 +234,7 @@ func (e *lendingorderEndpoint) handleCancelLendingOrder(w http.ResponseWriter, r
 	err = e.lendingorderService.CancelLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, o.Hash)
@@ -255,7 +255,7 @@ func (e *lendingorderEndpoint) handleRepayLendingOrder(w http.ResponseWriter, r 
 	err = e.lendingorderService.RepayLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, o.Hash)
@@ -275,7 +275,7 @@ func (e *lendingorderEndpoint) handleTopupLendingOrder(w http.ResponseWriter, r 
 	err = e.lendingorderService.TopupLendingOrder(o)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, o.Hash)
@@ -296,9 +296,40 @@ func (e *lendingorderEndpoint) ws(input interface{}, c *ws.Client) {
 		e.handleWSNewLendingOrder(msg, c)
 	case "CANCEL_LENDING_ORDER":
 		e.handleWSCancelLendingOrder(msg, c)
+	case "SUBSCRIBE":
+		e.handleWSSubLendingOrder(msg, c)
 	default:
 		log.Print("Response with error")
 	}
+}
+
+func (e *lendingorderEndpoint) handleWSSubLendingOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	var addr string
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
+	bytes, err := json.Marshal(ev.Payload)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
+
+	err = json.Unmarshal(bytes, &addr)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, errInvalidPayload)
+		return
+	}
+
+	a := common.HexToAddress(addr)
+	ws.RegisterLendingOrderConnection(a, c)
+	ws.SendLendingOrderMessage(types.INIT, a, nil)
 }
 
 // handleWSNewLendingOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
@@ -380,7 +411,7 @@ func (e *lendingorderEndpoint) handleGetLendingOrderNonce(w http.ResponseWriter,
 	total, err := e.lendingorderService.GetLendingNonceByUserAddress(a)
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	httputils.WriteJSON(w, http.StatusOK, total)
@@ -505,7 +536,7 @@ func (e *lendingorderEndpoint) handleGetTopup(w http.ResponseWriter, r *http.Req
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -631,7 +662,7 @@ func (e *lendingorderEndpoint) handleGetRepay(w http.ResponseWriter, r *http.Req
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -765,7 +796,7 @@ func (e *lendingorderEndpoint) handleGetRecall(w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		httputils.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -818,8 +849,9 @@ func (e *lendingorderEndpoint) handleGetEstimateCollateral(w http.ResponseWriter
 	}
 	result.LendingAmount = lendingAmount
 	collateralAmount, colalteralPrice, err := e.lendingorderService.EstimateCollateral(common.HexToAddress(collateralToken), common.HexToAddress(lendingToken), lendingAmount)
-	if err != nil || collateralAmount == nil {
+	if err != nil {
 		httputils.WriteError(w, http.StatusBadRequest, "Cant not estimate collateral amount")
+		return
 	}
 	result.EstimateCollateralAmount = collateralAmount.Mul(collateralAmount, big.NewFloat(result.Rate))
 	result.CollateralPrice = colalteralPrice

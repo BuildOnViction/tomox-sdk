@@ -49,6 +49,7 @@ type LendingTrade struct {
 	TradeID                string         `bson:"tradeId" json:"tradeID"`
 	Hash                   common.Hash    `bson:"hash" json:"hash"`
 	TxHash                 common.Hash    `bson:"txHash" json:"txHash"`
+	AutoTopUp              uint64         `json:"autoTopUp" json:"autoTopUp"`
 	ExtraData              string         `bson:"extraData" json:"extraData"`
 	CreatedAt              time.Time      `bson:"createdAt" json:"createdAt"`
 	UpdatedAt              time.Time      `bson:"updatedAt" json:"updatedAt"`
@@ -79,6 +80,7 @@ func (t *LendingTrade) MarshalJSON() ([]byte, error) {
 		"takerOrderType":         t.TakerOrderType,
 		"hash":                   t.Hash,
 		"tradeID":                t.TradeID,
+		"autoTopUp":              strconv.FormatUint(t.AutoTopUp, 10),
 		"createdAt":              t.CreatedAt.Format(time.RFC3339Nano),
 		"updatedAt":              t.UpdatedAt.Format(time.RFC3339Nano),
 	}
@@ -198,6 +200,13 @@ func (t *LendingTrade) UnmarshalJSON(b []byte) error {
 		tm, _ := time.Parse(time.RFC3339Nano, trade["createdAt"].(string))
 		t.CreatedAt = tm
 	}
+	if trade["autoTopUp"] != nil {
+		autoTopUp, err := strconv.ParseInt(trade["autoTopUp"].(string), 10, 64)
+		if err != nil {
+			logger.Error(err)
+		}
+		t.AutoTopUp = uint64(autoTopUp)
+	}
 	if trade["updatedAt"] != nil {
 		tm, _ := time.Parse(time.RFC3339Nano, trade["updatedAt"].(string))
 		t.UpdatedAt = tm
@@ -237,6 +246,7 @@ type LendingTradeBSON struct {
 	TradeID                string        `bson:"tradeId" json:"tradeID"`
 	Hash                   string        `bson:"hash" json:"hash"`
 	TxHash                 string        `bson:"txHash" json:"txHash"`
+	AutoTopUp              uint64        `bson:"autoTopUp" json:"autoTopUp"`
 	ExtraData              string        `bson:"extraData" json:"extraData"`
 	CreatedAt              time.Time     `bson:"createdAt" json:"createdAt"`
 	UpdatedAt              time.Time     `bson:"updatedAt" json:"updatedAt"`
@@ -275,6 +285,7 @@ func (t *LendingTrade) GetBSON() (interface{}, error) {
 			TradeID:                t.TradeID,
 			Hash:                   t.Hash.Hex(),
 			TxHash:                 t.TxHash.Hex(),
+			AutoTopUp:              t.AutoTopUp,
 			ExtraData:              t.ExtraData,
 			UpdatedAt:              t.UpdatedAt,
 		},
@@ -329,6 +340,7 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 	t.ExtraData = decoded.ExtraData
 	t.Hash = common.HexToHash(decoded.Hash)
 	t.TxHash = common.HexToHash(decoded.TxHash)
+	t.AutoTopUp = decoded.AutoTopUp
 	t.UpdatedAt = decoded.UpdatedAt
 	t.CreatedAt = decoded.CreatedAt
 

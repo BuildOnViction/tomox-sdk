@@ -145,12 +145,13 @@ func (dao *RelayerDao) UpdateByAddress(addr common.Address, relayer *types.Relay
 	return nil
 }
 
-func (dao *RelayerDao) UpdateNameByAddress(addr common.Address, name string) error {
+func (dao *RelayerDao) UpdateNameByAddress(addr common.Address, name string, url string) error {
 	q := bson.M{"address": addr.Hex()}
 
 	update := bson.M{
 		"$set": bson.M{
-			"name": name,
+			"name":   name,
+			"domain": url,
 		},
 	}
 

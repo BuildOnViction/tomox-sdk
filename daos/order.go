@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -965,9 +966,9 @@ func (dao *OrderDao) Aggregate(q []bson.M) ([]*types.OrderData, error) {
 }
 
 type OrderMsg struct {
-	AccountNonce    uint64         `json:"nonce"    gencodec:"required"`
-	Quantity        *big.Int       `json:"quantity,omitempty"`
-	Price           *big.Int       `json:"price,omitempty"`
+	AccountNonce    hexutil.Uint64 `json:"nonce"    gencodec:"required"`
+	Quantity        hexutil.Big    `json:"quantity,omitempty"`
+	Price           hexutil.Big    `json:"price,omitempty"`
 	ExchangeAddress common.Address `json:"exchangeAddress,omitempty"`
 	UserAddress     common.Address `json:"userAddress,omitempty"`
 	BaseToken       common.Address `json:"baseToken,omitempty"`
@@ -975,12 +976,11 @@ type OrderMsg struct {
 	Status          string         `json:"status,omitempty"`
 	Side            string         `json:"side,omitempty"`
 	Type            string         `json:"type,omitempty"`
-	PairName        string         `json:"pairName,omitempty"`
-	OrderID         uint64         `json:"orderid,omitempty"`
+	OrderID         hexutil.Uint64 `json:"orderid,omitempty"`
 	// Signature values
-	V *big.Int `json:"v" gencodec:"required"`
-	R *big.Int `json:"r" gencodec:"required"`
-	S *big.Int `json:"s" gencodec:"required"`
+	V hexutil.Big `json:"v" gencodec:"required"`
+	R hexutil.Big `json:"r" gencodec:"required"`
+	S hexutil.Big `json:"s" gencodec:"required"`
 
 	// This is only used when marshaling to JSON.
 	Hash common.Hash `json:"hash" rlp:"-"`
@@ -1004,9 +1004,9 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 	S := o.Signature.S.Big()
 
 	msg := OrderMsg{
-		AccountNonce:    uint64(n),
-		Quantity:        o.Amount,
-		Price:           o.PricePoint,
+		AccountNonce:    hexutil.Uint64(uint64(n)),
+		Quantity:        hexutil.Big(*o.Amount),
+		Price:           hexutil.Big(*o.PricePoint),
 		ExchangeAddress: o.ExchangeAddress,
 		UserAddress:     o.UserAddress,
 		BaseToken:       o.BaseToken,
@@ -1015,10 +1015,9 @@ func (dao *OrderDao) AddNewOrder(o *types.Order, topic string) error {
 		Side:            o.Side,
 		Type:            o.Type,
 		Hash:            o.Hash,
-		PairName:        o.PairName,
-		V:               V,
-		R:               R,
-		S:               S,
+		V:               hexutil.Big(*V),
+		R:               hexutil.Big(*R),
+		S:               hexutil.Big(*S),
 	}
 	var result interface{}
 	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex())
@@ -1051,17 +1050,17 @@ func (dao *OrderDao) CancelOrder(o *types.Order, topic string) error {
 	S := o.Signature.S.Big()
 
 	msg := OrderMsg{
-		AccountNonce:    uint64(n),
+		AccountNonce:    hexutil.Uint64(uint64(n)),
 		Status:          o.Status,
 		Hash:            o.Hash,
-		OrderID:         o.OrderID,
+		OrderID:         hexutil.Uint64(o.OrderID),
 		UserAddress:     o.UserAddress,
 		QuoteToken:      o.QuoteToken,
 		BaseToken:       o.BaseToken,
 		ExchangeAddress: o.ExchangeAddress,
-		V:               V,
-		R:               R,
-		S:               S,
+		V:               hexutil.Big(*V),
+		R:               hexutil.Big(*R),
+		S:               hexutil.Big(*S),
 	}
 	var result interface{}
 	logger.Info("tomox_sendOrder", o.Status, o.Hash.Hex(), o.OrderID, o.UserAddress.Hex(), n)

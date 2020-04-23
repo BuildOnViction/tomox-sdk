@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -342,24 +343,24 @@ func (dao *LendingOrderDao) GetLendingOrderBook(term uint64, lendingToken common
 
 // LendingOrderMsg for tomox rpc
 type LendingOrderMsg struct {
-	AccountNonce    uint64         `json:"nonce"    gencodec:"required"`
-	Quantity        *big.Int       `json:"quantity,omitempty"`
+	AccountNonce    hexutil.Uint64 `json:"nonce"    gencodec:"required"`
+	Quantity        hexutil.Big    `json:"quantity,omitempty"`
 	RelayerAddress  common.Address `json:"relayerAddress,omitempty"`
 	UserAddress     common.Address `json:"userAddress,omitempty"`
 	CollateralToken common.Address `json:"collateralToken,omitempty"`
 	LendingToken    common.Address `json:"lendingToken,omitempty"`
-	Interest        uint64         `json:"interest,omitempty"`
-	Term            uint64         `json:"term,omitempty"`
+	Interest        hexutil.Uint64 `json:"interest,omitempty"`
+	Term            hexutil.Uint64 `json:"term,omitempty"`
 	Status          string         `json:"status,omitempty"`
 	Side            string         `json:"side,omitempty"`
 	Type            string         `json:"type,omitempty"`
-	LendingID       uint64         `json:"lendingID,omitempty"`
-	LendingTradeID  uint64         `json:"tradeId,omitempty"`
+	LendingID       hexutil.Uint64 `json:"lendingID,omitempty"`
+	LendingTradeID  hexutil.Uint64 `json:"tradeId,omitempty"`
 	AutoTopUp       bool           `json:"autoTopUp,omitempty"`
 	// Signature values
-	V *big.Int `json:"v" gencodec:"required"`
-	R *big.Int `json:"r" gencodec:"required"`
-	S *big.Int `json:"s" gencodec:"required"`
+	V hexutil.Big `json:"v" gencodec:"required"`
+	R hexutil.Big `json:"r" gencodec:"required"`
+	S hexutil.Big `json:"s" gencodec:"required"`
 
 	// This is only used when marshaling to JSON.
 	Hash common.Hash `json:"hash" rlp:"-"`
@@ -381,22 +382,22 @@ func (dao *LendingOrderDao) AddNewLendingOrder(o *types.LendingOrder) error {
 	autoTopUp := (uint64(o.AutoTopUp) == uint64(1))
 
 	msg := LendingOrderMsg{
-		AccountNonce:    uint64(n),
-		Quantity:        o.Quantity,
+		AccountNonce:    hexutil.Uint64(uint64(n)),
+		Quantity:        hexutil.Big(*o.Quantity),
 		RelayerAddress:  o.RelayerAddress,
 		UserAddress:     o.UserAddress,
 		CollateralToken: o.CollateralToken,
 		AutoTopUp:       autoTopUp,
-		Term:            o.Term,
-		Interest:        o.Interest,
+		Term:            hexutil.Uint64(o.Term),
+		Interest:        hexutil.Uint64(o.Interest),
 		LendingToken:    o.LendingToken,
 		Status:          "NEW",
 		Side:            o.Side,
 		Type:            o.Type,
 		Hash:            o.Hash,
-		V:               V,
-		R:               R,
-		S:               S,
+		V:               hexutil.Big(*V),
+		R:               hexutil.Big(*R),
+		S:               hexutil.Big(*S),
 	}
 	var result interface{}
 	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex())
@@ -430,19 +431,19 @@ func (dao *LendingOrderDao) CancelLendingOrder(o *types.LendingOrder) error {
 	S := o.Signature.S.Big()
 
 	msg := LendingOrderMsg{
-		AccountNonce:    uint64(n),
+		AccountNonce:    hexutil.Uint64(uint64(n)),
 		Status:          o.Status,
 		Hash:            o.Hash,
-		LendingID:       o.LendingID,
+		LendingID:       hexutil.Uint64(o.LendingID),
 		UserAddress:     o.UserAddress,
 		CollateralToken: o.CollateralToken,
 		LendingToken:    o.LendingToken,
-		Term:            o.Term,
-		Interest:        o.Interest,
+		Term:            hexutil.Uint64(o.Term),
+		Interest:        hexutil.Uint64(o.Interest),
 		RelayerAddress:  o.RelayerAddress,
-		V:               V,
-		R:               R,
-		S:               S,
+		V:               hexutil.Big(*V),
+		R:               hexutil.Big(*R),
+		S:               hexutil.Big(*S),
 	}
 	var result interface{}
 	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex(), o.LendingID, o.UserAddress.Hex(), n)
@@ -475,17 +476,17 @@ func (dao *LendingOrderDao) RepayLendingOrder(o *types.LendingOrder) error {
 	S := o.Signature.S.Big()
 
 	msg := LendingOrderMsg{
-		AccountNonce:   uint64(n),
+		AccountNonce:   hexutil.Uint64(uint64(n)),
 		Status:         o.Status,
 		UserAddress:    o.UserAddress,
 		LendingToken:   o.LendingToken,
-		Term:           o.Term,
-		LendingTradeID: o.LendingTradeID,
+		Term:           hexutil.Uint64(o.Term),
+		LendingTradeID: hexutil.Uint64(o.LendingTradeID),
 		RelayerAddress: o.RelayerAddress,
 		Type:           o.Type,
-		V:              V,
-		R:              R,
-		S:              S,
+		V:              hexutil.Big(*V),
+		R:              hexutil.Big(*R),
+		S:              hexutil.Big(*S),
 	}
 	var result interface{}
 	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex(), o.LendingTradeID, o.UserAddress.Hex(), n)
@@ -499,7 +500,7 @@ func (dao *LendingOrderDao) RepayLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
+	// ws.SendLendingOrderMessage(types.LENDING_ORDER_REPAYED, o.UserAddress, o)
 	return nil
 }
 
@@ -518,18 +519,18 @@ func (dao *LendingOrderDao) TopupLendingOrder(o *types.LendingOrder) error {
 	S := o.Signature.S.Big()
 
 	msg := LendingOrderMsg{
-		AccountNonce:   uint64(n),
+		AccountNonce:   hexutil.Uint64(uint64(n)),
 		Status:         o.Status,
 		UserAddress:    o.UserAddress,
 		LendingToken:   o.LendingToken,
-		Term:           o.Term,
-		LendingTradeID: o.LendingTradeID,
+		Term:           hexutil.Uint64(o.Term),
+		LendingTradeID: hexutil.Uint64(o.LendingTradeID),
 		RelayerAddress: o.RelayerAddress,
-		Quantity:       o.Quantity,
+		Quantity:       hexutil.Big(*o.Quantity),
 		Type:           o.Type,
-		V:              V,
-		R:              R,
-		S:              S,
+		V:              hexutil.Big(*V),
+		R:              hexutil.Big(*R),
+		S:              hexutil.Big(*S),
 	}
 	var result interface{}
 	logger.Info("tomox_sendLending", o.Status, o.Hash.Hex(), o.LendingTradeID, o.UserAddress.Hex(), n)
@@ -543,7 +544,7 @@ func (dao *LendingOrderDao) TopupLendingOrder(o *types.LendingOrder) error {
 		return err
 	}
 
-	ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
+	// ws.SendLendingOrderMessage(types.LENDING_ORDER_TOPUPED, o.UserAddress, o)
 	return nil
 }
 

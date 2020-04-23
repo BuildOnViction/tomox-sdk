@@ -319,13 +319,13 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 
 	var orderSpec types.OrderSpec
 
-    orderSpec.UserAddress = common.HexToAddress(addr).Hex()
+	orderSpec.UserAddress = common.HexToAddress(addr).Hex()
 	if baseToken != "" {
 		if !common.IsHexAddress(baseToken) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid Base Token Address")
 			return
 		}
-        orderSpec.BaseToken = common.HexToAddress(baseToken).Hex()
+		orderSpec.BaseToken = common.HexToAddress(baseToken).Hex()
 	}
 
 	if quoteToken != "" {
@@ -333,7 +333,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid Quote Token Address")
 			return
 		}
-        orderSpec.QuoteToken = common.HexToAddress(quoteToken).Hex()
+		orderSpec.QuoteToken = common.HexToAddress(quoteToken).Hex()
 	}
 
 	if fromParam != "" {
@@ -525,9 +525,40 @@ func (e *orderEndpoint) ws(input interface{}, c *ws.Client) {
 		e.handleWSNewOrder(msg, c)
 	case "CANCEL_ORDER":
 		e.handleWSCancelOrder(msg, c)
+	case "SUBSCRIBE":
+		e.handleWSSubOrder(msg, c)
 	default:
 		log.Print("Response with error")
 	}
+}
+
+func (e *orderEndpoint) handleWSSubOrder(ev *types.WebsocketEvent, c *ws.Client) {
+	var addr string
+	errInvalidPayload := map[string]string{"Message": "Invalid payload"}
+	bytes, err := json.Marshal(ev.Payload)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.OrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	logger.Debugf("Payload: %v#", ev.Payload)
+
+	err = json.Unmarshal(bytes, &addr)
+	if err != nil {
+		logger.Error(err)
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, err.Error())
+		return
+	}
+
+	if !common.IsHexAddress(addr) {
+		c.SendMessage(ws.LendingOrderChannel, types.ERROR, errInvalidPayload)
+		return
+	}
+
+	a := common.HexToAddress(addr)
+	ws.RegisterOrderConnection(a, c)
+	ws.SendOrderMessage(types.INIT, a, nil)
 }
 
 // handleNewOrder handles NewOrder message. New order messages are transmitted to the order service after being unmarshalled
