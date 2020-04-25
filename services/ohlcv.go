@@ -23,21 +23,28 @@ import (
 )
 
 const (
-	intervalMin  = 60 * 60 * 24
-	intervalMax  = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
-	yesterdaySec = 24 * 60 * 60
-	hourSec      = 60 * 60
-	milisecond   = 1000
-	baseFiat     = "USDT"
-	tomo         = "TOMO"
+	intervalMin          = 60 * 60 * 24
+	intervalMax          = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
+	yesterdaySec         = 24 * 60 * 60
+	hourSec              = 60 * 60
+	milisecond           = 1000
+	baseFiat             = "USDT"
+	tomo                 = "TOMO"
+	pairCacheTimeLifeMax = 15 * 50
 )
 
+type PairCache struct {
+	pair     *types.Pair
+	timelife int64
+}
 type OHLCVService struct {
-	tradeDao   interfaces.TradeDao
-	pairDao    interfaces.PairDao
-	tickCache  *tickCache
-	mutex      sync.RWMutex
-	tokenCache map[common.Address]int
+	tradeDao           interfaces.TradeDao
+	pairDao            interfaces.PairDao
+	tickCache          *tickCache
+	mutex              sync.RWMutex
+	tokenCache         map[common.Address]int
+	pairCacheByAddress map[string]*PairCache
+	pairCacheByName    map[string]*PairCache
 }
 
 type timeframe struct {
@@ -67,10 +74,12 @@ func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao) *
 		ticks: make(map[string]map[int64]*types.Tick),
 	}
 	return &OHLCVService{
-		tradeDao:   TradeDao,
-		pairDao:    pairDao,
-		tickCache:  cache,
-		tokenCache: make(map[common.Address]int),
+		tradeDao:           TradeDao,
+		pairDao:            pairDao,
+		tickCache:          cache,
+		tokenCache:         make(map[common.Address]int),
+		pairCacheByAddress: make(map[string]*PairCache),
+		pairCacheByName:    make(map[string]*PairCache),
 	}
 }
 
@@ -428,7 +437,7 @@ func (s *OHLCVService) getVolumeByQuote(baseToken, quoteToken common.Address, am
 		baseTokenDecimal = d
 	} else {
 
-		pair, err := s.pairDao.GetByTokenAddress(baseToken, quoteToken)
+		pair, err := s.getCachePairByAddress(baseToken, quoteToken)
 		if err != nil || pair == nil {
 			return big.NewInt(0)
 		}
@@ -1011,7 +1020,7 @@ func (s *OHLCVService) getLastPricePairAtTime(pairName string, createAt time.Tim
 	if pairs[0] == pairs[1] {
 		return big.NewFloat(1), nil
 	}
-	pair, err := s.pairDao.GetByName(pairName)
+	pair, err := s.getCachePairByName(pairName)
 	if err == nil && pair != nil {
 		durations := s.getConfig()
 		for _, d := range durations {
@@ -1058,4 +1067,41 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	return s.getLastPriceCurrentByTime(symbol, createAt)
+}
+
+func (s *OHLCVService) getCachePairByName(pairName string) (*types.Pair, error) {
+	now := time.Now().Unix()
+	if pairCache, ok := s.pairCacheByName[pairName]; ok {
+		if now-pairCache.timelife < pairCacheTimeLifeMax {
+			return pairCache.pair, nil
+		}
+		delete(s.pairCacheByName, pairName)
+	}
+	pair, err := s.pairDao.GetByName(pairName)
+	if err == nil {
+		s.pairCacheByName[pairName] = &PairCache{
+			pair:     pair,
+			timelife: now,
+		}
+	}
+	return pair, err
+}
+
+func (s *OHLCVService) getCachePairByAddress(baseToken, quoteToken common.Address) (*types.Pair, error) {
+	now := time.Now().Unix()
+	pairName := utils.GetPairKey(baseToken, quoteToken)
+	if pairCache, ok := s.pairCacheByAddress[pairName]; ok {
+		if now-pairCache.timelife < pairCacheTimeLifeMax {
+			return pairCache.pair, nil
+		}
+		delete(s.pairCacheByAddress, pairName)
+	}
+	pair, err := s.pairDao.GetByTokenAddress(baseToken, quoteToken)
+	if err == nil {
+		s.pairCacheByAddress[pairName] = &PairCache{
+			pair:     pair,
+			timelife: now,
+		}
+	}
+	return pair, err
 }

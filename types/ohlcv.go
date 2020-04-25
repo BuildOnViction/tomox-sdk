@@ -19,6 +19,7 @@ type Tick struct {
 	Low           *big.Int  `json:"low,omitempty" bson:"low"`
 	Volume        *big.Int  `json:"volume,omitempty" bson:"volume"`
 	VolumeByQuote *big.Int  `json:"volumebyquote,omitempty" bson:"volumebyquote"`
+	VolumeUsdt    *big.Int  `json:"volumeusdt,omitempty" bson:"volumeusdt"`
 	Count         *big.Int  `json:"count,omitempty" bson:"count"`
 	Timestamp     int64     `json:"timestamp,omitempty" bson:"timestamp"`
 	OpenTime      time.Time `json:"openTime" bson:"openTime"`
@@ -79,7 +80,9 @@ func (t *Tick) MarshalJSON() ([]byte, error) {
 	if t.VolumeByQuote != nil {
 		tick["volumebyquote"] = t.VolumeByQuote.String()
 	}
-
+	if t.VolumeUsdt != nil {
+		tick["volumeusdt"] = t.VolumeUsdt.String()
+	}
 	if t.Close != nil {
 		tick["close"] = t.Close.String()
 	}
@@ -143,7 +146,9 @@ func (t *Tick) UnmarshalJSON(b []byte) error {
 	if tick["volumebyquote"] != nil {
 		t.VolumeByQuote = math.ToBigInt(tick["volumebyquote"].(string))
 	}
-
+	if tick["volumeusdt"] != nil {
+		t.VolumeUsdt = math.ToBigInt(tick["volumeusdt"].(string))
+	}
 	if tick["count"] != nil {
 		t.Count = math.ToBigInt(tick["count"].(string))
 	}
