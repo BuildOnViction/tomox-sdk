@@ -106,7 +106,7 @@ func NewRouter(
 
 	// get services for injection
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
-	ohlcvService := services.NewOHLCVService(tradeDao, pairDao)
+	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, tokenDao)
 	ohlcvService.Init()
 
 	tokenService := services.NewTokenService(tokenDao)

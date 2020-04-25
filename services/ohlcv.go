@@ -23,28 +23,34 @@ import (
 )
 
 const (
-	intervalMin          = 60 * 60 * 24
-	intervalMax          = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
-	yesterdaySec         = 24 * 60 * 60
-	hourSec              = 60 * 60
-	milisecond           = 1000
-	baseFiat             = "USDT"
-	tomo                 = "TOMO"
-	pairCacheTimeLifeMax = 15 * 50
+	intervalMin      = 60 * 60 * 24
+	intervalMax      = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
+	yesterdaySec     = 24 * 60 * 60
+	hourSec          = 60 * 60
+	milisecond       = 1000
+	baseFiat         = "USDT"
+	tomo             = "TOMO"
+	cacheTimeLifeMax = 15 * 50
 )
 
 type PairCache struct {
 	pair     *types.Pair
 	timelife int64
 }
+type TokenCache struct {
+	token    *types.Token
+	timelife int64
+}
 type OHLCVService struct {
 	tradeDao           interfaces.TradeDao
 	pairDao            interfaces.PairDao
+	tokenDao           interfaces.TokenDao
 	tickCache          *tickCache
 	mutex              sync.RWMutex
-	tokenCache         map[common.Address]int
+	tokenCache         map[common.Address]*TokenCache
 	pairCacheByAddress map[string]*PairCache
 	pairCacheByName    map[string]*PairCache
+	priceCacheByUsdt   map[string]*big.Int
 }
 
 type timeframe struct {
@@ -69,15 +75,16 @@ type durationtick struct {
 }
 
 // NewOHLCVService init new ohlcv service
-func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao) *OHLCVService {
+func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, tokenDao interfaces.TokenDao) *OHLCVService {
 	cache := &tickCache{
 		ticks: make(map[string]map[int64]*types.Tick),
 	}
 	return &OHLCVService{
 		tradeDao:           TradeDao,
 		pairDao:            pairDao,
+		tokenDao:           tokenDao,
 		tickCache:          cache,
-		tokenCache:         make(map[common.Address]int),
+		tokenCache:         make(map[common.Address]*TokenCache),
 		pairCacheByAddress: make(map[string]*PairCache),
 		pairCacheByName:    make(map[string]*PairCache),
 	}
@@ -432,21 +439,13 @@ func (s *OHLCVService) parseTickKey(key string) (common.Address, common.Address,
 }
 
 func (s *OHLCVService) getVolumeByQuote(baseToken, quoteToken common.Address, amount *big.Int, price *big.Int) *big.Int {
-	var baseTokenDecimal int
-	if d, ok := s.tokenCache[baseToken]; ok {
-		baseTokenDecimal = d
-	} else {
-
-		pair, err := s.getCachePairByAddress(baseToken, quoteToken)
-		if err != nil || pair == nil {
-			return big.NewInt(0)
-		}
-		s.tokenCache[baseToken] = pair.BaseTokenDecimals
-		baseTokenDecimal = pair.BaseTokenDecimals
+	token, err := s.getTokenByAddress(baseToken)
+	if err == nil {
+		baseTokenDecimalBig := big.NewInt(int64(math.Pow10(token.Decimals)))
+		p := new(big.Int).Mul(amount, price)
+		return new(big.Int).Div(p, baseTokenDecimalBig)
 	}
-	baseTokenDecimalBig := big.NewInt(int64(math.Pow10(baseTokenDecimal)))
-	p := new(big.Int).Mul(amount, price)
-	return new(big.Int).Div(p, baseTokenDecimalBig)
+	return big.NewInt(0)
 }
 
 // updateTick update lastest tick, need to be lock
@@ -1072,7 +1071,7 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 func (s *OHLCVService) getCachePairByName(pairName string) (*types.Pair, error) {
 	now := time.Now().Unix()
 	if pairCache, ok := s.pairCacheByName[pairName]; ok {
-		if now-pairCache.timelife < pairCacheTimeLifeMax {
+		if now-pairCache.timelife < cacheTimeLifeMax {
 			return pairCache.pair, nil
 		}
 		delete(s.pairCacheByName, pairName)
@@ -1091,7 +1090,7 @@ func (s *OHLCVService) getCachePairByAddress(baseToken, quoteToken common.Addres
 	now := time.Now().Unix()
 	pairName := utils.GetPairKey(baseToken, quoteToken)
 	if pairCache, ok := s.pairCacheByAddress[pairName]; ok {
-		if now-pairCache.timelife < pairCacheTimeLifeMax {
+		if now-pairCache.timelife < cacheTimeLifeMax {
 			return pairCache.pair, nil
 		}
 		delete(s.pairCacheByAddress, pairName)
@@ -1104,4 +1103,22 @@ func (s *OHLCVService) getCachePairByAddress(baseToken, quoteToken common.Addres
 		}
 	}
 	return pair, err
+}
+
+func (s *OHLCVService) getTokenByAddress(token common.Address) (*types.Token, error) {
+	now := time.Now().Unix()
+	if tokenCache, ok := s.tokenCache[token]; ok {
+		if now-tokenCache.timelife < cacheTimeLifeMax {
+			return tokenCache.token, nil
+		}
+		delete(s.tokenCache, token)
+	}
+	t, err := s.tokenDao.GetByAddress(token)
+	if err == nil {
+		s.tokenCache[token] = &TokenCache{
+			token:    t,
+			timelife: now,
+		}
+	}
+	return t, err
 }
