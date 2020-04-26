@@ -184,7 +184,7 @@ func (p *Pair) DecimalsMultiplier() *big.Int {
 }
 
 func (p *Pair) Code() string {
-	code := p.BaseTokenSymbol + "/" + p.QuoteTokenSymbol + "::" + p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
+	code := p.BaseTokenAddress.Hex() + "::" + p.QuoteTokenAddress.Hex()
 	return code
 }
 

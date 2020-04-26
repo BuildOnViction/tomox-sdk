@@ -340,11 +340,7 @@ func (o *Order) BuyTokenSymbol() string {
 }
 
 func (o *Order) PairCode() (string, error) {
-	if o.PairName == "" {
-		return "", errors.New("Pair name is required")
-	}
-
-	return o.PairName + "::" + o.BaseToken.Hex() + "::" + o.QuoteToken.Hex(), nil
+	return o.BaseToken.Hex() + "::" + o.QuoteToken.Hex(), nil
 }
 
 func (o *Order) BaseTokenSymbol() string {
