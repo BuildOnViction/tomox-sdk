@@ -41,6 +41,11 @@ type TokenCache struct {
 	token    *types.Token
 	timelife int64
 }
+
+type PriceUsdt struct {
+	price    *big.Int
+	timelife int64
+}
 type OHLCVService struct {
 	tradeDao           interfaces.TradeDao
 	pairDao            interfaces.PairDao
@@ -50,7 +55,7 @@ type OHLCVService struct {
 	tokenCache         map[common.Address]*TokenCache
 	pairCacheByAddress map[string]*PairCache
 	pairCacheByName    map[string]*PairCache
-	priceCacheByUsdt   map[string]*big.Int
+	priceCacheByUsdt   map[common.Address]*PriceUsdt
 }
 
 type timeframe struct {
@@ -62,11 +67,15 @@ type timeframes []*timeframe
 type tickCache struct {
 	tframes timeframes
 	ticks   map[string]map[int64]*types.Tick
+
+	// relayerAddress => pairAddress => time => tick
+	relayerTicks map[common.Address]map[string]map[int64]*types.Tick
 }
 
 type tickfile struct {
-	Frame timeframes  `json:"frame" bson:"frame"`
-	Ticks types.Ticks `json:"ticks" bson:"ticks"`
+	Frame        timeframes         `json:"frame" bson:"frame"`
+	Ticks        types.Ticks        `json:"ticks" bson:"ticks"`
+	RelayerTicks types.RelayerTicks `json:"relayerticks" bson:"relayerticks"`
 }
 type durationtick struct {
 	duration int64
@@ -74,10 +83,15 @@ type durationtick struct {
 	interval int64
 }
 
+var fiatToken *types.Token
+
 // NewOHLCVService init new ohlcv service
 func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, tokenDao interfaces.TokenDao) *OHLCVService {
+	fiatToken = new(types.Token)
+	fiatToken.Decimals = 8
 	cache := &tickCache{
-		ticks: make(map[string]map[int64]*types.Tick),
+		ticks:        make(map[string]map[int64]*types.Tick),
+		relayerTicks: make(map[common.Address]map[string]map[int64]*types.Tick),
 	}
 	return &OHLCVService{
 		tradeDao:           TradeDao,
@@ -87,6 +101,7 @@ func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, t
 		tokenCache:         make(map[common.Address]*TokenCache),
 		pairCacheByAddress: make(map[string]*PairCache),
 		pairCacheByName:    make(map[string]*PairCache),
+		priceCacheByUsdt:   make(map[common.Address]*PriceUsdt),
 	}
 }
 
@@ -312,6 +327,14 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 					s.updateTick(key, trade)
 				}
 			}
+
+			if trade.MakerExchange.Hex() == trade.TakerExchange.Hex() {
+				s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+			} else {
+				s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+				s.updateRelayerTick(trade.Taker, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+			}
+
 			if i == 0 {
 				s.updatefisttimeframe(trade.CreatedAt.Unix(), frame)
 			}
@@ -367,15 +390,32 @@ func (s *OHLCVService) flatten() []*types.Tick {
 	return ticks
 }
 
+func (s *OHLCVService) flattenRelayerTick() []*types.RelayerTick {
+	var relayerTicks []*types.RelayerTick
+	for addr, tickbyrekayer := range s.tickCache.relayerTicks {
+		for _, tickbytime := range tickbyrekayer {
+			for _, tick := range tickbytime {
+				relayerTicks = append(relayerTicks, &types.RelayerTick{
+					RelayerAddress: addr,
+					Tick:           tick,
+				})
+			}
+		}
+	}
+	return relayerTicks
+}
+
 func (s *OHLCVService) commitCache() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	logger.Info("commit ohlcv cache")
 	s.truncate()
 	ticks := s.flatten()
+	tickbyrelayer := s.flattenRelayerTick()
 	tickfile := &tickfile{
-		Frame: s.tickCache.tframes,
-		Ticks: ticks,
+		Frame:        s.tickCache.tframes,
+		Ticks:        ticks,
+		RelayerTicks: tickbyrelayer,
 	}
 	tickData, err := json.Marshal(tickfile)
 	if err != nil {
@@ -415,6 +455,9 @@ func (s *OHLCVService) loadCache() error {
 	for _, t := range tickf.Ticks {
 		s.addTick(t)
 	}
+	for _, t := range tickf.RelayerTicks {
+		s.addRelayerTick(t)
+	}
 	s.tickCache.tframes = tickf.Frame
 	return nil
 }
@@ -440,10 +483,24 @@ func (s *OHLCVService) parseTickKey(key string) (common.Address, common.Address,
 
 func (s *OHLCVService) getVolumeByQuote(baseToken, quoteToken common.Address, amount *big.Int, price *big.Int) *big.Int {
 	token, err := s.getTokenByAddress(baseToken)
-	if err == nil {
+	if err == nil && token != nil {
 		baseTokenDecimalBig := big.NewInt(int64(math.Pow10(token.Decimals)))
 		p := new(big.Int).Mul(amount, price)
 		return new(big.Int).Div(p, baseTokenDecimalBig)
+	}
+	return big.NewInt(0)
+}
+
+func (s *OHLCVService) getVolumeByUsdt(baseToken, quoteToken common.Address, baseVolume *big.Int, quoteVolume *big.Int) *big.Int {
+	token, err := s.getTokenByAddress(quoteToken)
+	if err == nil {
+		quoteTokenPrice, err := s.getTokenPriceByUsdt(quoteToken)
+		if err == nil {
+			quoteTokenDecimal := big.NewInt(int64(math.Pow10(token.Decimals)))
+			volumeByUsdt := new(big.Int).Mul(quoteVolume, quoteTokenPrice)
+			volumeByUsdt.Div(volumeByUsdt, quoteTokenDecimal)
+			return volumeByUsdt
+		}
 	}
 	return big.NewInt(0)
 }
@@ -471,10 +528,13 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 					last.Low = trade.PricePoint
 				}
 				last.Volume = big.NewInt(0).Add(last.Volume, trade.Amount)
-				last.VolumeByQuote = big.NewInt(0).Add(last.VolumeByQuote, s.getVolumeByQuote(trade.BaseToken, trade.QuoteToken, trade.Amount, trade.PricePoint))
+				volumeByQuote := s.getVolumeByQuote(trade.BaseToken, trade.QuoteToken, trade.Amount, trade.PricePoint)
+				last.VolumeByQuote = big.NewInt(0).Add(last.VolumeByQuote, volumeByQuote)
+				last.VolumeUsdt = big.NewInt(0).Add(last.VolumeUsdt, s.getVolumeByUsdt(trade.BaseToken, trade.QuoteToken, trade.Amount, volumeByQuote))
 				last.Count = last.Count.Add(last.Count, big.NewInt(1))
 				last.CloseTime = trade.CreatedAt
 			} else {
+				volumeByQuote := s.getVolumeByQuote(trade.BaseToken, trade.QuoteToken, trade.Amount, trade.PricePoint)
 				tick := &types.Tick{
 					Pair: types.PairID{
 						PairName:   trade.PairName,
@@ -487,7 +547,8 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 					High:          trade.PricePoint,
 					Low:           trade.PricePoint,
 					Volume:        trade.Amount,
-					VolumeByQuote: s.getVolumeByQuote(trade.BaseToken, trade.QuoteToken, trade.Amount, trade.PricePoint),
+					VolumeByQuote: volumeByQuote,
+					VolumeUsdt:    s.getVolumeByUsdt(trade.BaseToken, trade.QuoteToken, trade.Amount, volumeByQuote),
 					Count:         big.NewInt(1),
 					Timestamp:     modTime,
 					Duration:      duration,
@@ -501,8 +562,69 @@ func (s *OHLCVService) updateTick(key string, trade *types.Trade) error {
 	return nil
 }
 
+// updateRelayerTick update lastest tick, need to be lock
+func (s *OHLCVService) updateRelayerTick(relayerAddress common.Address, key string, trade *types.Trade) error {
+	tradeTime := trade.CreatedAt.Unix()
+	baseToken, quoteToken, duration, unit, err := s.parseTickKey(key)
+	if err != nil {
+		return err
+	}
+	if baseToken.Hex() == trade.BaseToken.Hex() && quoteToken.Hex() == trade.QuoteToken.Hex() {
+		modTime, _ := utils.GetModTime(tradeTime, duration, unit)
+		if _, ok := s.tickCache.relayerTicks[relayerAddress]; !ok {
+			s.tickCache.relayerTicks[relayerAddress] = make(map[string]map[int64]*types.Tick)
+		}
+		if _, ok := s.tickCache.relayerTicks[relayerAddress][key]; !ok {
+			s.tickCache.relayerTicks[relayerAddress][key] = make(map[int64]*types.Tick)
+		}
+
+		if tickByTime, ok1 := s.tickCache.relayerTicks[relayerAddress][key]; ok1 {
+			if last, ok2 := tickByTime[modTime]; ok2 {
+				last.Timestamp = modTime
+				last.Close = trade.PricePoint
+				if last.High.Cmp(trade.PricePoint) < 0 {
+					last.High = trade.PricePoint
+				}
+				if last.Low.Cmp(trade.PricePoint) > 0 {
+					last.Low = trade.PricePoint
+				}
+				last.Volume = big.NewInt(0).Add(last.Volume, trade.Amount)
+				volumeByQuote := s.getVolumeByQuote(trade.BaseToken, trade.QuoteToken, trade.Amount, trade.PricePoint)
+				last.VolumeByQuote = big.NewInt(0).Add(last.VolumeByQuote, volumeByQuote)
+				last.VolumeUsdt = big.NewInt(0).Add(last.VolumeUsdt, s.getVolumeByUsdt(trade.BaseToken, trade.QuoteToken, trade.Amount, volumeByQuote))
+				last.Count = last.Count.Add(last.Count, big.NewInt(1))
+				last.CloseTime = trade.CreatedAt
+			} else {
+				volumeByQuote := s.getVolumeByQuote(trade.BaseToken, trade.QuoteToken, trade.Amount, trade.PricePoint)
+				tick := &types.Tick{
+					Pair: types.PairID{
+						PairName:   trade.PairName,
+						BaseToken:  trade.BaseToken,
+						QuoteToken: trade.QuoteToken,
+					},
+					OpenTime:      trade.CreatedAt,
+					Open:          trade.PricePoint,
+					Close:         trade.PricePoint,
+					High:          trade.PricePoint,
+					Low:           trade.PricePoint,
+					Volume:        trade.Amount,
+					VolumeByQuote: volumeByQuote,
+					VolumeUsdt:    s.getVolumeByUsdt(trade.BaseToken, trade.QuoteToken, trade.Amount, volumeByQuote),
+					Count:         big.NewInt(1),
+					Timestamp:     modTime,
+					Duration:      duration,
+					Unit:          unit,
+				}
+				tickByTime[modTime] = tick
+			}
+		}
+	}
+
+	return nil
+}
 func (s *OHLCVService) addTick(tick *types.Tick) {
 	tick.VolumeByQuote = big.NewInt(0)
+	tick.VolumeUsdt = big.NewInt(0)
 	key := s.getTickKey(tick.Pair.BaseToken, tick.Pair.QuoteToken, tick.Duration, tick.Unit)
 	if _, ok := s.tickCache.ticks[key]; ok {
 
@@ -510,6 +632,29 @@ func (s *OHLCVService) addTick(tick *types.Tick) {
 	} else {
 		s.tickCache.ticks[key] = make(map[int64]*types.Tick)
 		s.tickCache.ticks[key][tick.Timestamp] = tick
+	}
+
+}
+
+func (s *OHLCVService) addRelayerTick(relayerTick *types.RelayerTick) {
+	relayerTick.Tick.VolumeByQuote = big.NewInt(0)
+	relayerTick.Tick.VolumeUsdt = big.NewInt(0)
+	key := s.getTickKey(relayerTick.Tick.Pair.BaseToken, relayerTick.Tick.Pair.QuoteToken, relayerTick.Tick.Duration, relayerTick.Tick.Unit)
+	if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress]; ok {
+		if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress][key]; ok {
+			s.tickCache.relayerTicks[relayerTick.RelayerAddress][key][relayerTick.Tick.Timestamp] = relayerTick.Tick
+		} else {
+			s.tickCache.relayerTicks[relayerTick.RelayerAddress][key] = make(map[int64]*types.Tick)
+			s.tickCache.relayerTicks[relayerTick.RelayerAddress][key][relayerTick.Tick.Timestamp] = relayerTick.Tick
+		}
+	} else {
+		s.tickCache.relayerTicks[relayerTick.RelayerAddress] = make(map[string]map[int64]*types.Tick)
+		if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress][key]; ok {
+			s.tickCache.relayerTicks[relayerTick.RelayerAddress][key][relayerTick.Tick.Timestamp] = relayerTick.Tick
+		} else {
+			s.tickCache.relayerTicks[relayerTick.RelayerAddress][key] = make(map[int64]*types.Tick)
+			s.tickCache.relayerTicks[relayerTick.RelayerAddress][key][relayerTick.Tick.Timestamp] = relayerTick.Tick
+		}
 	}
 
 }
@@ -523,6 +668,29 @@ func (s *OHLCVService) filterTick(key string, start, end int64) []*types.Tick {
 				c.Timestamp = t.Timestamp * 1000
 				res = append(res, &c)
 			}
+		}
+	} else {
+		return nil
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Timestamp < res[j].Timestamp
+	})
+	return res
+}
+
+func (s *OHLCVService) filterRelayerTick(relayerAddress common.Address, key string, start, end int64) []*types.Tick {
+	var res []*types.Tick
+	if _, ok := s.tickCache.relayerTicks[relayerAddress]; ok {
+		if _, ok := s.tickCache.relayerTicks[relayerAddress][key]; ok {
+			for _, t := range s.tickCache.relayerTicks[relayerAddress][key] {
+				if (t.Timestamp >= start || start == 0) && (t.Timestamp <= end || end == 0) {
+					c := *t
+					c.Timestamp = t.Timestamp * 1000
+					res = append(res, &c)
+				}
+			}
+		} else {
+			return nil
 		}
 	} else {
 		return nil
@@ -553,6 +721,7 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 		low := first.Low
 		volume := big.NewInt(0)
 		volumebyquote := big.NewInt(0)
+		volumebyUsdt := big.NewInt(0)
 		count := big.NewInt(0)
 		for _, t := range res {
 			if high.Cmp(t.High) < 0 {
@@ -563,6 +732,7 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 			}
 			volume = volume.Add(volume, t.Volume)
 			volumebyquote = volumebyquote.Add(volumebyquote, t.VolumeByQuote)
+			volumebyUsdt = volumebyUsdt.Add(volumebyUsdt, t.VolumeUsdt)
 			count = count.Add(count, t.Count)
 		}
 		return &types.Tick{
@@ -574,6 +744,51 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 			Count:         count,
 			Volume:        volume,
 			VolumeByQuote: volumebyquote,
+			VolumeUsdt:    volumebyUsdt,
+			Timestamp:     last.Timestamp,
+		}
+	}
+	return nil
+}
+
+func (s *OHLCVService) get24hRelayerTick(relayerAddress common.Address, baseToken, quoteToken common.Address) *types.Tick {
+	var res []*types.Tick
+	now := time.Now()
+	begin := now.AddDate(0, 0, -1).Unix()
+	key := s.getTickKey(baseToken, quoteToken, 1, "hour")
+	res = s.filterRelayerTick(relayerAddress, key, begin, 0)
+
+	if len(res) >= 1 {
+		first := res[0]
+		last := res[len(res)-1]
+		high := first.High
+		low := first.Low
+		volume := big.NewInt(0)
+		volumebyquote := big.NewInt(0)
+		volumebyUsdt := big.NewInt(0)
+		count := big.NewInt(0)
+		for _, t := range res {
+			if high.Cmp(t.High) < 0 {
+				high = t.High
+			}
+			if low.Cmp(t.Low) > 0 {
+				low = t.Low
+			}
+			volume = volume.Add(volume, t.Volume)
+			volumebyquote = volumebyquote.Add(volumebyquote, t.VolumeByQuote)
+			volumebyUsdt = volumebyUsdt.Add(volumebyUsdt, t.VolumeUsdt)
+			count = count.Add(count, t.Count)
+		}
+		return &types.Tick{
+			Open:          first.Open,
+			Close:         last.Close,
+			High:          high,
+			Low:           low,
+			CloseTime:     last.CloseTime,
+			Count:         count,
+			Volume:        volume,
+			VolumeByQuote: volumebyquote,
+			VolumeUsdt:    volumebyUsdt,
 			Timestamp:     last.Timestamp,
 		}
 	}
@@ -588,9 +803,16 @@ func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 		key := s.getTickKey(trade.BaseToken, trade.QuoteToken, d.duration, d.unit)
 		s.updateTick(key, trade)
 	}
+	if trade.MakerExchange.Hex() == trade.TakerExchange.Hex() {
+		s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+	} else {
+		s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+		s.updateRelayerTick(trade.Taker, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+	}
 	lastFrame := s.lastTimeFrame()
 	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
 }
+
 func (s *OHLCVService) getOHLCV(pairs []types.PairAddresses, duration int64, unit string, start, end time.Time) ([]*types.Tick, error) {
 	res := make([]*types.Tick, 0)
 	match := make(bson.M)
@@ -1077,7 +1299,7 @@ func (s *OHLCVService) getCachePairByName(pairName string) (*types.Pair, error) 
 		delete(s.pairCacheByName, pairName)
 	}
 	pair, err := s.pairDao.GetByName(pairName)
-	if err == nil {
+	if err == nil && pair != nil {
 		s.pairCacheByName[pairName] = &PairCache{
 			pair:     pair,
 			timelife: now,
@@ -1096,7 +1318,7 @@ func (s *OHLCVService) getCachePairByAddress(baseToken, quoteToken common.Addres
 		delete(s.pairCacheByAddress, pairName)
 	}
 	pair, err := s.pairDao.GetByTokenAddress(baseToken, quoteToken)
-	if err == nil {
+	if err == nil && pair != nil {
 		s.pairCacheByAddress[pairName] = &PairCache{
 			pair:     pair,
 			timelife: now,
@@ -1114,11 +1336,64 @@ func (s *OHLCVService) getTokenByAddress(token common.Address) (*types.Token, er
 		delete(s.tokenCache, token)
 	}
 	t, err := s.tokenDao.GetByAddress(token)
-	if err == nil {
+	if err == nil && t != nil {
 		s.tokenCache[token] = &TokenCache{
 			token:    t,
 			timelife: now,
 		}
 	}
 	return t, err
+}
+
+func (s *OHLCVService) getTokenPriceByUsdt(token common.Address) (*big.Int, error) {
+	now := time.Now().Unix()
+	if tokenPrice, ok := s.priceCacheByUsdt[token]; ok {
+		if now-tokenPrice.timelife < cacheTimeLifeMax {
+			return tokenPrice.price, nil
+		}
+		delete(s.priceCacheByUsdt, token)
+	}
+	t, err := s.getTokenByAddress(token)
+	if err != nil || t == nil {
+		return big.NewInt(0), errors.New("cant not get token price by usdt")
+	}
+	fiatTokenDecimal := int64(math.Pow10(fiatToken.Decimals))
+	if t.Symbol == baseFiat {
+		s.priceCacheByUsdt[token] = &PriceUsdt{
+			price:    big.NewInt(fiatTokenDecimal),
+			timelife: now,
+		}
+		return big.NewInt(fiatTokenDecimal), nil
+	}
+	price, err := s.getLastPriceCurrentByTime(t.Symbol, time.Now())
+	priceDecimals := new(big.Float).Mul(price, big.NewFloat(float64(fiatTokenDecimal)))
+	priceDecimalsInt := new(big.Int)
+	priceDecimals.Int(priceDecimalsInt)
+	if err == nil {
+		s.priceCacheByUsdt[token] = &PriceUsdt{
+			price:    priceDecimalsInt,
+			timelife: now,
+		}
+	}
+	return priceDecimalsInt, err
+}
+
+// GetVolumeByCoinbase get total volume exchange
+func (s *OHLCVService) GetVolumeByCoinbase(addr common.Address) (*big.Int, error) {
+	pairs, err := s.pairDao.GetActivePairsByCoinbase(addr)
+	if err != nil {
+		return nil, err
+	}
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	totalVolume := big.NewInt(0)
+	for _, p := range pairs {
+		tick := s.get24hRelayerTick(addr, p.BaseTokenAddress, p.QuoteTokenAddress)
+		if tick != nil {
+			totalVolume = totalVolume.Add(totalVolume, tick.VolumeUsdt)
+		}
+
+	}
+
+	return totalVolume, nil
 }

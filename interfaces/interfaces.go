@@ -234,6 +234,7 @@ type OHLCVService interface {
 	GetAllTokenPairData() ([]*types.PairData, error)
 	GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error)
 	GetTokenPairData(baseToken common.Address, quoteToken common.Address) *types.PairData
+	GetVolumeByCoinbase(addr common.Address) (*big.Int, error)
 }
 
 type EthereumService interface {

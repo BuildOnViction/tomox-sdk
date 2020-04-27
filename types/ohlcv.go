@@ -34,7 +34,18 @@ type PairID struct {
 	BaseToken  common.Address `json:"baseToken" bson:"baseToken"`
 	QuoteToken common.Address `json:"quoteToken" bson:"quoteToken"`
 }
+
+// Ticks tick
 type Ticks []*Tick
+
+// RelayerTick relayer tick
+type RelayerTick struct {
+	RelayerAddress common.Address `json:"relayerAddress,omitempty" bson:"relayerAddress"`
+	Tick           *Tick          `json:"tick,omitempty" bson:"tick"`
+}
+
+// RelayerTicks array relayer tick
+type RelayerTicks []*RelayerTick
 
 // OHLCVParams struct
 type OHLCVParams struct {

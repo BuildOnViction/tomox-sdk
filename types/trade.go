@@ -45,6 +45,8 @@ type Trade struct {
 	TakerOrderSide string         `json:"takerOrderSide" bson:"takerOrderSide"`
 	TakerOrderType string         `json:"takerOrderType" bson:"takerOrderType"`
 	MakerOrderType string         `json:"makerOrderType" bson:"makerOrderType"`
+	MakerExchange  common.Address `json:"makerExchange" bson:"makerExchange"`
+	TakerExchange  common.Address `json:"takerExchange" bson:"takerExchange"`
 }
 
 // TradeSpec for query
@@ -81,6 +83,8 @@ type TradeRecord struct {
 	TakerOrderSide string        `json:"takerOrderSide" bson:"takerOrderSide"`
 	TakerOrderType string        `json:"takerOrderType" bson:"takerOrderType"`
 	MakerOrderType string        `json:"makerOrderType" bson:"makerOrderType"`
+	MakerExchange  string        `json:"makerExchange" bson:"makerExchange"`
+	TakerExchange  string        `json:"takerExchange" bson:"takerExchange"`
 }
 
 // NewTrade returns a new unsigned trade corresponding to an Order, amount and taker address
@@ -345,6 +349,8 @@ func (t *Trade) SetBSON(raw bson.Raw) error {
 		TakerOrderSide string        `json:"takerOrderSide" bson:"takerOrderSide"`
 		TakerOrderType string        `json:"takerOrderType" bson:"takerOrderType"`
 		MakerOrderType string        `json:"makerOrderType" bson:"makerOrderType"`
+		MakerExchange  string        `json:"makerExchange" bson:"makerExchange"`
+		TakerExchange  string        `json:"takerExchange" bson:"takerExchange"`
 	})
 
 	err := raw.Unmarshal(decoded)
@@ -374,6 +380,8 @@ func (t *Trade) SetBSON(raw bson.Raw) error {
 	t.TakerOrderSide = decoded.TakerOrderSide
 	t.TakerOrderType = decoded.TakerOrderType
 	t.MakerOrderType = decoded.TakerOrderType
+	t.MakerExchange = common.HexToAddress(decoded.MakerExchange)
+	t.TakerExchange = common.HexToAddress(decoded.TakerExchange)
 	return nil
 }
 
