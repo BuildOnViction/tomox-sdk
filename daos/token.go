@@ -149,6 +149,23 @@ func (dao *TokenDao) GetByID(id bson.ObjectId) (*types.Token, error) {
 	return response, nil
 }
 
+func (dao *TokenDao) GetBySymbol(symbol string) (*types.Token, error) {
+	q := bson.M{"symbol": symbol}
+	var resp []types.Token
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &resp)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	if len(resp) == 0 {
+		return nil, nil
+	}
+
+	return &resp[0], nil
+}
+
 // GetByAddress function fetches details of a token based on its contract address
 func (dao *TokenDao) GetByAddress(addr common.Address) (*types.Token, error) {
 	q := bson.M{"contractAddress": addr.Hex()}
