@@ -180,6 +180,7 @@ type TokenDao interface {
 	GetAllByCoinbase(addr common.Address) ([]types.Token, error)
 	GetByID(id bson.ObjectId) (*types.Token, error)
 	GetByAddress(addr common.Address) (*types.Token, error)
+	GetBySymbol(symbol string) (*types.Token, error)
 	GetQuoteTokens() ([]types.Token, error)
 	GetBaseTokens() ([]types.Token, error)
 	UpdateFiatPriceBySymbol(symbol string, price float64) error
