@@ -88,10 +88,10 @@ var fiatToken *types.Token
 // NewOHLCVService init new ohlcv service
 func NewOHLCVService(TradeDao interfaces.TradeDao, pairDao interfaces.PairDao, tokenDao interfaces.TokenDao) *OHLCVService {
 	fiatToken = new(types.Token)
-	f, _ := tokenDao.GetBySymbol("USDT")
+	f, _ := tokenDao.GetBySymbol(baseFiat)
 
 	if f != nil {
-		fiatToken = f
+		fiatToken.Decimals = f.Decimals
 	} else {
 		fiatToken.Decimals = 6
 	}
@@ -1373,6 +1373,9 @@ func (s *OHLCVService) getTokenPriceByUsdt(token common.Address) (*big.Int, erro
 		return big.NewInt(fiatTokenDecimal), nil
 	}
 	price, err := s.getLastPriceCurrentByTime(t.Symbol, time.Now())
+	if price == nil || err != nil {
+		return big.NewInt(0), err
+	}
 	priceDecimals := new(big.Float).Mul(price, big.NewFloat(float64(fiatTokenDecimal)))
 	priceDecimalsInt := new(big.Int)
 	priceDecimals.Int(priceDecimalsInt)
