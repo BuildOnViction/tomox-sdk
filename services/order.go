@@ -530,7 +530,17 @@ func (s *OrderService) broadcastRawOrderBookUpdate(orders []*types.Order) {
 	ws.GetRawOrderBookSocket().BroadcastMessage(id, orders)
 }
 
+// WatchChanges wath change record
 func (s *OrderService) WatchChanges() {
+	go func() {
+		for {
+			<-time.After(500 * time.Millisecond)
+			s.processBulkOrders()
+		}
+	}()
+	s.watchChanges()
+}
+func (s *OrderService) watchChanges() {
 	ct, sc, err := s.orderDao.Watch()
 
 	if err != nil {
@@ -545,12 +555,6 @@ func (s *OrderService) WatchChanges() {
 	defer s.WatchChanges()
 
 	ctx := context.Background()
-	go func() {
-		for {
-			<-time.After(500 * time.Millisecond)
-			s.processBulkOrders()
-		}
-	}()
 
 	//Handling change stream in a cycle
 	for {
