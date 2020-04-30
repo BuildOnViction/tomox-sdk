@@ -350,6 +350,7 @@ func (t *LendingTrade) SetBSON(raw bson.Raw) error {
 // LendingTradeSpec for query
 type LendingTradeSpec struct {
 	CollateralToken string
+	RelayerAddress  common.Address
 	LendingToken    string
 	Term            string
 	Status          string

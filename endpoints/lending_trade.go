@@ -15,6 +15,7 @@ import (
 
 type lendingTradeEndpoint struct {
 	lendingTradeService interfaces.LendingTradeService
+	relayerService      interfaces.RelayerService
 }
 
 // ServeLendingTradeResource sets up the routing of trade endpoints and the corresponding handlers.
@@ -22,8 +23,9 @@ type lendingTradeEndpoint struct {
 func ServeLendingTradeResource(
 	r *mux.Router,
 	lendingTradeService interfaces.LendingTradeService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &lendingTradeEndpoint{lendingTradeService}
+	e := &lendingTradeEndpoint{lendingTradeService, relayerService}
 	r.HandleFunc("/api/lending/trades", e.handleGetLendingTrades).Methods("GET")
 	r.HandleFunc("/api/lending/trades/history", e.handleGetLendingTradesHistory).Methods("GET")
 	ws.RegisterChannel(ws.LendingTradeChannel, e.lendingTradeWebsocket)
@@ -108,6 +110,7 @@ func (e *lendingTradeEndpoint) handleGetLendingTradesHistory(w http.ResponseWrit
 	}
 
 	var lendingTradeSpec types.LendingTradeSpec
+	lendingTradeSpec.RelayerAddress = e.relayerService.GetRelayerAddress(r)
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")

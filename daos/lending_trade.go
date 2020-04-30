@@ -350,6 +350,10 @@ func (dao *LendingTradeDao) GetLendingTradesUserHistory(a common.Address, lendin
 		{"investor": a.Hex()},
 		{"borrower": a.Hex()},
 	}
+	q["$or"] = []bson.M{
+		{"investingRelayer": lendingtradeSpec.RelayerAddress.Hex()},
+		{"borrowingRelayer": lendingtradeSpec.RelayerAddress.Hex()},
+	}
 	if lendingtradeSpec.Term != "" {
 		q["term"] = lendingtradeSpec.Term
 	}
