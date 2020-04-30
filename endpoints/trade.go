@@ -14,7 +14,8 @@ import (
 )
 
 type tradeEndpoint struct {
-	tradeService interfaces.TradeService
+	tradeService   interfaces.TradeService
+	relayerService interfaces.RelayerService
 }
 
 // ServeTradeResource sets up the routing of trade endpoints and the corresponding handlers.
@@ -22,8 +23,9 @@ type tradeEndpoint struct {
 func ServeTradeResource(
 	r *mux.Router,
 	tradeService interfaces.TradeService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &tradeEndpoint{tradeService}
+	e := &tradeEndpoint{tradeService, relayerService}
 	r.HandleFunc("/api/trades", e.HandleGetTrades)
 	r.HandleFunc("/api/trades/history", e.HandleGetTradesHistory)
 	ws.RegisterChannel(ws.TradeChannel, e.tradeWebsocket)
@@ -148,6 +150,8 @@ func (e *tradeEndpoint) HandleGetTradesHistory(w http.ResponseWriter, r *http.Re
 		sortBy = "time"
 	}
 	var tradeSpec types.TradeSpec
+
+	tradeSpec.RelayerAddress = e.relayerService.GetRelayerAddress(r)
 
 	if addr == "" {
 		httputils.WriteError(w, http.StatusBadRequest, "address Parameter missing")

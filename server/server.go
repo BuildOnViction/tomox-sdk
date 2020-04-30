@@ -152,8 +152,8 @@ func NewRouter(
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 
-	endpoints.ServeTradeResource(r, tradeService)
-	endpoints.ServeOrderResource(r, orderService, accountService)
+	endpoints.ServeTradeResource(r, tradeService, relayerService)
+	endpoints.ServeOrderResource(r, orderService, accountService, relayerService)
 
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService, ohlcvService, relayerService)

@@ -555,6 +555,7 @@ func (dao *OrderDao) removeSignature(order *types.Order) {
 func (dao *OrderDao) GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error) {
 
 	q := bson.M{}
+	q["exchangeAddress"] = orderSpec.RelayerAddress.Hex()
 	if orderSpec.UserAddress != "" {
 		q["userAddress"] = orderSpec.UserAddress
 	}

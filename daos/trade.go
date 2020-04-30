@@ -660,6 +660,10 @@ func (dao *TradeDao) GetTradesUserHistory(a common.Address, tradeSpec *types.Tra
 		{"maker": a.Hex()},
 		{"taker": a.Hex()},
 	}
+	q["$or"] = []bson.M{
+		{"makerExchange": tradeSpec.RelayerAddress.Hex()},
+		{"takerExchange": tradeSpec.RelayerAddress.Hex()},
+	}
 	if tradeSpec.BaseToken != "" {
 		q["baseToken"] = tradeSpec.BaseToken
 	}
