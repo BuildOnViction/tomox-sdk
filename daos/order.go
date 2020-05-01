@@ -777,7 +777,7 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 	totalLockedBalance := big.NewInt(0)
 	for _, o := range orders {
 		for _, p := range pairs {
-			if p.BaseTokenSymbol == o.BaseTokenSymbol() && p.QuoteTokenSymbol == o.QuoteTokenSymbol() {
+			if p.BaseTokenAddress == o.BaseToken && p.QuoteTokenAddress == o.QuoteToken {
 				if o.Side == types.BUY {
 					remainingAmount := math.Sub(o.Amount, o.FilledAmount)
 					amount := math.Mul(remainingAmount, o.PricePoint)
