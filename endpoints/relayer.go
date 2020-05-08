@@ -13,8 +13,9 @@ import (
 )
 
 type relayerEndpoint struct {
-	relayerService interfaces.RelayerService
-	ohlcvService   interfaces.OHLCVService
+	relayerService      interfaces.RelayerService
+	ohlcvService        interfaces.OHLCVService
+	lendingOhlcvService interfaces.LendingOhlcvService
 }
 
 // ServeRelayerResource sets up the routing of order endpoints and the corresponding handlers.
@@ -22,10 +23,12 @@ func ServeRelayerResource(
 	r *mux.Router,
 	relayerService interfaces.RelayerService,
 	ohlcvService interfaces.OHLCVService,
+	lendingOhlcvService interfaces.LendingOhlcvService,
 ) {
-	e := &relayerEndpoint{relayerService, ohlcvService}
+	e := &relayerEndpoint{relayerService, ohlcvService, lendingOhlcvService}
 	r.HandleFunc("/api/relayer", e.handleRelayerUpdate).Methods("PUT")
 	r.HandleFunc("/api/relayer/volume", e.handleGetVolume).Methods("GET")
+	r.HandleFunc("/api/relayer/lending", e.handleGetLendingVolume).Methods("GET")
 }
 
 func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +79,28 @@ func (e *relayerEndpoint) handleGetVolume(w http.ResponseWriter, r *http.Request
 	ex := e.relayerService.GetRelayerAddress(r)
 	result.RelayerAddress = ex
 	volume, err := e.ohlcvService.GetVolumeByCoinbase(ex)
+	result.TotalVolume = volume
+	if err != nil {
+		logger.Error(err)
+		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httputils.WriteJSON(w, http.StatusOK, result)
+	return
+
+}
+
+func (e *relayerEndpoint) handleGetLendingVolume(w http.ResponseWriter, r *http.Request) {
+	type res struct {
+		RelayerAddress common.Address `json:"relayerAddress"`
+		TotalVolume    *big.Int       `json:"totalLendingVolume"`
+		VolumeType     string         `json:"volumeType"`
+	}
+	var result res
+	result.VolumeType = "USDT"
+	ex := e.relayerService.GetRelayerAddress(r)
+	result.RelayerAddress = ex
+	volume, err := e.lendingOhlcvService.GetLendingVolumeByCoinbase(ex)
 	result.TotalVolume = volume
 	if err != nil {
 		logger.Error(err)

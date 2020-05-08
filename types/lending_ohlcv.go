@@ -33,6 +33,15 @@ type LendingID struct {
 // LendingTicks array of lending ticks
 type LendingTicks []*LendingTick
 
+// RelayerLendingTick relayer tick
+type RelayerLendingTick struct {
+	RelayerAddress common.Address `json:"relayerAddress,omitempty" bson:"relayerAddress"`
+	LendingTick    *LendingTick   `json:"lendingTick,omitempty" bson:"lendingTick"`
+}
+
+// RelayerLendingTicks array relayer tick
+type RelayerLendingTicks []*RelayerLendingTick
+
 // MarshalJSON returns the json encoded byte array representing the trade struct
 func (t *LendingTick) MarshalJSON() ([]byte, error) {
 	tick := map[string]interface{}{

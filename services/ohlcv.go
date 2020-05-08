@@ -1388,6 +1388,13 @@ func (s *OHLCVService) getTokenPriceByUsdt(token common.Address) (*big.Int, erro
 	return priceDecimalsInt, err
 }
 
+// GetVolumeByUsdt convert to USDT volume
+func (s *OHLCVService) GetVolumeByUsdt(token common.Address, volume *big.Int) *big.Int {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.getVolumeByUsdt(common.Address{}, token, new(big.Int), volume)
+}
+
 // GetVolumeByCoinbase get total volume exchange
 func (s *OHLCVService) GetVolumeByCoinbase(addr common.Address) (*big.Int, error) {
 	pairs, err := s.pairDao.GetActivePairsByCoinbase(addr)

@@ -34,22 +34,27 @@ type LendingOhlcvService struct {
 	bulkPairs           map[string]bool
 	mutex               sync.RWMutex
 	tokenCache          map[common.Address]int
+	ohlcv               interfaces.OHLCVService
 }
 
 type lendingTickCache struct {
 	tframes timeframes
 	ticks   map[string]map[int64]*types.LendingTick
+	// relayerAddress => term => time => tick
+	relayerLendingTicks map[common.Address]map[string]map[int64]*types.LendingTick
 }
 
 type lendingtickfile struct {
-	Frame        timeframes         `json:"frame" bson:"frame"`
-	LendingTicks types.LendingTicks `json:"ticks" bson:"ticks"`
+	Frame        timeframes                `json:"frame" bson:"frame"`
+	LendingTicks types.LendingTicks        `json:"ticks" bson:"ticks"`
+	RelayerTicks types.RelayerLendingTicks `json:"relayerticks" bson:"relayerticks"`
 }
 
 // NewLendingOhlcvService init new ohlcv service
-func NewLendingOhlcvService(lendingTradeService interfaces.LendingTradeService, lendingPairDao interfaces.LendingPairDao) *LendingOhlcvService {
+func NewLendingOhlcvService(lendingTradeService interfaces.LendingTradeService, ohlcv interfaces.OHLCVService, lendingPairDao interfaces.LendingPairDao) *LendingOhlcvService {
 	cache := &lendingTickCache{
-		ticks: make(map[string]map[int64]*types.LendingTick),
+		ticks:               make(map[string]map[int64]*types.LendingTick),
+		relayerLendingTicks: make(map[common.Address]map[string]map[int64]*types.LendingTick),
 	}
 	return &LendingOhlcvService{
 		lendingTradeService: lendingTradeService,
@@ -57,6 +62,7 @@ func NewLendingOhlcvService(lendingTradeService interfaces.LendingTradeService, 
 		lendingTickCache:    cache,
 		tokenCache:          make(map[common.Address]int),
 		bulkPairs:           make(map[string]bool),
+		ohlcv:               ohlcv,
 	}
 }
 
@@ -324,6 +330,14 @@ func (s *LendingOhlcvService) fetch(fromdate int64, todate int64, frame *timefra
 					s.updateTick(key, trade)
 				}
 			}
+
+			if trade.BorrowingRelayer.Hex() == trade.InvestingRelayer.Hex() {
+				s.updateRelayerTick(trade.BorrowingRelayer, s.getTickKey(trade.Term, trade.LendingToken, 1, "hour"), trade)
+			} else {
+				s.updateRelayerTick(trade.BorrowingRelayer, s.getTickKey(trade.Term, trade.LendingToken, 1, "hour"), trade)
+				s.updateRelayerTick(trade.InvestingRelayer, s.getTickKey(trade.Term, trade.LendingToken, 1, "hour"), trade)
+			}
+
 			if i == 0 {
 				s.updatefisttimeframe(trade.CreatedAt.Unix(), frame)
 			}
@@ -379,15 +393,32 @@ func (s *LendingOhlcvService) flatten() []*types.LendingTick {
 	return ticks
 }
 
+func (s *LendingOhlcvService) flattenRelayerLendingTick() []*types.RelayerLendingTick {
+	var relayerTicks []*types.RelayerLendingTick
+	for addr, tickbyrekayer := range s.lendingTickCache.relayerLendingTicks {
+		for _, tickbytime := range tickbyrekayer {
+			for _, tick := range tickbytime {
+				relayerTicks = append(relayerTicks, &types.RelayerLendingTick{
+					RelayerAddress: addr,
+					LendingTick:    tick,
+				})
+			}
+		}
+	}
+	return relayerTicks
+}
+
 func (s *LendingOhlcvService) commitCache() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	logger.Info("commit ohlcv cache")
 	s.truncate()
 	ticks := s.flatten()
+	tickbyrelayer := s.flattenRelayerLendingTick()
 	lendingtickfile := &lendingtickfile{
 		Frame:        s.lendingTickCache.tframes,
 		LendingTicks: ticks,
+		RelayerTicks: tickbyrelayer,
 	}
 	tickData, err := json.Marshal(lendingtickfile)
 	if err != nil {
@@ -427,6 +458,10 @@ func (s *LendingOhlcvService) loadCache() error {
 	for _, t := range tickf.LendingTicks {
 		s.addTick(t)
 	}
+	for _, t := range tickf.RelayerTicks {
+		s.addRelayerTick(t)
+	}
+
 	s.lendingTickCache.tframes = tickf.Frame
 	return nil
 }
@@ -501,6 +536,57 @@ func (s *LendingOhlcvService) updateTick(key string, trade *types.LendingTrade) 
 	return nil
 }
 
+// updateRelayerTick update lastest tick, need to be lock
+func (s *LendingOhlcvService) updateRelayerTick(relayerAddress common.Address, key string, trade *types.LendingTrade) error {
+	tradeTime := trade.CreatedAt.Unix()
+	term, lendingToken, duration, unit, err := s.parseTickKey(key)
+	if err != nil {
+		return err
+	}
+	if term == trade.Term && lendingToken.Hex() == trade.LendingToken.Hex() {
+		modTime, _ := utils.GetModTime(tradeTime, duration, unit)
+		if _, ok := s.lendingTickCache.relayerLendingTicks[relayerAddress]; !ok {
+			s.lendingTickCache.relayerLendingTicks[relayerAddress] = make(map[string]map[int64]*types.LendingTick)
+		}
+		if _, ok := s.lendingTickCache.relayerLendingTicks[relayerAddress][key]; !ok {
+			s.lendingTickCache.relayerLendingTicks[relayerAddress][key] = make(map[int64]*types.LendingTick)
+		}
+
+		if tickByTime, ok1 := s.lendingTickCache.relayerLendingTicks[relayerAddress][key]; ok1 {
+			if last, ok2 := tickByTime[modTime]; ok2 {
+				last.Timestamp = modTime
+				last.Close = trade.Interest
+				if last.High < trade.Interest {
+					last.High = trade.Interest
+				}
+				if last.Low > trade.Interest {
+					last.Low = trade.Interest
+				}
+				last.Volume = big.NewInt(0).Add(last.Volume, trade.Amount)
+				last.Count = last.Count.Add(last.Count, big.NewInt(1))
+			} else {
+				tick := &types.LendingTick{
+					LendingID: types.LendingID{
+						Term:         trade.Term,
+						LendingToken: trade.LendingToken,
+					},
+					Open:      trade.Interest,
+					Close:     trade.Interest,
+					High:      trade.Interest,
+					Low:       trade.Interest,
+					Volume:    trade.Amount,
+					Count:     big.NewInt(1),
+					Timestamp: modTime,
+					Duration:  duration,
+					Unit:      unit,
+				}
+				tickByTime[modTime] = tick
+			}
+		}
+	}
+	return nil
+}
+
 func (s *LendingOhlcvService) addTick(tick *types.LendingTick) {
 	key := s.getTickKey(tick.LendingID.Term, tick.LendingID.LendingToken, tick.Duration, tick.Unit)
 	if _, ok := s.lendingTickCache.ticks[key]; ok {
@@ -509,6 +595,28 @@ func (s *LendingOhlcvService) addTick(tick *types.LendingTick) {
 	} else {
 		s.lendingTickCache.ticks[key] = make(map[int64]*types.LendingTick)
 		s.lendingTickCache.ticks[key][tick.Timestamp] = tick
+	}
+
+}
+
+func (s *LendingOhlcvService) addRelayerTick(relayerTick *types.RelayerLendingTick) {
+
+	key := s.getTickKey(relayerTick.LendingTick.LendingID.Term, relayerTick.LendingTick.LendingID.LendingToken, relayerTick.LendingTick.Duration, relayerTick.LendingTick.Unit)
+	if _, ok := s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress]; ok {
+		if _, ok := s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key]; ok {
+			s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key][relayerTick.LendingTick.Timestamp] = relayerTick.LendingTick
+		} else {
+			s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key] = make(map[int64]*types.LendingTick)
+			s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key][relayerTick.LendingTick.Timestamp] = relayerTick.LendingTick
+		}
+	} else {
+		s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress] = make(map[string]map[int64]*types.LendingTick)
+		if _, ok := s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key]; ok {
+			s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key][relayerTick.LendingTick.Timestamp] = relayerTick.LendingTick
+		} else {
+			s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key] = make(map[int64]*types.LendingTick)
+			s.lendingTickCache.relayerLendingTicks[relayerTick.RelayerAddress][key][relayerTick.LendingTick.Timestamp] = relayerTick.LendingTick
+		}
 	}
 
 }
@@ -522,6 +630,29 @@ func (s *LendingOhlcvService) filterTick(key string, start, end int64) []*types.
 				c.Timestamp = t.Timestamp * 1000
 				res = append(res, &c)
 			}
+		}
+	} else {
+		return nil
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Timestamp < res[j].Timestamp
+	})
+	return res
+}
+
+func (s *LendingOhlcvService) filterRelayerTick(relayerAddress common.Address, key string, start, end int64) []*types.LendingTick {
+	var res []*types.LendingTick
+	if _, ok := s.lendingTickCache.relayerLendingTicks[relayerAddress]; ok {
+		if _, ok := s.lendingTickCache.relayerLendingTicks[relayerAddress][key]; ok {
+			for _, t := range s.lendingTickCache.relayerLendingTicks[relayerAddress][key] {
+				if (t.Timestamp >= start || start == 0) && (t.Timestamp <= end || end == 0) {
+					c := *t
+					c.Timestamp = t.Timestamp * 1000
+					res = append(res, &c)
+				}
+			}
+		} else {
+			return nil
 		}
 	} else {
 		return nil
@@ -589,6 +720,58 @@ func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Addres
 	}
 }
 
+func (s *LendingOhlcvService) get24hRelayerTick(relayerAddress common.Address, term uint64, lendingToken common.Address) *types.LendingTick {
+	var res []*types.LendingTick
+	now := time.Now()
+	begin := now.AddDate(0, 0, -1).Unix()
+	key := s.getTickKey(term, lendingToken, 1, "hour")
+	res = s.filterRelayerTick(relayerAddress, key, begin, 0)
+
+	if len(res) >= 1 {
+		first := res[0]
+		last := res[len(res)-1]
+		high := first.High
+		low := first.Low
+		volume := big.NewInt(0)
+		count := big.NewInt(0)
+		for _, t := range res {
+			if high < t.High {
+				high = t.High
+			}
+			if low > t.Low {
+				low = t.Low
+			}
+			volume = volume.Add(volume, t.Volume)
+			count = count.Add(count, t.Count)
+		}
+		return &types.LendingTick{
+			Open:      first.Open,
+			Close:     last.Close,
+			High:      high,
+			Low:       low,
+			Count:     count,
+			Volume:    volume,
+			Timestamp: last.Timestamp,
+			LendingID: types.LendingID{
+				Term:         term,
+				LendingToken: lendingToken,
+			},
+			Duration: 24,
+			Unit:     "hour",
+		}
+	}
+	return &types.LendingTick{
+		LendingID: types.LendingID{
+			Term:         term,
+			LendingToken: lendingToken,
+		},
+		Duration: 24,
+		Unit:     "hour",
+		Volume:   big.NewInt(0),
+	}
+	return nil
+}
+
 // NotifyTrade trigger if trade comming
 func (s *LendingOhlcvService) NotifyTrade(trade *types.LendingTrade) {
 	s.mutex.Lock()
@@ -596,6 +779,12 @@ func (s *LendingOhlcvService) NotifyTrade(trade *types.LendingTrade) {
 	for _, d := range s.getConfig() {
 		key := s.getTickKey(trade.Term, trade.LendingToken, d.duration, d.unit)
 		s.updateTick(key, trade)
+	}
+	if trade.BorrowingRelayer.Hex() == trade.InvestingRelayer.Hex() {
+		s.updateRelayerTick(trade.BorrowingRelayer, s.getTickKey(trade.Term, trade.LendingToken, 1, "hour"), trade)
+	} else {
+		s.updateRelayerTick(trade.BorrowingRelayer, s.getTickKey(trade.Term, trade.LendingToken, 1, "hour"), trade)
+		s.updateRelayerTick(trade.InvestingRelayer, s.getTickKey(trade.Term, trade.LendingToken, 1, "hour"), trade)
 	}
 	lastFrame := s.lastTimeFrame()
 	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
@@ -663,4 +852,23 @@ func (s *LendingOhlcvService) GetAllTokenPairData() ([]*types.LendingTick, error
 
 	}
 	return pairsData, nil
+}
+
+// GetLendingVolumeByCoinbase get total volume lending
+func (s *LendingOhlcvService) GetLendingVolumeByCoinbase(addr common.Address) (*big.Int, error) {
+	pairs, err := s.lendingPairDao.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	totalVolume := big.NewInt(0)
+	for _, p := range pairs {
+		tick := s.get24hRelayerTick(addr, p.Term, p.LendingTokenAddress)
+		if tick != nil {
+			totalVolume = totalVolume.Add(totalVolume, s.ohlcv.GetVolumeByUsdt(p.LendingTokenAddress, tick.Volume))
+		}
+	}
+
+	return totalVolume, nil
 }

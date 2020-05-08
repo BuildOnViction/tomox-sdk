@@ -5,6 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
+	"strconv"
+
+	"runtime/pprof"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/handlers"
@@ -71,7 +75,27 @@ func Start() {
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
+	router.HandleFunc("/heap", handleHeap).Methods("GET")
 	panic(http.ListenAndServe(address, handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
+}
+func handleHeap(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	p := pprof.Lookup(string("heap"))
+	if p == nil {
+		return
+	}
+	gc, _ := strconv.Atoi(r.FormValue("gc"))
+	if gc > 0 {
+		runtime.GC()
+	}
+	debug, _ := strconv.Atoi(r.FormValue("debug"))
+	if debug != 0 {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	} else {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, "heap"))
+	}
+	p.WriteTo(w, debug)
 }
 
 func NewRouter(
@@ -130,7 +154,7 @@ func NewRouter(
 
 	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, lendingRecallDao, tokenCollateralDao, tokenLendingDao, notificationDao, lendingTradeDao, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, notificationDao, rabbitConn)
-	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeService, lengdingPairDao)
+	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeService, ohlcvService, lengdingPairDao)
 	lendingOhlcvService.Init()
 
 	lendingOrderbookService := services.NewLendingOrderBookService(lendingOrderDao)
@@ -171,7 +195,7 @@ func NewRouter(
 	endpoints.ServeLendingMarketsResource(r, lendingMarketService, lendingOhlcvService)
 	endpoints.ServeLendingPriceBoardResource(r, lendingPriceboardService)
 
-	endpoints.ServeRelayerResource(r, relayerService, ohlcvService)
+	endpoints.ServeRelayerResource(r, relayerService, ohlcvService, lendingOhlcvService)
 
 	// Swagger UI
 	sh := http.StripPrefix(swaggerUIDir, http.FileServer(http.Dir("."+swaggerUIDir)))
