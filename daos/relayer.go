@@ -102,7 +102,7 @@ func (dao *RelayerDao) GetByAddress(owner common.Address) (*types.Relayer, error
 
 func (dao *RelayerDao) GetByHost(host string) (*types.Relayer, error) {
 	res := []types.Relayer{}
-	q := bson.M{"domain": host}
+	q := bson.M{"domain": host, "resign": false}
 	err := db.Get(dao.dbName, dao.collectionName, q, 0, 1, &res)
 	if err != nil {
 		logger.Error(err)

@@ -346,9 +346,19 @@ func (dao *LendingTradeDao) GetLendingTradesUserHistory(a common.Address, lendin
 		}
 		q["createdAt"] = dateFilter
 	}
-	q["$or"] = []bson.M{
-		{"investor": a.Hex()},
-		{"borrower": a.Hex()},
+	q["$and"] = []bson.M{
+		{
+			"$or": []bson.M{
+				{"investor": a.Hex()},
+				{"borrower": a.Hex()},
+			},
+		},
+		{
+			"$or": []bson.M{
+				{"investingRelayer": lendingtradeSpec.RelayerAddress.Hex()},
+				{"borrowingRelayer": lendingtradeSpec.RelayerAddress.Hex()},
+			},
+		},
 	}
 	if lendingtradeSpec.Term != "" {
 		q["term"] = lendingtradeSpec.Term

@@ -21,11 +21,16 @@ const (
 
 type lendingorderEndpoint struct {
 	lendingorderService interfaces.LendingOrderService
+	relayerService      interfaces.RelayerService
 }
 
 // ServeLendingOrderResource sets up the routing of order endpoints and the corresponding handlers.
-func ServeLendingOrderResource(r *mux.Router, lendingorderService interfaces.LendingOrderService) {
-	e := &lendingorderEndpoint{lendingorderService}
+func ServeLendingOrderResource(
+	r *mux.Router,
+	lendingorderService interfaces.LendingOrderService,
+	relayerService interfaces.RelayerService,
+) {
+	e := &lendingorderEndpoint{lendingorderService, relayerService}
 	r.HandleFunc("/api/lending/orders", e.handleGetLendingOrders).Methods("GET")
 	r.HandleFunc("/api/lending/repay", e.handleGetRepay).Methods("GET")
 	r.HandleFunc("/api/lending/topup", e.handleGetTopup).Methods("GET")
@@ -64,6 +69,8 @@ func (e *lendingorderEndpoint) handleGetLendingOrders(w http.ResponseWriter, r *
 	sortedList["lendingSide"] = "side"
 
 	var lendingSpec types.LendingSpec
+	lendingSpec.RelayerAddress = e.relayerService.GetRelayerAddress(r)
+
 	if addr != "" {
 		if !common.IsHexAddress(addr) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")

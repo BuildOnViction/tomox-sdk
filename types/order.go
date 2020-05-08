@@ -63,15 +63,16 @@ type OrderRes struct {
 
 // OrderSpec contains field for filter
 type OrderSpec struct {
-	UserAddress string
-	BaseToken   string
-	QuoteToken  string
-	Status      string
-	Side        string
-	OrderType   string
-	DateFrom    int64
-	DateTo      int64
-	OrderHash   string
+	UserAddress    string
+	RelayerAddress common.Address
+	BaseToken      string
+	QuoteToken     string
+	Status         string
+	Side           string
+	OrderType      string
+	DateFrom       int64
+	DateTo         int64
+	OrderHash      string
 }
 
 func (o *Order) String() string {

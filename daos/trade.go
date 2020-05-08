@@ -656,9 +656,19 @@ func (dao *TradeDao) GetTradesUserHistory(a common.Address, tradeSpec *types.Tra
 		}
 		q["createdAt"] = dateFilter
 	}
-	q["$or"] = []bson.M{
-		{"maker": a.Hex()},
-		{"taker": a.Hex()},
+	q["$and"] = []bson.M{
+		{
+			"$or": []bson.M{
+				{"maker": a.Hex()},
+				{"taker": a.Hex()},
+			},
+		},
+		{
+			"$or": []bson.M{
+				{"makerExchange": tradeSpec.RelayerAddress.Hex()},
+				{"takerExchange": tradeSpec.RelayerAddress.Hex()},
+			},
+		},
 	}
 	if tradeSpec.BaseToken != "" {
 		q["baseToken"] = tradeSpec.BaseToken

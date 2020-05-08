@@ -68,6 +68,7 @@ type LendingRes struct {
 type LendingSpec struct {
 	UserAddress     string
 	CollateralToken string
+	RelayerAddress  common.Address
 	LendingToken    string
 	Term            string
 	Status          string

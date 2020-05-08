@@ -176,8 +176,8 @@ func NewRouter(
 	endpoints.ServeOrderBookResource(r, orderBookService)
 	endpoints.ServeOHLCVResource(r, ohlcvService)
 
-	endpoints.ServeTradeResource(r, tradeService)
-	endpoints.ServeOrderResource(r, orderService, accountService)
+	endpoints.ServeTradeResource(r, tradeService, relayerService)
+	endpoints.ServeOrderResource(r, orderService, accountService, relayerService)
 
 	endpoints.ServePriceBoardResource(r, priceBoardService)
 	endpoints.ServeMarketsResource(r, marketsService, ohlcvService, relayerService)
@@ -189,8 +189,8 @@ func NewRouter(
 
 	endpoints.ServeLendingPairResource(r, lendingPairService, relayerService)
 	endpoints.ServeLendingOrderBookResource(r, lendingOrderbookService)
-	endpoints.ServeLendingTradeResource(r, lendingTradeService)
-	endpoints.ServeLendingOrderResource(r, lendingOrderService)
+	endpoints.ServeLendingTradeResource(r, lendingTradeService, relayerService)
+	endpoints.ServeLendingOrderResource(r, lendingOrderService, relayerService)
 	endpoints.ServeLendingOhlcvResource(r, lendingOhlcvService)
 	endpoints.ServeLendingMarketsResource(r, lendingMarketService, lendingOhlcvService)
 	endpoints.ServeLendingPriceBoardResource(r, lendingPriceboardService)

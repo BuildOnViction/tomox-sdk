@@ -19,6 +19,7 @@ import (
 type orderEndpoint struct {
 	orderService   interfaces.OrderService
 	accountService interfaces.AccountService
+	relayerService interfaces.RelayerService
 }
 
 // ServeOrderResource sets up the routing of order endpoints and the corresponding handlers.
@@ -26,8 +27,9 @@ func ServeOrderResource(
 	r *mux.Router,
 	orderService interfaces.OrderService,
 	accountService interfaces.AccountService,
+	relayerService interfaces.RelayerService,
 ) {
-	e := &orderEndpoint{orderService, accountService}
+	e := &orderEndpoint{orderService, accountService, relayerService}
 
 	r.HandleFunc("/api/orders/count", e.handleGetCountOrder).Methods("GET")
 	r.HandleFunc("/api/orders/nonce", e.handleGetOrderNonce).Methods("GET")
@@ -132,6 +134,8 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	sortedList["orderSide"] = "side"
 
 	var orderSpec types.OrderSpec
+	orderSpec.RelayerAddress = e.relayerService.GetRelayerAddress(r)
+
 	if addr != "" {
 		if !common.IsHexAddress(addr) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid Address")
@@ -318,6 +322,8 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	}
 
 	var orderSpec types.OrderSpec
+
+	orderSpec.RelayerAddress = e.relayerService.GetRelayerAddress(r)
 
 	orderSpec.UserAddress = common.HexToAddress(addr).Hex()
 	if baseToken != "" {

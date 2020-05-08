@@ -663,6 +663,7 @@ func (dao *LendingOrderDao) UpdateFilledAmount(hash common.Hash, value *big.Int)
 func (dao *LendingOrderDao) GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error) {
 
 	q := bson.M{}
+	q["relayer"] = lendingSpec.RelayerAddress.Hex()
 	if lendingSpec.UserAddress != "" {
 		q["userAddress"] = lendingSpec.UserAddress
 	}

@@ -51,10 +51,11 @@ type Trade struct {
 
 // TradeSpec for query
 type TradeSpec struct {
-	BaseToken  string
-	QuoteToken string
-	DateFrom   int64
-	DateTo     int64
+	BaseToken      string
+	QuoteToken     string
+	RelayerAddress common.Address
+	DateFrom       int64
+	DateTo         int64
 }
 
 // TradeRes response api
@@ -171,6 +172,8 @@ func (t *Trade) MarshalJSON() ([]byte, error) {
 		"takerOrderSide": t.TakerOrderSide,
 		"takerOrderType": t.TakerOrderType,
 		"makerOrderType": t.MakerOrderType,
+		"makerExchange":  t.MakerExchange,
+		"takerExchange":  t.TakerExchange,
 	}
 
 	if (t.BaseToken != common.Address{}) {
@@ -291,6 +294,12 @@ func (t *Trade) UnmarshalJSON(b []byte) error {
 	if trade["makerOrderType"] != nil {
 		t.TakerOrderType = trade["makerOrderType"].(string)
 	}
+	if trade["makerExchange"] != nil {
+		t.MakerExchange = common.HexToAddress(trade["makerExchange"].(string))
+	}
+	if trade["takerExchange"] != nil {
+		t.TakerExchange = common.HexToAddress(trade["takerExchange"].(string))
+	}
 
 	return nil
 }
@@ -322,6 +331,8 @@ func (t *Trade) GetBSON() (interface{}, error) {
 		TakerOrderSide: t.TakerOrderSide,
 		TakerOrderType: t.TakerOrderType,
 		MakerOrderType: t.MakerOrderType,
+		MakerExchange:  t.MakerExchange.Hex(),
+		TakerExchange:  t.TakerExchange.Hex(),
 	}
 
 	return tr, nil
