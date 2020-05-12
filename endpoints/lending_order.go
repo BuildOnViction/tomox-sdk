@@ -145,7 +145,7 @@ func (e *lendingorderEndpoint) handleGetLendingOrders(w http.ResponseWriter, r *
 
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -153,7 +153,7 @@ func (e *lendingorderEndpoint) handleGetLendingOrders(w http.ResponseWriter, r *
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
@@ -517,7 +517,7 @@ func (e *lendingorderEndpoint) handleGetTopup(w http.ResponseWriter, r *http.Req
 
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -525,7 +525,7 @@ func (e *lendingorderEndpoint) handleGetTopup(w http.ResponseWriter, r *http.Req
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
@@ -643,7 +643,7 @@ func (e *lendingorderEndpoint) handleGetRepay(w http.ResponseWriter, r *http.Req
 
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -651,7 +651,7 @@ func (e *lendingorderEndpoint) handleGetRepay(w http.ResponseWriter, r *http.Req
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
@@ -777,7 +777,7 @@ func (e *lendingorderEndpoint) handleGetRecall(w http.ResponseWriter, r *http.Re
 
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -785,7 +785,7 @@ func (e *lendingorderEndpoint) handleGetRecall(w http.ResponseWriter, r *http.Re
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
