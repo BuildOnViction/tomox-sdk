@@ -649,10 +649,10 @@ func (dao *TradeDao) GetTradesUserHistory(a common.Address, tradeSpec *types.Tra
 	if tradeSpec.DateFrom != 0 || tradeSpec.DateTo != 0 {
 		dateFilter := bson.M{}
 		if tradeSpec.DateFrom != 0 {
-			dateFilter["$gte"] = strconv.FormatInt(tradeSpec.DateFrom, 10)
+			dateFilter["$gte"] = time.Unix(tradeSpec.DateFrom, 0)
 		}
 		if tradeSpec.DateTo != 0 {
-			dateFilter["$lt"] = strconv.FormatInt(tradeSpec.DateTo, 10)
+			dateFilter["$lt"] = time.Unix(tradeSpec.DateTo, 0)
 		}
 		q["createdAt"] = dateFilter
 	}
