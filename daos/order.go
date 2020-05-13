@@ -1105,3 +1105,47 @@ func (dao *OrderDao) GetOrderNonce(userAddress common.Address) (interface{}, err
 	logger.Info("OrderNonce:", result)
 	return result, nil
 }
+
+// GetBestAsk get best selling price
+func (dao *OrderDao) GetBestAsk(baseToken, quouteToken common.Address) (*types.PriceVolume, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	var result types.PriceVolume
+
+	err = rpcClient.Call(&result, "tomox_getBestAsk", baseToken, quouteToken)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	return &result, nil
+}
+
+// GetBestBid get best buy price
+func (dao *OrderDao) GetBestBid(baseToken, quouteToken common.Address) (*types.PriceVolume, error) {
+	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
+
+	defer rpcClient.Close()
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	var result types.PriceVolume
+
+	err = rpcClient.Call(&result, "tomox_getBestBid", baseToken, quouteToken)
+
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	return &result, nil
+}

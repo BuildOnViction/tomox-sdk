@@ -55,6 +55,8 @@ type OrderDao interface {
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 	GetOrderNonce(addr common.Address) (interface{}, error)
 	GetOpenOrders() ([]*types.Order, error)
+	GetBestBid(baseToken, quouteToken common.Address) (*types.PriceVolume, error)
+	GetBestAsk(baseToken, quouteToken common.Address) (*types.PriceVolume, error)
 }
 
 type StopOrderDao interface {
@@ -136,8 +138,6 @@ type PairDao interface {
 	GetByName(name string) (*types.Pair, error)
 	GetByTokenSymbols(baseTokenSymbol, quoteTokenSymbol string) (*types.Pair, error)
 	GetByTokenAddress(baseToken, quoteToken common.Address) (*types.Pair, error)
-	GetListedPairs() ([]types.Pair, error)
-	GetUnlistedPairs() ([]types.Pair, error)
 	DeleteByToken(baseAddress common.Address, quoteAddress common.Address) error
 	DeleteByTokenAndCoinbase(baseAddress common.Address, quoteAddress common.Address, addr common.Address) error
 }
@@ -261,6 +261,8 @@ type OrderService interface {
 	HandleEngineResponse(res *types.EngineResponse) error
 	GetOrders(orderSpec types.OrderSpec, sort []string, offset int, size int) (*types.OrderRes, error)
 	GetOrderNonceByUserAddress(addr common.Address) (interface{}, error)
+	GetBestBid(baseToken, quouteToken common.Address) (*types.PriceVolume, error)
+	GetBestAsk(baseToken, quouteToken common.Address) (*types.PriceVolume, error)
 }
 
 type OrderBookService interface {
@@ -282,12 +284,8 @@ type PairService interface {
 	GetByTokenAddress(bt, qt common.Address) (*types.Pair, error)
 	GetTokenPairData(bt, qt common.Address) (*types.PairData, error)
 	GetAllTokenPairData() ([]*types.PairData, error)
-	GetMarketStats(bt, qt common.Address) (*types.PairData, error)
-	GetAllMarketStats() ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
 	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
-	GetListedPairs() ([]types.Pair, error)
-	GetUnlistedPairs() ([]types.Pair, error)
 }
 
 type TokenService interface {

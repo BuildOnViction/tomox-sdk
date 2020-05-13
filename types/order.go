@@ -61,6 +61,12 @@ type OrderRes struct {
 	Orders []*Order `json:"orders" bson:"orders"`
 }
 
+// PriceVolume get best order price
+type PriceVolume struct {
+	Price  *big.Int `json:"price,omitempty"`
+	Volume *big.Int `json:"volume,omitempty"`
+}
+
 // OrderSpec contains field for filter
 type OrderSpec struct {
 	UserAddress    string

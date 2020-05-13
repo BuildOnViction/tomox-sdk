@@ -678,3 +678,13 @@ func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
 func (s *OrderService) GetOrderNonceByUserAddress(addr common.Address) (interface{}, error) {
 	return s.orderDao.GetOrderNonce(addr)
 }
+
+// GetBestBid get best buy price
+func (s *OrderService) GetBestBid(baseToken, quouteToken common.Address) (*types.PriceVolume, error) {
+	return s.orderDao.GetBestBid(baseToken, quouteToken)
+}
+
+// GetBestAsk get best sell price
+func (s *OrderService) GetBestAsk(baseToken, quouteToken common.Address) (*types.PriceVolume, error) {
+	return s.orderDao.GetBestAsk(baseToken, quouteToken)
+}
