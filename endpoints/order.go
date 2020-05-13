@@ -201,7 +201,7 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -209,7 +209,7 @@ func (e *orderEndpoint) handleGetOrders(w http.ResponseWriter, r *http.Request) 
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
@@ -377,7 +377,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	}
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -385,7 +385,7 @@ func (e *orderEndpoint) handleGetOrderHistory(w http.ResponseWriter, r *http.Req
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if err != nil {
+		if (err != nil) || (t > 500) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
