@@ -96,7 +96,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 	}
 	if pageOffset != "" {
 		t, err := strconv.Atoi(pageOffset)
-		if (err != nil) || (t > 500) {
+		if err != nil {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page offset")
 			return
 		}
@@ -104,7 +104,7 @@ func (e *tradeEndpoint) HandleGetTrades(w http.ResponseWriter, r *http.Request) 
 	}
 	if pageSize != "" {
 		t, err := strconv.Atoi(pageSize)
-		if (err != nil) || (t > 500) {
+		if (err != nil) || (t > 1000) {
 			httputils.WriteError(w, http.StatusBadRequest, "Invalid page size")
 			return
 		}
