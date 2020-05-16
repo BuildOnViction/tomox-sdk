@@ -102,14 +102,6 @@ func writeHandler(c *Client) {
 
 	for {
 		select {
-		case <-ticker.C:
-			c.SetWriteDeadline(time.Now().Add(writeWait))
-			err := c.WriteMessage(websocket.PingMessage, nil)
-			if err != nil {
-				logger.Error(err)
-				return
-			}
-
 		case m, ok := <-c.send:
 			c.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
@@ -127,8 +119,17 @@ func writeHandler(c *Client) {
 				logger.Error(err)
 				return
 			}
+
+		case <-ticker.C:
+			c.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.WriteMessage(websocket.PingMessage, nil)
+			if err != nil {
+				logger.Error(err)
+				return
+			}
 		}
 	}
+
 }
 
 func closeHandler(c *Client) func(code int, text string) error {
