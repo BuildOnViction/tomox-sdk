@@ -630,8 +630,6 @@ func (s *OHLCVService) updateRelayerTick(relayerAddress common.Address, key stri
 	return nil
 }
 func (s *OHLCVService) addTick(tick *types.Tick) {
-	tick.VolumeByQuote = big.NewInt(0)
-	tick.VolumeUsdt = big.NewInt(0)
 	key := s.getTickKey(tick.Pair.BaseToken, tick.Pair.QuoteToken, tick.Duration, tick.Unit)
 	if _, ok := s.tickCache.ticks[key]; ok {
 
@@ -644,8 +642,6 @@ func (s *OHLCVService) addTick(tick *types.Tick) {
 }
 
 func (s *OHLCVService) addRelayerTick(relayerTick *types.RelayerTick) {
-	relayerTick.Tick.VolumeByQuote = big.NewInt(0)
-	relayerTick.Tick.VolumeUsdt = big.NewInt(0)
 	key := s.getTickKey(relayerTick.Tick.Pair.BaseToken, relayerTick.Tick.Pair.QuoteToken, relayerTick.Tick.Duration, relayerTick.Tick.Unit)
 	if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress]; ok {
 		if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress][key]; ok {
