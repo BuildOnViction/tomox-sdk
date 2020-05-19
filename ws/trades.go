@@ -9,13 +9,13 @@ import (
 
 var tradeSocket *TradeSocket
 
-var lockTrade = &sync.Mutex{}
-
 // TradeSocket holds the map of connections subscribed to pair channels
 // corresponding to the key/event they have subscribed to.
 type TradeSocket struct {
 	subscriptions     map[string]map[*Client]bool
 	subscriptionsList map[*Client][]string
+	subsMutex         sync.RWMutex
+	subsListMutex     sync.RWMutex
 }
 
 func NewTradeSocket() *TradeSocket {
@@ -35,6 +35,11 @@ func GetTradeSocket() *TradeSocket {
 
 // Subscribe registers a new websocket connections to the trade channel updates
 func (s *TradeSocket) Subscribe(channelID string, c *Client) error {
+	s.subsMutex.Lock()
+	s.subsListMutex.Lock()
+	defer s.subsMutex.Unlock()
+	defer s.subsListMutex.Unlock()
+
 	if c == nil {
 		return errors.New("No connection found")
 	}
@@ -48,9 +53,7 @@ func (s *TradeSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-	lockTrade.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-	lockTrade.Unlock()
 	return nil
 }
 
@@ -69,15 +72,17 @@ func (s *TradeSocket) UnsubscribeHandler() func(c *Client) {
 
 // UnsubscribeChannel removes a websocket connection from the trade channel updates
 func (s *TradeSocket) UnsubscribeChannel(channelID string, c *Client) {
-	lockTrade.Lock()
+	s.subsMutex.Lock()
+	defer s.subsMutex.Unlock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
-	lockTrade.Unlock()
 }
 
 func (s *TradeSocket) Unsubscribe(c *Client) {
+	s.subsListMutex.RLock()
+	defer s.subsListMutex.RUnlock()
 	channelIDs := s.subscriptionsList[c]
 	if channelIDs == nil {
 		return
@@ -91,6 +96,8 @@ func (s *TradeSocket) Unsubscribe(c *Client) {
 // BroadcastMessage broadcasts trade message to all subscribed sockets
 func (s *TradeSocket) BroadcastMessage(channelID string, p interface{}) {
 	go func() {
+		s.subsMutex.RLock()
+		defer s.subsMutex.RUnlock()
 		for conn, active := range tradeSocket.subscriptions[channelID] {
 			if active {
 				s.SendUpdateMessage(conn, p)

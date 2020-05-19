@@ -10,12 +10,14 @@ import (
 // LendingOrderConnection array for lending connections
 type LendingOrderConnection []*Client
 
-var lockLendingOrder = &sync.Mutex{}
+var lockLendingOrder = &sync.RWMutex{}
 
 var lendingOrderConnections map[string]LendingOrderConnection
 
 // GetLendingOrderConnections returns the connection associated with an order ID
 func GetLendingOrderConnections(a common.Address) LendingOrderConnection {
+	lockLendingOrder.RLock()
+	defer lockLendingOrder.RUnlock()
 	c := lendingOrderConnections[a.Hex()]
 	if c == nil {
 		logger.Warning("No connection found")
@@ -29,6 +31,8 @@ func GetLendingOrderConnections(a common.Address) LendingOrderConnection {
 func LendingOrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 	return func(client *Client) {
 		logger.Info("In unsubscription handler")
+		lockLendingOrder.Lock()
+		defer lockLendingOrder.Unlock()
 		orderConnection := lendingOrderConnections[a.Hex()]
 		if orderConnection == nil {
 			logger.Info("No subscriptions")
@@ -36,13 +40,11 @@ func LendingOrderSocketUnsubscribeHandler(a common.Address) func(client *Client)
 
 		if orderConnection != nil {
 			logger.Info("%v connections before unsubscription", len(lendingOrderConnections[a.Hex()]))
-			lockLendingOrder.Lock()
 			for i, c := range orderConnection {
 				if client == c {
 					orderConnection = append(orderConnection[:i], orderConnection[i+1:]...)
 				}
 			}
-			lockLendingOrder.Unlock()
 
 		}
 
@@ -55,6 +57,8 @@ func LendingOrderSocketUnsubscribeHandler(a common.Address) func(client *Client)
 // It is called whenever a message is recieved over order channel
 func RegisterLendingOrderConnection(a common.Address, c *Client) {
 	logger.Info("Registering new order connection")
+	lockLendingOrder.Lock()
+	defer lockLendingOrder.Unlock()
 
 	if lendingOrderConnections == nil {
 		lendingOrderConnections = make(map[string]LendingOrderConnection)
@@ -71,9 +75,7 @@ func RegisterLendingOrderConnection(a common.Address, c *Client) {
 
 		if !isClientConnected(lendingOrderConnections[a.Hex()], c) {
 			logger.Info("Registering a new order connection")
-			lockLendingOrder.Lock()
 			lendingOrderConnections[a.Hex()] = append(lendingOrderConnections[a.Hex()], c)
-			lockLendingOrder.Unlock()
 			RegisterConnectionUnsubscribeHandler(c, LendingOrderSocketUnsubscribeHandler(a))
 			logger.Info("Number of connections for this address: %v", len(lendingOrderConnections))
 		}

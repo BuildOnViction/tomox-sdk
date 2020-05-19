@@ -9,13 +9,13 @@ import (
 
 var marketsSocket *MarketsSocket
 
-var lockMarket = &sync.Mutex{}
-
 // MarketsSocket holds the map of subscriptions subscribed to markets channels
 // corresponding to the key/event they have subscribed to.
 type MarketsSocket struct {
 	subscriptions     map[string]map[*Client]bool
 	subscriptionsList map[*Client][]string
+	subsMutex         sync.RWMutex
+	subsListMutex     sync.RWMutex
 }
 
 func NewMarketsSocket() *MarketsSocket {
@@ -36,6 +36,11 @@ func GetMarketSocket() *MarketsSocket {
 // Subscribe handles the subscription of connection to get
 // streaming data over the socker for any pair.
 func (s *MarketsSocket) Subscribe(channelID string, c *Client) error {
+	s.subsMutex.Lock()
+	s.subsListMutex.Lock()
+	defer s.subsMutex.Unlock()
+	defer s.subsListMutex.Unlock()
+
 	if c == nil {
 		return errors.New("No connection found")
 	}
@@ -70,15 +75,17 @@ func (s *MarketsSocket) UnsubscribeHandler() func(c *Client) {
 
 // Unsubscribe removes a websocket connection from the markets channel updates
 func (s *MarketsSocket) UnsubscribeChannel(channelID string, c *Client) {
-	lockMarket.Lock()
+	s.subsMutex.Lock()
+	defer s.subsMutex.Unlock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
-	lockMarket.Unlock()
 }
 
 func (s *MarketsSocket) Unsubscribe(c *Client) {
+	s.subsListMutex.RLock()
+	defer s.subsListMutex.RUnlock()
 	channelIDs := s.subscriptionsList[c]
 	if channelIDs == nil {
 		return
@@ -91,7 +98,8 @@ func (s *MarketsSocket) Unsubscribe(c *Client) {
 
 // BroadcastMessage streams message to all the subscriptions subscribed to the pair
 func (s *MarketsSocket) BroadcastMessage(channelID string, p interface{}) error {
-
+	s.subsMutex.RLock()
+	defer s.subsMutex.RUnlock()
 	for c, status := range s.subscriptions[channelID] {
 		if status {
 			s.SendUpdateMessage(c, p)

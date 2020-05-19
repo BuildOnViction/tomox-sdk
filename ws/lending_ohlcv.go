@@ -9,13 +9,13 @@ import (
 
 var lendingOhlcvSocket *LendingOhlcvSocket
 
-var lockLendingOhlcv = &sync.Mutex{}
-
 // LendingOhlcvSocket holds the map of subscribtions subscribed to OHLCV channels
 // corresponding to the key/event they have subscribed to.
 type LendingOhlcvSocket struct {
 	subscriptions     map[string]map[*Client]bool
 	subscriptionsList map[*Client][]string
+	subsMutex         sync.RWMutex
+	subsListMutex     sync.RWMutex
 }
 
 // NewLendingOhlcvSocket create new instance
@@ -41,6 +41,10 @@ func (s *LendingOhlcvSocket) Subscribe(channelID string, c *Client) error {
 	if c == nil {
 		return errors.New("No connection found")
 	}
+	s.subsMutex.Lock()
+	s.subsListMutex.Lock()
+	defer s.subsMutex.Unlock()
+	defer s.subsListMutex.Unlock()
 
 	if s.subscriptions[channelID] == nil {
 		s.subscriptions[channelID] = make(map[*Client]bool)
@@ -51,9 +55,7 @@ func (s *LendingOhlcvSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-	lockLendingOhlcv.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-	lockLendingOhlcv.Unlock()
 	return nil
 }
 
@@ -76,16 +78,18 @@ func (s *LendingOhlcvSocket) UnsubscribeHandler() func(c *Client) {
 // subscribed to. It can be called on unsubscription message from user or due to some other reason by
 // system
 func (s *LendingOhlcvSocket) UnsubscribeChannel(channelID string, c *Client) {
-	lockLendingOhlcv.Lock()
+	s.subsMutex.Lock()
+	defer s.subsMutex.Unlock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
-	lockLendingOhlcv.Unlock()
 }
 
 // Unsubscribe  returns function of type unsubscribe handler
 func (s *LendingOhlcvSocket) Unsubscribe(c *Client) {
+	s.subsListMutex.RLock()
+	defer s.subsListMutex.RUnlock()
 	channelIDs := s.subscriptionsList[c]
 	if channelIDs == nil {
 		return
@@ -98,6 +102,8 @@ func (s *LendingOhlcvSocket) Unsubscribe(c *Client) {
 
 // BroadcastLendingOhlcv Message streams message to all the subscriptions subscribed to the pair
 func (s *LendingOhlcvSocket) BroadcastLendingOhlcv(channelID string, p interface{}) error {
+	s.subsMutex.RLock()
+	defer s.subsMutex.RUnlock()
 	for c, status := range s.subscriptions[channelID] {
 		if status {
 			s.SendUpdateMessage(c, p)

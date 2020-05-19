@@ -9,13 +9,13 @@ import (
 
 var ohlcvSocket *OHLCVSocket
 
-var lockOhlc = &sync.Mutex{}
-
 // OHLCVSocket holds the map of subscribtions subscribed to OHLCV channels
 // corresponding to the key/event they have subscribed to.
 type OHLCVSocket struct {
 	subscriptions     map[string]map[*Client]bool
 	subscriptionsList map[*Client][]string
+	subsMutex         sync.RWMutex
+	subsListMutex     sync.RWMutex
 }
 
 func NewOHLCVSocket() *OHLCVSocket {
@@ -37,6 +37,11 @@ func GetOHLCVSocket() *OHLCVSocket {
 // Subscribe handles the registration of connection to get
 // streaming data over the socket for any pair.
 func (s *OHLCVSocket) Subscribe(channelID string, c *Client) error {
+	s.subsMutex.Lock()
+	s.subsListMutex.Lock()
+	defer s.subsMutex.Unlock()
+	defer s.subsListMutex.Unlock()
+
 	if c == nil {
 		return errors.New("No connection found")
 	}
@@ -50,9 +55,7 @@ func (s *OHLCVSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-	lockOhlc.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-	lockOhlc.Unlock()
 	return nil
 }
 
@@ -74,15 +77,17 @@ func (s *OHLCVSocket) UnsubscribeHandler() func(c *Client) {
 // subscribed to. It can be called on unsubscription message from user or due to some other reason by
 // system
 func (s *OHLCVSocket) UnsubscribeChannel(channelID string, c *Client) {
-	lockOhlc.Lock()
+	s.subsMutex.Lock()
+	defer s.subsMutex.Unlock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
-	lockOhlc.Unlock()
 }
 
 func (s *OHLCVSocket) Unsubscribe(c *Client) {
+	s.subsListMutex.RLock()
+	defer s.subsListMutex.RUnlock()
 	channelIDs := s.subscriptionsList[c]
 	if channelIDs == nil {
 		return
@@ -95,6 +100,8 @@ func (s *OHLCVSocket) Unsubscribe(c *Client) {
 
 // BroadcastOHLCV Message streams message to all the subscriptions subscribed to the pair
 func (s *OHLCVSocket) BroadcastOHLCV(channelID string, p interface{}) error {
+	s.subsMutex.RLock()
+	defer s.subsMutex.RUnlock()
 	for c, status := range s.subscriptions[channelID] {
 		if status {
 			s.SendUpdateMessage(c, p)
