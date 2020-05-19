@@ -127,7 +127,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 
 func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) error {
 	currentPairs, err := s.lendingPairDao.GetAllByCoinbase(relayerInfo.Address)
-	logger.Info("UpdateLendingPairRelayer starting...")
+	logger.Info("UpdateLendingPairRelayer starting...", relayerInfo.Address.Hex(), len(relayerInfo.LendingPairs), len(currentPairs))
 	if err != nil {
 		return err
 	}
@@ -166,8 +166,8 @@ func (s *RelayerService) updateLendingPair(relayerInfo *relayer.LendingRInfo) er
 		}
 		if !found {
 			logger.Info("Delete Pair:", currentPair.Term, currentPair.LendingTokenAddress.Hex())
-			err := s.lendingPairDao.DeleteByLendingKey(currentPair.Term, currentPair.LendingTokenAddress)
-			if err == nil {
+			err := s.lendingPairDao.DeleteByLendingKeyAndCoinbase(currentPair.Term, currentPair.LendingTokenAddress, relayerInfo.Address)
+			if err != nil {
 				logger.Error(err)
 			}
 		}
@@ -457,15 +457,17 @@ func (s *RelayerService) UpdateRelayer(coinbase common.Address) error {
 }
 
 func (s *RelayerService) UpdateRelayers() error {
-	relayerInfos, err := s.relayer.GetRelayers()
-	if err != nil {
-		return err
-	}
-	for _, relayerInfo := range relayerInfos {
-		s.updateTokenRelayer(relayerInfo)
-		s.updatePairRelayer(relayerInfo)
-	}
+	/*
+		relayerInfos, err := s.relayer.GetRelayers()
+		if err != nil {
+			return err
+		}
+		for _, relayerInfo := range relayerInfos {
+			s.updateTokenRelayer(relayerInfo)
+			s.updatePairRelayer(relayerInfo)
+		}
 
+	*/
 	relayerLendingInfos, err := s.relayer.GetLendings()
 	if err != nil {
 		return err
@@ -475,6 +477,6 @@ func (s *RelayerService) UpdateRelayers() error {
 		s.updateCollateralTokenRelayer(relayerLendingInfo)
 		s.updateLendingTokenRelayer(relayerLendingInfo)
 	}
-	s.updateRelayers(relayerInfos, relayerLendingInfos)
+	// s.updateRelayers(relayerInfos, relayerLendingInfos)
 	return nil
 }
