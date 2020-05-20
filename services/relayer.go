@@ -117,7 +117,7 @@ func (s *RelayerService) updatePairRelayer(relayerInfo *relayer.RInfo) error {
 		if !found {
 			logger.Info("Delete Pair:", currentPair.BaseTokenAddress.Hex(), currentPair.QuoteTokenAddress.Hex())
 			err := s.pairDao.DeleteByTokenAndCoinbase(currentPair.BaseTokenAddress, currentPair.QuoteTokenAddress, relayerInfo.Address)
-			if err == nil {
+			if err != nil {
 				logger.Error(err)
 			}
 		}
