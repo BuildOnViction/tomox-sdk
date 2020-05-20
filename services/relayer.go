@@ -457,17 +457,15 @@ func (s *RelayerService) UpdateRelayer(coinbase common.Address) error {
 }
 
 func (s *RelayerService) UpdateRelayers() error {
-	/*
-		relayerInfos, err := s.relayer.GetRelayers()
-		if err != nil {
-			return err
-		}
-		for _, relayerInfo := range relayerInfos {
-			s.updateTokenRelayer(relayerInfo)
-			s.updatePairRelayer(relayerInfo)
-		}
+	relayerInfos, err := s.relayer.GetRelayers()
+	if err != nil {
+		return err
+	}
+	for _, relayerInfo := range relayerInfos {
+		s.updateTokenRelayer(relayerInfo)
+		s.updatePairRelayer(relayerInfo)
+	}
 
-	*/
 	relayerLendingInfos, err := s.relayer.GetLendings()
 	if err != nil {
 		return err
@@ -477,6 +475,6 @@ func (s *RelayerService) UpdateRelayers() error {
 		s.updateCollateralTokenRelayer(relayerLendingInfo)
 		s.updateLendingTokenRelayer(relayerLendingInfo)
 	}
-	// s.updateRelayers(relayerInfos, relayerLendingInfos)
+	s.updateRelayers(relayerInfos, relayerLendingInfos)
 	return nil
 }
