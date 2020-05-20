@@ -810,7 +810,7 @@ func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 		s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 	} else {
 		s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
-		s.updateRelayerTick(trade.Taker, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+		s.updateRelayerTick(trade.TakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 	}
 	lastFrame := s.lastTimeFrame()
 	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
