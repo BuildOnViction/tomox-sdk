@@ -339,7 +339,7 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 				s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 			} else {
 				s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
-				s.updateRelayerTick(trade.Taker, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+				s.updateRelayerTick(trade.TakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 			}
 
 			if i == 0 {
