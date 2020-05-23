@@ -738,7 +738,13 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 			volumebyUsdt = volumebyUsdt.Add(volumebyUsdt, t.VolumeUsdt)
 			count = count.Add(count, t.Count)
 		}
+		pair := types.PairID{
+			BaseToken:  baseToken,
+			QuoteToken: quoteToken,
+			PairName:   "",
+		}
 		return &types.Tick{
+			Pair:          pair,
 			Open:          first.Open,
 			Close:         last.Close,
 			High:          high,
