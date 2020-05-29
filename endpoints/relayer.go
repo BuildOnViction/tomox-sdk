@@ -121,6 +121,7 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 		SpotVolume    *big.Int       `json:"spotVolume"`
 		SpotFee       *big.Int       `json:"spotFee"`
 		LendingFee    *big.Int       `json:"lendingFee"`
+		Deposit       *big.Int       `json:"deposit"`
 		Domain        string         `json:"domain"`
 		Name          string         `json:"name"`
 		VolumeType    string         `json:"volumeType"`
@@ -140,6 +141,7 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 		result.Name = relayer.Name
 		result.Domain = relayer.Domain
 		result.Owner = relayer.Owner
+		result.Deposit = relayer.Deposit
 		ret = append(ret, result)
 	}
 
