@@ -126,6 +126,16 @@ func (s *TradeService) GetByOrderHashes(hashes []common.Hash) ([]*types.Trade, e
 }
 
 func (s *TradeService) WatchChanges() {
+	go func() {
+		for {
+			<-time.After(500 * time.Millisecond)
+			s.processBulkTrades()
+		}
+	}()
+	s.watchChanges()
+}
+
+func (s *TradeService) watchChanges() {
 
 	ct, sc, err := s.tradeDao.Watch()
 
@@ -138,16 +148,9 @@ func (s *TradeService) WatchChanges() {
 	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
-	defer s.WatchChanges()
+	defer s.watchChanges()
 
 	ctx := context.Background()
-
-	go func() {
-		for {
-			<-time.After(500 * time.Millisecond)
-			s.processBulkTrades()
-		}
-	}()
 
 	//Handling change stream in a cycle
 	for {

@@ -103,8 +103,7 @@ func pingHandler(c *Client) {
 	for {
 		select {
 		case <-ticker.C:
-			c.SetWriteDeadline(time.Now().Add(writeWait))
-			err := c.WriteMessage(websocket.PingMessage, nil)
+			err := c.SendPingMessage()
 			if err != nil {
 				logger.Error(err)
 				return

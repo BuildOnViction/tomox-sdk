@@ -64,6 +64,14 @@ func (c *Client) SendMessage(channel string, msgType types.SubscriptionEvent, pa
 	c.writeMessage(m)
 }
 
+// SendPingMessage check conntection
+func (c *Client) SendPingMessage() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.WriteMessage(websocket.PingMessage, nil)
+}
+
 func (c *Client) closeConnection() {
 	for _, unsub := range unsubscribeHandlers[c] {
 		go unsub(c)
