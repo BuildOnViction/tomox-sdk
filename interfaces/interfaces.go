@@ -404,6 +404,7 @@ type RelayerService interface {
 	UpdateNameByAddress(addr common.Address, name string, url string) error
 	GetRelayerAddress(r *http.Request) common.Address
 	GetByAddress(addr common.Address) (*types.Relayer, error)
+	GetAll() ([]types.Relayer, error)
 }
 
 // Relayer interface for relayer

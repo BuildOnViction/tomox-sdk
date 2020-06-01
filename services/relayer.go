@@ -48,6 +48,10 @@ func (s *RelayerService) GetByAddress(addr common.Address) (*types.Relayer, erro
 	return s.relayerDao.GetByAddress(addr)
 }
 
+func (s *RelayerService) GetAll() ([]types.Relayer, error) {
+	return s.relayerDao.GetAll()
+}
+
 func (s *RelayerService) UpdateNameByAddress(addr common.Address, name string, url string) error {
 	return s.relayerDao.UpdateNameByAddress(addr, name, url)
 }
