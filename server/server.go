@@ -129,10 +129,10 @@ func NewRouter(
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
 	// get services for injection
-	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, tokenDao)
 	ohlcvService.Init()
 
+	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider, ohlcvService)
 	tokenService := services.NewTokenService(tokenDao)
 	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
