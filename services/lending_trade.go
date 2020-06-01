@@ -116,7 +116,7 @@ func (s *LendingTradeService) watchChanges() {
 	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
-	defer s.WatchChanges()
+	defer s.watchChanges()
 
 	ctx := context.Background()
 
