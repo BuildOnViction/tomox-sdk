@@ -190,9 +190,11 @@ func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) 
 
 		price, _ := s.OHLCVService.GetLastPriceCurrentByTime(balance.Symbol, time.Now())
 
-		inUsdBalance := new(big.Float).Mul(price, new(big.Float).SetInt(balance.Balance))
-		inUsdBalance = new(big.Float).Quo(inUsdBalance, new(big.Float).SetInt(big.NewInt(int64(math2.Pow10(balance.Decimals)))))
-		balance.InUsdBalance = inUsdBalance
+		if balance != nil && price != nil {
+			inUsdBalance := new(big.Float).Mul(price, new(big.Float).SetInt(balance.Balance))
+			inUsdBalance = new(big.Float).Quo(inUsdBalance, new(big.Float).SetInt(big.NewInt(int64(math2.Pow10(balance.Decimals)))))
+			balance.InUsdBalance = inUsdBalance
+		}
 
 		account.TokenBalances[token.ContractAddress] = balance
 	}
