@@ -1390,6 +1390,12 @@ func (s *OHLCVService) getTokenPriceByUsdt(token common.Address) (*big.Int, erro
 	return priceDecimalsInt, err
 }
 
+func (s *OHLCVService) GetTokenPriceByUsdt(token common.Address) (*big.Int, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.getTokenPriceByUsdt(token)
+}
+
 // GetVolumeByUsdt convert to USDT volume
 func (s *OHLCVService) GetVolumeByUsdt(token common.Address, volume *big.Int) *big.Int {
 	s.mutex.RLock()
