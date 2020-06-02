@@ -74,7 +74,7 @@ func (c *Client) SendPingMessage() error {
 
 func (c *Client) closeConnection() {
 	for _, unsub := range unsubscribeHandlers[c] {
-		go unsub(c)
+		unsub(c)
 	}
 
 	c.Close()
@@ -98,7 +98,7 @@ func (c *Client) SendOrderErrorMessage(err error, h common.Hash) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.send <- m
+	c.writeMessage(m)
 }
 
 // SendLendingOrderErrorMessage send error lending transaction
@@ -120,5 +120,5 @@ func (c *Client) SendLendingOrderErrorMessage(err error, h common.Hash) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.send <- m
+	c.writeMessage(m)
 }
