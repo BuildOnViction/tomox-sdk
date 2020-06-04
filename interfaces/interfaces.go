@@ -363,8 +363,8 @@ type AccountService interface {
 }
 
 type ValidatorService interface {
-	ValidateBalance(o *types.Order) error
-	ValidateAvailableBalance(o *types.Order) error
+	ValidateAvailablExchangeBalance(o *types.Order) error
+	ValidateAvailablLendingBalance(o *types.LendingOrder) error
 }
 
 type EthereumConfig interface {
@@ -444,6 +444,7 @@ type LendingOrderDao interface {
 	TopupLendingOrder(o *types.LendingOrder) error
 	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error)
 }
 
 // LendingOrderBookService interface for lending order book

@@ -251,7 +251,7 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 	if o.Type == types.TypeLimitOrder {
-		err = s.validator.ValidateAvailableBalance(o)
+		err = s.validator.ValidateAvailablExchangeBalance(o)
 		if err != nil {
 			logger.Error(err)
 			return err
