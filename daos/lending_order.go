@@ -752,7 +752,6 @@ func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken comm
 //GetUserLockedBalance return balance using selling
 func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error) {
 	var orders []*types.LendingOrder
-
 	q := bson.M{
 		"$or": []bson.M{
 			{
@@ -786,7 +785,7 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 			totalInvest = math.Add(totalInvest, remainingAmount)
 		} else {
 			if v, ok := lendingTokenList[o.LendingToken]; ok {
-				v = new(big.Int).Add(v, remainingAmount)
+				v = v.Add(v, remainingAmount)
 			} else {
 				lendingTokenList[o.LendingToken] = new(big.Int).Add(big.NewInt(0), remainingAmount)
 			}
