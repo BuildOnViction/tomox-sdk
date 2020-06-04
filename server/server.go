@@ -132,9 +132,9 @@ func NewRouter(
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, tokenDao)
 	ohlcvService.Init()
 
-	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider, ohlcvService)
+	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, lendingOrderDao, provider, ohlcvService)
 	tokenService := services.NewTokenService(tokenDao)
-	validatorService := services.NewValidatorService(provider, accountDao, orderDao, lendingOrderDao, pairDao)
+	validatorService := services.NewValidatorService(provider, accountDao, orderDao, lendingOrderDao, pairDao, tokenDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
 
 	orderService := services.NewOrderService(orderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)

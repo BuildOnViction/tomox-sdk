@@ -16,6 +16,7 @@ type ValidatorService struct {
 	orderDao         interfaces.OrderDao
 	lendingDao       interfaces.LendingOrderDao
 	pairDao          interfaces.PairDao
+	tokenDao         interfaces.TokenDao
 }
 
 func NewValidatorService(
@@ -24,6 +25,7 @@ func NewValidatorService(
 	orderDao interfaces.OrderDao,
 	lendingDao interfaces.LendingOrderDao,
 	pairDao interfaces.PairDao,
+	tokenDao interfaces.TokenDao,
 ) *ValidatorService {
 
 	return &ValidatorService{
@@ -32,6 +34,7 @@ func NewValidatorService(
 		orderDao,
 		lendingDao,
 		pairDao,
+		tokenDao,
 	}
 }
 
@@ -58,13 +61,17 @@ func (s *ValidatorService) ValidateAvailablExchangeBalance(o *types.Order) error
 		logger.Error(err)
 		return err
 	}
-	pairs, err := s.pairDao.GetActivePairs()
-	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), pairs)
+	tokenInfo, err := s.tokenDao.GetByAddress(o.SellToken())
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
-	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, o.SellToken())
+	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), tokenInfo.Decimals)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), tokenInfo.Decimals)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -91,7 +98,7 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 	var sellTokenBalance *big.Int
 	var err error
 	sellToken := o.CollateralToken
-	if o.Type == types.LEND {
+	if o.Side == types.LEND {
 		sellToken = o.LendingToken
 	}
 	err = utils.Retry(3, func() error {
@@ -100,16 +107,20 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 	})
 
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err, "addr:", sellToken.Hex())
 		return err
 	}
-	pairs, err := s.pairDao.GetActivePairs()
-	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, sellToken, pairs)
+	tokenInfo, err := s.tokenDao.GetByAddress(sellToken)
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
-	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, sellToken)
+	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, sellToken, tokenInfo.Decimals)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, sellToken, tokenInfo.Decimals)
 	if err != nil {
 		logger.Error(err)
 		return err

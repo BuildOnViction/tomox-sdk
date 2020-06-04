@@ -147,13 +147,13 @@ func (s *OrderService) LoadCache() {
 // GetOrdersLockedBalanceByUserAddress get the total number of orders amount created by a user
 func (s *OrderService) GetOrdersLockedBalanceByUserAddress(addr common.Address) (map[string]*big.Int, error) {
 	mapAccountBalance := make(map[string]*big.Int)
-	pairs, err := s.pairDao.GetActivePairs()
+
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		return nil, err
 	}
-	tokens, err := s.tokenDao.GetAll()
 	for _, t := range tokens {
-		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, pairs)
+		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, t.Decimals)
 		if err != nil {
 			return nil, err
 		}

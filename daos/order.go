@@ -748,7 +748,7 @@ func (dao *OrderDao) GetHistoryByUserAddress(addr, bt, qt common.Address, from, 
 }
 
 //GetUserLockedBalance return balance using selling
-func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.Address, pairs []*types.Pair) (*big.Int, error) {
+func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.Address, decimal int) (*big.Int, error) {
 	var orders []*types.Order
 
 	q := bson.M{
@@ -776,21 +776,17 @@ func (dao *OrderDao) GetUserLockedBalance(account common.Address, token common.A
 
 	totalLockedBalance := big.NewInt(0)
 	for _, o := range orders {
-		for _, p := range pairs {
-			if p.BaseTokenAddress == o.BaseToken && p.QuoteTokenAddress == o.QuoteToken {
-				if o.Side == types.BUY {
-					remainingAmount := math.Sub(o.Amount, o.FilledAmount)
-					amount := math.Mul(remainingAmount, o.PricePoint)
-					w := math.Exp(big.NewInt(10), big.NewInt(int64(p.BaseTokenDecimals)))
-					amount = math.Div(amount, w)
-					totalLockedBalance = math.Add(totalLockedBalance, amount)
 
-				} else {
-					remainingAmount := math.Sub(o.Amount, o.FilledAmount)
-					totalLockedBalance = math.Add(totalLockedBalance, remainingAmount)
-				}
-				break
-			}
+		if o.Side == types.BUY {
+			remainingAmount := math.Sub(o.Amount, o.FilledAmount)
+			amount := math.Mul(remainingAmount, o.PricePoint)
+			w := math.Exp(big.NewInt(10), big.NewInt(int64(decimal)))
+			amount = math.Div(amount, w)
+			totalLockedBalance = math.Add(totalLockedBalance, amount)
+
+		} else {
+			remainingAmount := math.Sub(o.Amount, o.FilledAmount)
+			totalLockedBalance = math.Add(totalLockedBalance, remainingAmount)
 		}
 
 	}

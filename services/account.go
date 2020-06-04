@@ -17,6 +17,7 @@ type AccountService struct {
 	TokenDao     interfaces.TokenDao
 	PairDao      interfaces.PairDao
 	OrderDao     interfaces.OrderDao
+	LendingDao   interfaces.LendingOrderDao
 	Provider     interfaces.EthereumProvider
 	OHLCVService interfaces.OHLCVService
 }
@@ -27,6 +28,7 @@ func NewAccountService(
 	tokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
 	orderDao interfaces.OrderDao,
+	lendingDao interfaces.LendingOrderDao,
 	provider interfaces.EthereumProvider,
 	ohlcvService interfaces.OHLCVService,
 ) *AccountService {
@@ -35,6 +37,7 @@ func NewAccountService(
 		TokenDao:     tokenDao,
 		PairDao:      pairDao,
 		OrderDao:     orderDao,
+		LendingDao:   lendingDao,
 		Provider:     provider,
 		OHLCVService: ohlcvService,
 	}
@@ -227,12 +230,22 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 		return nil, err
 	}
 	tokenBalance.Balance = b
-	pairs, err := s.PairDao.GetActivePairs()
-	sellTokenLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, pairs)
+	tokenInfo, err := s.TokenDao.GetByAddress(tokenAddress)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
+	sellTokenExchangeLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, tokenInfo.Decimals)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	sellTokenLendingLockedBalance, err := s.LendingDao.GetUserLockedBalance(owner, tokenAddress, tokenInfo.Decimals)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	sellTokenLockedBalance := new(big.Int).Add(sellTokenExchangeLockedBalance, sellTokenLendingLockedBalance)
 	tokenBalance.InOrderBalance = sellTokenLockedBalance
 	tokenBalance.AvailableBalance = math.Sub(b, sellTokenLockedBalance)
 	return tokenBalance, nil

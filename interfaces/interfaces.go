@@ -40,7 +40,7 @@ type OrderDao interface {
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
 	UpdateOrderFilledAmounts(h []common.Hash, values []*big.Int) ([]*types.Order, error)
 	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.Order, error)
-	GetUserLockedBalance(account common.Address, token common.Address, p []*types.Pair) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address, decimal int) (*big.Int, error)
 	UpdateOrderStatus(h common.Hash, status string) error
 	GetRawOrderBook(*types.Pair) ([]*types.Order, error)
 	GetOrderBook(*types.Pair) ([]map[string]string, []map[string]string, error)
@@ -444,7 +444,7 @@ type LendingOrderDao interface {
 	TopupLendingOrder(o *types.LendingOrder) error
 	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error)
-	GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error)
 }
 
 // LendingOrderBookService interface for lending order book

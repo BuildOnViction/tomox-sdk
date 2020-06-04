@@ -3,6 +3,7 @@ package daos
 import (
 	"errors"
 	"fmt"
+	m "math"
 	"math/big"
 	"sort"
 	"strconv"
@@ -749,7 +750,7 @@ func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken comm
 }
 
 //GetUserLockedBalance return balance using selling
-func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error) {
+func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error) {
 	var orders []*types.LendingOrder
 
 	q := bson.M{
@@ -776,10 +777,31 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 	}
 
 	totalLockedBalance := big.NewInt(0)
+	totalInvest := big.NewInt(0)
+	totalBorrow := big.NewInt(0)
+	lendingTokenList := make(map[common.Address]*big.Int)
 	for _, o := range orders {
 		remainingAmount := math.Sub(o.Quantity, o.FilledAmount)
-		totalLockedBalance = math.Add(totalLockedBalance, remainingAmount)
+		if o.Side == types.LEND {
+			totalInvest = math.Add(totalInvest, remainingAmount)
+		} else {
+			if v, ok := lendingTokenList[o.LendingToken]; ok {
+				v = new(big.Int).Add(v, remainingAmount)
+			} else {
+				lendingTokenList[o.LendingToken] = new(big.Int).Add(big.NewInt(0), remainingAmount)
+			}
+		}
 	}
-
+	collateralDecimals := big.NewInt(int64(m.Pow10(decimals)))
+	for lt, q := range lendingTokenList {
+		collateralPrice, err := dao.GetLastTokenPrice(token, lt)
+		if err != nil {
+			return nil, err
+		}
+		collateralAmount := new(big.Int).Mul(q, collateralDecimals)
+		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)
+		totalBorrow = totalBorrow.Add(totalBorrow, collateralAmount)
+	}
+	totalLockedBalance = new(big.Int).Add(totalInvest, totalBorrow)
 	return totalLockedBalance, nil
 }
