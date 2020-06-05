@@ -798,7 +798,9 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 			return nil, err
 		}
 		collateralAmount := new(big.Int).Mul(q, collateralDecimals)
+		collateralAmount = math.Mul(collateralAmount, big.NewInt(int64(types.LendingRate)))
 		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)
+		collateralAmount = math.Div(collateralAmount, big.NewInt(100))
 		totalBorrow = totalBorrow.Add(totalBorrow, collateralAmount)
 	}
 	totalLockedBalance = new(big.Int).Add(totalInvest, totalBorrow)
