@@ -66,7 +66,12 @@ func (s *ValidatorService) ValidateAvailablExchangeBalance(o *types.Order) error
 		logger.Error(err)
 		return err
 	}
-	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), tokenInfo.Decimals)
+	listPairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), listPairs)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -115,7 +120,12 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 		logger.Error(err)
 		return err
 	}
-	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, sellToken, tokenInfo.Decimals)
+	listPairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	sellExchangeTokenLockedBalance, err := s.orderDao.GetUserLockedBalance(o.UserAddress, sellToken, listPairs)
 	if err != nil {
 		logger.Error(err)
 		return err

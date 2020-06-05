@@ -152,8 +152,13 @@ func (s *OrderService) GetOrdersLockedBalanceByUserAddress(addr common.Address) 
 	if err != nil {
 		return nil, err
 	}
+	listPairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
 	for _, t := range tokens {
-		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, t.Decimals)
+		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, listPairs)
 		if err != nil {
 			return nil, err
 		}

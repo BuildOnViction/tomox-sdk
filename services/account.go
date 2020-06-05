@@ -235,7 +235,12 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 		logger.Error(err)
 		return nil, err
 	}
-	sellTokenExchangeLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, tokenInfo.Decimals)
+	listPairs, err := s.PairDao.GetActivePairs()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	sellTokenExchangeLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, listPairs)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
