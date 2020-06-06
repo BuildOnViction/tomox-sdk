@@ -41,6 +41,8 @@ func (c *Client) SendMessage(channel string, msgType types.SubscriptionEvent, pa
 		e.Hash = h[0].Hex()
 	}
 
+	logger.Debug("SendMessage", channel, msgType)
+
 	m := types.WebsocketMessage{
 		Channel: channel,
 		Event:   e,
