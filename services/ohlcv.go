@@ -1300,6 +1300,8 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 }
 
 func (s *OHLCVService) getCachePairByName(pairName string) (*types.Pair, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	now := time.Now().Unix()
 	if pairCache, ok := s.pairCacheByName[pairName]; ok {
 		if now-pairCache.timelife < cacheTimeLifeMax {
