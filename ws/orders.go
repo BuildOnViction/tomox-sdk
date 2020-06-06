@@ -12,12 +12,14 @@ import (
 
 type OrderConnection []*Client
 
-var lockOrder = &sync.Mutex{}
+var lockOrder = &sync.RWMutex{}
 
 var orderConnections map[string]OrderConnection
 
 // GetOrderConn returns the connection associated with an order ID
 func GetOrderConnections(a common.Address) OrderConnection {
+	lockOrder.RLock()
+	defer lockOrder.RUnlock()
 	c := orderConnections[a.Hex()]
 	if c == nil {
 		logger.Warning("No connection found")
@@ -31,6 +33,8 @@ func GetOrderConnections(a common.Address) OrderConnection {
 func OrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 	return func(client *Client) {
 		logger.Info("In unsubscription handler")
+		lockOrder.Lock()
+		defer lockOrder.Unlock()
 		orderConnection := orderConnections[a.Hex()]
 		if orderConnection == nil {
 			logger.Info("No subscriptions")
@@ -38,14 +42,11 @@ func OrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 
 		if orderConnection != nil {
 			logger.Info("%v connections before unsubscription", len(orderConnections[a.Hex()]))
-			lockOrder.Lock()
 			for i, c := range orderConnection {
 				if client == c {
 					orderConnection = append(orderConnection[:i], orderConnection[i+1:]...)
 				}
 			}
-			lockOrder.Unlock()
-
 		}
 
 		orderConnections[a.Hex()] = orderConnection
@@ -57,7 +58,8 @@ func OrderSocketUnsubscribeHandler(a common.Address) func(client *Client) {
 // It is called whenever a message is recieved over order channel
 func RegisterOrderConnection(a common.Address, c *Client) {
 	logger.Info("Registering new order connection")
-
+	lockOrder.Lock()
+	defer lockOrder.Unlock()
 	if orderConnections == nil {
 		orderConnections = make(map[string]OrderConnection)
 	}
@@ -73,9 +75,7 @@ func RegisterOrderConnection(a common.Address, c *Client) {
 
 		if !isClientConnected(orderConnections[a.Hex()], c) {
 			logger.Info("Registering a new order connection")
-			lockOrder.Lock()
 			orderConnections[a.Hex()] = append(orderConnections[a.Hex()], c)
-			lockOrder.Unlock()
 			RegisterConnectionUnsubscribeHandler(c, OrderSocketUnsubscribeHandler(a))
 			logger.Info("Number of connections for this address: %v", len(orderConnections))
 		}

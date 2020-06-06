@@ -35,6 +35,7 @@ type LendingOrderService struct {
 	lendingTokenDao    interfaces.TokenDao
 	notificationDao    interfaces.NotificationDao
 	lendingTradeDao    interfaces.LendingTradeDao
+	validator          interfaces.ValidatorService
 	engine             interfaces.Engine
 	broker             *rabbitmq.Connection
 	mutext             sync.RWMutex
@@ -51,6 +52,7 @@ func NewLendingOrderService(
 	lendingTokenDao interfaces.TokenDao,
 	notificationDao interfaces.NotificationDao,
 	lendingTradeDao interfaces.LendingTradeDao,
+	validator interfaces.ValidatorService,
 	engine interfaces.Engine,
 	broker *rabbitmq.Connection,
 ) *LendingOrderService {
@@ -64,6 +66,7 @@ func NewLendingOrderService(
 		lendingTokenDao,
 		notificationDao,
 		lendingTradeDao,
+		validator,
 		engine,
 		broker,
 		sync.RWMutex{},
@@ -94,6 +97,15 @@ func (s *LendingOrderService) NewLendingOrder(o *types.LendingOrder) error {
 	if !ok {
 		return errors.New("Invalid Signature")
 	}
+
+	if o.Type == types.TypeLimitOrder {
+		err = s.validator.ValidateAvailablLendingBalance(o)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	}
+
 	err = s.broker.PublishLendingOrderMessage(o)
 	if err != nil {
 		logger.Error(err)

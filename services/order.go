@@ -147,13 +147,18 @@ func (s *OrderService) LoadCache() {
 // GetOrdersLockedBalanceByUserAddress get the total number of orders amount created by a user
 func (s *OrderService) GetOrdersLockedBalanceByUserAddress(addr common.Address) (map[string]*big.Int, error) {
 	mapAccountBalance := make(map[string]*big.Int)
-	pairs, err := s.pairDao.GetActivePairs()
+
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		return nil, err
 	}
-	tokens, err := s.tokenDao.GetAll()
+	listPairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
 	for _, t := range tokens {
-		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, pairs)
+		lockBalance, err := s.orderDao.GetUserLockedBalance(addr, t.ContractAddress, listPairs)
 		if err != nil {
 			return nil, err
 		}
@@ -251,7 +256,7 @@ func (s *OrderService) NewOrder(o *types.Order) error {
 		return err
 	}
 	if o.Type == types.TypeLimitOrder {
-		err = s.validator.ValidateAvailableBalance(o)
+		err = s.validator.ValidateAvailablExchangeBalance(o)
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -552,7 +557,7 @@ func (s *OrderService) watchChanges() {
 	defer sc.Close()
 
 	// Watch the event again in case there is error and function returned
-	defer s.WatchChanges()
+	defer s.watchChanges()
 
 	ctx := context.Background()
 

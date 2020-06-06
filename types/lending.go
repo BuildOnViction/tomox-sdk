@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	BORROW     = "BORROW"
-	LEND       = "INVEST"
-	TypeMarket = "MO"
-	TypeLimit  = "LO"
+	LendingRate = 150
+	BORROW      = "BORROW"
+	LEND        = "INVEST"
+	TypeMarket  = "MO"
+	TypeLimit   = "LO"
 
 	LendingStatusOpen          = "OPEN"
 	LendingStatusPartialFilled = "PARTIAL_FILLED"

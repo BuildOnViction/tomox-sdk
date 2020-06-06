@@ -129,12 +129,12 @@ func NewRouter(
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
 	// get services for injection
-	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, provider)
 	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, tokenDao)
 	ohlcvService.Init()
 
+	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, lendingOrderDao, provider, ohlcvService)
 	tokenService := services.NewTokenService(tokenDao)
-	validatorService := services.NewValidatorService(provider, accountDao, orderDao, pairDao)
+	validatorService := services.NewValidatorService(provider, accountDao, orderDao, lendingOrderDao, pairDao, tokenDao)
 	pairService := services.NewPairService(pairDao, tokenDao, tradeDao, orderDao, ohlcvService, eng, provider)
 
 	orderService := services.NewOrderService(orderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
@@ -152,7 +152,7 @@ func NewRouter(
 	tokenLendingService := services.NewTokenService(tokenLendingDao)
 	tokenCollateralService := services.NewTokenService(tokenCollateralDao)
 
-	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, lendingRecallDao, tokenCollateralDao, tokenLendingDao, notificationDao, lendingTradeDao, eng, rabbitConn)
+	lendingOrderService := services.NewLendingOrderService(lendingOrderDao, lendingTopupDao, lendingRepayDao, lendingRecallDao, tokenCollateralDao, tokenLendingDao, notificationDao, lendingTradeDao, validatorService, eng, rabbitConn)
 	lendingTradeService := services.NewLendingTradeService(lendingOrderDao, lendingTradeDao, notificationDao, rabbitConn)
 	lendingOhlcvService := services.NewLendingOhlcvService(lendingTradeService, ohlcvService, lengdingPairDao)
 	lendingOhlcvService.Init()

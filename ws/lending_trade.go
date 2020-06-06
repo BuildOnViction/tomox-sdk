@@ -9,13 +9,13 @@ import (
 
 var lendingTradeSocket *LendingTradeSocket
 
-var lockLendingTrade = &sync.Mutex{}
-
 // LendingTradeSocket holds the map of connections subscribed to pair channels
 // corresponding to the key/event they have subscribed to.
 type LendingTradeSocket struct {
 	subscriptions     map[string]map[*Client]bool
 	subscriptionsList map[*Client][]string
+	subsMutex         sync.RWMutex
+	subsListMutex     sync.RWMutex
 }
 
 // NewLendingTradeSocket init lending socket instance
@@ -37,6 +37,11 @@ func GetLendingTradeSocket() *LendingTradeSocket {
 
 // Subscribe registers a new websocket connections to the trade channel updates
 func (s *LendingTradeSocket) Subscribe(channelID string, c *Client) error {
+	s.subsMutex.Lock()
+	s.subsListMutex.Lock()
+	defer s.subsMutex.Unlock()
+	defer s.subsListMutex.Unlock()
+
 	if c == nil {
 		return errors.New("No connection found")
 	}
@@ -50,9 +55,7 @@ func (s *LendingTradeSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-	lockLendingTrade.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-	lockLendingTrade.Unlock()
 	return nil
 }
 
@@ -72,16 +75,18 @@ func (s *LendingTradeSocket) UnsubscribeHandler() func(c *Client) {
 
 // UnsubscribeChannel removes a websocket connection from the trade channel updates
 func (s *LendingTradeSocket) UnsubscribeChannel(channelID string, c *Client) {
-	lockLendingTrade.Lock()
+	s.subsMutex.Lock()
+	defer s.subsMutex.Unlock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
-	lockLendingTrade.Unlock()
 }
 
 // Unsubscribe removes a websocket connection from the trade channel updates
 func (s *LendingTradeSocket) Unsubscribe(c *Client) {
+	s.subsListMutex.RLock()
+	defer s.subsListMutex.RUnlock()
 	channelIDs := s.subscriptionsList[c]
 	if channelIDs == nil {
 		return
@@ -95,6 +100,8 @@ func (s *LendingTradeSocket) Unsubscribe(c *Client) {
 // BroadcastMessage broadcasts trade message to all subscribed sockets
 func (s *LendingTradeSocket) BroadcastMessage(channelID string, p interface{}) {
 	go func() {
+		s.subsMutex.RLock()
+		defer s.subsMutex.RUnlock()
 		for conn, active := range lendingTradeSocket.subscriptions[channelID] {
 			if active {
 				s.SendUpdateMessage(conn, p)

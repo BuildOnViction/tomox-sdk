@@ -1,7 +1,9 @@
 package services
 
 import (
+	math2 "math"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
@@ -11,11 +13,13 @@ import (
 )
 
 type AccountService struct {
-	AccountDao interfaces.AccountDao
-	TokenDao   interfaces.TokenDao
-	PairDao    interfaces.PairDao
-	OrderDao   interfaces.OrderDao
-	Provider   interfaces.EthereumProvider
+	AccountDao   interfaces.AccountDao
+	TokenDao     interfaces.TokenDao
+	PairDao      interfaces.PairDao
+	OrderDao     interfaces.OrderDao
+	LendingDao   interfaces.LendingOrderDao
+	Provider     interfaces.EthereumProvider
+	OHLCVService interfaces.OHLCVService
 }
 
 // NewAccountService returns a new instance of accountService
@@ -24,14 +28,18 @@ func NewAccountService(
 	tokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
 	orderDao interfaces.OrderDao,
+	lendingDao interfaces.LendingOrderDao,
 	provider interfaces.EthereumProvider,
+	ohlcvService interfaces.OHLCVService,
 ) *AccountService {
 	return &AccountService{
-		AccountDao: accountDao,
-		TokenDao:   tokenDao,
-		PairDao:    pairDao,
-		OrderDao:   orderDao,
-		Provider:   provider,
+		AccountDao:   accountDao,
+		TokenDao:     tokenDao,
+		PairDao:      pairDao,
+		OrderDao:     orderDao,
+		LendingDao:   lendingDao,
+		Provider:     provider,
+		OHLCVService: ohlcvService,
 	}
 }
 
@@ -182,6 +190,15 @@ func (s *AccountService) GetByAddress(a common.Address) (*types.Account, error) 
 		if err != nil {
 			return nil, err
 		}
+
+		price, _ := s.OHLCVService.GetLastPriceCurrentByTime(balance.Symbol, time.Now())
+
+		if balance != nil && price != nil {
+			inUsdBalance := new(big.Float).Mul(price, new(big.Float).SetInt(balance.Balance))
+			inUsdBalance = new(big.Float).Quo(inUsdBalance, new(big.Float).SetInt(big.NewInt(int64(math2.Pow10(balance.Decimals)))))
+			balance.InUsdBalance = inUsdBalance
+		}
+
 		account.TokenBalances[token.ContractAddress] = balance
 	}
 
@@ -206,18 +223,34 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 		AvailableBalance: big.NewInt(0),
 		InOrderBalance:   big.NewInt(0),
 		Balance:          big.NewInt(0),
+		InUsdBalance:     big.NewFloat(0),
 	}
 	b, err := s.Provider.Balance(owner, tokenAddress)
 	if err != nil {
 		return nil, err
 	}
 	tokenBalance.Balance = b
-	pairs, err := s.PairDao.GetActivePairs()
-	sellTokenLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, pairs)
+	tokenInfo, err := s.TokenDao.GetByAddress(tokenAddress)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
+	listPairs, err := s.PairDao.GetActivePairs()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	sellTokenExchangeLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, listPairs)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	sellTokenLendingLockedBalance, err := s.LendingDao.GetUserLockedBalance(owner, tokenAddress, tokenInfo.Decimals)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	sellTokenLockedBalance := new(big.Int).Add(sellTokenExchangeLockedBalance, sellTokenLendingLockedBalance)
 	tokenBalance.InOrderBalance = sellTokenLockedBalance
 	tokenBalance.AvailableBalance = math.Sub(b, sellTokenLockedBalance)
 	return tokenBalance, nil

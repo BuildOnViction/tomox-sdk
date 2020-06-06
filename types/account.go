@@ -126,6 +126,7 @@ func (a *Account) MarshalJSON() ([]byte, error) {
 			"decimals":         balance.Decimals,
 			"balance":          balance.Balance.String(),
 			"inOrderBalance":   balance.InOrderBalance.String(),
+			"inUsdBalance":     balance.InUsdBalance.String(),
 			"availableBalance": balance.AvailableBalance.String(),
 		}
 	}
@@ -195,6 +196,10 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 
 			if tokenBalance["availableBalance"] != nil {
 				tb.AvailableBalance.UnmarshalJSON([]byte(tokenBalance["availableBalance"].(string)))
+			}
+
+			if tokenBalance["inUsdBalance"] != nil {
+				tb.InUsdBalance, _ = new(big.Float).SetString(tokenBalance["inUsdBalance"].(string))
 			}
 
 			a.TokenBalances[common.HexToAddress(address)] = tb
@@ -280,6 +285,7 @@ type TokenBalance struct {
 	Balance          *big.Int       `json:"balance" bson:"balance"`
 	AvailableBalance *big.Int       `json:"availableBalance" bson:"availableBalance"`
 	InOrderBalance   *big.Int       `json:"inOrderBalance" bson:"inOrderBalance"`
+	InUsdBalance     *big.Float     `json:"inUsdBalance" bson:"inUsdBalance"`
 }
 
 // MarshalJSON implements the json.Marshal interface
@@ -290,6 +296,7 @@ func (t *TokenBalance) MarshalJSON() ([]byte, error) {
 		"decimals":         t.Decimals,
 		"balance":          t.Balance.String(),
 		"inOrderBalance":   t.InOrderBalance.String(),
+		"inUsdBalance":     t.InUsdBalance.String(),
 		"availableBalance": t.AvailableBalance.String(),
 	}
 
@@ -325,6 +332,11 @@ func (t *TokenBalance) UnmarshalJSON(b []byte) error {
 
 	if tb["inOrderBalance"] != nil {
 		t.InOrderBalance.UnmarshalJSON([]byte(tb["inOrderBalance"].(string)))
+
+	}
+
+	if tb["inUsdBalance"] != nil {
+		t.InUsdBalance, _ = new(big.Float).SetString(tb["inUsdBalance"].(string))
 	}
 
 	if tb["availableBalance"] != nil {

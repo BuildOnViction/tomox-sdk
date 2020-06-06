@@ -40,7 +40,7 @@ type OrderDao interface {
 	UpdateOrderFilledAmount(h common.Hash, value *big.Int) error
 	UpdateOrderFilledAmounts(h []common.Hash, values []*big.Int) ([]*types.Order, error)
 	UpdateOrderStatusesByHashes(status string, hashes ...common.Hash) ([]*types.Order, error)
-	GetUserLockedBalance(account common.Address, token common.Address, p []*types.Pair) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address, pairs []*types.Pair) (*big.Int, error)
 	UpdateOrderStatus(h common.Hash, status string) error
 	GetRawOrderBook(*types.Pair) ([]*types.Order, error)
 	GetOrderBook(*types.Pair) ([]map[string]string, []map[string]string, error)
@@ -363,8 +363,8 @@ type AccountService interface {
 }
 
 type ValidatorService interface {
-	ValidateBalance(o *types.Order) error
-	ValidateAvailableBalance(o *types.Order) error
+	ValidateAvailablExchangeBalance(o *types.Order) error
+	ValidateAvailablLendingBalance(o *types.LendingOrder) error
 }
 
 type EthereumConfig interface {
@@ -404,6 +404,7 @@ type RelayerService interface {
 	UpdateNameByAddress(addr common.Address, name string, url string) error
 	GetRelayerAddress(r *http.Request) common.Address
 	GetByAddress(addr common.Address) (*types.Relayer, error)
+	GetAll() ([]types.Relayer, error)
 }
 
 // Relayer interface for relayer
@@ -443,6 +444,7 @@ type LendingOrderDao interface {
 	TopupLendingOrder(o *types.LendingOrder) error
 	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error)
 }
 
 // LendingOrderBookService interface for lending order book

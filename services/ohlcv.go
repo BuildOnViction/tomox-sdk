@@ -339,7 +339,7 @@ func (s *OHLCVService) fetch(fromdate int64, todate int64, frame *timeframe) {
 				s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 			} else {
 				s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
-				s.updateRelayerTick(trade.Taker, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+				s.updateRelayerTick(trade.TakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 			}
 
 			if i == 0 {
@@ -630,8 +630,6 @@ func (s *OHLCVService) updateRelayerTick(relayerAddress common.Address, key stri
 	return nil
 }
 func (s *OHLCVService) addTick(tick *types.Tick) {
-	tick.VolumeByQuote = big.NewInt(0)
-	tick.VolumeUsdt = big.NewInt(0)
 	key := s.getTickKey(tick.Pair.BaseToken, tick.Pair.QuoteToken, tick.Duration, tick.Unit)
 	if _, ok := s.tickCache.ticks[key]; ok {
 
@@ -644,8 +642,6 @@ func (s *OHLCVService) addTick(tick *types.Tick) {
 }
 
 func (s *OHLCVService) addRelayerTick(relayerTick *types.RelayerTick) {
-	relayerTick.Tick.VolumeByQuote = big.NewInt(0)
-	relayerTick.Tick.VolumeUsdt = big.NewInt(0)
 	key := s.getTickKey(relayerTick.Tick.Pair.BaseToken, relayerTick.Tick.Pair.QuoteToken, relayerTick.Tick.Duration, relayerTick.Tick.Unit)
 	if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress]; ok {
 		if _, ok := s.tickCache.relayerTicks[relayerTick.RelayerAddress][key]; ok {
@@ -742,7 +738,13 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 			volumebyUsdt = volumebyUsdt.Add(volumebyUsdt, t.VolumeUsdt)
 			count = count.Add(count, t.Count)
 		}
+		pair := types.PairID{
+			BaseToken:  baseToken,
+			QuoteToken: quoteToken,
+			PairName:   "",
+		}
 		return &types.Tick{
+			Pair:          pair,
 			Open:          first.Open,
 			Close:         last.Close,
 			High:          high,
@@ -814,7 +816,7 @@ func (s *OHLCVService) NotifyTrade(trade *types.Trade) {
 		s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 	} else {
 		s.updateRelayerTick(trade.MakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
-		s.updateRelayerTick(trade.Taker, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
+		s.updateRelayerTick(trade.TakerExchange, s.getTickKey(trade.BaseToken, trade.QuoteToken, 1, "hour"), trade)
 	}
 	lastFrame := s.lastTimeFrame()
 	s.updatelasttimeframe(trade.CreatedAt.Unix(), lastFrame)
@@ -1388,6 +1390,12 @@ func (s *OHLCVService) getTokenPriceByUsdt(token common.Address) (*big.Int, erro
 		}
 	}
 	return priceDecimalsInt, err
+}
+
+func (s *OHLCVService) GetTokenPriceByUsdt(token common.Address) (*big.Int, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	return s.getTokenPriceByUsdt(token)
 }
 
 // GetVolumeByUsdt convert to USDT volume

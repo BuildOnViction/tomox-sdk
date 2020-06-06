@@ -8,13 +8,14 @@ import (
 )
 
 var priceBoardSocket *PriceBoardSocket
-var lockP = &sync.Mutex{}
 
 // PriceBoardSocket holds the map of subscriptions subscribed to price board channels
 // corresponding to the key/event they have subscribed to.
 type PriceBoardSocket struct {
 	subscriptions     map[string]map[*Client]bool
 	subscriptionsList map[*Client][]string
+	subsMutex         sync.RWMutex
+	subsListMutex     sync.RWMutex
 }
 
 func NewPriceBoardSocket() *PriceBoardSocket {
@@ -36,6 +37,11 @@ func GetPriceBoardSocket() *PriceBoardSocket {
 // Subscribe handles the subscription of connection to get
 // streaming data over the socker for any pair.
 func (s *PriceBoardSocket) Subscribe(channelID string, c *Client) error {
+	s.subsMutex.Lock()
+	s.subsListMutex.Lock()
+	defer s.subsMutex.Unlock()
+	defer s.subsListMutex.Unlock()
+
 	if c == nil {
 		return errors.New("No connection found")
 	}
@@ -49,9 +55,7 @@ func (s *PriceBoardSocket) Subscribe(channelID string, c *Client) error {
 	if s.subscriptionsList[c] == nil {
 		s.subscriptionsList[c] = []string{}
 	}
-	lockP.Lock()
 	s.subscriptionsList[c] = append(s.subscriptionsList[c], channelID)
-	lockP.Unlock()
 	return nil
 }
 
@@ -70,15 +74,17 @@ func (s *PriceBoardSocket) UnsubscribeHandler() func(c *Client) {
 
 // UnsubscribeChannel removes a websocket connection from the price board channel updates
 func (s *PriceBoardSocket) UnsubscribeChannel(channelID string, c *Client) {
-	lockP.Lock()
+	s.subsMutex.Lock()
+	defer s.subsMutex.Unlock()
 	if s.subscriptions[channelID][c] {
 		s.subscriptions[channelID][c] = false
 		delete(s.subscriptions[channelID], c)
 	}
-	lockP.Unlock()
 }
 
 func (s *PriceBoardSocket) Unsubscribe(c *Client) {
+	s.subsListMutex.RLock()
+	defer s.subsListMutex.RUnlock()
 	channelIDs := s.subscriptionsList[c]
 	if channelIDs == nil {
 		return
@@ -91,7 +97,8 @@ func (s *PriceBoardSocket) Unsubscribe(c *Client) {
 
 // BroadcastMessage streams message to all the subscriptions subscribed to the pair
 func (s *PriceBoardSocket) BroadcastMessage(channelID string, p interface{}) error {
-
+	s.subsMutex.RLock()
+	defer s.subsMutex.RUnlock()
 	for c, status := range s.subscriptions[channelID] {
 		if status {
 			s.SendUpdateMessage(c, p)

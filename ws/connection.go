@@ -40,7 +40,7 @@ func ConnectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	c.SetCloseHandler(closeHandler(c))
 
 	go readHandler(c)
-	go writeHandler(c)
+	go pingHandler(c)
 }
 
 func readHandler(c *Client) {
@@ -92,7 +92,7 @@ func readHandler(c *Client) {
 	}
 }
 
-func writeHandler(c *Client) {
+func pingHandler(c *Client) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		logger.Info("Closing connection")
@@ -102,27 +102,8 @@ func writeHandler(c *Client) {
 
 	for {
 		select {
-		case m, ok := <-c.send:
-			c.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				c.WriteMessage(websocket.CloseMessage, []byte{})
-			}
-
-			if app.Config.Env == "local" {
-				logger.LogMessageOut(&m)
-			}
-
-			logger.Infof("%v", m.String())
-
-			err := c.WriteJSON(m)
-			if err != nil {
-				logger.Error(err)
-				return
-			}
-
 		case <-ticker.C:
-			c.SetWriteDeadline(time.Now().Add(writeWait))
-			err := c.WriteMessage(websocket.PingMessage, nil)
+			err := c.SendPingMessage()
 			if err != nil {
 				logger.Error(err)
 				return

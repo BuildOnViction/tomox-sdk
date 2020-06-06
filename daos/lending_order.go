@@ -3,6 +3,7 @@ package daos
 import (
 	"errors"
 	"fmt"
+	m "math"
 	"math/big"
 	"sort"
 	"strconv"
@@ -746,4 +747,62 @@ func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken comm
 	}
 
 	return n, nil
+}
+
+//GetUserLockedBalance return balance using selling
+func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error) {
+	var orders []*types.LendingOrder
+	q := bson.M{
+		"$or": []bson.M{
+			{
+				"userAddress":  account.Hex(),
+				"status":       bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"lendingToken": token.Hex(),
+				"side":         "INVEST",
+			},
+			{
+				"userAddress":     account.Hex(),
+				"status":          bson.M{"$in": []string{types.OrderStatusOpen, types.OrderStatusPartialFilled}},
+				"collateralToken": token.Hex(),
+				"side":            "BORROW",
+			},
+		},
+	}
+
+	err := db.Get(dao.dbName, dao.collectionName, q, 0, 0, &orders)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	totalLockedBalance := big.NewInt(0)
+	totalInvest := big.NewInt(0)
+	totalBorrow := big.NewInt(0)
+	lendingTokenList := make(map[common.Address]*big.Int)
+	for _, o := range orders {
+		remainingAmount := math.Sub(o.Quantity, o.FilledAmount)
+		if o.Side == types.LEND {
+			totalInvest = math.Add(totalInvest, remainingAmount)
+		} else {
+			if v, ok := lendingTokenList[o.LendingToken]; ok {
+				v = v.Add(v, remainingAmount)
+			} else {
+				lendingTokenList[o.LendingToken] = new(big.Int).Add(big.NewInt(0), remainingAmount)
+			}
+		}
+	}
+	collateralDecimals := big.NewInt(int64(m.Pow10(decimals)))
+	for lt, q := range lendingTokenList {
+		collateralPrice, err := dao.GetLastTokenPrice(token, lt)
+		if err != nil {
+			return nil, err
+		}
+		collateralAmount := new(big.Int).Mul(q, collateralDecimals)
+		collateralAmount = math.Mul(collateralAmount, big.NewInt(int64(types.LendingRate)))
+		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)
+		collateralAmount = math.Div(collateralAmount, big.NewInt(100))
+		totalBorrow = totalBorrow.Add(totalBorrow, collateralAmount)
+	}
+	totalLockedBalance = new(big.Int).Add(totalInvest, totalBorrow)
+	return totalLockedBalance, nil
 }

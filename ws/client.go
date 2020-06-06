@@ -2,6 +2,7 @@ package ws
 
 import (
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/websocket"
@@ -30,6 +31,17 @@ func NewClient(c *websocket.Conn) *Client {
 	return conn
 }
 
+func (c *Client) writeMessage(m types.WebsocketMessage) {
+	c.SetWriteDeadline(time.Now().Add(writeWait))
+	err := c.WriteJSON(m)
+	if err != nil {
+		logger.Info("writeMessage closing connection:", err)
+		c.closeConnection()
+		return
+	}
+
+}
+
 // SendMessage constructs the message with proper structure to be sent over websocket
 func (c *Client) SendMessage(channel string, msgType types.SubscriptionEvent, payload interface{}, h ...common.Hash) {
 	e := types.WebsocketEvent{
@@ -50,12 +62,21 @@ func (c *Client) SendMessage(channel string, msgType types.SubscriptionEvent, pa
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.send <- m
+
+	c.writeMessage(m)
+}
+
+// SendPingMessage check conntection
+func (c *Client) SendPingMessage() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.WriteMessage(websocket.PingMessage, nil)
 }
 
 func (c *Client) closeConnection() {
 	for _, unsub := range unsubscribeHandlers[c] {
-		go unsub(c)
+		unsub(c)
 	}
 
 	c.Close()
@@ -79,7 +100,7 @@ func (c *Client) SendOrderErrorMessage(err error, h common.Hash) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.send <- m
+	c.writeMessage(m)
 }
 
 // SendLendingOrderErrorMessage send error lending transaction
@@ -101,5 +122,5 @@ func (c *Client) SendLendingOrderErrorMessage(err error, h common.Hash) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.send <- m
+	c.writeMessage(m)
 }
