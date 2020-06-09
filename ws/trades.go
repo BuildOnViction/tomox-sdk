@@ -93,12 +93,17 @@ func (s *TradeSocket) Unsubscribe(c *Client) {
 	}
 }
 
+func (s *TradeSocket) getSubscriptions() map[string]map[*Client]bool {
+	s.subsMutex.RLock()
+	defer s.subsMutex.RUnlock()
+	return tradeSocket.subscriptions
+}
+
 // BroadcastMessage broadcasts trade message to all subscribed sockets
 func (s *TradeSocket) BroadcastMessage(channelID string, p interface{}) {
 	go func() {
-		s.subsMutex.RLock()
-		defer s.subsMutex.RUnlock()
-		for conn, active := range tradeSocket.subscriptions[channelID] {
+		subs := s.getSubscriptions()
+		for conn, active := range subs[channelID] {
 			if active {
 				s.SendUpdateMessage(conn, p)
 			}
