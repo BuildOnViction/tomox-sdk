@@ -98,11 +98,16 @@ func (s *LendingMarketsSocket) Unsubscribe(c *Client) {
 	}
 }
 
-// BroadcastMessage streams message to all the subscriptions subscribed to the pair
-func (s *LendingMarketsSocket) BroadcastMessage(channelID string, p interface{}) error {
+func (s *LendingMarketsSocket) getSubscriptions() map[string]map[*Client]bool {
 	s.subsMutex.RLock()
 	defer s.subsMutex.RUnlock()
-	for c, status := range s.subscriptions[channelID] {
+	return s.subscriptions
+}
+
+// BroadcastMessage streams message to all the subscriptions subscribed to the pair
+func (s *LendingMarketsSocket) BroadcastMessage(channelID string, p interface{}) error {
+	subs := s.getSubscriptions()
+	for c, status := range subs[channelID] {
 		if status {
 			s.SendUpdateMessage(c, p)
 		}
