@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	m "math"
 	"math/big"
 
 	"github.com/tomochain/tomox-sdk/interfaces"
@@ -98,13 +99,31 @@ func (s *ValidatorService) ValidateAvailablExchangeBalance(o *types.Order) error
 
 // ValidateAvailablLendingBalance validate avalable lending order
 func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder) error {
-	totalRequiredAmount := o.Quantity
 
 	var sellTokenBalance *big.Int
+	var totalRequiredAmount *big.Int
 	var err error
 	sellToken := o.CollateralToken
 	if o.Side == types.LEND {
 		sellToken = o.LendingToken
+		totalRequiredAmount = o.Quantity
+	} else {
+		collateralPrice, err := s.lendingDao.GetLastTokenPrice(o.CollateralToken, o.LendingToken)
+		if err != nil {
+			return err
+		}
+		tokenInfo, err := s.tokenDao.GetByAddress(o.CollateralToken)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+		collateralDecimals := big.NewInt(int64(m.Pow10(tokenInfo.Decimals)))
+		collateralAmount := new(big.Int).Mul(o.Quantity, collateralDecimals)
+		collateralAmount = math.Mul(collateralAmount, big.NewInt(int64(types.LendingRate)))
+		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)
+		collateralAmount = math.Div(collateralAmount, big.NewInt(100))
+		totalRequiredAmount = collateralAmount
+
 	}
 	err = utils.Retry(3, func() error {
 		sellTokenBalance, err = s.ethereumProvider.Balance(o.UserAddress, sellToken)
@@ -140,11 +159,11 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 
 	//Sell Token Balance
 	if sellTokenBalance.Cmp(totalRequiredAmount) == -1 {
-		return fmt.Errorf("insufficient %v Balance", sellToken.Hex())
+		return fmt.Errorf("insufficient %v Balance", sellToken.Hex(), "balance:", sellTokenBalance, "expected:", totalRequiredAmount)
 	}
 
 	if availableSellTokenBalance.Cmp(totalRequiredAmount) == -1 {
-		return fmt.Errorf("insufficient %v available", sellToken.Hex())
+		return fmt.Errorf("insufficient %v available", sellToken.Hex(), "available balance:", sellTokenBalance, "expected:", totalRequiredAmount)
 	}
 
 	return nil
