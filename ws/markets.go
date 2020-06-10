@@ -96,11 +96,16 @@ func (s *MarketsSocket) Unsubscribe(c *Client) {
 	}
 }
 
-// BroadcastMessage streams message to all the subscriptions subscribed to the pair
-func (s *MarketsSocket) BroadcastMessage(channelID string, p interface{}) error {
+func (s *MarketsSocket) getSubscriptions() map[string]map[*Client]bool {
 	s.subsMutex.RLock()
 	defer s.subsMutex.RUnlock()
-	for c, status := range s.subscriptions[channelID] {
+	return s.subscriptions
+}
+
+// BroadcastMessage streams message to all the subscriptions subscribed to the pair
+func (s *MarketsSocket) BroadcastMessage(channelID string, p interface{}) error {
+	subs := s.getSubscriptions()
+	for c, status := range subs[channelID] {
 		if status {
 			s.SendUpdateMessage(c, p)
 		}
