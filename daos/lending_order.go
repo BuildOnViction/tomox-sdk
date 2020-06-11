@@ -816,7 +816,7 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 	}
 	collateralDecimals := big.NewInt(int64(m.Pow10(collateralTokenInfo.Decimals)))
 	for lt, q := range lendingTokenList {
-		lendingTokenInfo := types.TokensFrom(token, tokens)
+		lendingTokenInfo := types.TokensFrom(lt, tokens)
 		if lendingTokenInfo == nil {
 			return nil, errors.New("Lending token not found")
 		}

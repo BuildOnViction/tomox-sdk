@@ -635,7 +635,7 @@ func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address,
 	if err != nil {
 		return nil, nil, err
 	}
-	collateralTokenInfo, err := s.lendingTokenDao.GetByAddress(lendingToken)
+	collateralTokenInfo, err := s.lendingTokenDao.GetByAddress(collateralToken)
 	if err != nil {
 		return nil, nil, err
 	}
