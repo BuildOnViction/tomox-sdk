@@ -109,16 +109,22 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 		sellToken = o.LendingToken
 		totalRequiredAmount = o.Quantity
 	} else {
-		collateralPrice, err := s.lendingDao.GetLastTokenPrice(o.CollateralToken, o.LendingToken)
-		if err != nil {
-			return err
-		}
-		tokenInfo, err := s.tokenDao.GetByAddress(o.CollateralToken)
+		collateralTokenInfo, err := s.tokenDao.GetByAddress(o.CollateralToken)
 		if err != nil {
 			logger.Error(err)
 			return err
 		}
-		collateralDecimals := big.NewInt(int64(m.Pow10(tokenInfo.Decimals)))
+		lendingTokenTokenInfo, err := s.tokenDao.GetByAddress(o.LendingToken)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+		collateralPrice, err := s.lendingDao.GetLastTokenPrice(o.CollateralToken, o.LendingToken, collateralTokenInfo.Decimals, lendingTokenTokenInfo.Decimals)
+		if err != nil {
+			return err
+		}
+
+		collateralDecimals := big.NewInt(int64(m.Pow10(collateralTokenInfo.Decimals)))
 		collateralAmount := new(big.Int).Mul(o.Quantity, collateralDecimals)
 		collateralAmount = math.Mul(collateralAmount, big.NewInt(int64(types.LendingRate)))
 		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)

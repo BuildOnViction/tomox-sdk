@@ -717,7 +717,7 @@ func (dao *LendingOrderDao) GetLendingOrders(lendingSpec types.LendingSpec, sort
 }
 
 // GetLastTokenPrice get last token price
-func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error) {
+func (dao *LendingOrderDao) getLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error) {
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 
 	defer rpcClient.Close()
@@ -749,14 +749,14 @@ func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken comm
 	return n, nil
 }
 
-// GetLastTokenPriceEx extend getLastTokenPrice
-func (dao *LendingOrderDao) GetLastTokenPriceEx(bToken, qToken common.Address, baseTokenDecimal, quoteTokenDecinals int) (*big.Int, error) {
+// GetLastTokenPrice extend getLastTokenPrice
+func (dao *LendingOrderDao) GetLastTokenPrice(bToken, qToken common.Address, baseTokenDecimal, quoteTokenDecinals int) (*big.Int, error) {
 	var price *big.Int
-	price, err := dao.GetLastTokenPrice(bToken, qToken)
+	price, err := dao.getLastTokenPrice(bToken, qToken)
 	if err == nil {
 		return price, nil
 	}
-	price, err = dao.GetLastTokenPrice(qToken, bToken)
+	price, err = dao.getLastTokenPrice(qToken, bToken)
 	if err != nil {
 		return nil, err
 	}
@@ -820,7 +820,7 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 		if lendingTokenInfo == nil {
 			return nil, errors.New("Lending token not found")
 		}
-		collateralPrice, err := dao.GetLastTokenPriceEx(token, lt, collateralTokenInfo.Decimals, lendingTokenInfo.Decimals)
+		collateralPrice, err := dao.GetLastTokenPrice(token, lt, collateralTokenInfo.Decimals, lendingTokenInfo.Decimals)
 		if err != nil {
 			return nil, err
 		}
