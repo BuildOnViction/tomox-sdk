@@ -749,8 +749,27 @@ func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken comm
 	return n, nil
 }
 
+// GetLastTokenPriceEx extend getLastTokenPrice
+func (dao *LendingOrderDao) GetLastTokenPriceEx(bToken, qToken common.Address, baseTokenDecimal, quoteTokenDecinals int) (*big.Int, error) {
+	var price *big.Int
+	price, err := dao.GetLastTokenPrice(bToken, qToken)
+	if err == nil {
+		return price, nil
+	}
+	price, err = dao.GetLastTokenPrice(qToken, bToken)
+	if err != nil {
+		return nil, err
+	}
+	dbase := big.NewInt(int64(m.Pow10(baseTokenDecimal)))
+	dquote := big.NewInt(int64(m.Pow10(quoteTokenDecinals)))
+
+	priceBaseQuote := math.Mul(dbase, dquote)
+	priceBaseQuote = math.Div(priceBaseQuote, price)
+	return priceBaseQuote, nil
+}
+
 //GetUserLockedBalance return balance using selling
-func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error) {
+func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address, tokens []types.Token) (*big.Int, error) {
 	var orders []*types.LendingOrder
 	q := bson.M{
 		"$or": []bson.M{
@@ -791,9 +810,17 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 			}
 		}
 	}
-	collateralDecimals := big.NewInt(int64(m.Pow10(decimals)))
+	collateralTokenInfo := types.TokensFrom(token, tokens)
+	if collateralTokenInfo == nil {
+		return nil, errors.New("Collateral token not found")
+	}
+	collateralDecimals := big.NewInt(int64(m.Pow10(collateralTokenInfo.Decimals)))
 	for lt, q := range lendingTokenList {
-		collateralPrice, err := dao.GetLastTokenPrice(token, lt)
+		lendingTokenInfo := types.TokensFrom(token, tokens)
+		if lendingTokenInfo == nil {
+			return nil, errors.New("Lending token not found")
+		}
+		collateralPrice, err := dao.GetLastTokenPriceEx(token, lt, collateralTokenInfo.Decimals, lendingTokenInfo.Decimals)
 		if err != nil {
 			return nil, err
 		}

@@ -5,6 +5,7 @@ import (
 	m "math"
 	"math/big"
 
+	"github.com/tomochain/tomox-sdk/errors"
 	"github.com/tomochain/tomox-sdk/interfaces"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils"
@@ -62,12 +63,12 @@ func (s *ValidatorService) ValidateAvailablExchangeBalance(o *types.Order) error
 		logger.Error(err)
 		return err
 	}
-	tokenInfo, err := s.tokenDao.GetByAddress(o.SellToken())
+	listPairs, err := s.pairDao.GetActivePairs()
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
-	listPairs, err := s.pairDao.GetActivePairs()
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -77,7 +78,7 @@ func (s *ValidatorService) ValidateAvailablExchangeBalance(o *types.Order) error
 		logger.Error(err)
 		return err
 	}
-	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), tokenInfo.Decimals)
+	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, o.SellToken(), tokens)
 	if err != nil {
 		logger.Error(err)
 		return err
@@ -134,10 +135,14 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 		logger.Error(err, "addr:", sellToken.Hex())
 		return err
 	}
-	tokenInfo, err := s.tokenDao.GetByAddress(sellToken)
+	tokens, err := s.tokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return err
+	}
+	tokenInfo := types.TokensFrom(sellToken, tokens)
+	if tokenInfo == nil {
+		return errors.New("Token not found")
 	}
 	listPairs, err := s.pairDao.GetActivePairs()
 	if err != nil {
@@ -149,7 +154,7 @@ func (s *ValidatorService) ValidateAvailablLendingBalance(o *types.LendingOrder)
 		logger.Error(err)
 		return err
 	}
-	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, sellToken, tokenInfo.Decimals)
+	sellLendingTokenLockedBalance, err := s.lendingDao.GetUserLockedBalance(o.UserAddress, sellToken, tokens)
 	if err != nil {
 		logger.Error(err)
 		return err

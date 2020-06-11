@@ -230,12 +230,13 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 		return nil, err
 	}
 	tokenBalance.Balance = b
-	tokenInfo, err := s.TokenDao.GetByAddress(tokenAddress)
+
+	listPairs, err := s.PairDao.GetActivePairs()
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
-	listPairs, err := s.PairDao.GetActivePairs()
+	tokens, err := s.TokenDao.GetAll()
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -245,7 +246,7 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 		logger.Error(err)
 		return nil, err
 	}
-	sellTokenLendingLockedBalance, err := s.LendingDao.GetUserLockedBalance(owner, tokenAddress, tokenInfo.Decimals)
+	sellTokenLendingLockedBalance, err := s.LendingDao.GetUserLockedBalance(owner, tokenAddress, tokens)
 	if err != nil {
 		logger.Error(err)
 		return nil, err

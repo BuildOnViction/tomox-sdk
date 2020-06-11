@@ -7,7 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/globalsign/mgo/bson"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/tomochain/tomox-sdk/utils/math"
 )
 
@@ -225,6 +225,16 @@ func (t *Token) SetBSON(raw bson.Raw) error {
 
 	if decoded.TakeFee != "" {
 		t.TakeFee = math.ToBigInt(decoded.TakeFee)
+	}
+	return nil
+}
+
+// TokensFrom get token from list
+func TokensFrom(token common.Address, tokens []Token) *Token {
+	for _, t := range tokens {
+		if token.Hex() == t.ContractAddress.Hex() {
+			return &t
+		}
 	}
 	return nil
 }

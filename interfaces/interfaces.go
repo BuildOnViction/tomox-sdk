@@ -444,7 +444,7 @@ type LendingOrderDao interface {
 	TopupLendingOrder(o *types.LendingOrder) error
 	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error)
-	GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error)
+	GetUserLockedBalance(account common.Address, token common.Address, tokens []types.Token) (*big.Int, error)
 }
 
 // LendingOrderBookService interface for lending order book
