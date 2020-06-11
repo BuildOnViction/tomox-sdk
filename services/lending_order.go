@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"math"
+	m "math"
 	"math/big"
 	"strconv"
 	"sync"
@@ -15,6 +15,7 @@ import (
 	"github.com/tomochain/tomox-sdk/rabbitmq"
 	"github.com/tomochain/tomox-sdk/types"
 	"github.com/tomochain/tomox-sdk/utils"
+	"github.com/tomochain/tomox-sdk/utils/math"
 	"github.com/tomochain/tomox-sdk/ws"
 )
 
@@ -631,7 +632,16 @@ func (s *LendingOrderService) GetRecall(recallSpec types.RecallSpec, sort []stri
 
 // EstimateCollateral estimate collateral amount to make lending
 func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Float) (*big.Float, *big.Float, error) {
-	collateralPrice, err := s.lendingDao.GetLastTokenPrice(collateralToken, lendingToken)
+	collateralTokenInfo, err := s.collateralTokenDao.GetByAddress(collateralToken)
+	if err != nil {
+		return nil, nil, err
+	}
+	lendingInfo, err := s.lendingTokenDao.GetByAddress(lendingToken)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	collateralPrice, err := s.lendingDao.GetLastTokenPriceEx(collateralToken, lendingToken, collateralTokenInfo.Decimals, lendingInfo.Decimals)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -640,9 +650,71 @@ func (s *LendingOrderService) EstimateCollateral(collateralToken common.Address,
 	if err != nil {
 		return nil, nil, err
 	}
-	lendingDecimals := big.NewInt(int64(math.Pow10(lendingTokenInfo.Decimals)))
+	lendingDecimals := big.NewInt(int64(m.Pow10(lendingTokenInfo.Decimals)))
 	x := new(big.Float).Quo(new(big.Float).SetInt(collateralPrice), new(big.Float).SetInt(lendingDecimals))
 	a := new(big.Float).Mul(lendingAmount, new(big.Float).SetInt(lendingDecimals))
 	collateralAmount := new(big.Float).Quo(a, new(big.Float).SetInt(collateralPrice))
 	return collateralAmount, x, nil
+}
+
+//GetUserLockedBalance return balance using selling
+func (s *LendingOrderService) GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error) {
+	orders, err := s.lendingDao.GetSellLendingOrder(account, token)
+	if err != nil {
+		return nil, err
+	}
+	totalLockedBalance := big.NewInt(0)
+	totalInvest := big.NewInt(0)
+	totalBorrow := big.NewInt(0)
+	lendingTokenList := make(map[common.Address]*big.Int)
+	for _, o := range orders {
+		remainingAmount := math.Sub(o.Quantity, o.FilledAmount)
+		if o.Side == types.LEND {
+			totalInvest = math.Add(totalInvest, remainingAmount)
+		} else {
+			if v, ok := lendingTokenList[o.LendingToken]; ok {
+				v = v.Add(v, remainingAmount)
+			} else {
+				lendingTokenList[o.LendingToken] = new(big.Int).Add(big.NewInt(0), remainingAmount)
+			}
+		}
+	}
+	collateralTokenInfo, err := s.collateralTokenDao.GetByAddress(token)
+	if err != nil {
+		return nil, err
+	}
+	collateralDecimals := big.NewInt(int64(m.Pow10(collateralTokenInfo.Decimals)))
+
+	for lt, q := range lendingTokenList {
+		lendingInfo, err := s.lendingTokenDao.GetByAddress(lt)
+		if err != nil {
+			return nil, err
+		}
+		collateralPrice, err := s.lendingDao.GetLastTokenPriceEx(token, lt, collateralTokenInfo.Decimals, lendingInfo.Decimals)
+		if err != nil {
+			return nil, err
+		}
+		collateralAmount := new(big.Int).Mul(q, collateralDecimals)
+		collateralAmount = math.Mul(collateralAmount, big.NewInt(int64(types.LendingRate)))
+		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)
+		collateralAmount = math.Div(collateralAmount, big.NewInt(100))
+		totalBorrow = totalBorrow.Add(totalBorrow, collateralAmount)
+	}
+	totalLockedBalance = new(big.Int).Add(totalInvest, totalBorrow)
+	return totalLockedBalance, nil
+}
+
+// GetLastTokenPriceEx get last price of colalteral
+func (s *LendingOrderService) GetLastTokenPriceEx(bToken, qToken common.Address) (*big.Int, error) {
+	collateraltokenInfo, err := s.collateralTokenDao.GetByAddress(bToken)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	quotetokenInfo, err := s.lendingTokenDao.GetByAddress(qToken)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	return s.lendingDao.GetLastTokenPriceEx(bToken, qToken, collateraltokenInfo.Decimals, quotetokenInfo.Decimals)
 }

@@ -13,13 +13,13 @@ import (
 )
 
 type AccountService struct {
-	AccountDao   interfaces.AccountDao
-	TokenDao     interfaces.TokenDao
-	PairDao      interfaces.PairDao
-	OrderDao     interfaces.OrderDao
-	LendingDao   interfaces.LendingOrderDao
-	Provider     interfaces.EthereumProvider
-	OHLCVService interfaces.OHLCVService
+	AccountDao     interfaces.AccountDao
+	TokenDao       interfaces.TokenDao
+	PairDao        interfaces.PairDao
+	orderService   interfaces.OrderService
+	lendingService interfaces.LendingOrderService
+	Provider       interfaces.EthereumProvider
+	OHLCVService   interfaces.OHLCVService
 }
 
 // NewAccountService returns a new instance of accountService
@@ -27,19 +27,19 @@ func NewAccountService(
 	accountDao interfaces.AccountDao,
 	tokenDao interfaces.TokenDao,
 	pairDao interfaces.PairDao,
-	orderDao interfaces.OrderDao,
-	lendingDao interfaces.LendingOrderDao,
+	orderService interfaces.OrderService,
+	lendingService interfaces.LendingOrderService,
 	provider interfaces.EthereumProvider,
 	ohlcvService interfaces.OHLCVService,
 ) *AccountService {
 	return &AccountService{
-		AccountDao:   accountDao,
-		TokenDao:     tokenDao,
-		PairDao:      pairDao,
-		OrderDao:     orderDao,
-		LendingDao:   lendingDao,
-		Provider:     provider,
-		OHLCVService: ohlcvService,
+		AccountDao:     accountDao,
+		TokenDao:       tokenDao,
+		PairDao:        pairDao,
+		orderService:   orderService,
+		lendingService: lendingService,
+		Provider:       provider,
+		OHLCVService:   ohlcvService,
 	}
 }
 
@@ -230,22 +230,12 @@ func (s *AccountService) GetTokenBalanceProvidor(owner common.Address, tokenAddr
 		return nil, err
 	}
 	tokenBalance.Balance = b
-	tokenInfo, err := s.TokenDao.GetByAddress(tokenAddress)
+	sellTokenExchangeLockedBalance, err := s.orderService.GetUserLockedBalance(owner, tokenAddress)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
-	listPairs, err := s.PairDao.GetActivePairs()
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-	sellTokenExchangeLockedBalance, err := s.OrderDao.GetUserLockedBalance(owner, tokenAddress, listPairs)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-	sellTokenLendingLockedBalance, err := s.LendingDao.GetUserLockedBalance(owner, tokenAddress, tokenInfo.Decimals)
+	sellTokenLendingLockedBalance, err := s.lendingService.GetUserLockedBalance(owner, tokenAddress)
 	if err != nil {
 		logger.Error(err)
 		return nil, err

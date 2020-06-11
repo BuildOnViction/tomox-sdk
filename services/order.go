@@ -693,3 +693,12 @@ func (s *OrderService) GetBestBid(baseToken, quouteToken common.Address) (*types
 func (s *OrderService) GetBestAsk(baseToken, quouteToken common.Address) (*types.PriceVolume, error) {
 	return s.orderDao.GetBestAsk(baseToken, quouteToken)
 }
+
+// GetUserLockedBalance get locked balance of user account
+func (s *OrderService) GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error) {
+	pairs, err := s.pairDao.GetActivePairs()
+	if err != nil {
+		return nil, err
+	}
+	return s.orderDao.GetUserLockedBalance(account, token, pairs)
+}

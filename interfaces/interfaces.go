@@ -263,6 +263,7 @@ type OrderService interface {
 	GetOrderNonceByUserAddress(addr common.Address) (interface{}, error)
 	GetBestBid(baseToken, quouteToken common.Address) (*types.PriceVolume, error)
 	GetBestAsk(baseToken, quouteToken common.Address) (*types.PriceVolume, error)
+	GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error)
 }
 
 type OrderBookService interface {
@@ -428,6 +429,8 @@ type LendingOrderService interface {
 	GetRepay(repaySpec types.RepaySpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	GetRecall(recall types.RecallSpec, sort []string, offset int, size int) (*types.LendingRes, error)
 	EstimateCollateral(collateralToken common.Address, lendingToken common.Address, lendingAmount *big.Float) (*big.Float, *big.Float, error)
+	GetUserLockedBalance(account common.Address, token common.Address) (*big.Int, error)
+	GetLastTokenPriceEx(bToken, qToken common.Address) (*big.Int, error)
 }
 
 // LendingOrderDao dao
@@ -443,8 +446,8 @@ type LendingOrderDao interface {
 	RepayLendingOrder(o *types.LendingOrder) error
 	TopupLendingOrder(o *types.LendingOrder) error
 	GetLendingOrders(lendingSpec types.LendingSpec, sort []string, offset int, size int) (*types.LendingRes, error)
-	GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error)
-	GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error)
+	GetLastTokenPriceEx(bToken, qToken common.Address, baseTokenDecimal, quoteTokenDecinals int) (*big.Int, error)
+	GetSellLendingOrder(account common.Address, token common.Address) ([]*types.LendingOrder, error)
 }
 
 // LendingOrderBookService interface for lending order book

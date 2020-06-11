@@ -717,7 +717,7 @@ func (dao *LendingOrderDao) GetLendingOrders(lendingSpec types.LendingSpec, sort
 }
 
 // GetLastTokenPrice get last token price
-func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error) {
+func (dao *LendingOrderDao) getLastTokenPrice(bToken common.Address, qToken common.Address) (*big.Int, error) {
 	rpcClient, err := rpc.DialHTTP(app.Config.Tomochain["http_url"])
 
 	defer rpcClient.Close()
@@ -749,8 +749,27 @@ func (dao *LendingOrderDao) GetLastTokenPrice(bToken common.Address, qToken comm
 	return n, nil
 }
 
-//GetUserLockedBalance return balance using selling
-func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token common.Address, decimals int) (*big.Int, error) {
+// GetLastTokenPriceEx extend getLastTokenPrice
+func (dao *LendingOrderDao) GetLastTokenPriceEx(bToken, qToken common.Address, baseTokenDecimal, quoteTokenDecinals int) (*big.Int, error) {
+	var price *big.Int
+	price, err := dao.getLastTokenPrice(bToken, qToken)
+	if err == nil {
+		return price, nil
+	}
+	price, err = dao.getLastTokenPrice(qToken, bToken)
+	if err != nil {
+		return nil, err
+	}
+	dbase := big.NewInt(int64(m.Pow10(baseTokenDecimal)))
+	dquote := big.NewInt(int64(m.Pow10(quoteTokenDecinals)))
+
+	priceBaseQuote := math.Mul(dbase, dquote)
+	priceBaseQuote = math.Div(priceBaseQuote, price)
+	return priceBaseQuote, nil
+}
+
+// GetSellLendingOrder get list sell lending order
+func (dao *LendingOrderDao) GetSellLendingOrder(account common.Address, token common.Address) ([]*types.LendingOrder, error) {
 	var orders []*types.LendingOrder
 	q := bson.M{
 		"$or": []bson.M{
@@ -774,35 +793,5 @@ func (dao *LendingOrderDao) GetUserLockedBalance(account common.Address, token c
 		logger.Error(err)
 		return nil, err
 	}
-
-	totalLockedBalance := big.NewInt(0)
-	totalInvest := big.NewInt(0)
-	totalBorrow := big.NewInt(0)
-	lendingTokenList := make(map[common.Address]*big.Int)
-	for _, o := range orders {
-		remainingAmount := math.Sub(o.Quantity, o.FilledAmount)
-		if o.Side == types.LEND {
-			totalInvest = math.Add(totalInvest, remainingAmount)
-		} else {
-			if v, ok := lendingTokenList[o.LendingToken]; ok {
-				v = v.Add(v, remainingAmount)
-			} else {
-				lendingTokenList[o.LendingToken] = new(big.Int).Add(big.NewInt(0), remainingAmount)
-			}
-		}
-	}
-	collateralDecimals := big.NewInt(int64(m.Pow10(decimals)))
-	for lt, q := range lendingTokenList {
-		collateralPrice, err := dao.GetLastTokenPrice(token, lt)
-		if err != nil {
-			return nil, err
-		}
-		collateralAmount := new(big.Int).Mul(q, collateralDecimals)
-		collateralAmount = math.Mul(collateralAmount, big.NewInt(int64(types.LendingRate)))
-		collateralAmount = new(big.Int).Div(collateralAmount, collateralPrice)
-		collateralAmount = math.Div(collateralAmount, big.NewInt(100))
-		totalBorrow = totalBorrow.Add(totalBorrow, collateralAmount)
-	}
-	totalLockedBalance = new(big.Int).Add(totalInvest, totalBorrow)
-	return totalLockedBalance, nil
+	return orders, nil
 }
