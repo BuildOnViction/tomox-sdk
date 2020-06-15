@@ -760,10 +760,10 @@ func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.T
 	return nil
 }
 
-func (s *OHLCVService) get24hRelayerTick(relayerAddress common.Address, baseToken, quoteToken common.Address) *types.Tick {
+func (s *OHLCVService) getRelayerTickByTime(relayerAddress common.Address, baseToken, quoteToken common.Address, years, months, days int) *types.Tick {
 	var res []*types.Tick
 	now := time.Now()
-	begin := now.AddDate(0, 0, -1).Unix()
+	begin := now.AddDate(years, months, days).Unix()
 	key := s.getTickKey(baseToken, quoteToken, 1, "hour")
 	res = s.filterRelayerTick(relayerAddress, key, begin, 0)
 
@@ -1404,21 +1404,26 @@ func (s *OHLCVService) GetVolumeByUsdt(token common.Address, volume *big.Int) *b
 }
 
 // GetVolumeByCoinbase get total volume exchange
-func (s *OHLCVService) GetVolumeByCoinbase(addr common.Address) (*big.Int, error) {
+func (s *OHLCVService) GetVolumeByCoinbase(addr common.Address, years, months, days int) (*big.Int, *big.Int, error) {
 	pairs, err := s.pairDao.GetActivePairsByCoinbase(addr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	totalVolume := big.NewInt(0)
+	totalCount := big.NewInt(0)
 	for _, p := range pairs {
-		tick := s.get24hRelayerTick(addr, p.BaseTokenAddress, p.QuoteTokenAddress)
+		tick := s.getRelayerTickByTime(addr, p.BaseTokenAddress, p.QuoteTokenAddress, years, months, days)
 		if tick != nil {
 			totalVolume = totalVolume.Add(totalVolume, tick.VolumeUsdt)
+			totalCount = totalCount.Add(totalCount, tick.Count)
 		}
 
 	}
 
-	return totalVolume, nil
+	return totalVolume, totalCount, nil
+}
+func (s *OHLCVService) getRelayerTrader(addr common.Address, years, months, days int) {
+
 }

@@ -720,10 +720,10 @@ func (s *LendingOhlcvService) get24hTick(term uint64, lendingToken common.Addres
 	}
 }
 
-func (s *LendingOhlcvService) get24hRelayerTick(relayerAddress common.Address, term uint64, lendingToken common.Address) *types.LendingTick {
+func (s *LendingOhlcvService) getRelayerTickByTime(relayerAddress common.Address, term uint64, lendingToken common.Address, years, months, days int) *types.LendingTick {
 	var res []*types.LendingTick
 	now := time.Now()
-	begin := now.AddDate(0, 0, -1).Unix()
+	begin := now.AddDate(years, months, days).Unix()
 	key := s.getTickKey(term, lendingToken, 1, "hour")
 	res = s.filterRelayerTick(relayerAddress, key, begin, 0)
 
@@ -855,20 +855,22 @@ func (s *LendingOhlcvService) GetAllTokenPairData() ([]*types.LendingTick, error
 }
 
 // GetLendingVolumeByCoinbase get total volume lending
-func (s *LendingOhlcvService) GetLendingVolumeByCoinbase(addr common.Address) (*big.Int, error) {
+func (s *LendingOhlcvService) GetLendingVolumeByCoinbase(addr common.Address, years, months, days int) (*big.Int, *big.Int, error) {
 	pairs, err := s.lendingPairDao.GetAll()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	totalVolume := big.NewInt(0)
+	totalCount := big.NewInt(0)
 	for _, p := range pairs {
-		tick := s.get24hRelayerTick(addr, p.Term, p.LendingTokenAddress)
+		tick := s.getRelayerTickByTime(addr, p.Term, p.LendingTokenAddress, years, months, days)
 		if tick != nil {
 			totalVolume = totalVolume.Add(totalVolume, s.ohlcv.GetVolumeByUsdt(p.LendingTokenAddress, tick.Volume))
+			totalCount = totalCount.Add(totalCount, tick.Count)
 		}
 	}
 
-	return totalVolume, nil
+	return totalVolume, totalCount, nil
 }

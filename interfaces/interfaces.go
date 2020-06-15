@@ -236,7 +236,7 @@ type OHLCVService interface {
 	GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error)
 	GetTokenPairData(baseToken common.Address, quoteToken common.Address) *types.PairData
 	GetVolumeByUsdt(token common.Address, volume *big.Int) *big.Int
-	GetVolumeByCoinbase(addr common.Address) (*big.Int, error)
+	GetVolumeByCoinbase(addr common.Address, years, month, days int) (*big.Int, *big.Int, error)
 }
 
 type EthereumService interface {
@@ -484,7 +484,7 @@ type LendingOhlcvService interface {
 	Unsubscribe(conn *ws.Client)
 	GetAllTokenPairData() ([]*types.LendingTick, error)
 	GetTokenPairData(term uint64, lendingToken common.Address) *types.LendingTick
-	GetLendingVolumeByCoinbase(addr common.Address) (*big.Int, error)
+	GetLendingVolumeByCoinbase(addr common.Address, years, months, days int) (*big.Int, *big.Int, error)
 }
 
 // LendingPairDao interface for lending pair by term/lendingtoken
