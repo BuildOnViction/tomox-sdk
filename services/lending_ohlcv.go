@@ -768,6 +768,7 @@ func (s *LendingOhlcvService) getRelayerTickByTime(relayerAddress common.Address
 		Duration: 24,
 		Unit:     "hour",
 		Volume:   big.NewInt(0),
+		Count:    big.NewInt(0),
 	}
 	return nil
 }
