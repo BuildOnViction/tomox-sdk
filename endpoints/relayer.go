@@ -75,16 +75,46 @@ func (e *relayerEndpoint) handleGetVolume(w http.ResponseWriter, r *http.Request
 	type res struct {
 		RelayerAddress common.Address `json:"relayerAddress"`
 		TotalVolume    *big.Int       `json:"totalVolume"`
+		TotalTrade     *big.Int       `json:"totalTrade"`
 	}
 	var result res
+	var timetype string
+	v := r.URL.Query()
+	timetype = v.Get("type")
+	if timetype == "" {
+		timetype = "24h"
+	}
 	ex := e.relayerService.GetRelayerAddress(r)
 	result.RelayerAddress = ex
-	volume, err := e.ohlcvService.GetVolumeByCoinbase(ex)
-	result.TotalVolume = volume
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-		return
+	if timetype == "24h" {
+		volume, count, err := e.ohlcvService.GetVolumeByCoinbase(ex, 0, 0, -1)
+		result.TotalVolume = volume
+		result.TotalTrade = count
+		if err != nil {
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	if timetype == "7d" {
+		volume, count, err := e.ohlcvService.GetVolumeByCoinbase(ex, 0, 0, -7)
+		result.TotalVolume = volume
+		result.TotalTrade = count
+		if err != nil {
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	if timetype == "30d" {
+		volume, count, err := e.ohlcvService.GetVolumeByCoinbase(ex, 0, 0, -30)
+		result.TotalVolume = volume
+		result.TotalTrade = count
+		if err != nil {
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	httputils.WriteJSON(w, http.StatusOK, result)
 	return
@@ -96,18 +126,49 @@ func (e *relayerEndpoint) handleGetLendingVolume(w http.ResponseWriter, r *http.
 		RelayerAddress common.Address `json:"relayerAddress"`
 		TotalVolume    *big.Int       `json:"totalLendingVolume"`
 		VolumeType     string         `json:"volumeType"`
+		TotalTrade     *big.Int       `json:"totalLendingTrade"`
 	}
 	var result res
 	result.VolumeType = "USDT"
+	var timetype string
+	v := r.URL.Query()
+	timetype = v.Get("type")
+	if timetype == "" {
+		timetype = "24h"
+	}
 	ex := e.relayerService.GetRelayerAddress(r)
 	result.RelayerAddress = ex
-	volume, err := e.lendingOhlcvService.GetLendingVolumeByCoinbase(ex)
-	result.TotalVolume = volume
-	if err != nil {
-		logger.Error(err)
-		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
-		return
+	if timetype == "24h" {
+		volume, count, err := e.lendingOhlcvService.GetLendingVolumeByCoinbase(ex, 0, 0, -1)
+		if err != nil {
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		result.TotalTrade = count
+		result.TotalVolume = volume
 	}
+	if timetype == "7d" {
+		volume, count, err := e.lendingOhlcvService.GetLendingVolumeByCoinbase(ex, 0, 0, -7)
+		if err != nil {
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		result.TotalTrade = count
+		result.TotalVolume = volume
+	}
+	if timetype == "30d" {
+		volume, count, err := e.lendingOhlcvService.GetLendingVolumeByCoinbase(ex, 0, 0, -30)
+		if err != nil {
+			logger.Error(err)
+			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		result.TotalTrade = count
+		result.TotalVolume = volume
+	}
+
 	httputils.WriteJSON(w, http.StatusOK, result)
 	return
 
@@ -125,16 +186,47 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 		Domain        string         `json:"domain"`
 		Name          string         `json:"name"`
 		VolumeType    string         `json:"volumeType"`
+		LendingTrade  *big.Int       `json:"lendingTrade"`
+		SpotTrade     *big.Int       `json:"spotTrade"`
 	}
 	var ret []res
 	var result res
 	result.VolumeType = "USDT"
+	var timetype string
+	v := r.URL.Query()
+	timetype = v.Get("type")
+	if timetype == "" {
+		timetype = "24h"
+	}
+
 	relayers, _ := e.relayerService.GetAll()
 	for _, relayer := range relayers {
-		volume, _ := e.lendingOhlcvService.GetLendingVolumeByCoinbase(relayer.Address)
-		result.LendingVolume = volume
-		volume, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address)
-		result.SpotVolume = volume
+
+		if timetype == "24h" {
+			volume, count, _ := e.lendingOhlcvService.GetLendingVolumeByCoinbase(relayer.Address, 0, 0, -1)
+			result.LendingVolume = volume
+			result.LendingTrade = count
+			volume, count, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address, 0, 0, -1)
+			result.SpotVolume = volume
+			result.SpotTrade = count
+		}
+		if timetype == "7d" {
+			volume, count, _ := e.lendingOhlcvService.GetLendingVolumeByCoinbase(relayer.Address, 0, 0, -7)
+			result.LendingVolume = volume
+			result.LendingTrade = count
+			volume, count, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address, 0, 0, -7)
+			result.SpotVolume = volume
+			result.SpotTrade = count
+		}
+		if timetype == "30d" {
+			volume, count, _ := e.lendingOhlcvService.GetLendingVolumeByCoinbase(relayer.Address, 0, 0, -30)
+			result.LendingVolume = volume
+			result.LendingTrade = count
+			volume, count, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address, 0, 0, -30)
+			result.SpotVolume = volume
+			result.SpotTrade = count
+		}
+
 		result.Address = relayer.Address
 		result.SpotFee = relayer.MakeFee
 		result.LendingFee = relayer.LendingFee
