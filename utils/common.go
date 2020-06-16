@@ -240,3 +240,9 @@ func ToBigInt(s string) *big.Int {
 	res.SetString(s, 10)
 	return res
 }
+
+// CloneBigInt copy int
+func CloneBigInt(bigInt *big.Int) *big.Int {
+	res := new(big.Int).SetBytes(bigInt.Bytes())
+	return res
+}

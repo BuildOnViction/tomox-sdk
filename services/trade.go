@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -25,12 +24,14 @@ type TradeService struct {
 	ohlcvService    *OHLCVService
 	bulkTrades      map[types.PairAddresses][]*types.Trade
 	mutext          sync.RWMutex
+	tradeDispatcher *TradeDispatcherService
 }
 
 // NewTradeService returns a new instance of TradeService
 func NewTradeService(
 	orderdao interfaces.OrderDao,
 	tradeDao interfaces.TradeDao,
+	tradeDispatcher *TradeDispatcherService,
 	ohlcvService *OHLCVService,
 	notificationDao interfaces.NotificationDao,
 	broker *rabbitmq.Connection,
@@ -44,6 +45,7 @@ func NewTradeService(
 		ohlcvService:    ohlcvService,
 		bulkTrades:      bulkTrades,
 		mutext:          sync.RWMutex{},
+		tradeDispatcher: tradeDispatcher,
 	}
 }
 
@@ -132,59 +134,7 @@ func (s *TradeService) WatchChanges() {
 			s.processBulkTrades()
 		}
 	}()
-	s.watchChanges()
-}
-
-func (s *TradeService) watchChanges() {
-
-	ct, sc, err := s.tradeDao.Watch()
-
-	if err != nil {
-		logger.Error("Failed to open change stream")
-		return //exiting func
-	}
-
-	defer ct.Close()
-	defer sc.Close()
-
-	// Watch the event again in case there is error and function returned
-	defer s.watchChanges()
-
-	ctx := context.Background()
-
-	//Handling change stream in a cycle
-	for {
-		select {
-		case <-ctx.Done(): // if parent context was cancelled
-			err := ct.Close() // close the stream
-			if err != nil {
-				logger.Error("Change stream closed")
-			}
-			return //exiting from the func
-		default:
-			ev := types.TradeChangeEvent{}
-
-			//getting next item from the steam
-			ok := ct.Next(&ev)
-
-			//if data from the stream wasn't un-marshaled, we get ok == false as a result
-			//so we need to call Err() method to get info why
-			//it'll be nil if we just have no data
-			if !ok {
-				err := ct.Err()
-				if err != nil {
-					logger.Error(err)
-					return
-				}
-			}
-
-			//if item from the stream un-marshaled successfully, do something with it
-			if ok {
-				logger.Debugf("Operation Type: %s", ev.OperationType)
-				s.HandleDocumentType(ev)
-			}
-		}
-	}
+	s.tradeDispatcher.SubscribeTrade(s.HandleDocumentType)
 }
 
 func (s *TradeService) processBulkTrades() {
@@ -213,7 +163,7 @@ func (s *TradeService) processBulkTrades() {
 }
 
 // HandleDocumentType handle trade insert/update db trigger
-func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) error {
+func (s *TradeService) HandleDocumentType(ev *types.TradeChangeEvent) {
 	res := &types.EngineResponse{}
 
 	if ev.OperationType == types.OPERATION_TYPE_INSERT {
@@ -229,11 +179,9 @@ func (s *TradeService) HandleDocumentType(ev types.TradeChangeEvent) error {
 		err := s.broker.PublishTradeResponse(res)
 		if err != nil {
 			logger.Error(err)
-			return err
 		}
 	}
 
-	return nil
 }
 
 // HandleTradeResponse listens to messages incoming from the engine and handles websocket

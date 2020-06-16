@@ -129,7 +129,9 @@ func NewRouter(
 	eng := engine.NewEngine(rabbitConn, orderDao, tradeDao, pairDao, provider)
 
 	// get services for injection
-	ohlcvService := services.NewOHLCVService(tradeDao, pairDao, tokenDao)
+	tradeDispatcher := services.NewTradeDispatcherService(tradeDao)
+
+	ohlcvService := services.NewOHLCVService(tradeDao, tradeDispatcher, pairDao, tokenDao)
 	ohlcvService.Init()
 
 	accountService := services.NewAccountService(accountDao, tokenDao, pairDao, orderDao, lendingOrderDao, provider, ohlcvService)
@@ -139,8 +141,12 @@ func NewRouter(
 
 	orderService := services.NewOrderService(orderDao, tokenDao, pairDao, accountDao, tradeDao, notificationDao, eng, validatorService, rabbitConn)
 	orderService.LoadCache()
+
 	orderBookService := services.NewOrderBookService(pairDao, tokenDao, orderDao, eng)
-	tradeService := services.NewTradeService(orderDao, tradeDao, ohlcvService, notificationDao, rabbitConn)
+	tradeService := services.NewTradeService(orderDao, tradeDao, tradeDispatcher, ohlcvService, notificationDao, rabbitConn)
+
+	tradeStatisticService := services.NewTradeStatisticService(tokenDao, tradeDispatcher)
+	tradeStatisticService.Init()
 
 	walletService := services.NewWalletService(walletDao)
 
@@ -223,6 +229,7 @@ func NewRouter(
 	// lending mongo watch change
 	go lendingOrderService.WatchChanges()
 	go lendingTradeService.WatchChanges()
+	tradeDispatcher.Start()
 	cronService.InitCrons()
 	return r
 }
