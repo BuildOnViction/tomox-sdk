@@ -40,6 +40,8 @@ type tradeCache struct {
 	lastTime int64
 	// relayerAddress => pairAddress => userAddress => time => UserTrade
 	relayerUserTrades map[common.Address]map[string]map[common.Address]map[int64]*types.UserTrade
+
+	// relayerAddress => s => time => UserTrade
 }
 
 type cachetradefile struct {
@@ -369,4 +371,22 @@ func (s *TradeStatisticService) addRelayerUserTrade(userTrade *types.UserTrade) 
 
 func (s *TradeStatisticService) filterRelayerUserTrade() {
 
+}
+
+// GetNumberTrader get number trader bytime
+func (s *TradeStatisticService) GetNumberTrader(relayerAddress common.Address, dateFrom, dateTo int64) int64 {
+	var count int64
+	count = 0
+	if tradenypair, ok := s.tradeCache.relayerUserTrades[relayerAddress]; ok {
+		for _, tradeuserbyaddress := range tradenypair {
+			for _, tradebytime := range tradeuserbyaddress {
+				for t := range tradebytime {
+					if (t >= dateFrom || dateFrom == 0) && (t <= dateTo || dateTo == 0) {
+						count++
+					}
+				}
+			}
+		}
+	}
+	return count
 }

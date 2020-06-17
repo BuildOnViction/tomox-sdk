@@ -201,7 +201,7 @@ func NewRouter(
 	endpoints.ServeLendingMarketsResource(r, lendingMarketService, lendingOhlcvService)
 	endpoints.ServeLendingPriceBoardResource(r, lendingPriceboardService)
 
-	endpoints.ServeRelayerResource(r, relayerService, ohlcvService, lendingOhlcvService)
+	endpoints.ServeRelayerResource(r, relayerService, ohlcvService, lendingOhlcvService, tradeStatisticService)
 
 	// Swagger UI
 	sh := http.StripPrefix(swaggerUIDir, http.FileServer(http.Dir("."+swaggerUIDir)))

@@ -4,6 +4,9 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/tomochain/tomox-sdk/services"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -13,9 +16,10 @@ import (
 )
 
 type relayerEndpoint struct {
-	relayerService      interfaces.RelayerService
-	ohlcvService        interfaces.OHLCVService
-	lendingOhlcvService interfaces.LendingOhlcvService
+	relayerService        interfaces.RelayerService
+	ohlcvService          interfaces.OHLCVService
+	lendingOhlcvService   interfaces.LendingOhlcvService
+	tradeStatisticService *services.TradeStatisticService
 }
 
 // ServeRelayerResource sets up the routing of order endpoints and the corresponding handlers.
@@ -24,8 +28,9 @@ func ServeRelayerResource(
 	relayerService interfaces.RelayerService,
 	ohlcvService interfaces.OHLCVService,
 	lendingOhlcvService interfaces.LendingOhlcvService,
+	tradeStatisticService *services.TradeStatisticService,
 ) {
-	e := &relayerEndpoint{relayerService, ohlcvService, lendingOhlcvService}
+	e := &relayerEndpoint{relayerService, ohlcvService, lendingOhlcvService, tradeStatisticService}
 	r.HandleFunc("/api/relayer", e.handleRelayerUpdate).Methods("PUT")
 	r.HandleFunc("/api/relayer/all", e.handleGetRelayers).Methods("GET")
 	r.HandleFunc("/api/relayer/volume", e.handleGetVolume).Methods("GET")
@@ -73,9 +78,10 @@ func (e *relayerEndpoint) handleRelayerUpdate(w http.ResponseWriter, r *http.Req
 // HandleGetVolume get volume relayer
 func (e *relayerEndpoint) handleGetVolume(w http.ResponseWriter, r *http.Request) {
 	type res struct {
-		RelayerAddress common.Address `json:"relayerAddress"`
-		TotalVolume    *big.Int       `json:"totalVolume"`
-		TotalTrade     *big.Int       `json:"totalTrade"`
+		RelayerAddress   common.Address `json:"relayerAddress"`
+		TotalVolume      *big.Int       `json:"totalVolume"`
+		TotalTrade       *big.Int       `json:"totalTrade"`
+		TotalUserAddress *big.Int       `json: "totalUserAddress"`
 	}
 	var result res
 	var timetype string
@@ -90,6 +96,8 @@ func (e *relayerEndpoint) handleGetVolume(w http.ResponseWriter, r *http.Request
 		volume, count, err := e.ohlcvService.GetVolumeByCoinbase(ex, 0, 0, -1)
 		result.TotalVolume = volume
 		result.TotalTrade = count
+		c := e.tradeStatisticService.GetNumberTrader(ex, time.Now().AddDate(0, 0, -1).Unix(), 0)
+		result.TotalUserAddress = big.NewInt(c)
 		if err != nil {
 			logger.Error(err)
 			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -100,6 +108,8 @@ func (e *relayerEndpoint) handleGetVolume(w http.ResponseWriter, r *http.Request
 		volume, count, err := e.ohlcvService.GetVolumeByCoinbase(ex, 0, 0, -7)
 		result.TotalVolume = volume
 		result.TotalTrade = count
+		c := e.tradeStatisticService.GetNumberTrader(ex, time.Now().AddDate(0, 0, -7).Unix(), 0)
+		result.TotalUserAddress = big.NewInt(c)
 		if err != nil {
 			logger.Error(err)
 			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -110,6 +120,8 @@ func (e *relayerEndpoint) handleGetVolume(w http.ResponseWriter, r *http.Request
 		volume, count, err := e.ohlcvService.GetVolumeByCoinbase(ex, 0, 0, -30)
 		result.TotalVolume = volume
 		result.TotalTrade = count
+		c := e.tradeStatisticService.GetNumberTrader(ex, time.Now().AddDate(0, 0, -30).Unix(), 0)
+		result.TotalUserAddress = big.NewInt(c)
 		if err != nil {
 			logger.Error(err)
 			httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -188,6 +200,7 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 		VolumeType    string         `json:"volumeType"`
 		LendingTrade  *big.Int       `json:"lendingTrade"`
 		SpotTrade     *big.Int       `json:"spotTrade"`
+		SpotTrader    *big.Int       `json:"spotTrader"`
 	}
 	var ret []res
 	var result res
@@ -209,6 +222,8 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 			volume, count, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address, 0, 0, -1)
 			result.SpotVolume = volume
 			result.SpotTrade = count
+			c := e.tradeStatisticService.GetNumberTrader(relayer.Address, time.Now().AddDate(0, 0, -1).Unix(), 0)
+			result.SpotTrader = big.NewInt(c)
 		}
 		if timetype == "7d" {
 			volume, count, _ := e.lendingOhlcvService.GetLendingVolumeByCoinbase(relayer.Address, 0, 0, -7)
@@ -217,6 +232,8 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 			volume, count, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address, 0, 0, -7)
 			result.SpotVolume = volume
 			result.SpotTrade = count
+			c := e.tradeStatisticService.GetNumberTrader(relayer.Address, time.Now().AddDate(0, 0, -7).Unix(), 0)
+			result.SpotTrader = big.NewInt(c)
 		}
 		if timetype == "30d" {
 			volume, count, _ := e.lendingOhlcvService.GetLendingVolumeByCoinbase(relayer.Address, 0, 0, -30)
@@ -225,6 +242,8 @@ func (e *relayerEndpoint) handleGetRelayers(w http.ResponseWriter, r *http.Reque
 			volume, count, _ = e.ohlcvService.GetVolumeByCoinbase(relayer.Address, 0, 0, -30)
 			result.SpotVolume = volume
 			result.SpotTrade = count
+			c := e.tradeStatisticService.GetNumberTrader(relayer.Address, time.Now().AddDate(0, 0, -30).Unix(), 0)
+			result.SpotTrader = big.NewInt(c)
 		}
 
 		result.Address = relayer.Address
