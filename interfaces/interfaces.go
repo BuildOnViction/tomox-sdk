@@ -284,6 +284,7 @@ type PairService interface {
 	GetByTokenAddress(bt, qt common.Address) (*types.Pair, error)
 	GetTokenPairData(bt, qt common.Address) (*types.PairData, error)
 	GetAllTokenPairData() ([]*types.PairData, error)
+	GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error)
 	GetAll() ([]types.Pair, error)
 	GetAllByCoinbase(addr common.Address) ([]types.Pair, error)
 }

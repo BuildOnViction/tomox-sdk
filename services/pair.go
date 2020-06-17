@@ -201,3 +201,7 @@ func (s *PairService) GetTokenPairData(bt, qt common.Address) (*types.PairData, 
 func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	return s.ohlcv.GetAllTokenPairData()
 }
+
+func (s *PairService) GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error) {
+	return s.ohlcv.GetAllTokenPairDataByCoinbase(addr)
+}
