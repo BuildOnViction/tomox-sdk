@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"os"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/tomochain/tomox-sdk/interfaces"
@@ -19,7 +18,6 @@ type TradeDispatcherService struct {
 	dispatcherdb             dispatcherdb
 	tradeFetchNotifyCallback []func(*types.Trade)
 	tradeNotifyCallback      []func(*types.TradeChangeEvent)
-	mutex                    sync.RWMutex
 }
 
 type timeframe struct {
@@ -30,6 +28,9 @@ type timeframes []*timeframe
 
 type dispatcherdb struct {
 	tframes timeframes
+}
+type dispatcherfile struct {
+	Tframes timeframes `json:"timeframes"`
 }
 
 // NewTradeDispatcherService init new ohlcv service
@@ -65,6 +66,7 @@ func (s *TradeDispatcherService) SubscribeFetch(fn func(*types.Trade)) {
 // Start init cache
 // ensure add current time frame before trade notify come
 func (s *TradeDispatcherService) Start() {
+	logger.Info("DispatcherService starting")
 	now := time.Now().Unix()
 	datefrom := now - intervalMin
 	s.loadDatabase()
@@ -88,8 +90,9 @@ func (s *TradeDispatcherService) Start() {
 	})
 
 	lastFrame = s.lastTimeFrame()
-	logger.Info("init fetch", time.Unix(datefrom, 0), time.Unix(now, 0))
+	logger.Info("dispatcher fetch start", time.Unix(datefrom, 0), time.Unix(now, 0))
 	s.fetch(datefrom, now, lastFrame)
+	logger.Info("dispatcher fetch finished", time.Unix(datefrom, 0), time.Unix(now, 0))
 	s.commitDatabase()
 	go s.continueFetch()
 	ticker := time.NewTicker(60 * time.Second)
@@ -109,7 +112,7 @@ func (s *TradeDispatcherService) Start() {
 		}
 	}()
 	go s.watchChanges()
-	logger.Info("OHLCV finished")
+	logger.Info("DispatcherService started")
 }
 
 func (s *TradeDispatcherService) fetch(fromdate int64, todate int64, frame *timeframe) {
@@ -118,24 +121,23 @@ func (s *TradeDispatcherService) fetch(fromdate int64, todate int64, frame *time
 	size := 1000
 	for {
 		trades, err := s.tradeDao.GetTradeByTime(fromdate, todate, pageOffset*size, size)
-		logger.Debug("FETCH DATA", pageOffset*size)
+		logger.Debug("TRADE FETCH DATA", pageOffset*size)
 		if err != nil || len(trades) == 0 {
 			break
 		}
 		sort.Slice(trades, func(i, j int) bool {
 			return trades[i].CreatedAt.Unix() < trades[j].CreatedAt.Unix()
 		})
-		s.mutex.Lock()
 		for i, trade := range trades {
 			for _, fn := range s.tradeFetchNotifyCallback {
 				fn(trade)
 			}
 			if i == 0 {
+				logger.Debug("FETCH TIME:", trade.CreatedAt)
 				s.updatefisttimeframe(trade.CreatedAt.Unix(), frame)
 			}
 
 		}
-		s.mutex.Unlock()
 		pageOffset = pageOffset + 1
 	}
 }
@@ -176,9 +178,10 @@ func (s *TradeDispatcherService) updatelasttimeframe(lasttime int64, frame *time
 }
 
 func (s *TradeDispatcherService) commitDatabase() error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	data, err := json.Marshal(s.dispatcherdb)
+	df := dispatcherfile{
+		Tframes: s.dispatcherdb.tframes,
+	}
+	data, err := json.Marshal(df)
 	if err != nil {
 		return err
 	}
@@ -208,12 +211,12 @@ func (s *TradeDispatcherService) loadDatabase() error {
 	bytes := make([]byte, size)
 	bufr := bufio.NewReader(file)
 	_, err = bufr.Read(bytes)
-	var db dispatcherdb
+	var db dispatcherfile
 	err = json.Unmarshal(bytes, &db)
 	if err != nil {
 		return err
 	}
-	s.dispatcherdb.tframes = db.tframes
+	s.dispatcherdb.tframes = db.Tframes
 	return nil
 }
 
@@ -263,7 +266,7 @@ func (s *TradeDispatcherService) watchChanges() {
 
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
-				logger.Debugf("Operation Type: %s", ev.OperationType)
+				logger.Debugf("dispatcher wathchage type: %s", ev.OperationType)
 				for _, fn := range s.tradeNotifyCallback {
 
 					if ev.OperationType == types.OPERATION_TYPE_INSERT {

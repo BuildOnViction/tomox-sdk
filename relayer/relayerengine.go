@@ -160,7 +160,10 @@ func (b *Blockchain) setBaseTokenInfo() *TokenInfo {
 }
 
 func (b *Blockchain) GetRelayers(contractAddress common.Address) ([]*RInfo, error) {
-	count, _ := b.GetRelayerCount(contractAddress)
+	count, err := b.GetRelayerCount(contractAddress)
+	if err != nil {
+		return nil, err
+	}
 
 	var rInfos []*RInfo
 	logger.Debug("Relayer count", count.String())
