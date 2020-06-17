@@ -27,7 +27,7 @@ func ServePairResource(
 	e := &pairEndpoint{p, rl}
 	r.HandleFunc("/api/pairs", e.HandleGetPairs).Methods("GET")
 	r.HandleFunc("/api/pair", e.HandleGetPair).Methods("GET")
-	r.HandleFunc("/api/pair", e.HandleCreatePair).Methods("POST")
+	// r.HandleFunc("/api/pair", e.HandleCreatePair).Methods("POST")
 	r.HandleFunc("/api/pairs/data", e.HandleGetPairsData).Methods("GET")
 	r.HandleFunc("/api/pair/data", e.HandleGetPairData).Methods("GET")
 }
@@ -139,7 +139,8 @@ func (e *pairEndpoint) HandleGetPair(w http.ResponseWriter, r *http.Request) {
 
 func (e *pairEndpoint) HandleGetPairsData(w http.ResponseWriter, r *http.Request) {
 
-	res, err := e.pairService.GetAllTokenPairData()
+	ex := e.relayerService.GetRelayerAddress(r)
+	res, err := e.pairService.GetAllTokenPairDataByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
