@@ -72,3 +72,5 @@ config/config.yml
 ohlcv.cache
 lending.cache
 nohup.out
+*.cache
+dispatcher.db
