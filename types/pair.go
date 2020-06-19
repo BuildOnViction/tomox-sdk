@@ -333,7 +333,7 @@ func (p *PairData) MarshalJSON() ([]byte, error) {
 		pairData["volume"] = p.Volume.String()
 	}
 	if p.BaseVolume != nil {
-		pairData["baseVolume"] = p.Volume.String()
+		pairData["baseVolume"] = p.BaseVolume.String()
 	}
 	if p.Close != nil {
 		pairData["close"] = p.Close.String()
