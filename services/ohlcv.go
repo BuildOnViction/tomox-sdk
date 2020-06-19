@@ -56,6 +56,8 @@ type OHLCVService struct {
 	pairCacheByAddress map[string]*PairCache
 	pairCacheByName    map[string]*PairCache
 	priceCacheByUsdt   map[common.Address]*PriceUsdt
+	tokenCacheMutex    sync.RWMutex
+	pairCacheMutex     sync.RWMutex
 }
 
 type timeframe struct {
@@ -1312,6 +1314,8 @@ func (s *OHLCVService) GetLastPriceCurrentByTime(symbol string, createAt time.Ti
 
 func (s *OHLCVService) getCachePairByName(pairName string) (*types.Pair, error) {
 	now := time.Now().Unix()
+	s.pairCacheMutex.Lock()
+	defer s.pairCacheMutex.Unlock()
 	if pairCache, ok := s.pairCacheByName[pairName]; ok {
 		if now-pairCache.timelife < cacheTimeLifeMax {
 			return pairCache.pair, nil
@@ -1330,6 +1334,8 @@ func (s *OHLCVService) getCachePairByName(pairName string) (*types.Pair, error) 
 
 func (s *OHLCVService) getCachePairByAddress(baseToken, quoteToken common.Address) (*types.Pair, error) {
 	now := time.Now().Unix()
+	s.pairCacheMutex.Lock()
+	defer s.pairCacheMutex.Unlock()
 	pairName := utils.GetPairKey(baseToken, quoteToken)
 	if pairCache, ok := s.pairCacheByAddress[pairName]; ok {
 		if now-pairCache.timelife < cacheTimeLifeMax {
@@ -1349,6 +1355,8 @@ func (s *OHLCVService) getCachePairByAddress(baseToken, quoteToken common.Addres
 
 func (s *OHLCVService) getTokenByAddress(token common.Address) (*types.Token, error) {
 	now := time.Now().Unix()
+	s.tokenCacheMutex.Lock()
+	defer s.tokenCacheMutex.Unlock()
 	if tokenCache, ok := s.tokenCache[token]; ok {
 		if now-tokenCache.timelife < cacheTimeLifeMax {
 			return tokenCache.token, nil
