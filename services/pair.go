@@ -202,6 +202,27 @@ func (s *PairService) GetAllTokenPairData() ([]*types.PairData, error) {
 	return s.ohlcv.GetAllTokenPairData()
 }
 
+// GetAllTokenPairDataByCoinbase get all token pair data
 func (s *PairService) GetAllTokenPairDataByCoinbase(addr common.Address) ([]*types.PairData, error) {
-	return s.ohlcv.GetAllTokenPairDataByCoinbase(addr)
+	var pairDataList []*types.PairData
+	pairs, err := s.pairDao.GetActivePairsByCoinbase(addr)
+	if err != nil {
+		return nil, err
+	}
+	for _, pair := range pairs {
+		pairData := s.ohlcv.GetTokenPairData(pair.BaseTokenAddress, pair.QuoteTokenAddress)
+		if pairData != nil {
+			bidPrice, err := s.orderDao.GetBestBid(pair.BaseTokenAddress, pair.QuoteTokenAddress)
+			if err == nil && bidPrice != nil {
+				pairData.BidPrice = bidPrice.Price
+			}
+			askPrice, err := s.orderDao.GetBestAsk(pair.BaseTokenAddress, pair.QuoteTokenAddress)
+			if err == nil && askPrice != nil {
+				pairData.AskPrice = askPrice.Price
+			}
+			pairDataList = append(pairDataList, pairData)
+		}
+
+	}
+	return pairDataList, nil
 }

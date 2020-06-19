@@ -13,19 +13,19 @@ import (
 )
 
 type MarketsEndpoint struct {
-	MarketsService interfaces.MarketsService
-	OHLCVService   interfaces.OHLCVService
-	RelayerService interfaces.RelayerService
+	marketsService interfaces.MarketsService
+	pairService    interfaces.PairService
+	relayerService interfaces.RelayerService
 }
 
 // ServeTokenResource sets up the routing of token endpoints and the corresponding handlers.
 func ServeMarketsResource(
 	r *mux.Router,
 	marketsService interfaces.MarketsService,
-	ohlcvService interfaces.OHLCVService,
+	pairService interfaces.PairService,
 	relayerService interfaces.RelayerService,
 ) {
-	e := &MarketsEndpoint{marketsService, ohlcvService, relayerService}
+	e := &MarketsEndpoint{marketsService, pairService, relayerService}
 	r.HandleFunc("/api/market/stats/all", e.HandleGetAllMarketStats).Methods("GET")
 	r.HandleFunc("/api/market/stats", e.HandleGetMarketStats).Methods("GET")
 
@@ -35,8 +35,8 @@ func ServeMarketsResource(
 // HandleGetAllMarketStats get all market token data
 func (e *MarketsEndpoint) HandleGetAllMarketStats(w http.ResponseWriter, r *http.Request) {
 
-	ex := e.RelayerService.GetRelayerAddress(r)
-	res, err := e.OHLCVService.GetAllTokenPairDataByCoinbase(ex)
+	ex := e.relayerService.GetRelayerAddress(r)
+	res, err := e.pairService.GetAllTokenPairDataByCoinbase(ex)
 	if err != nil {
 		logger.Error(err)
 		httputils.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -82,7 +82,7 @@ func (e *MarketsEndpoint) HandleGetMarketStats(w http.ResponseWriter, r *http.Re
 	baseTokenAddress := common.HexToAddress(baseToken)
 	quoteTokenAddress := common.HexToAddress(quoteToken)
 
-	res := e.OHLCVService.GetTokenPairData(baseTokenAddress, quoteTokenAddress)
+	res, _ := e.pairService.GetTokenPairData(baseTokenAddress, quoteTokenAddress)
 	if res == nil {
 		httputils.WriteError(w, http.StatusInternalServerError, "Pair data not found")
 		return
@@ -114,10 +114,10 @@ func (e *MarketsEndpoint) handleMarketsWebSocket(input interface{}, c *ws.Client
 	}
 
 	if ev.Type == types.SUBSCRIBE {
-		e.MarketsService.Subscribe(c)
+		e.marketsService.Subscribe(c)
 	}
 
 	if ev.Type == types.UNSUBSCRIBE {
-		e.MarketsService.Unsubscribe(c)
+		e.marketsService.Unsubscribe(c)
 	}
 }

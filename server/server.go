@@ -180,7 +180,7 @@ func NewRouter(
 	endpoints.ServeOrderResource(r, orderService, accountService, relayerService)
 
 	endpoints.ServePriceBoardResource(r, priceBoardService)
-	endpoints.ServeMarketsResource(r, marketsService, ohlcvService, relayerService)
+	endpoints.ServeMarketsResource(r, marketsService, pairService, relayerService)
 	endpoints.ServeNotificationResource(r, notificationService)
 
 	// Endpoint for lending
