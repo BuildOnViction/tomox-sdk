@@ -332,7 +332,9 @@ func (p *PairData) MarshalJSON() ([]byte, error) {
 	if p.Volume != nil {
 		pairData["volume"] = p.Volume.String()
 	}
-
+	if p.BaseVolume != nil {
+		pairData["baseVolume"] = p.Volume.String()
+	}
 	if p.Close != nil {
 		pairData["close"] = p.Close.String()
 	}
@@ -372,7 +374,7 @@ func (p *PairData) MarshalJSON() ([]byte, error) {
 	if p.Price != nil {
 		pairData["price"] = p.Price.String()
 	}
-
+	pairData["change"] = fmt.Sprintf("%f", p.Change)
 	bytes, err := json.Marshal(pairData)
 	return bytes, err
 }
