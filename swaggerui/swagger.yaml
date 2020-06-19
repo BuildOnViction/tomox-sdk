@@ -1255,10 +1255,6 @@ definitions:
         type: string
       orderCount:
         type: string
-      averageOrderAmount:
-        type: string
-      averageTradeAmount:
-        type: string
       askPrice:
         type: string
       bidPrice:
