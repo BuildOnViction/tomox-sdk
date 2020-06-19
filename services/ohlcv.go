@@ -1080,6 +1080,8 @@ func (s *OHLCVService) getTokenPairData(pairName string, baseTokenSymbol string,
 			BidPrice:     big.NewInt(0),
 			AskPrice:     big.NewInt(0),
 			Price:        big.NewInt(0),
+			BaseVolume:   big.NewInt(0),
+			Change:       0,
 		}
 		pairData.Open = tick.Open
 		pairData.High = tick.High
@@ -1087,6 +1089,15 @@ func (s *OHLCVService) getTokenPairData(pairName string, baseTokenSymbol string,
 		pairData.Volume = tick.VolumeByQuote
 		pairData.Close = tick.Close
 		pairData.Count = tick.Count
+		pairData.BaseVolume = tick.Volume
+		fOpen := new(big.Float).SetInt(tick.Open)
+		fLast := new(big.Float).SetInt(tick.Close)
+		delta := new(big.Float).Sub(fLast, fOpen)
+		if fOpen.Cmp(big.NewFloat(0)) > 0 {
+			percent := new(big.Float).Quo(delta, fOpen)
+			pairData.Change, _ = percent.Float32()
+		}
+
 		price, err := s.getLastPriceCurrentByTime(baseTokenSymbol, time.Unix(tick.Timestamp/milisecond, 0))
 		if err == nil {
 			pairData.CloseBaseUsd = price

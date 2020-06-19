@@ -292,6 +292,8 @@ type PairData struct {
 	Close              *big.Int   `json:"close,omitempty" bson:"close"`
 	CloseBaseUsd       *big.Float `json:"closeBaseUsd,omitempty" bson:"closeBaseUsd"`
 	Volume             *big.Int   `json:"volume,omitempty" bson:"volume"`
+	BaseVolume         *big.Int   `json:"baseVolume,omitempty" bson:"baseVolume"`
+	Change             float32    `json:"change,omitempty" bson:"change"`
 	Count              *big.Int   `json:"count,omitempty" bson:"count"`
 	Timestamp          int64      `json:"timestamp,omitempty" bson:"timestamp"`
 	OrderVolume        *big.Int   `json:"orderVolume,omitempty" bson:"orderVolume"`
