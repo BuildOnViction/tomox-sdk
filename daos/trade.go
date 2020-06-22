@@ -23,64 +23,11 @@ type TradeDao struct {
 func NewTradeDao() *TradeDao {
 	dbName := app.Config.DBName
 	collection := "trades"
-
-	i1 := mgo.Index{
-		Key: []string{"baseToken"},
-	}
-
-	i2 := mgo.Index{
-		Key: []string{"quoteToken"},
-	}
-
 	i3 := mgo.Index{
 		Key: []string{"createdAt"},
 	}
 
-	i4 := mgo.Index{
-		Key:    []string{"hash"},
-		Unique: true,
-		Sparse: true,
-	}
-
-	i5 := mgo.Index{
-		Key:    []string{"makerOrderHash"},
-		Sparse: true,
-	}
-
-	i6 := mgo.Index{
-		Key:    []string{"takerOrderHash"},
-		Sparse: true,
-	}
-
-	i7 := mgo.Index{
-		Key: []string{"createdAt", "status", "baseToken", "quoteToken"},
-	}
-
-	i8 := mgo.Index{
-		Key:       []string{"pricepoint"},
-		Collation: &mgo.Collation{NumericOrdering: true, Locale: "en"},
-	}
-	i9 := mgo.Index{
-		Key:    []string{"createdAt"},
-		Sparse: true,
-	}
-	indexes := []mgo.Index{}
-	indexes, err := db.Session.DB(dbName).C(collection).Indexes()
-	if err == nil {
-		if !existedIndex("index_trade_hash", indexes) {
-			db.Session.DB(dbName).C(collection).EnsureIndex(i4)
-		}
-	}
-
-	db.Session.DB(dbName).C(collection).EnsureIndex(i1)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i2)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i3)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i5)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i6)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i7)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i8)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i9)
-
 	return &TradeDao{collection, dbName}
 }
 

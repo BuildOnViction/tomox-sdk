@@ -24,52 +24,10 @@ func NewLendingTradeDao() *LendingTradeDao {
 	dbName := app.Config.DBName
 	collection := "lending_trades"
 
-	i1 := mgo.Index{
-		Key: []string{"collateralToken"},
-	}
-
-	i2 := mgo.Index{
-		Key: []string{"lendingToken"},
-	}
-
 	i3 := mgo.Index{
 		Key: []string{"createdAt"},
 	}
-
-	i4 := mgo.Index{
-		Key:    []string{"hash"},
-		Unique: true,
-		Sparse: true,
-	}
-
-	i5 := mgo.Index{
-		Key:    []string{"borrowingHash"},
-		Sparse: true,
-	}
-
-	i6 := mgo.Index{
-		Key:    []string{"investingHash"},
-		Sparse: true,
-	}
-
-	i7 := mgo.Index{
-		Key: []string{"createdAt", "status", "collateralToken", "lendingToken"},
-	}
-
-	indexes := []mgo.Index{}
-	indexes, err := db.Session.DB(dbName).C(collection).Indexes()
-	if err == nil {
-		if !existedIndex("index_lending_trade_hash", indexes) {
-			db.Session.DB(dbName).C(collection).EnsureIndex(i4)
-		}
-	}
-
-	db.Session.DB(dbName).C(collection).EnsureIndex(i1)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i2)
 	db.Session.DB(dbName).C(collection).EnsureIndex(i3)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i5)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i6)
-	db.Session.DB(dbName).C(collection).EnsureIndex(i7)
 
 	return &LendingTradeDao{collection, dbName}
 }

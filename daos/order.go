@@ -49,11 +49,6 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 		}
 	}
 
-	index := mgo.Index{
-		Key:    []string{"hash"},
-		Unique: true,
-	}
-
 	i1 := mgo.Index{
 		Key: []string{"userAddress"},
 	}
@@ -90,18 +85,9 @@ func NewOrderDao(opts ...OrderDaoOption) *OrderDao {
 	i9 := mgo.Index{
 		Key: []string{"createdAt"},
 	}
-	indexes := []mgo.Index{}
-	indexes, err := db.Session.DB(dao.dbName).C(dao.collectionName).Indexes()
-	if err == nil {
-		if !existedIndex("index_order_hash", indexes) {
-			err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
+	
 
-	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
+	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
 	if err != nil {
 		panic(err)
 	}

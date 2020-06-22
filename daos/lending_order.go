@@ -45,11 +45,6 @@ func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 		}
 	}
 
-	index := mgo.Index{
-		Key:    []string{"hash"},
-		Unique: true,
-	}
-
 	i1 := mgo.Index{
 		Key: []string{"userAddress"},
 	}
@@ -68,18 +63,8 @@ func NewLendingOrderDao(opts ...LendingOrderDaoOption) *LendingOrderDao {
 	i5 := mgo.Index{
 		Key: []string{"createdAt"},
 	}
-	indexes := []mgo.Index{}
-	indexes, err := db.Session.DB(dao.dbName).C(dao.collectionName).Indexes()
-	if err == nil {
-		if !existedIndex("index_lending_item_hash", indexes) {
-			err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(index)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
 
-	err = db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
+	err := db.Session.DB(dao.dbName).C(dao.collectionName).EnsureIndex(i1)
 	if err != nil {
 		panic(err)
 	}
