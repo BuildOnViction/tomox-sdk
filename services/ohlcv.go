@@ -1111,6 +1111,8 @@ func (s *OHLCVService) getTokenPairData(pairName string, baseTokenSymbol string,
 
 // GetTokenPairData get tick of pair tokens
 func (s *OHLCVService) GetTokenPairData(baseToken common.Address, quoteToken common.Address) *types.PairData {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	p, err := s.pairDao.GetByTokenAddress(baseToken, quoteToken)
 	if err != nil {
 		return nil
