@@ -23,14 +23,15 @@ import (
 )
 
 const (
-	intervalMin      = 60 * 60 * 24
-	intervalMax      = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
-	yesterdaySec     = 24 * 60 * 60
-	hourSec          = 60 * 60
-	milisecond       = 1000
-	baseFiat         = "USDT"
-	tomo             = "TOMO"
-	cacheTimeLifeMax = 15 * 50
+	intervalMin         = 60 * 60 * 24
+	intervalMax         = 5 * 12 * 30 * 24 * 60 * 60 // 5 years
+	yesterdaySec        = 24 * 60 * 60
+	hourSec             = 60 * 60
+	milisecond          = 1000
+	baseFiat            = "USDT"
+	tomo                = "TOMO"
+	cacheTimeLifeMax    = 15 * 50
+	cacheCommitInterval = 60 * 10 * time.Second
 )
 
 type PairCache struct {
@@ -267,7 +268,7 @@ func (s *OHLCVService) Init() {
 	s.fetch(datefrom, now, lastFrame)
 	s.commitCache()
 	go s.continueCache()
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(cacheCommitInterval)
 	quit := make(chan struct{})
 	go func() {
 		for {
@@ -415,12 +416,13 @@ func (s *OHLCVService) flattenRelayerTick() []*types.RelayerTick {
 }
 
 func (s *OHLCVService) commitCache() error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
 	logger.Info("commit ohlcv cache")
+	s.mutex.Lock()
 	s.truncate()
 	ticks := s.flatten()
 	tickbyrelayer := s.flattenRelayerTick()
+	s.mutex.Unlock()
+
 	tickfile := &tickfile{
 		Frame:        s.tickCache.tframes,
 		Ticks:        ticks,
@@ -708,8 +710,8 @@ func (s *OHLCVService) filterRelayerTick(relayerAddress common.Address, key stri
 
 // Get24hTick get 24h tick of token
 func (s *OHLCVService) Get24hTick(baseToken, quoteToken common.Address) *types.Tick {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	return s.get24hTick(baseToken, quoteToken)
 }
 func (s *OHLCVService) get24hTick(baseToken, quoteToken common.Address) *types.Tick {
