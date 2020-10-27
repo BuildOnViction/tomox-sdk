@@ -631,8 +631,10 @@ func (s *OrderService) processBulkOrders() {
 
 // HandleDocumentType handle order frome changing db
 func (s *OrderService) HandleDocumentType(ev types.OrderChangeEvent) error {
+	if ev.FullDocument == nil {
+		return nil
+	}
 	res := &types.EngineResponse{}
-
 	if ev.FullDocument.Status == types.OrderStatusOpen {
 		res.Status = types.ORDER_ADDED
 		res.Order = ev.FullDocument

@@ -410,6 +410,9 @@ func (s *LendingOrderService) WatchChanges() {
 
 // HandleDocumentType handle order frome changing db
 func (s *LendingOrderService) HandleDocumentType(ev types.LendingOrderChangeEvent, docType string) error {
+	if ev.FullDocument == nil {
+		return nil
+	}
 	res := &types.EngineResponse{}
 
 	if ev.FullDocument.Status == types.LendingStatusOpen {
