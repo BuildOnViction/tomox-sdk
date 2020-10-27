@@ -547,45 +547,27 @@ func (s *OrderService) WatchChanges() {
 }
 func (s *OrderService) watchChanges() {
 	ct, sc, err := s.orderDao.Watch()
-
 	if err != nil {
+		sc.Close()
 		logger.Error("Failed to open change stream")
-		return //exiting func
+		return
 	}
 
 	defer ct.Close()
 	defer sc.Close()
-
-	// Watch the event again in case there is error and function returned
-	defer s.watchChanges()
-
 	ctx := context.Background()
 
 	//Handling change stream in a cycle
 	for {
 		select {
 		case <-ctx.Done(): // if parent context was cancelled
-			err := ct.Close() // close the stream
-			if err != nil {
-				logger.Error("Change stream closed")
-			}
-			return //exiting from the func
+			logger.Error("Change stream closed")
+			return
 		default:
 			ev := types.OrderChangeEvent{}
 
 			//getting next item from the steam
 			ok := ct.Next(&ev)
-
-			//if data from the stream wasn't un-marshaled, we get ok == false as a result
-			//so we need to call Err() method to get info why
-			//it'll be nil if we just have no data
-			if !ok {
-				err := ct.Err()
-				if err != nil {
-					logger.Error(err)
-					return
-				}
-			}
 
 			//if item from the stream un-marshaled successfully, do something with it
 			if ok {
